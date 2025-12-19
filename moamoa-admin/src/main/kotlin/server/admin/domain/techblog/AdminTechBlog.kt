@@ -23,7 +23,7 @@ class AdminTechBlog(
     var icon: String
 ) : BaseEntity() {
 
-    val clientBeanName: String
+    val clientKey: String
         get() = key + CLIENT_BEAN_SUFFIX
 
     fun update(

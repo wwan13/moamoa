@@ -1,0 +1,109 @@
+package server.admin.application
+
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Service
+import server.admin.domain.category.AdminCategory
+import server.admin.domain.category.AdminCategoryRepository
+import server.admin.domain.post.AdminPost
+import server.admin.domain.post.AdminPostRepository
+import server.admin.domain.postcategory.AdminPostCategory
+import server.admin.domain.postcategory.AdminPostCategoryRepository
+import server.admin.domain.techblog.AdminTechBlog
+import server.admin.domain.techblog.AdminTechBlogRepository
+import server.client.techblogs.TechBlogPost
+
+@Service
+class AdminPostService(
+    private val transactional: AdminTransactional,
+    private val postRepository: AdminPostRepository,
+    private val techBlogRepository: AdminTechBlogRepository,
+    private val categoryRepository: AdminCategoryRepository,
+    private val postCategoryRepository: AdminPostCategoryRepository,
+    private val techBlogClients: AdminTechBlogClients
+) {
+    fun initPosts(command: AdminInitPostsCommand): AdminInitPostsResult {
+        if (postRepository.existsByTechBlogId(command.techBlogId)) {
+            throw IllegalArgumentException("이미 초기화된 tech blog 입니다.")
+        }
+
+        val techBlog = techBlogRepository.findByIdOrNull(command.techBlogId)
+            ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
+
+        val techBlogClient = techBlogClients.get(techBlog.clientKey)
+        val fetchedPosts = techBlogClient.getPosts()
+
+        return transactional {
+            val categoriesByTitle = upsertCategories(fetchedPosts)
+            val savedPosts = savePosts(techBlog, fetchedPosts)
+            savePostCategories(savedPosts, fetchedPosts, categoriesByTitle)
+
+            AdminInitPostsResult(
+                techBlog = AdminTechBlogData(techBlog),
+                newPostCount = savedPosts.size,
+            )
+        }
+    }
+
+    private fun upsertCategories(fetchedPosts: List<TechBlogPost>): Map<String, AdminCategory> {
+        val titles = fetchedPosts.flatMap { it.categories }.distinct()
+
+        if (titles.isEmpty()) return emptyMap()
+
+        val existing = categoryRepository.findAllByTitleIn(titles)
+        val existingTitles = existing.map { it.title }.toHashSet()
+
+        val newCategories = titles
+            .asSequence()
+            .filterNot { it in existingTitles }
+            .map { AdminCategory(it) }
+            .toList()
+
+        if (newCategories.isEmpty()) {
+            return existing.associateBy { it.title }
+        }
+
+        val saved = categoryRepository.saveAll(newCategories)
+        return (existing + saved).associateBy { it.title }
+    }
+
+    private fun savePosts(
+        techBlog: AdminTechBlog,
+        fetchedPosts: List<TechBlogPost>
+    ): List<AdminPost> {
+        val posts = fetchedPosts.map {
+            AdminPost(
+                key = it.key,
+                title = it.title,
+                description = it.description,
+                thumbnail = it.thumbnail,
+                url = it.url,
+                techBlog = techBlog
+            )
+        }
+        return postRepository.saveAll(posts)
+    }
+
+    private fun savePostCategories(
+        savedPosts: List<AdminPost>,
+        fetchedPosts: List<TechBlogPost>,
+        categoriesByTitle: Map<String, AdminCategory>
+    ) {
+        val fetchedByKey = fetchedPosts.associateBy { it.key }
+
+        val postCategories = savedPosts.flatMap { savedPost ->
+            val fetched = fetchedByKey[savedPost.key]
+                ?: throw IllegalStateException("포스트가 존재하지 않습니다.")
+
+            fetched.categories.distinct().map { title ->
+                val category = categoriesByTitle[title]
+                    ?: throw IllegalStateException("카테고리가 존재하지 않습니다.")
+                AdminPostCategory(
+                    post = savedPost,
+                    category = category
+                )
+            }
+        }
+
+        postCategoryRepository.saveAll(postCategories)
+    }
+}
