@@ -18,10 +18,15 @@ class TossClient(
     override fun getPosts(size: Int?): List<TechBlogPost> {
         return fetchWithPaging(pageSize = 100, targetCount = size) { size, page ->
             val response = webClient.get()
-                .uri(
-                    URI,
-                    mutableMapOf(SIZE to size, PAGE to page)
-                )
+                .uri {
+                    it
+                        .scheme(SCHEME)
+                        .host(HOST)
+                        .path(PATH)
+                        .queryParam(SIZE, size)
+                        .queryParam(PAGE, page)
+                        .build()
+                }
                 .retrieve()
                 .handlePagingFinished()
                 .onStatus({ it.isError }) { res ->
@@ -43,6 +48,7 @@ class TossClient(
                     key = it.key,
                     title = it.title,
                     description = it.subtitle,
+                    categories = listOf(it.category),
                     thumbnail = it.thumbnailConfig.imageUrl,
                     publishedAt = ZonedDateTime.parse(it.publishedTime).toLocalDateTime(),
                     url = POST_BASE_URL + it.key
@@ -52,7 +58,9 @@ class TossClient(
     }
 
     companion object {
-        private const val URI = "https://api-public.toss.im/api-public/v3/ipd-thor/api/v1/workspaces/15/posts"
+        private const val SCHEME = "https"
+        private const val HOST = "api-public.toss.im"
+        private const val PATH = "/api-public/v3/ipd-thor/api/v1/workspaces/15/posts"
         private const val SIZE = "size"
         private const val PAGE = "page"
         private const val POST_BASE_URL = "https://toss.tech/article/"
