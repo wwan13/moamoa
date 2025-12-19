@@ -7,7 +7,7 @@ import support.domain.BaseEntity
 
 @Entity
 @Table(name = "tech_blog")
-class TechBlog(
+data class TechBlog(
     @Column(name = "title", nullable = false, unique = true)
     var title: String,
 
