@@ -1,3 +1,7 @@
+plugins {
+    kotlin("plugin.jpa") version "1.9.25"
+}
+
 tasks.getByName("bootJar") {
     dependsOn(":moamoa-admin:build")
     enabled = true
