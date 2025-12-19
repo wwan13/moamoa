@@ -14,3 +14,5 @@ include("moamoa-infra:infra-caffeine")
 
 include("moamoa-support")
 include("moamoa-support:support-api-docs")
+
+include("moamoa-admin")
