@@ -1,4 +1,4 @@
-package server.paging
+package server.utill.webclient
 
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClient
