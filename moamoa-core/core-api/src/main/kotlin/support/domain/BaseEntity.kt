@@ -1,39 +1,23 @@
 package support.domain
 
-import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
-import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import org.springframework.data.domain.Persistable
+import org.springframework.data.relational.core.mapping.Column
 import java.time.LocalDateTime
 
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener::class)
-abstract class BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0L
-        protected set
+abstract class BaseEntity : Persistable<Long> {
+    abstract val id: Long
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column("created_at")
     var createdAt: LocalDateTime = LocalDateTime.now()
 
     @LastModifiedDate
-    @Column(name = "last_modified_at", nullable = false)
+    @Column("last_modified_at")
     var lastModifiedAt: LocalDateTime = LocalDateTime.now()
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    override fun getId(): Long = id
 
-        other as BaseEntity
-
-        if (id != other.id) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return id.hashCode()
-    }
+    override fun isNew(): Boolean = id == 0L
 }

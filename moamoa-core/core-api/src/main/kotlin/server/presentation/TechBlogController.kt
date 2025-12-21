@@ -15,7 +15,7 @@ class TechBlogController(
 ) {
 
     @GetMapping("/{techBlogId}")
-    fun findById(
+    suspend fun findById(
         @PathVariable techBlogId: Long
     ): ResponseEntity<TechBlogData> {
         val response = techBlogService.findById(techBlogId)
@@ -23,7 +23,7 @@ class TechBlogController(
     }
 
     @GetMapping
-    fun findAll(): ResponseEntity<List<TechBlogData>> {
+    suspend fun findAll(): ResponseEntity<List<TechBlogData>> {
         val response = techBlogService.findAll()
         return ResponseEntity.ok(response)
     }

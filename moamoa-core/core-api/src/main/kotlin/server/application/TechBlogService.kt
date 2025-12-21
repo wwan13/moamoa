@@ -1,20 +1,20 @@
 package server.application
 
-import org.springframework.data.repository.findByIdOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.domain.techblog.TechBlogRepository
 
 @Service
 class TechBlogService(
-    private val transactional: Transactional,
     private val techBlogRepository: TechBlogRepository
 ) {
-    fun findById(id: Long): TechBlogData = transactional(readOnly = true) {
-        techBlogRepository.findByIdOrNull(id)?.let(::TechBlogData)
+    suspend fun findById(id: Long): TechBlogData {
+        return techBlogRepository.findById(id)?.let(::TechBlogData)
             ?: throw IllegalArgumentException("존재하는 tech blog가 아닙니다.")
     }
 
-    fun findAll(): List<TechBlogData> = transactional(readOnly = true) {
-        techBlogRepository.findAll().map(::TechBlogData)
+    suspend fun findAll(): List<TechBlogData> {
+        return techBlogRepository.findAll().map(::TechBlogData).toList()
     }
 }

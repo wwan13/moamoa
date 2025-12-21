@@ -1,5 +1,6 @@
 package server.admin.application
 
+import kotlinx.coroutines.flow.toList
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import server.admin.domain.category.AdminCategory
@@ -21,12 +22,12 @@ class AdminPostService(
     private val postCategoryRepository: AdminPostCategoryRepository,
     private val techBlogClients: AdminTechBlogClients
 ) {
-    fun initPosts(command: AdminInitPostsCommand): AdminInitPostsResult {
+    suspend fun initPosts(command: AdminInitPostsCommand): AdminInitPostsResult {
         if (postRepository.existsByTechBlogId(command.techBlogId)) {
             throw IllegalArgumentException("이미 초기화된 tech blog 입니다.")
         }
 
-        val techBlog = techBlogRepository.findByIdOrNull(command.techBlogId)
+        val techBlog = techBlogRepository.findById(command.techBlogId)
             ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
 
         val techBlogClient = techBlogClients.get(techBlog.clientKey)
@@ -44,7 +45,7 @@ class AdminPostService(
         }
     }
 
-    private fun upsertCategories(fetchedPosts: List<TechBlogPost>): Map<String, AdminCategory> {
+    private suspend  fun upsertCategories(fetchedPosts: List<TechBlogPost>): Map<String, AdminCategory> {
         val titles = fetchedPosts.flatMap { it.categories }.map { it.lowercase() }.distinct()
 
         if (titles.isEmpty()) return emptyMap()
@@ -55,18 +56,18 @@ class AdminPostService(
         val newCategories = titles
             .asSequence()
             .filterNot { it in existingTitles }
-            .map { AdminCategory(it) }
+            .map { AdminCategory(title = it) }
             .toList()
 
         if (newCategories.isEmpty()) {
             return existing.associateBy { it.title }
         }
 
-        val saved = categoryRepository.saveAll(newCategories)
+        val saved = categoryRepository.saveAll(newCategories).toList()
         return (existing + saved).associateBy { it.title }
     }
 
-    private fun savePosts(
+    private suspend  fun savePosts(
         techBlog: AdminTechBlog,
         fetchedPosts: List<TechBlogPost>
     ): List<AdminPost> {
@@ -77,13 +78,13 @@ class AdminPostService(
                 description = it.description,
                 thumbnail = it.thumbnail,
                 url = it.url,
-                techBlog = techBlog
+                techBlogId = techBlog.id
             )
         }
-        return postRepository.saveAll(posts)
+        return postRepository.saveAll(posts).toList()
     }
 
-    private fun savePostCategories(
+    private suspend fun savePostCategories(
         savedPosts: List<AdminPost>,
         fetchedPosts: List<TechBlogPost>,
         categoriesByTitle: Map<String, AdminCategory>
@@ -100,10 +101,10 @@ class AdminPostService(
                 .map { normalizedTitle ->
                     val category = categoriesByTitle[normalizedTitle]
                         ?: throw IllegalStateException("카테고리가 존재하지 않습니다. title=$normalizedTitle keys=${categoriesByTitle.keys.take(10)}")
-                    AdminPostCategory(post = savedPost, category = category)
+                    AdminPostCategory(postId = savedPost.id, categoryId = category.id)
                 }
         }
 
-        postCategoryRepository.saveAll(postCategories)
+        postCategoryRepository.saveAll(postCategories).toList()
     }
 }

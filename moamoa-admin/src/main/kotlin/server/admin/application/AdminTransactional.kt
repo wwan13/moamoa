@@ -3,9 +3,8 @@ package server.admin.application
 import org.springframework.transaction.annotation.Propagation
 
 interface AdminTransactional {
-    operator fun <T> invoke(
-        readOnly: Boolean = false,
+    suspend operator fun <T> invoke(
         propagation: Propagation = Propagation.REQUIRED,
-        block: () -> T
+        block: suspend () -> T
     ): T
 }

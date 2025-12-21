@@ -1,33 +1,31 @@
 package server.admin.domain.post
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
-import server.admin.domain.techblog.AdminTechBlog
+import org.springframework.data.annotation.Id
+import org.springframework.data.relational.core.mapping.Column
+import org.springframework.data.relational.core.mapping.Table
 import support.admin.domain.BaseEntity
 
-@Entity
 @Table(name = "post")
 data class AdminPost(
-    @Column(name = "post_key", nullable = false, unique = false)
+    @Id
+    @Column("id")
+    override val id: Long = 0,
+
+    @Column("post_key")
     val key: String,
 
-    @Column(name = "title", nullable = false, unique = false)
+    @Column("title")
     val title: String,
 
-    @Column(name = "description", nullable = false, unique = false)
+    @Column("description")
     val description: String,
 
-    @Column(name = "thumbnail", nullable = false, unique = false)
+    @Column("thumbnail")
     val thumbnail: String,
 
-    @Column(name = "url", nullable = false, unique = false)
+    @Column("url")
     val url: String,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tech_blog_id", nullable = false)
-    val techBlog: AdminTechBlog
+    @Column("tech_blog_id")
+    val techBlogId: Long
 ) : BaseEntity()

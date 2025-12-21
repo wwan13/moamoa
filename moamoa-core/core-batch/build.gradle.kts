@@ -7,7 +7,10 @@ tasks.getByName("jar") {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+    runtimeOnly("io.asyncer:r2dbc-mysql")
 
     implementation(project(":moamoa-core:core-port"))
 }

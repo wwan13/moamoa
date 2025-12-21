@@ -1,7 +1,3 @@
-plugins {
-    kotlin("plugin.jpa") version "1.9.25"
-}
-
 tasks.getByName("bootJar") {
     dependsOn(":moamoa-admin:build")
     enabled = true
@@ -12,10 +8,10 @@ tasks.getByName("jar") {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    runtimeOnly("com.mysql:mysql-connector-j")
+    implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+    runtimeOnly("io.asyncer:r2dbc-mysql")
 
     implementation(project(":moamoa-core:core-port"))
     implementation(project(":moamoa-support:support-api-docs"))

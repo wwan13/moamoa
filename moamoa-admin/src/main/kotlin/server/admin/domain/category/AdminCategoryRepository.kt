@@ -1,7 +1,7 @@
 package server.admin.domain.category
 
-import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 
-interface AdminCategoryRepository : JpaRepository<AdminCategory, Long> {
-    fun findAllByTitleIn(titles: List<String>): List<AdminCategory>
+interface AdminCategoryRepository : CoroutineCrudRepository<AdminCategory, Long> {
+    suspend fun findAllByTitleIn(titles: List<String>): List<AdminCategory>
 }

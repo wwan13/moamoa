@@ -1,19 +1,16 @@
 package server.admin.domain.category
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Index
-import jakarta.persistence.Table
+import org.springframework.data.annotation.Id
+import org.springframework.data.relational.core.mapping.Column
+import org.springframework.data.relational.core.mapping.Table
 import support.admin.domain.BaseEntity
 
-@Entity
-@Table(
-    name = "category",
-    indexes = [
-        Index(name = "idx_category_title", columnList = "title", unique = true)
-    ]
-)
+@Table(name = "category")
 data class AdminCategory(
-    @Column(name = "title", nullable = false, unique = true)
+    @Id
+    @Column("id")
+    override val id: Long = 0,
+
+    @Column("title")
     val title: String
 ) : BaseEntity()

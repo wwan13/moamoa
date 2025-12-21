@@ -1,7 +1,7 @@
 package server.domain.category
 
-import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 
-interface CategoryRepository : JpaRepository<Category, Long> {
-    fun findAllByOrderByTitleAsc(): List<Category>
+interface CategoryRepository : CoroutineCrudRepository<Category, Long> {
+    suspend fun findAllByOrderByTitleAsc(): List<Category>
 }

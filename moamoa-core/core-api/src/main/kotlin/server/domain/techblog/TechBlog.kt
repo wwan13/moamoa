@@ -1,22 +1,25 @@
 package server.domain.techblog
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Table
+import org.springframework.data.annotation.Id
+import org.springframework.data.relational.core.mapping.Column
+import org.springframework.data.relational.core.mapping.Table
 import support.domain.BaseEntity
 
-@Entity
 @Table(name = "tech_blog")
 data class TechBlog(
-    @Column(name = "title", nullable = false, unique = true)
-    var title: String,
+    @Id
+    @Column("id")
+    override val id: Long = 0,
 
-    @Column(name = "tech_blog_key", nullable = false, unique = true)
-    var key: String,
+    @Column("title")
+    val title: String,
 
-    @Column(name = "blog_url", nullable = false, unique = false)
-    var blogUrl: String,
+    @Column("tech_blog_key")
+    val key: String,
 
-    @Column(name = "icon", nullable = false, unique = false)
-    var icon: String
+    @Column("blog_url")
+    val blogUrl: String,
+
+    @Column("icon")
+    val icon: String
 ) : BaseEntity()

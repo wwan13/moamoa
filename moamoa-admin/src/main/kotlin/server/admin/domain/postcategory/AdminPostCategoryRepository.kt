@@ -1,6 +1,6 @@
 package server.admin.domain.postcategory
 
-import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 
-interface AdminPostCategoryRepository : JpaRepository<AdminPostCategory, Long>{
+interface AdminPostCategoryRepository : CoroutineCrudRepository<AdminPostCategory, Long>{
 }

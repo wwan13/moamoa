@@ -8,7 +8,7 @@ class CategoryService(
     private val categoryRepository: CategoryRepository
 ) {
 
-    fun findAll(): List<CategoryData> {
+    suspend fun findAll(): List<CategoryData> {
         return categoryRepository.findAllByOrderByTitleAsc().map(::CategoryData)
     }
 }

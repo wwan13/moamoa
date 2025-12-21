@@ -14,7 +14,7 @@ class AdminTechBlogController(
     private val techBlogService: AdminTechBlogService
 ) {
     @PostMapping
-    fun create(
+    suspend fun create(
         @RequestBody command: AdminCreateTechBlogCommand
     ): ResponseEntity<AdminTechBlogData> {
         val response = techBlogService.create(command)
@@ -23,7 +23,7 @@ class AdminTechBlogController(
     }
 
     @PatchMapping("/{techBlogId}")
-    fun update(
+    suspend fun update(
         @PathVariable techBlogId: Long,
         @RequestBody command: AdminUpdateTechBlogCommand
     ): ResponseEntity<AdminTechBlogData> {

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 class AdminHealthController {
 
     @GetMapping("/admin/health-check")
-    fun healthCheck(): ResponseEntity<String> {
+    suspend fun healthCheck(): ResponseEntity<String> {
         return ResponseEntity.ok("healthy")
     }
 }

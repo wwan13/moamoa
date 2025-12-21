@@ -16,7 +16,7 @@ class AdminPostController(
 ) {
 
     @PostMapping("init")
-    fun initPosts(
+    suspend fun initPosts(
         @RequestBody command: AdminInitPostsCommand
     ): ResponseEntity<AdminInitPostsResult?> {
         val response = postService.initPosts(command)

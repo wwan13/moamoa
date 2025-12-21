@@ -13,7 +13,7 @@ class CategoryController(
     private val categoryService: CategoryService
 ) {
     @GetMapping
-    fun findAll(): ResponseEntity<List<CategoryData>> {
+    suspend fun findAll(): ResponseEntity<List<CategoryData>> {
         val response = categoryService.findAll()
         return ResponseEntity.ok(response)
     }

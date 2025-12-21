@@ -1,6 +1,6 @@
 package server.domain.techblog
 
-import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 
-interface TechBlogRepository : JpaRepository<TechBlog, Long> {
+interface TechBlogRepository : CoroutineCrudRepository<TechBlog, Long> {
 }
