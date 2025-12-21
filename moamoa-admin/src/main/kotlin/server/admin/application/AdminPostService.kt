@@ -45,12 +45,12 @@ class AdminPostService(
     }
 
     private fun upsertCategories(fetchedPosts: List<TechBlogPost>): Map<String, AdminCategory> {
-        val titles = fetchedPosts.flatMap { it.categories }.distinct()
+        val titles = fetchedPosts.flatMap { it.categories }.map { it.lowercase() }.distinct()
 
         if (titles.isEmpty()) return emptyMap()
 
         val existing = categoryRepository.findAllByTitleIn(titles)
-        val existingTitles = existing.map { it.title }.toHashSet()
+        val existingTitles = existing.map { it.title.lowercase() }.toHashSet()
 
         val newCategories = titles
             .asSequence()
@@ -94,14 +94,14 @@ class AdminPostService(
             val fetched = fetchedByKey[savedPost.key]
                 ?: throw IllegalStateException("포스트가 존재하지 않습니다.")
 
-            fetched.categories.distinct().map { title ->
-                val category = categoriesByTitle[title]
-                    ?: throw IllegalStateException("카테고리가 존재하지 않습니다.")
-                AdminPostCategory(
-                    post = savedPost,
-                    category = category
-                )
-            }
+            fetched.categories
+                .map { it.lowercase() }
+                .distinct()
+                .map { normalizedTitle ->
+                    val category = categoriesByTitle[normalizedTitle]
+                        ?: throw IllegalStateException("카테고리가 존재하지 않습니다. title=$normalizedTitle keys=${categoriesByTitle.keys.take(10)}")
+                    AdminPostCategory(post = savedPost, category = category)
+                }
         }
 
         postCategoryRepository.saveAll(postCategories)
