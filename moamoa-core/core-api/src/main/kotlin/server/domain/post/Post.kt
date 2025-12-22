@@ -26,6 +26,9 @@ data class Post(
     @Column("url")
     val url: String,
 
+    @Column("view_count")
+    val viewCount: Long = 0,
+
     @Column("tech_blog_id")
     val techBlogId: Long
 ) : BaseEntity()

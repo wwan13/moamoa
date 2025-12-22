@@ -7,5 +7,7 @@ interface CacheMemory {
 
     suspend fun <T> setIfAbsent(key: String, value: T, ttlMillis: Long? = null): Boolean
 
+    suspend fun incr(key: String): Long
+
     suspend fun evict(key: String)
 }

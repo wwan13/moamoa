@@ -49,6 +49,10 @@ class RedisCacheMemory(
         }
     }
 
+    override suspend fun incr(key: String): Long {
+        return valueOps.increment(key).awaitSingle()
+    }
+
     override suspend fun evict(key: String) {
         reactiveRedisTemplate.delete(key).awaitSingle()
     }
