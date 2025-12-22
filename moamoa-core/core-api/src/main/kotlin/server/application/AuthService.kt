@@ -8,6 +8,7 @@ import server.infra.security.password.PasswordEncoder
 import server.infra.security.token.AuthPrincipal
 import server.infra.security.token.TokenProvider
 import server.infra.security.token.TokenType
+import server.security.UnauthorizedException
 import server.template.mail.MailTemplate
 import server.template.mail.toTemplateArgs
 import java.security.SecureRandom
@@ -85,16 +86,16 @@ class AuthService(
         val principal = tokenProvider.decodeToken(refreshToken)
 
         if (principal.type != TokenType.REFRESH) {
-            throw IllegalArgumentException("LOGIN_AGAIN")
+            throw UnauthorizedException()
         }
         val savedToken = refreshTokenCache.get(principal.memberId)
-            ?: throw IllegalArgumentException("LOGIN_AGAIN")
+            ?: throw UnauthorizedException()
         if (refreshToken != savedToken) {
-            throw IllegalArgumentException("LOGIN_AGAIN")
+            throw UnauthorizedException()
         }
 
         val member = memberRepository.findById(principal.memberId)
-            ?: throw IllegalArgumentException("LOGIN_AGAIN")
+            ?: throw UnauthorizedException()
         val tokens = issueTokens(member.id, member.role.name)
         refreshTokenCache.set(member.id, tokens.refreshToken, refreshTokenExpires)
 

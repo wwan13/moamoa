@@ -6,6 +6,8 @@ import io.jsonwebtoken.security.Keys
 import org.springframework.stereotype.Component
 import server.config.SecurityProperties
 import server.infra.security.token.AuthPrincipal
+import server.infra.security.token.ExpiredTokenException
+import server.infra.security.token.InvalidTokenException
 import server.infra.security.token.TokenProvider
 import server.infra.security.token.TokenType
 import java.util.*
@@ -47,15 +49,15 @@ class JwtTokenProvider(
                 .parseSignedClaims(token)
                 .payload
         } catch (e: ExpiredJwtException) {
-            throw IllegalArgumentException("TOKEN_EXPIRED")
+            throw ExpiredTokenException()
         } catch (e: Exception) {
-            throw IllegalArgumentException("INVALID_TOKEN")
+            throw InvalidTokenException()
         }
 
         val memberId = payload.subject.toLongOrNull()
-            ?: throw IllegalArgumentException("INVALID_TOKEN")
+            ?: throw InvalidTokenException()
         val type = payload.get("type", String::class.java)
-            ?: throw IllegalArgumentException("INVALID_TOKEN")
+            ?: throw InvalidTokenException()
         val role: String? = payload.get("role", String::class.java)
 
         return AuthPrincipal(

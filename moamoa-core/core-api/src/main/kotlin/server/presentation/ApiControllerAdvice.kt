@@ -8,6 +8,8 @@ import org.springframework.validation.BindException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.*
+import server.infra.security.token.ExpiredTokenException
+import server.infra.security.token.InvalidTokenException
 import server.security.ForbiddenException
 import server.security.UnauthorizedException
 
@@ -108,17 +110,37 @@ class ApiControllerAdvice {
         e: UnauthorizedException
     ): ResponseEntity<ErrorResponse> {
         log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
-        return error(HttpStatus.UNAUTHORIZED, e.message ?: "인증 정보가 없습니다.")
+        return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
     }
 
     // 403
     @ExceptionHandler(ForbiddenException::class)
-    fun handleForbiddenException(
+    fun handleForbidden(
         exchange: ServerWebExchange,
         e: ForbiddenException
     ): ResponseEntity<ErrorResponse> {
         log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
         return error(HttpStatus.FORBIDDEN, e.message ?: "접근 권한이 없습니다")
+    }
+
+    // 401
+    @ExceptionHandler(InvalidTokenException::class)
+    fun handleInvalidToken(
+        exchange: ServerWebExchange,
+        e: InvalidTokenException
+    ): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
+    }
+
+    // 401
+    @ExceptionHandler(ExpiredTokenException::class)
+    fun handleExpiredToken(
+        exchange: ServerWebExchange,
+        e: ExpiredTokenException
+    ): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        return error(HttpStatus.UNAUTHORIZED, e.message ?: "TOKEN_EXPIRED")
     }
 
     // 500 - 도메인 예외
