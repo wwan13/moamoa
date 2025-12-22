@@ -15,8 +15,11 @@ dependencies {
 
     implementation(project(":moamoa-core:core-port"))
     implementation(project(":moamoa-support:support-api-docs"))
+    implementation(project(":moamoa-support:support-templates"))
 
     runtimeOnly(project(":moamoa-admin"))
     runtimeOnly(project(":moamoa-client:client-tech-blogs"))
+    runtimeOnly(project(":moamoa-client:client-mail"))
     runtimeOnly(project(":moamoa-infra:infra-redis"))
+    runtimeOnly(project(":moamoa-infra:infra-security"))
 }

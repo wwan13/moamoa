@@ -8,4 +8,8 @@ spring:
     default-timeout: 30
 
   profiles:
-    include: api-docs
+    include:
+      - api-docs
+      - mail
+      - redis
+      - security

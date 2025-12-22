@@ -9,6 +9,21 @@ plugins {
 
 java.sourceCompatibility = JavaVersion.valueOf("VERSION_21")
 
+tasks.register("buildRuntimeModules") {
+    group = "build"
+    description = "Build related modules"
+
+    dependsOn(
+        ":moamoa-admin:build",
+
+        ":moamoa-client:client-tech-blogs:build",
+        ":moamoa-client:client-mail:build",
+
+        ":moamoa-infra:infra-redis:build",
+        ":moamoa-infra:infra-security:build",
+    )
+}
+
 allprojects {
     group = ""
     version = "0.0.1"

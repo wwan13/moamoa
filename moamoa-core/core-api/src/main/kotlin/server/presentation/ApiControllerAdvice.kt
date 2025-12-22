@@ -6,8 +6,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.validation.BindException
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.*
 
+@RestControllerAdvice
 class ApiControllerAdvice {
 
     private val log = LoggerFactory.getLogger(javaClass)

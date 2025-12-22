@@ -1,0 +1,2 @@
+security:
+  secret-key: ${JWT_SECRET}
