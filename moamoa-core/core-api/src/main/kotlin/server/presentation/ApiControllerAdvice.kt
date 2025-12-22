@@ -8,6 +8,8 @@ import org.springframework.validation.BindException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.*
+import server.security.ForbiddenException
+import server.security.UnauthorizedException
 
 @RestControllerAdvice
 class ApiControllerAdvice {
@@ -97,6 +99,26 @@ class ApiControllerAdvice {
     ): ResponseEntity<ErrorResponse> {
         log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
         return badRequest(e.message ?: "잘못된 요청입니다")
+    }
+
+    // 401
+    @ExceptionHandler(UnauthorizedException::class)
+    fun handleUnauthorized(
+        exchange: ServerWebExchange,
+        e: UnauthorizedException
+    ): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        return error(HttpStatus.UNAUTHORIZED, e.message ?: "인증 정보가 없습니다.")
+    }
+
+    // 403
+    @ExceptionHandler(ForbiddenException::class)
+    fun handleForbiddenException(
+        exchange: ServerWebExchange,
+        e: ForbiddenException
+    ): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        return error(HttpStatus.FORBIDDEN, e.message ?: "접근 권한이 없습니다")
     }
 
     // 500 - 도메인 예외
