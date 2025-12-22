@@ -1,8 +1,9 @@
 package server.techblogs.toss
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import reactor.core.publisher.Mono
 import server.client.techblogs.TechBlogClient
 import server.client.techblogs.TechBlogPost
 import server.utill.webclient.fetchWithPaging
@@ -20,28 +21,18 @@ class TossClient(
     private val path = "/api-public/v3/ipd-thor/api/v1/workspaces/15/posts"
     private val postBaseUrl = "https://toss.tech/article/"
 
-    override fun getPosts(size: Int?): List<TechBlogPost> {
-        return fetchWithPaging(pageSize = 100, targetCount = size) { size, page ->
+    override suspend fun getPosts(size: Int?): Flow<TechBlogPost> {
+        return fetchWithPaging(pageSize = 100, targetCount = size) { pageSize, page ->
             val response = webClient.get()
-                .uri {
-                    it
-                        .scheme(scheme)
-                        .host(host)
-                        .path(path)
-                        .queryParam("size", size)
-                        .queryParam("page", page)
-                        .build()
+                .uri { it.scheme(scheme).host(host).path(path)
+                    .queryParam("size", pageSize)
+                    .queryParam("page", page)
+                    .build()
                 }
                 .retrieve()
                 .handlePagingFinished()
-                .onStatus({ it.isError }) { res ->
-                    res.bodyToMono(String::class.java).defaultIfEmpty("").flatMap { body ->
-                        Mono.error(IllegalStateException("toss api error: status=${res.statusCode()} body=$body"))
-                    }
-                }
                 .bodyToMono(Response::class.java)
-                .block()
-                ?: throw IllegalStateException("toss response is null")
+                .awaitSingle()
 
             if (response.success == null || response.resultType != "SUCCESS") {
                 throw IllegalStateException("toss tech blog 정보를 불러오는데 실패하였습니다.")

@@ -31,7 +31,7 @@ class AdminPostService(
             ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
 
         val techBlogClient = techBlogClients.get(techBlog.clientKey)
-        val fetchedPosts = techBlogClient.getPosts()
+        val fetchedPosts = techBlogClient.getPosts().toList()
 
         return transactional {
             val categoriesByTitle = upsertCategories(fetchedPosts)

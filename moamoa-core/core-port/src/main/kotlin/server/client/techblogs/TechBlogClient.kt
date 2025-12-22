@@ -1,5 +1,7 @@
 package server.client.techblogs
 
+import kotlinx.coroutines.flow.Flow
+
 interface TechBlogClient {
-    fun getPosts(size: Int? = null): List<TechBlogPost>
+    suspend fun getPosts(size: Int? = null): Flow<TechBlogPost>
 }
