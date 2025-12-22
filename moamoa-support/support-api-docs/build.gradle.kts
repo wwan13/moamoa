@@ -1,3 +1,3 @@
 dependencies {
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.14")
 }
