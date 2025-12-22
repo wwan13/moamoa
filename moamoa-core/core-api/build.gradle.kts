@@ -18,4 +18,5 @@ dependencies {
 
     runtimeOnly(project(":moamoa-admin"))
     runtimeOnly(project(":moamoa-client:client-tech-blogs"))
+    runtimeOnly(project(":moamoa-infra:infra-redis"))
 }
