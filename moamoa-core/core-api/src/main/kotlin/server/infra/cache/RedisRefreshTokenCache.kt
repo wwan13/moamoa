@@ -1,19 +1,19 @@
-package server.application
+package server.infra.cache
 
 import org.springframework.stereotype.Component
-import server.infra.cache.CacheMemory
-import server.infra.cache.get
+import server.application.cache.RefreshTokenCache
 
 @Component
-class RefreshTokenCache(
-    private val cacheMemory: CacheMemory,
-) {
+class RedisRefreshTokenCache(
+    private val cacheMemory: CacheMemory
+) : RefreshTokenCache {
+
     private val refreshTokenPrefix = "REFRESH_TOKEN:"
 
     private fun key(memberId: Long): String =
         refreshTokenPrefix + memberId
 
-    suspend fun set(
+    override suspend fun set(
         memberId: Long,
         refreshToken: String,
         ttlMillis: Long,
@@ -25,11 +25,11 @@ class RefreshTokenCache(
         )
     }
 
-    suspend fun get(memberId: Long): String? {
-        return cacheMemory.get<String>(key(memberId))
+    override suspend fun get(memberId: Long): String? {
+        return cacheMemory.get(key(memberId))
     }
 
-    suspend fun evict(memberId: Long) {
+    override suspend fun evict(memberId: Long) {
         cacheMemory.evict(key(memberId))
     }
 }

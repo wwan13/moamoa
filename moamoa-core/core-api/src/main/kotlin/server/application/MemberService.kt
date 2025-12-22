@@ -1,6 +1,7 @@
 package server.application
 
 import org.springframework.stereotype.Service
+import server.application.cache.EmailVerificationCache
 import server.domain.member.Member
 import server.domain.member.MemberRepository
 import server.domain.member.MemberRole

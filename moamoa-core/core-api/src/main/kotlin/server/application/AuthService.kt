@@ -1,6 +1,8 @@
 package server.application
 
 import org.springframework.stereotype.Service
+import server.application.cache.EmailVerificationCache
+import server.application.cache.RefreshTokenCache
 import server.client.mail.MailContent
 import server.client.mail.MailSender
 import server.domain.member.MemberRepository
@@ -12,7 +14,6 @@ import server.security.UnauthorizedException
 import server.template.mail.MailTemplate
 import server.template.mail.toTemplateArgs
 import java.security.SecureRandom
-import kotlin.text.get
 
 @Service
 class AuthService(
