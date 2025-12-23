@@ -15,12 +15,7 @@ tasks.register("buildRuntimeModules") {
 
     dependsOn(
         ":moamoa-admin:build",
-
-        ":moamoa-client:client-tech-blogs:build",
-        ":moamoa-client:client-mail:build",
-
-        ":moamoa-infra:infra-redis:build",
-        ":moamoa-infra:infra-security:build",
+        ":moamoa-infra:infra-tech-blog:build",
     )
 }
 

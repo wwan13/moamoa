@@ -1,11 +1,12 @@
 package server.application
 
 import org.springframework.stereotype.Service
-import server.application.cache.EmailVerificationCache
 import server.domain.member.Member
 import server.domain.member.MemberRepository
 import server.domain.member.MemberRole
-import server.infra.security.password.PasswordEncoder
+import server.infra.cache.EmailVerificationCache
+import server.infra.db.Transactional
+import server.password.PasswordEncoder
 
 @Service
 class MemberService(

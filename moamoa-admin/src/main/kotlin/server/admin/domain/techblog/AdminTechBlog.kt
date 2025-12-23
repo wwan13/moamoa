@@ -24,9 +24,6 @@ class AdminTechBlog(
     var icon: String
 ) : BaseEntity() {
 
-    val clientKey: String
-        get() = key + CLIENT_BEAN_SUFFIX
-
     fun update(
         title: String,
         blogUrl: String,
@@ -35,9 +32,5 @@ class AdminTechBlog(
         this.title = title
         this.blogUrl = blogUrl
         this.icon = icon
-    }
-
-    companion object {
-        const val CLIENT_BEAN_SUFFIX = "Client"
     }
 }

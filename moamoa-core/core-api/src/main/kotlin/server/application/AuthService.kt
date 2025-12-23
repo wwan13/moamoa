@@ -1,15 +1,15 @@
 package server.application
 
 import org.springframework.stereotype.Service
-import server.application.cache.EmailVerificationCache
-import server.application.cache.RefreshTokenCache
-import server.client.mail.MailContent
-import server.client.mail.MailSender
+import server.MailContent
+import server.MailSender
+import server.infra.cache.EmailVerificationCache
+import server.infra.cache.RefreshTokenCache
 import server.domain.member.MemberRepository
-import server.infra.security.password.PasswordEncoder
-import server.infra.security.token.AuthPrincipal
-import server.infra.security.token.TokenProvider
-import server.infra.security.token.TokenType
+import server.jwt.AuthPrincipal
+import server.jwt.TokenProvider
+import server.jwt.TokenType
+import server.password.PasswordEncoder
 import server.security.UnauthorizedException
 import server.template.mail.MailTemplate
 import server.template.mail.toTemplateArgs
@@ -23,7 +23,6 @@ class AuthService(
     private val tokenProvider: TokenProvider,
     private val passwordEncoder: PasswordEncoder,
     private val refreshTokenCache: RefreshTokenCache,
-    provider: TokenProvider
 ) {
 
     private val accessTokenExpires = 3_600_000L

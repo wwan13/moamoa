@@ -1,7 +1,6 @@
 package server.admin.application
 
 import kotlinx.coroutines.flow.toList
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import server.admin.domain.category.AdminCategory
 import server.admin.domain.category.AdminCategoryRepository
@@ -11,7 +10,9 @@ import server.admin.domain.postcategory.AdminPostCategory
 import server.admin.domain.postcategory.AdminPostCategoryRepository
 import server.admin.domain.techblog.AdminTechBlog
 import server.admin.domain.techblog.AdminTechBlogRepository
-import server.client.techblogs.TechBlogPost
+import server.admin.infra.db.AdminTransactional
+import server.techblog.TechBlogPost
+import server.techblog.TechBlogSources
 
 @Service
 class AdminPostService(
@@ -20,7 +21,7 @@ class AdminPostService(
     private val techBlogRepository: AdminTechBlogRepository,
     private val categoryRepository: AdminCategoryRepository,
     private val postCategoryRepository: AdminPostCategoryRepository,
-    private val techBlogClients: AdminTechBlogClients
+    private val techBlogSources: TechBlogSources
 ) {
     suspend fun initPosts(command: AdminInitPostsCommand): AdminInitPostsResult {
         if (postRepository.existsByTechBlogId(command.techBlogId)) {
@@ -30,7 +31,7 @@ class AdminPostService(
         val techBlog = techBlogRepository.findById(command.techBlogId)
             ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
 
-        val techBlogClient = techBlogClients.get(techBlog.clientKey)
+        val techBlogClient = techBlogSources.get(techBlog.key)
         val fetchedPosts = techBlogClient.getPosts().toList()
 
         return transactional {

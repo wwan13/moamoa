@@ -3,12 +3,14 @@ package server.admin.application
 import org.springframework.stereotype.Service
 import server.admin.domain.techblog.AdminTechBlog
 import server.admin.domain.techblog.AdminTechBlogRepository
+import server.admin.infra.db.AdminTransactional
+import server.techblog.TechBlogSources
 
 @Service
 class AdminTechBlogService(
     private val transactional: AdminTransactional,
     private val techBlogRepository: AdminTechBlogRepository,
-    private val techBlogClients: AdminTechBlogClients
+    private val techBlogSources: TechBlogSources
 ) {
 
     suspend fun create(command: AdminCreateTechBlogCommand): AdminTechBlogData = transactional {
@@ -19,7 +21,7 @@ class AdminTechBlogService(
             blogUrl = command.blogUrl,
             key = command.key
         )
-        techBlogClients.validateExists(techBlog.clientKey)
+        techBlogSources.validateExists(techBlog.key)
         techBlogRepository.save(techBlog).let(::AdminTechBlogData)
     }
 

@@ -8,8 +8,8 @@ import org.springframework.web.reactive.result.method.HandlerMethodArgumentResol
 import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import server.domain.member.MemberRole
-import server.infra.security.token.TokenProvider
-import server.infra.security.token.TokenType
+import server.jwt.TokenProvider
+import server.jwt.TokenType
 
 @Component
 class PassportResolver(

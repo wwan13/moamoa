@@ -8,8 +8,8 @@ import org.springframework.validation.BindException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.*
-import server.infra.security.token.ExpiredTokenException
-import server.infra.security.token.InvalidTokenException
+import server.jwt.ExpiredTokenException
+import server.jwt.InvalidTokenException
 import server.security.ForbiddenException
 import server.security.UnauthorizedException
 

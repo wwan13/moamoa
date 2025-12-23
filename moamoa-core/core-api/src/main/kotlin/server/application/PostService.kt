@@ -1,8 +1,8 @@
 package server.application
 
 import org.springframework.stereotype.Service
-import server.application.cache.PostViewCountCache
 import server.domain.post.PostRepository
+import server.infra.cache.PostViewCountCache
 
 @Service
 class PostService(
