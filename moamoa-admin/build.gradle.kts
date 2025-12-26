@@ -8,6 +8,7 @@ tasks.getByName("jar") {
 
 dependencies {
     compileOnly("org.springframework.boot:spring-boot-starter-webflux")
+    compileOnly("org.springframework.boot:spring-boot-starter-validation")
 
     compileOnly("org.springframework.boot:spring-boot-starter-data-r2dbc")
     runtimeOnly("io.asyncer:r2dbc-mysql")

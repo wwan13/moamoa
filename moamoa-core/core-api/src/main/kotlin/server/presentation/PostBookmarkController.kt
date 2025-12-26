@@ -1,5 +1,6 @@
 package server.presentation
 
+import jakarta.validation.Valid
 import kotlinx.coroutines.flow.toList
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -22,7 +23,7 @@ class PostBookmarkController(
 
     @PostMapping
     suspend fun toggle(
-        @RequestBody command: PostBookmarkToggleCommand,
+        @RequestBody @Valid command: PostBookmarkToggleCommand,
         @RequestPassport passport: Passport
     ): ResponseEntity<PostBookmarkToggleResult?> {
         val response = postBookmarkService.toggle(command, passport.memberId)

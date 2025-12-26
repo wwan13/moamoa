@@ -1,6 +1,13 @@
 package server.application
 
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
+
 data class EmailVerificationCommand(
+    @field:NotBlank
+    @field:Email
     val email: String
 )
 
@@ -9,7 +16,12 @@ data class EmailVerificationResult(
 )
 
 data class ConfirmEmailCommand(
+    @field:NotBlank
+    @field:Email
     val email: String,
+
+    @field:NotBlank
+    @field:Pattern(regexp = "^[0-9]{6}$")
     val code: String
 )
 
@@ -18,7 +30,13 @@ data class ConfirmEmailResult(
 )
 
 data class LoginCommand(
+    @field:NotBlank
+    @field:Email
     val email: String,
+
+    @field:NotBlank
+    @field:Size(min = 8, max = 24)
+    @field:Pattern(regexp = "^(?=.*[!@#\$%^&*()_+\\-=[\\]{};':\"\\\\|,.<>/?]).+$")
     val password: String
 )
 

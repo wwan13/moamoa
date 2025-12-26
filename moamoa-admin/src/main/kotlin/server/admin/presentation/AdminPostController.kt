@@ -1,5 +1,6 @@
 package server.admin.presentation
 
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -17,7 +18,7 @@ class AdminPostController(
 
     @PostMapping("init")
     suspend fun initPosts(
-        @RequestBody command: AdminInitPostsCommand
+        @RequestBody @Valid command: AdminInitPostsCommand
     ): ResponseEntity<AdminInitPostsResult?> {
         val response = postService.initPosts(command)
         return ResponseEntity.ok(response)

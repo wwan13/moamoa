@@ -1,5 +1,6 @@
 package server.presentation
 
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -22,7 +23,7 @@ class AuthController(
 
     @PostMapping("/email-verification")
     suspend fun emailVerification(
-        @RequestBody command: EmailVerificationCommand
+        @RequestBody @Valid command: EmailVerificationCommand
     ): ResponseEntity<EmailVerificationResult> {
         val response =  authService.emailVerification(command)
 
@@ -31,7 +32,7 @@ class AuthController(
 
     @PostMapping("/email-verification/confirm")
     suspend fun emailVerificationConfirm(
-        @RequestBody command: ConfirmEmailCommand
+        @RequestBody @Valid command: ConfirmEmailCommand
     ): ResponseEntity<ConfirmEmailResult> {
         val response = authService.confirmEmail(command)
 
@@ -40,7 +41,7 @@ class AuthController(
 
     @PostMapping("/login")
     suspend fun login(
-        @RequestBody command: LoginCommand
+        @RequestBody @Valid command: LoginCommand
     ): ResponseEntity<AuthTokens?> {
         val tokens = authService.login(command)
 

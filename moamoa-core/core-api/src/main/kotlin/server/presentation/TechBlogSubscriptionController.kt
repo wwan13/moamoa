@@ -1,5 +1,6 @@
 package server.presentation
 
+import jakarta.validation.Valid
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import org.springframework.http.ResponseEntity
@@ -26,7 +27,7 @@ class TechBlogSubscriptionController(
 
     @PostMapping
     suspend fun toggle(
-        @RequestBody command: TechBlogSubscriptionToggleCommand,
+        @RequestBody @Valid command: TechBlogSubscriptionToggleCommand,
         @RequestPassport passport: Passport
     ): ResponseEntity<TechBlogSubscriptionToggleResult> {
         val response = techBlogSubscriptionService.toggle(command, passport.memberId)
@@ -36,7 +37,7 @@ class TechBlogSubscriptionController(
 
     @PatchMapping("/notification-enabled")
     suspend fun notificationEnabledToggle(
-        @RequestBody command: NotificationEnabledToggleCommand,
+        @RequestBody @Valid command: NotificationEnabledToggleCommand,
         @RequestPassport passport: Passport
     ): ResponseEntity<NotificationEnabledToggleResult> {
         val response = techBlogSubscriptionService.notificationEnabledToggle(command, passport.memberId)

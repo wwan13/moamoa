@@ -1,5 +1,6 @@
 package server.admin.presentation
 
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import server.admin.application.AdminTechBlogService
@@ -25,7 +26,7 @@ class AdminTechBlogController(
     @PatchMapping("/{techBlogId}")
     suspend fun update(
         @PathVariable techBlogId: Long,
-        @RequestBody command: AdminUpdateTechBlogCommand
+        @RequestBody @Valid command: AdminUpdateTechBlogCommand
     ): ResponseEntity<AdminTechBlogData> {
         val response = techBlogService.update(techBlogId, command)
         return ResponseEntity.ok(response)
