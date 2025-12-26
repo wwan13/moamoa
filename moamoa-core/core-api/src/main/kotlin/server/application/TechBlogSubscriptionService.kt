@@ -41,4 +41,19 @@ class TechBlogSubscriptionService(
 
         return TechBlogSubscriptionToggleResult(subscribing)
     }
+
+    suspend fun notificationEnabledToggle(
+        command: NotificationEnabledToggleCommand,
+        memberId: Long
+    ): NotificationEnabledToggleResult {
+        val subscription = techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
+            ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
+
+        val updated = subscription.copy(
+            notificationEnabled = !subscription.notificationEnabled
+        )
+        techBlogSubscriptionRepository.save(updated)
+
+        return NotificationEnabledToggleResult(updated.notificationEnabled)
+    }
 }
