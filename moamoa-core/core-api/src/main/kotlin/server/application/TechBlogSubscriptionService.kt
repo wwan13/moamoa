@@ -1,6 +1,7 @@
 package server.application
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
@@ -63,6 +64,8 @@ class TechBlogSubscriptionService(
     suspend fun subscribingTechBlogs(memberId: Long): Flow<TechBlogData> {
         val subscriptions = techBlogSubscriptionRepository.findAllByMemberId(memberId).toList()
         val techBlogIds = subscriptions.map { it.techBlogId }
+        if (techBlogIds.isEmpty()) return emptyFlow()
+
         return techBlogRepository.findAllById(techBlogIds).map(::TechBlogData)
     }
 }
