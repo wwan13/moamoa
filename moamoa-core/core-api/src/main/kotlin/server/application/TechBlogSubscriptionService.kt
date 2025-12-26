@@ -1,5 +1,8 @@
 package server.application
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.domain.member.MemberRepository
 import server.domain.techblog.TechBlogRepository
@@ -55,5 +58,11 @@ class TechBlogSubscriptionService(
         techBlogSubscriptionRepository.save(updated)
 
         return NotificationEnabledToggleResult(updated.notificationEnabled)
+    }
+
+    suspend fun subscribingTechBlogs(memberId: Long): Flow<TechBlogData> {
+        val subscriptions = techBlogSubscriptionRepository.findAllByMemberId(memberId).toList()
+        val techBlogIds = subscriptions.map { it.techBlogId }
+        return techBlogRepository.findAllById(techBlogIds).map(::TechBlogData)
     }
 }
