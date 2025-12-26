@@ -1,5 +1,9 @@
 package server.application
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.domain.member.MemberRepository
 import server.domain.post.PostRepository
@@ -37,4 +41,11 @@ class PostBookmarkService(
         return PostBookmarkToggleResult(bookmarked)
     }
 
+    suspend fun bookmarkedPosts(memberId: Long): Flow<PostData> {
+        val postBookmarks = postBookmarkRepository.findAllByMemberId(memberId).toList()
+        val postIds = postBookmarks.map { it.postId }
+        if (postIds.isEmpty()) return emptyFlow()
+
+        return postRepository.findAllById(postIds).map(::PostData)
+    }
 }
