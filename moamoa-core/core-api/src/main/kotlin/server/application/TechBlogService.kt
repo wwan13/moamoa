@@ -9,9 +9,9 @@ import server.domain.techblog.TechBlogRepository
 class TechBlogService(
     private val techBlogRepository: TechBlogRepository
 ) {
-    suspend fun findById(id: Long): TechBlogData {
-        return techBlogRepository.findById(id)?.let(::TechBlogData)
-            ?: throw IllegalArgumentException("존재하는 tech blog가 아닙니다.")
+    suspend fun findById(techBlogId: Long): TechBlogData {
+        return techBlogRepository.findById(techBlogId)?.let(::TechBlogData)
+            ?: throw IllegalArgumentException("존재하지 않는 기술 블로그 입니다.")
     }
 
     suspend fun findAll(): List<TechBlogData> {

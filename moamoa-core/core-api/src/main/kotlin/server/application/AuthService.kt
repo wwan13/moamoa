@@ -28,7 +28,7 @@ class AuthService(
     private val accessTokenExpires = 3_600_000L
     private val refreshTokenExpires = 604_800_000L
 
-    suspend fun emailVerification(command: EmailVerificationCommand) {
+    suspend fun emailVerification(command: EmailVerificationCommand): EmailVerificationResult {
         if (memberRepository.existsByEmail(command.email)) {
             throw IllegalArgumentException("이미 존재하는 이메일 입니다.")
         }
@@ -48,6 +48,8 @@ class AuthService(
 
         mailSender.send(mailContent)
         emailVerificationCache.setVerificationCode(command.email, verificationCode)
+
+        return EmailVerificationResult(true)
     }
 
     private fun generateVerificationCode() = SecureRandom()
@@ -55,7 +57,7 @@ class AuthService(
         .toString()
         .padStart(6, '0')
 
-    suspend fun confirmEmail(command: ConfirmEmailCommand): Boolean {
+    suspend fun confirmEmail(command: ConfirmEmailCommand): ConfirmEmailResult {
         val registered = emailVerificationCache.getVerificationCode(command.email)
             ?: throw IllegalArgumentException("인증번호를 먼저 전송해 주세요.")
 
@@ -65,7 +67,7 @@ class AuthService(
 
         emailVerificationCache.setVerified(command.email)
 
-        return true
+        return ConfirmEmailResult(true)
     }
 
     suspend fun login(command: LoginCommand): AuthTokens {

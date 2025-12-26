@@ -28,8 +28,7 @@ class MemberController(
     suspend fun emailExists(
         @RequestParam email: String
     ): ResponseEntity<EmailExistsResult> {
-        val exists = memberService.emailExists(email)
-        val response = EmailExistsResult(exists)
+        val response = memberService.emailExists(email)
 
         return ResponseEntity.ok(response)
     }

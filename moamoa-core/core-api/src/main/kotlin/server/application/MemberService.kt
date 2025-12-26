@@ -39,7 +39,8 @@ class MemberService(
         }
     }
 
-    suspend fun emailExists(email: String): Boolean {
-        return memberRepository.existsByEmail(email)
+    suspend fun emailExists(email: String): EmailExistsResult {
+        val exists = memberRepository.existsByEmail(email)
+        return EmailExistsResult(exists)
     }
 }

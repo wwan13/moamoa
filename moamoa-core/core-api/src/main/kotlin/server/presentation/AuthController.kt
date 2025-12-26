@@ -24,8 +24,7 @@ class AuthController(
     suspend fun emailVerification(
         @RequestBody command: EmailVerificationCommand
     ): ResponseEntity<EmailVerificationResult> {
-        authService.emailVerification(command)
-        val response = EmailVerificationResult(true)
+        val response =  authService.emailVerification(command)
 
         return ResponseEntity.ok(response)
     }
@@ -34,8 +33,7 @@ class AuthController(
     suspend fun emailVerificationConfirm(
         @RequestBody command: ConfirmEmailCommand
     ): ResponseEntity<ConfirmEmailResult> {
-        val result = authService.confirmEmail(command)
-        val response = ConfirmEmailResult(result)
+        val response = authService.confirmEmail(command)
 
         return ResponseEntity.ok(response)
     }
