@@ -10,12 +10,10 @@ class PostService(
     private val postViewCountCache: PostViewCountCache
 ) {
 
-    suspend fun redirect(postId: Long): String {
+    suspend fun findById(postId: Long): PostData {
         val post = postRepository.findById(postId)
             ?: throw IllegalArgumentException("존재하지 않는 블로그 개시글 입니다.")
-
         postViewCountCache.incr(postId)
-
-        return post.url
+        return PostData(post)
     }
 }
