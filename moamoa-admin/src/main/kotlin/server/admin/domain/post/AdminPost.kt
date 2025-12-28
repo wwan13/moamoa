@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import support.admin.domain.BaseEntity
+import java.time.LocalDateTime
 
 @Table(name = "post")
 data class AdminPost(
@@ -25,6 +26,9 @@ data class AdminPost(
 
     @Column("url")
     val url: String,
+
+    @Column("published_at")
+    val publishedAt: LocalDateTime,
 
     @Column("tech_blog_id")
     val techBlogId: Long

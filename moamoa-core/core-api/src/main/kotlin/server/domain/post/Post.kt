@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import support.domain.BaseEntity
+import java.time.LocalDateTime
 
 @Table(name = "post")
 data class Post(
@@ -25,6 +26,9 @@ data class Post(
 
     @Column("url")
     val url: String,
+
+    @Column("published_at")
+    val publishedAt: LocalDateTime,
 
     @Column("view_count")
     val viewCount: Long = 0,

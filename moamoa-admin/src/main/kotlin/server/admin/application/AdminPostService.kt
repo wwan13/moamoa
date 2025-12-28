@@ -79,6 +79,7 @@ class AdminPostService(
                 description = it.description,
                 thumbnail = it.thumbnail ?: techBlog.icon,
                 url = it.url,
+                publishedAt = it.publishedAt,
                 techBlogId = techBlog.id
             )
         }
