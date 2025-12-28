@@ -71,6 +71,12 @@ async function safeJson(res) {
     }
 }
 
+let onLogout = () => {}
+
+export function setOnLogout(handler) {
+    onLogout = typeof handler === "function" ? handler : () => {}
+}
+
 /**
  * Reissue API 호출
  * - 너의 백엔드 스펙에 맞게 URL/바디/응답을 수정해줘.
@@ -78,30 +84,42 @@ async function safeJson(res) {
  */
 async function reissueToken(baseUrl = "") {
     const refreshToken = getRefreshToken()
-    if (!refreshToken) throw new Error("NO_REFRESH_TOKEN")
-
-    const res = await fetch(`${baseUrl}/api/auth/reissue`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }),
-    })
-
-    if (!res.ok) {
-        // reissue 자체가 실패면 로그인 다시
-        const err = (await safeJson(res)) || { status: res.status, message: "LOGIN_AGAIN" }
-        throw err
+    if (!refreshToken) {
+        logout()
+        throw new Error("NO_REFRESH_TOKEN")
     }
 
-    const data = await safeJson(res)
-    // 예: { accessToken: "..." , refreshToken?: "..." }
-    if (!data?.accessToken) throw new Error("INVALID_REISSUE_RESPONSE")
+    try {
+        const res = await fetch(`${baseUrl}/api/auth/reissue`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Refresh-Token": refreshToken,
+            },
+        })
 
-    setAccessToken(data.accessToken)
-    if (data.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken)
+        if (!res.ok) {
+            const err =
+                (await safeJson(res)) ||
+                {status: res.status, message: "LOGIN_AGAIN"}
+            throw err
+        }
 
-    return data.accessToken
+        const data = await safeJson(res)
+        if (!data?.accessToken) {
+            throw new Error("INVALID_REISSUE_RESPONSE")
+        }
+
+        setAccessToken(data.accessToken)
+        if (data.refreshToken) {
+            localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken)
+        }
+
+        return data.accessToken
+    } catch (e) {
+        onLogout()
+        throw e
+    }
 }
 
 async function ensureReissued(baseUrl) {

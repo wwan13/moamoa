@@ -8,6 +8,8 @@ import {setOnGlobalAlert, setOnLoadingChange, setOnServerError, setOnToast} from
 import GlobalSpinner from "../components/GlobalSpinner/GlobalSpinner.jsx";
 import GlobalAlertModal from "../components/alert/GlobalAlertModal.jsx";
 import GlobalToast from "../components/toast/GlobalToast.jsx";
+import {subscribingBlogsApi} from "../api/subscription.api.js";
+import Footer from "../components/Footer/Footer.jsx";
 
 const MOCK_SUBS = [
     { id: "toss", name: "Toss Tech", iconUrl: "https://avatars.githubusercontent.com/u/25682207?s=200&v=4" },
@@ -18,7 +20,6 @@ const MOCK_SUBS = [
     { id: "woowa", name: "우아한형제들", iconUrl: "https://avatars.githubusercontent.com/u/25682207?s=200&v=4" },
     { id: "woowa", name: "우아한형제들", iconUrl: "https://avatars.githubusercontent.com/u/25682207?s=200&v=4" },
     { id: "woowa", name: "우아한형제들", iconUrl: "https://avatars.githubusercontent.com/u/25682207?s=200&v=4" },
-
 ]
 
 const MOCK_POSTS = [
@@ -105,10 +106,10 @@ export default function App() {
 
     const { isLoggedIn } = useAuth()
 
-    const [posts] = useState(MOCK_POSTS)
-    const [subs] = useState(MOCK_SUBS)
+    const [posts, setPosts] = useState(MOCK_POSTS)
+    const [subs, setSubs] = useState([])
 
-    useEffect(() => {
+    useEffect( () => {
         setOnLoadingChange(setLoading)
 
         setOnServerError(({ message }) => {
@@ -122,6 +123,13 @@ export default function App() {
         })
 
         setOnToast(setToast)
+
+        const fetchSubscriptions = async () => {
+            const subsRes = await subscribingBlogsApi()
+            console.log(subsRes)
+            setSubs(subsRes)
+        }
+        fetchSubscriptions()
     }, [])
 
     return (
@@ -160,6 +168,8 @@ export default function App() {
                     <PostList posts={posts} />
                 </section>
             )}
+
+            <Footer />
         </div>
     )
 }

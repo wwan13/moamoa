@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { loginApi } from "../api/auth.api.js"
-import {showGlobalAlert, showToast} from "../api/client.js"
+import {setOnLogout, showGlobalAlert, showToast} from "../api/client.js"
 
 const AuthContext = createContext(null)
 
@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         setIsLoggedIn(Boolean(localStorage.getItem(ACCESS_TOKEN_KEY)))
+        setOnLogout(logout)
     }, [])
 
     const login = async ({ email, password }) => {
@@ -22,6 +23,8 @@ export function AuthProvider({ children }) {
         localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken)
         localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken)
         setIsLoggedIn(true)
+
+        showToast("로그인 되었습니다.")
     }
 
     const logout = () => {
@@ -29,7 +32,7 @@ export function AuthProvider({ children }) {
         localStorage.removeItem(REFRESH_TOKEN_KEY)
         setIsLoggedIn(false)
 
-        showToast("로그아웃이 완료되었습니다.")
+        showToast("로그아웃 되었습니다.")
     }
 
     return (

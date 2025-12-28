@@ -25,9 +25,9 @@ export default function Subscriptions({items = [], maxVisible = 5, onClickItem})
                             className={styles.item}
                             onClick={() => onClickItem?.(it)}
                         >
-                            <img className={styles.avatar} src="https://avatars.githubusercontent.com/u/25682207?s=200&v=4" alt={it.name}/>
-                            <span className={styles.name} title={it.name}>
-                                {it.name}
+                            <img className={styles.avatar} src={it.icon} alt={it.title}/>
+                            <span className={styles.name} title={it.title}>
+                                {it.title}
                             </span>
                         </button>
                     </li>
