@@ -1,0 +1,38 @@
+.userActions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.textButton {
+    appearance: none;
+    -webkit-appearance: none;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+
+    height: 33px;
+    padding: 0 6px;
+
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    color: #787878;
+}
+
+.textButton:hover {
+    background-color: #f3f4f6;
+    transition: .3s;
+}
+
+.textButton:focus-visible {
+    outline: none;
+    text-decoration: underline;
+}

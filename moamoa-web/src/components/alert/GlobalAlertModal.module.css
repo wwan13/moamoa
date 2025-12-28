@@ -1,0 +1,44 @@
+/* 로그인 모달 위에 뜨도록 */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 99999; /* 로그인 모달(1000)보다 높게 */
+}
+
+/* ModalShell panel과 톤 통일 */
+.panel {
+    width: 360px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+    padding: 20px;
+}
+
+.title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.message {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #374151;
+}
+
+.actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}

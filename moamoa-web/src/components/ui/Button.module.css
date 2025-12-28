@@ -1,0 +1,50 @@
+.base {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid transparent;
+}
+
+.primary {
+    height: 42px;
+    width: 100%;
+    background: #90AB8B;
+    border-color: #90AB8B;
+    color: #fff;
+    font-weight: 600;
+}
+
+.primary:hover {
+    opacity: 0.80;
+    transition: .3s;
+}
+
+.secondary {
+    height: 30px;
+    padding: 0 8px;
+    background: #f3f4f6;
+    color: #252525;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+.secondary:hover {
+    opacity: 0.80;
+    transition: .3s;
+}
+
+.link {
+    background: none;
+    border: none;
+    padding: 0;
+    height: auto;
+    color: #111827;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.base:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

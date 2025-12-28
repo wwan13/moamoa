@@ -1,0 +1,35 @@
+.header {
+    position: sticky;   /* ✅ 스크롤 따라오기 */
+    top: 0;
+    z-index: 2000;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: #fff;   /* ✅ 아래 내용 비치지 않게 */
+    padding: 12px 0;
+    margin-bottom: 20px;
+}
+
+.logoButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.logoButton:focus,
+.logoButton:focus-visible {
+    outline: none;
+}
+
+.logoImage {
+    height: 30px;
+    width: auto;
+    display: block;
+}

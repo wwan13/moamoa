@@ -1,0 +1,50 @@
+.page {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.banner {
+    margin: 36px 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.bannerImage {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 18px;
+    align-items: start;
+}
+
+.left {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+}
+
+.content {
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .left {
+        position: static;
+    }
+}
