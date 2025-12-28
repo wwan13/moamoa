@@ -21,5 +21,8 @@ data class TechBlog(
     val blogUrl: String,
 
     @Column("icon")
-    val icon: String
+    val icon: String,
+
+    @Column("subscription_count")
+    val subscriptionCount: Long = 0
 ) : BaseEntity()

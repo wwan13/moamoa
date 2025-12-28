@@ -7,20 +7,26 @@ import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.domain.member.MemberRepository
 import server.domain.techblog.TechBlogRepository
+import server.domain.techblog.TechBlogSubscribeCreatedEvent
+import server.domain.techblog.TechBlogSubscribeRemovedEvent
 import server.domain.techblogsubscription.TechBlogSubscription
 import server.domain.techblogsubscription.TechBlogSubscriptionRepository
+import server.infra.db.Transactional
+import server.infra.event.EventPublisher
 
 @Service
 class TechBlogSubscriptionService(
+    private val transactional: Transactional,
     private val techBlogSubscriptionRepository: TechBlogSubscriptionRepository,
     private val techBlogRepository: TechBlogRepository,
-    private val memberRepository: MemberRepository
+    private val memberRepository: MemberRepository,
+    private val eventPublisher: EventPublisher
 ) {
 
     suspend fun toggle(
         command: TechBlogSubscriptionToggleCommand,
         memberId: Long
-    ): TechBlogSubscriptionToggleResult {
+    ): TechBlogSubscriptionToggleResult = transactional {
         if (!memberRepository.existsById(memberId)) {
             throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
         }
@@ -31,6 +37,7 @@ class TechBlogSubscriptionService(
         val subscribing = techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
             ?.let { subscription ->
                 techBlogSubscriptionRepository.deleteById(subscription.id)
+                eventPublisher.publish(TechBlogSubscribeRemovedEvent(command.techBlogId))
                 false
             }
             ?: let {
@@ -40,16 +47,17 @@ class TechBlogSubscriptionService(
                     techBlogId = command.techBlogId
                 )
                 techBlogSubscriptionRepository.save(subscription)
+                eventPublisher.publish(TechBlogSubscribeCreatedEvent(command.techBlogId))
                 true
             }
 
-        return TechBlogSubscriptionToggleResult(subscribing)
+        TechBlogSubscriptionToggleResult(subscribing)
     }
 
     suspend fun notificationEnabledToggle(
         command: NotificationEnabledToggleCommand,
         memberId: Long
-    ): NotificationEnabledToggleResult {
+    ): NotificationEnabledToggleResult = transactional {
         val subscription = techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
             ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
 
@@ -58,7 +66,7 @@ class TechBlogSubscriptionService(
         )
         techBlogSubscriptionRepository.save(updated)
 
-        return NotificationEnabledToggleResult(updated.notificationEnabled)
+        NotificationEnabledToggleResult(updated.notificationEnabled)
     }
 
     suspend fun subscribingTechBlogs(memberId: Long): Flow<TechBlogData> {
