@@ -7,7 +7,8 @@ data class TechBlogData(
     val title: String,
     val icon: String,
     val blogUrl: String,
-    val key: String
+    val key: String,
+    val subscriptionCount: Long
 ) {
     constructor(
         techBlog: TechBlog
@@ -16,6 +17,7 @@ data class TechBlogData(
         title = techBlog.title,
         key = techBlog.key,
         icon = techBlog.icon,
-        blogUrl = techBlog.blogUrl
+        blogUrl = techBlog.blogUrl,
+        subscriptionCount = techBlog.subscriptionCount
     )
 }

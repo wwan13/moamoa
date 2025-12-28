@@ -1,19 +1,39 @@
 package server.application
 
+import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
-import server.domain.post.PostRepository
+import server.application.query.PostQueryRepository
 import server.infra.cache.PostViewCountCache
+import support.paging.Paging
+import support.paging.calculateTotalPage
 
 @Service
 class PostService(
-    private val postRepository: PostRepository,
+    private val postQueryRepository: PostQueryRepository,
     private val postViewCountCache: PostViewCountCache
 ) {
 
-    suspend fun findById(postId: Long): PostData {
-        val post = postRepository.findById(postId)
-            ?: throw IllegalArgumentException("존재하지 않는 블로그 게시글 입니다.")
+    suspend fun increaseViewCount(postId: Long): IncreaseViewCountResult {
         postViewCountCache.incr(postId)
-        return PostData(post)
+        return IncreaseViewCountResult(true)
+    }
+
+    suspend fun findByConditions(conditions: PostQueryConditions): PostList {
+        val paging = Paging(
+            size = conditions.size ?: 20,
+            page = conditions.page ?: 1
+        )
+
+        val totalCount = postQueryRepository.countByConditions()
+        val meta = ListMeta(
+            page = paging.page,
+            size = paging.size,
+            totalCount = totalCount,
+            totalPages = calculateTotalPage(totalCount, paging.size)
+        )
+
+        val posts = postQueryRepository.findAllByConditions(paging).toList()
+
+        return PostList(meta, posts)
     }
 }
