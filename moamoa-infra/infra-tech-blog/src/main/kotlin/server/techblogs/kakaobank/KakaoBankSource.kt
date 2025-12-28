@@ -51,7 +51,6 @@ class KakaoBankSource : TechBlogSource {
                     title = title,
                     description = description,
                     categories = categories,
-                    thumbnail = "",
                     publishedAt = publishedAt,
                     url = url
                 )

@@ -52,7 +52,6 @@ class WoowabrosSource : TechBlogSource {
                     title = title,
                     description = description,
                     categories = emptyList(),
-                    thumbnail = "",
                     publishedAt = publishedAt,
                     url = url
                 )
