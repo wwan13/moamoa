@@ -29,6 +29,9 @@ data class Post(
     @Column("view_count")
     val viewCount: Long = 0,
 
+    @Column("bookmark_count")
+    val bookmarkCount: Long = 0,
+
     @Column("tech_blog_id")
     val techBlogId: Long
 ) : BaseEntity()
