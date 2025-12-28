@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
-import server.utill.webclient.fetchWithPaging
-import server.utill.webclient.handlePagingFinished
-import server.utill.webclient.validateIsPagingFinished
+import server.utill.fetchWithPaging
+import server.utill.handlePagingFinished
+import server.utill.validateIsPagingFinished
 import java.time.ZonedDateTime
 
 @Component

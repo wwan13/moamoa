@@ -4,8 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import org.springframework.stereotype.Component
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
-import server.utill.jsoup.fetchWithPaging
-import server.utill.webclient.PagingFinishedException
+import server.utill.fetchWithPaging
+import server.utill.PagingFinishedException
 import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
