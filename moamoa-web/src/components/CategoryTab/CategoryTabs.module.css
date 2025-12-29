@@ -1,0 +1,72 @@
+.wrap {
+    padding-left: 40px;
+    border-left: 1px solid #e5e7eb;
+    padding-bottom: 52px;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+
+    border-bottom: 1px solid #e5e7eb;
+    padding: 6px 0 0 0;
+
+    justify-content: space-between;
+}
+
+.tabItem {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0 14px 12px 14px;
+
+    font-size: 16px;
+    font-weight: 400;
+    color: #6b7280;
+    cursor: pointer;
+
+    position: relative;
+    transition: .2s;
+}
+
+.tabItem:hover {
+    color: #252525;
+    font-weight: 600;
+}
+
+.active {
+    color: #252525;
+    font-weight: 600;
+}
+
+.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px; /* ✅ 밑줄이 border-bottom 위에 딱 붙게 */
+    height: 2px;
+    background: #252525;
+    border-radius: 2px;
+}
+
+.tabItem:focus,
+.tabItem:focus-visible {
+    outline: none;
+}
+
+.moreButton {
+    outline: none;
+    background: #ffffff;
+    border: none;
+    padding-bottom: 10px;
+    color: #6b7280;
+    font-weight: 300;
+    transition: .2s;
+}
+
+.moreButton:hover {
+    color: #252525;
+    font-weight: 500;
+}

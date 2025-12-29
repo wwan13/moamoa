@@ -1,0 +1,41 @@
+.banner {
+    margin: 16px 0 40px 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.bannerImage {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+.layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 18px;
+    align-items: start;
+}
+
+.left {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .left {
+        position: static;
+    }
+}
