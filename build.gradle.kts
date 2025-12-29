@@ -44,6 +44,7 @@ subprojects {
         implementation("org.jetbrains.kotlin:kotlin-reflect")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
         // test
         testImplementation("org.springframework.boot:spring-boot-starter-test")
