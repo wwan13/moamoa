@@ -41,6 +41,30 @@ export function showToast(message, options = {}) {
     onToast({ message, type, duration })
 }
 
+let onGlobalConfirm = () => {}
+
+export function setOnGlobalConfirm(handler) {
+    onGlobalConfirm = typeof handler === "function" ? handler : () => {}
+}
+
+export function showGlobalConfirm({
+                                      message,
+                                      title = "확인",
+                                      confirmText = "확인",
+                                      cancelText = "취소",
+                                  } = {}) {
+    return new Promise((resolve) => {
+        onGlobalConfirm({
+            title,
+            message: message ?? "계속 진행할까요?",
+            confirmText,
+            cancelText,
+            onConfirm: () => resolve(true),
+            onCancel: () => resolve(false),
+        })
+    })
+}
+
 let isRefreshing = false
 let refreshPromise = null
 
@@ -149,6 +173,8 @@ export class ApiError extends Error {
 /**
  * 공통 API 함수
  */
+const LOADING_DELAY_MS = 200 // 이 시간보다 오래 걸리면 로딩 켬
+
 export async function apiRequest(path, options = {}, config = {}) {
     const {
         retry = true,
@@ -157,7 +183,15 @@ export async function apiRequest(path, options = {}, config = {}) {
         showLoading = true,
     } = config
 
-    if (showLoading) onLoadingChange(true)
+    let loadingTimer = null
+    let loadingShown = false
+
+    if (showLoading) {
+        loadingTimer = setTimeout(() => {
+            loadingShown = true
+            onLoadingChange(true)
+        }, LOADING_DELAY_MS)
+    }
 
     try {
         const headers = new Headers(options.headers || {})
@@ -175,9 +209,7 @@ export async function apiRequest(path, options = {}, config = {}) {
             headers,
         })
 
-        if (res.ok) {
-            return await safeJson(res)
-        }
+        if (res.ok) return await safeJson(res)
 
         const errBody = (await safeJson(res)) || { status: res.status, message: "UNKNOWN" }
         const status = errBody.status ?? res.status
@@ -208,14 +240,13 @@ export async function apiRequest(path, options = {}, config = {}) {
             return await apiRequest(path, options, { ...config, retry: false })
         }
 
-        if (status === 500) {
-            onServerError({ message: "잠시 후 다시 시도해 주세요." })
-        }
+        if (status === 500) onServerError({ message: "잠시 후 다시 시도해 주세요." })
 
         const err = new ApiError({ status, message })
         onError?.(err)
         throw err
     } finally {
-        if (showLoading) onLoadingChange(false)
+        if (loadingTimer) clearTimeout(loadingTimer)
+        if (loadingShown) onLoadingChange(false)
     }
 }

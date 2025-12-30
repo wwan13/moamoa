@@ -1,0 +1,272 @@
+.wrap {
+    width: 100%;
+}
+
+/* ===== 배너 ===== */
+.info {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #3B4953;
+    border-radius: 12px;
+}
+
+.infoInner {
+    width: 1000px;
+    padding: 50px 50px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+}
+
+.textSection {
+    color: #ffffff;
+}
+
+.title {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.2;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.count {
+    font-weight: 700;
+    color: #EBF4DD;
+    font-size: 52px;
+}
+
+/* 오른쪽 CTA 박스 */
+.buttonSection {
+}
+
+.ctaText {
+    margin: 0 0 10px 0;
+    font-weight: 300;
+    color: #ffffff;
+    font-size: 13px;
+}
+
+.ctaRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.primaryButton {
+    height: 40px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    color: #ffffff;
+    background: #90AB8B;
+    margin-top: 3px;
+}
+
+.primaryButton:hover {
+    opacity: 0.80;
+    transition: .3s;
+}
+
+.primaryButton:active {
+    transform: translateY(1px);
+}
+
+.hint {
+    color: rgba(17, 24, 39, 0.7);
+    font-size: 13px;
+}
+
+/* ===== 리스트 영역 ===== */
+.listSection {
+    width: 1000px;
+    margin-top: 50px;
+}
+
+.listHeader {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search {
+    width: 700px;
+    height: 50px;
+    padding: 0 30px;
+    border-radius: 25px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    outline: none;
+}
+
+.search:focus {
+    border-color: #cbd5e1;
+}
+
+.select {
+    height: 40px;
+    padding: 0 10px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.empty {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #6D6D6D;
+    font-size: 18px;
+    margin-top: 100px;
+}
+
+.grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    display: flex;
+    width: 170px;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 30px;
+    box-sizing: border-box;
+}
+
+.logoWrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 100%;
+    overflow: hidden;
+}
+
+.logo {
+    width: 100%;
+    border-radius: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.card:hover .logo {
+    transform: scale(1.07);
+}
+
+.card:hover .blogName {
+    color: #90AB8B;;
+}
+
+.blogName {
+    margin: 20px 0 0 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    transition: 0.2s ease;
+}
+
+.subscription {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    color: #A8A8A8;
+    margin-top: 10px
+}
+
+.subscriptionCount {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 400;
+    color: #A8A8A8;
+}
+
+.subButton {
+    background: none;
+    outline: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-weight: 700;
+    color: #90AB8B;
+    font-size: 13px;
+    height: 17px;
+    line-height: 17px;
+}
+
+.subscribing {
+    background: none;
+    outline: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-weight: 700;
+    color: #A8A8A8;
+    font-size: 13px;
+    height: 17px;
+    line-height: 17px;
+}
+
+.subButton:hover {
+    background: #f9fafb;
+}
+
+.subscribing:hover {
+    background: #f9fafb;
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 900px) {
+    .infoInner {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .title {
+        font-size: 32px;
+    }
+
+    .controls {
+        width: 100%;
+    }
+
+    .search {
+        width: 100%;
+    }
+
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 520px) {
+    .title {
+        font-size: 26px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ctaRow {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

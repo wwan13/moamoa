@@ -4,17 +4,19 @@ import HeaderUser from "../HeaderUser/HeaderUser.jsx"
 import LoginModal from "../LoginModal/LoginModal.jsx"
 import SignupModal from "../SignupModal/SignupModal.jsx"
 import useAuth from "../../auth/AuthContext.jsx"
+import {useNavigate} from "react-router-dom";
 
 export default function Header() {
     const { isLoggedIn, login, logout } = useAuth()
     const [modal, setModal] = useState(null) // null | "login" | "signup"
+    const navigate = useNavigate()
 
     return (
         <header className={styles.header}>
             <button
                 type="button"
                 className={styles.logoButton}
-                onClick={() => console.log("home")}
+                onClick={() => navigate("/")}
                 aria-label="홈으로 이동"
             >
                 <img

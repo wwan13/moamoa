@@ -8,17 +8,12 @@ import { subscribingBlogsApi } from "../../api/subscription.api.js"
 import {usePagingQuery} from "../../hooks/usePagingQuery.js";
 import {postsApi} from "../../api/post.api.js";
 
-const MOCK_POSTS = [
-    { id: "1", title: "예시 글 제목", summary: "예시 요약 텍스트…", category: "개발", publishedAt: "2025-12-27" },
-    { id: "2", title: "또 다른 글", summary: "카테고리/태그로 필터링 되는 리스트", category: "프로덕트", publishedAt: "2025-12-26" },
-]
-
 export default function MainPage() {
     const { isLoggedIn } = useAuth()
     const { page, size, setPage } = usePagingQuery()
 
     const [totalPages, setTotalPages] = useState(1)
-    const [posts, setPosts] = useState(MOCK_POSTS)
+    const [posts, setPosts] = useState([])
     const [subs, setSubs] = useState([])
 
     useEffect(() => {

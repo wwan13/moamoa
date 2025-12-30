@@ -12,3 +12,17 @@ export function subscribingBlogsApi(onError) {
         }
     )
 }
+
+export function subscriptionToggleApi(techBlogId, onError) {
+    return apiRequest(
+        "/api/tech-blog-subscription",
+        {
+            method: "POST",
+            body: JSON.stringify({ techBlogId})
+        },
+        {
+            onError: onError ?? ((err) => {
+            }),
+        }
+    )
+}
