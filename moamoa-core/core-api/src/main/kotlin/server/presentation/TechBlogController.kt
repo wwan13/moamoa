@@ -14,11 +14,11 @@ class TechBlogController(
     private val techBlogService: TechBlogService
 ) {
 
-    @GetMapping("/{techBlogId}")
+    @GetMapping("/{techBlogKey}")
     suspend fun findById(
-        @PathVariable techBlogId: Long
+        @PathVariable techBlogKey: String
     ): ResponseEntity<TechBlogData> {
-        val response = techBlogService.findById(techBlogId)
+        val response = techBlogService.findByKey(techBlogKey)
         return ResponseEntity.ok(response)
     }
 

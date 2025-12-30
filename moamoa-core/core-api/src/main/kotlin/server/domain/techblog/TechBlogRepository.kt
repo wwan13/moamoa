@@ -6,6 +6,8 @@ import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.data.repository.query.Param
 
 interface TechBlogRepository : CoroutineCrudRepository<TechBlog, Long> {
+    suspend fun findByKey(key: String): TechBlog?
+
     @Modifying
     @Query(
         """
