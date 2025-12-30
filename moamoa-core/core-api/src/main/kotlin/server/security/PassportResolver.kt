@@ -10,6 +10,7 @@ import reactor.core.publisher.Mono
 import server.domain.member.MemberRole
 import server.jwt.TokenProvider
 import server.jwt.TokenType
+import kotlin.reflect.jvm.kotlinFunction
 
 @Component
 class PassportResolver(
@@ -19,7 +20,6 @@ class PassportResolver(
     override fun supportsParameter(parameter: MethodParameter): Boolean {
         val hasPassportAnnotation = parameter.hasParameterAnnotation(RequestPassport::class.java)
         val isPassportType = Passport::class.java.isAssignableFrom(parameter.parameterType)
-
         return hasPassportAnnotation && isPassportType
     }
 
@@ -27,24 +27,38 @@ class PassportResolver(
         parameter: MethodParameter,
         bindingContext: BindingContext,
         exchange: ServerWebExchange
-    ): Mono<Any> {
-        val headers = exchange.request.headers
-        val bearerToken = headers[HttpHeaders.AUTHORIZATION]?.firstOrNull()
-            ?: return Mono.error(UnauthorizedException())
+    ): Mono<Any?> {
+        val isNullable = parameter
+            .method
+            ?.kotlinFunction
+            ?.parameters
+            ?.firstOrNull { it.name == parameter.parameterName }
+            ?.type
+            ?.isMarkedNullable == true
 
+        fun unauthorized(): Mono<Any?> =
+            if (isNullable) Mono.justOrEmpty(null)
+            else Mono.error(UnauthorizedException())
+
+        val bearerToken = exchange.request.headers
+            .getFirst(HttpHeaders.AUTHORIZATION)
+            ?: return unauthorized()
         if (!bearerToken.startsWith("Bearer ", ignoreCase = true)) {
-            return Mono.error(UnauthorizedException())
+            return unauthorized()
         }
         val accessToken = bearerToken.removePrefix("Bearer").trim()
 
         val principal = tokenProvider.decodeToken(accessToken)
         if (principal.type != TokenType.ACCESS) {
-            return Mono.error(UnauthorizedException())
+            return unauthorized()
         }
+        val role = principal.role ?: return unauthorized()
 
-        val role = principal.role ?: return Mono.error(UnauthorizedException())
-        val passport = Passport(principal.memberId, MemberRole.valueOf(role))
-
-        return Mono.just(passport)
+        return Mono.just(
+            Passport(
+                memberId = principal.memberId,
+                role = MemberRole.valueOf(role)
+            )
+        )
     }
 }

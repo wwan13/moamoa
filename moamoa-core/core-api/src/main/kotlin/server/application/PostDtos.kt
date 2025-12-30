@@ -47,23 +47,11 @@ data class PostSummary(
     val thumbnail: String,
     val url: String,
     val publishedAt: LocalDateTime,
+    val isBookmarked: Boolean,
     val viewCount: Long,
     val bookmarkCount: Long,
     val techBlog: TechBlogData
-) {
-    constructor(post: Post, techBlog: TechBlog) : this(
-        id = post.id,
-        key = post.key,
-        title = post.title,
-        description = post.description,
-        thumbnail = post.thumbnail,
-        url = post.url,
-        publishedAt = post.publishedAt,
-        viewCount = post.viewCount,
-        bookmarkCount = post.bookmarkCount,
-        techBlog = TechBlogData(techBlog)
-    )
-}
+)
 
 data class PostList(
     val meta: ListMeta,

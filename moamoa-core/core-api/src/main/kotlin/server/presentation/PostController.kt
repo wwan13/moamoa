@@ -11,6 +11,8 @@ import server.application.PostData
 import server.application.PostList
 import server.application.PostQueryConditions
 import server.application.PostService
+import server.security.Passport
+import server.security.RequestPassport
 
 @RestController
 @RequestMapping("/api/post")
@@ -29,9 +31,10 @@ class PostController(
 
     @GetMapping
     suspend fun findByConditions(
-        postQueryConditions: PostQueryConditions
+        postQueryConditions: PostQueryConditions,
+        @RequestPassport passport: Passport?
     ): ResponseEntity<PostList> {
-        val response = postService.findByConditions(postQueryConditions)
+        val response = postService.findByConditions(postQueryConditions, passport)
 
         return ResponseEntity.ok(response)
     }
