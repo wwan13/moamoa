@@ -28,7 +28,9 @@ class PostService(
             page = conditions.page ?: 1
         )
 
-        val totalCount = postQueryRepository.countByConditions()
+        val totalCount = postQueryRepository.countByConditions(
+            techBlogId = conditions.techBlogId
+        )
         val meta = ListMeta(
             page = paging.page,
             size = paging.size,
@@ -36,7 +38,11 @@ class PostService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        val posts = postQueryRepository.findAllByConditions(paging, passport?.memberId).toList()
+        val posts = postQueryRepository.findAllByConditions(
+            paging = paging,
+            techBlogId = conditions.techBlogId,
+            memberId = passport?.memberId
+        ).toList()
 
         return PostList(meta, posts)
     }

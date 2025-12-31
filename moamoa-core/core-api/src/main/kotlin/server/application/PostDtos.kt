@@ -36,7 +36,8 @@ data class PostData(
 
 data class PostQueryConditions(
     val page: Long?,
-    val size: Long?
+    val size: Long?,
+    val techBlogId: Long?
 )
 
 data class PostSummary(
