@@ -1,0 +1,97 @@
+.wrap {
+    /*flex: 1;*/
+    /*display: grid;*/
+    /*grid-template-columns: 180px 1fr;*/
+}
+
+.left {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+}
+
+.blogInfo {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+    padding-bottom: 24px;
+    /*border-bottom: 1px solid #e5e7eb;*/
+}
+
+.posts {
+}
+
+.iconWrap {
+    box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.05);
+    border-radius: 100%;
+}
+
+.icon {
+    width: 140px;
+    border-radius: 100%;
+}
+
+.detail {
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.blogDetail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.blogTitle {
+    font-size: 24px;
+    font-weight: 600;
+    color: #252525;
+    margin: 0 0 4px 0;
+}
+
+.blogStats {
+    font-size: 14px;
+    font-weight: 300;
+    margin: 0;
+    color: #A8A8A8;
+}
+
+.blogLink {
+    font-size: 14px;
+    color: #A8A8A8;
+    text-decoration: underline;
+    outline: none;
+    border: none;
+    background-color: #fff;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+}
+
+.subButton {
+    outline: none;
+    border: none;
+    background-color: #90AB8B;
+    width: 64px;
+    height: 32px;
+    border-radius: 18px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer
+}
+
+.subIngButton {
+    outline: none;
+    border: 2px solid #90AB8B;
+    background-color: #ffffff;
+    width: 84px;
+    height: 32px;
+    border-radius: 18px;
+    color: #90AB8B;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer
+}

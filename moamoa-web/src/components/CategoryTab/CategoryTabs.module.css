@@ -1,5 +1,9 @@
 .wrap {
     padding-bottom: 52px;
+    /*position: sticky;*/
+    /*top: calc(60px + 16px);*/
+    /*background-color: #ffffff;*/
+    /*z-index: 10000;*/
 }
 
 .tab {

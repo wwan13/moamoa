@@ -1,7 +1,7 @@
 import styles from "./CategoryTabs.module.css"
 import {useNavigate} from "react-router-dom";
 
-export default function CategoryTabs({items, value, onChange}) {
+export default function CategoryTabs({items, value, onChange, isBlogDetail}) {
     const navigate = useNavigate()
 
     return (

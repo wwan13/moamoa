@@ -23,8 +23,17 @@ export function setOnGlobalAlert(handler) {
     onGlobalAlert = typeof handler === "function" ? handler : () => {}
 }
 
-export function showGlobalAlert(message) {
-    onGlobalAlert({ message: message ?? "알 수 없는 오류가 발생했어요." })
+export function showGlobalAlert(params) {
+    const { message, title = "오류" } =
+        typeof params === "string" ? { message: params } : params ?? {}
+
+    return new Promise((resolve) => {
+        onGlobalAlert({
+            title,
+            message: message ?? "알 수 없는 오류가 발생했어요.",
+            onClose: resolve, // ✅ 닫힐 때 resolve
+        })
+    })
 }
 
 let onToast = () => {}

@@ -1,4 +1,6 @@
 .wrap {
+    position: sticky;
+    top: calc(60px + 16px); /* 헤더 + 여유 */
     display: flex;
     flex-direction: column;
     gap: 16px;

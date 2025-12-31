@@ -1,17 +1,21 @@
 .header {
     width: 1000px;
-    position: sticky;   /* ✅ 스크롤 따라오기 */
+
+    position: fixed;
     top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+
     z-index: 2000;
 
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    background: #fff;   /* ✅ 아래 내용 비치지 않게 */
+    background: #fff;
     padding: 12px 0;
 
-    margin-bottom: 6px;
+    margin-bottom: 0;
 }
 
 .logoButton {

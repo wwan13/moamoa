@@ -20,8 +20,11 @@ import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal.jsx"
 export default function App() {
     const [loading, setLoading] = useState(false)
 
+    // ✅ alert 상태 (Promise resolve용 onClose 포함)
     const [alertOpen, setAlertOpen] = useState(false)
+    const [alertTitle, setAlertTitle] = useState("오류")
     const [alertMessage, setAlertMessage] = useState("")
+    const [alertOnClose, setAlertOnClose] = useState(() => () => setAlertOpen(false))
 
     const [toast, setToast] = useState(null)
 
@@ -39,19 +42,30 @@ export default function App() {
     useEffect(() => {
         setOnLoadingChange(setLoading)
 
+        // 서버 에러(기존 방식 유지: 단순 alert)
         setOnServerError(({ message }) => {
+            setAlertTitle("오류")
             setAlertMessage(message)
+            setAlertOnClose(() => () => setAlertOpen(false))
             setAlertOpen(true)
         })
 
-        setOnGlobalAlert(({ message }) => {
+        // ✅ Promise 기반 GlobalAlert 연결
+        setOnGlobalAlert(({ title, message, onClose }) => {
+            setAlertTitle(title ?? "오류")
             setAlertMessage(message)
+
+            setAlertOnClose(() => () => {
+                setAlertOpen(false)
+                onClose?.() // ✅ showGlobalAlert() resolve
+            })
+
             setAlertOpen(true)
         })
 
         setOnToast(setToast)
 
-        // ✅ 전역 confirm 연결
+        // ✅ Promise 기반 GlobalConfirm 연결
         setOnGlobalConfirm(({ title, message, confirmText, cancelText, onConfirm, onCancel }) => {
             setConfirmState({
                 title,
@@ -71,8 +85,9 @@ export default function App() {
 
             <GlobalAlertModal
                 open={alertOpen}
+                title={alertTitle}
                 message={alertMessage}
-                onClose={() => setAlertOpen(false)}
+                onClose={alertOnClose}
             />
 
             <GlobalConfirmModal

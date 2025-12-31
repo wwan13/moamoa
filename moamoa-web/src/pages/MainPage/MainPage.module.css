@@ -1,22 +1,14 @@
 .banner {
-    margin-bottom: 40px;
-    border-radius: 12px;
-    overflow: hidden;
-
-    /*width: 100vw;               !* 👈 브라우저 전체 가로 *!*/
-    /*margin-left: calc(50% - 50vw); !* 👈 중앙 정렬된 레이아웃 탈출 *!*/
-    /*margin-right: calc(50% - 50vw);*/
-    /*height: 280px;*/
-    /*background: #3B4953;*/
-
+    height: 120px;
+    background: #ffffff;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 }
 
 .bannerImage {
+    border-radius: 12px;
     width: 100%;
-    height: 120px;
     object-fit: cover;
     display: block;
 }
@@ -27,11 +19,13 @@
     grid-template-columns: 180px 1fr;
     gap: 32px;
     align-items: start;
+    padding-top: 30px;
+    background: #ffffff;
 }
 
 .left {
     position: sticky;
-    top: 16px;
+    top: calc(60px + 16px);
     align-self: start;
 }
 

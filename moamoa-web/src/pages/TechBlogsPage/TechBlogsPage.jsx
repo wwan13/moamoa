@@ -5,11 +5,13 @@ import { techBlogsApi } from "../../api/techblog.api.js"
 import useAuth from "../../auth/AuthContext.jsx"
 import { subscribingBlogsApi, subscriptionToggleApi } from "../../api/subscription.api.js"
 import {showGlobalConfirm, showToast} from "../../api/client.js";
+import {useNavigate} from "react-router-dom";
 
 export default function TechBlogsPage() {
+    const navigate = useNavigate()
     const { isLoggedIn } = useAuth()
 
-    const [blogCount, setBlogCount] = useState(1)
+    const [blogCount, setBlogCount] = useState(0)
     const [blogs, setBlogs] = useState([])
     const [subscriptions, setSubscriptions] = useState([])
     const [search, setSearch] = useState("")
@@ -134,14 +136,18 @@ export default function TechBlogsPage() {
                             const isSubscribed = subscribedBlogIdSet.has(blog.id)
 
                             return (
-                                <article key={blog.id} className={styles.card}>
+                                <article
+                                    key={blog.id}
+                                    className={styles.card}
+                                    onClick={() => navigate(`/${blog.key}`)}
+                                >
                                     <div className={styles.logoWrap}>
                                         <img src={blog.icon} alt="thumbnail" className={styles.logo} />
                                     </div>
                                     <p className={styles.blogName}>{blog.title}</p>
 
                                     <div className={styles.subscription}>
-                                        <p className={styles.subscriptionCount}>구독자 3명</p>
+                                        <p className={styles.subscriptionCount}>구독자 {blog.subscriptionCount}명</p>
 
                                         {isLoggedIn && (
                                             <>

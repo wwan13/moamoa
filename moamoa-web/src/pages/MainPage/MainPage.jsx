@@ -24,7 +24,7 @@ export default function MainPage() {
         fetchSubscriptions()
 
         const fetchPosts = async () => {
-            const postsRes = await postsApi(page)
+            const postsRes = await postsApi({ page: page })
             setTotalPages(postsRes.meta.totalPages)
             setPosts(postsRes.posts)
             window.scrollTo({ top: 0, behavior: "smooth" })
@@ -54,6 +54,7 @@ export default function MainPage() {
                             page={page}
                             totalPages={totalPages}
                             onChangePage={setPage}
+                            isBlogDetail={false}
                         />
                     </section>
                 </div>

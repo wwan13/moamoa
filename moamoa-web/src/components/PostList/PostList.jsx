@@ -18,6 +18,7 @@ export default function PostList({
                                      onChangePage,
                                      category,
                                      onChangeCategory,
+                                     isBlogDetail
                                  }) {
 
     return (
@@ -25,12 +26,12 @@ export default function PostList({
             <CategoryTabs
                 items={CATEGORY_ITEMS}
                 value="ALL"
-                onChange={(next) => onChangeCategory(next)} // ✅ 여기서 URL query 바꾸면 됨
+                onChange={(next) => onChangeCategory(next)}
             />
 
             <div className={styles.list}>
                 {posts.map((p) => (
-                    <PostItem key={p.id} post={p}/>
+                    <PostItem key={p.id} post={p} isBlogDetail={isBlogDetail}/>
                 ))}
             </div>
 

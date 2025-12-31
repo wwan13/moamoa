@@ -4,6 +4,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    padding-top: 60px;
 }
 
 /* ✅ Routes 영역이 남는 높이를 먹어서 푸터가 바닥에 붙게 */

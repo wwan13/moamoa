@@ -2,19 +2,22 @@ import styles from "./PostItem.module.css"
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder"
 import BookmarkIcon from "@mui/icons-material/Bookmark"
 import VisibilityIcon from "@mui/icons-material/Visibility"
-import { postsViewCountApi } from "../../api/post.api.js"
-import { formatRelativeDate } from "../../utils/date.js"
+import {postsViewCountApi} from "../../api/post.api.js"
+import {formatRelativeDate} from "../../utils/date.js"
 import {bookmarkToggleApi} from "../../api/bookmakr.api.js";
 import {useEffect, useState} from "react";
 import useAuth from "../../auth/AuthContext.jsx";
+import {useNavigate} from "react-router-dom";
 
-export default function PostItem({ post }) {
+export default function PostItem({post, isBlogDetail}) {
+    const navigate = useNavigate()
     const {isLoggedIn} = useAuth()
     const [bookmarked, setBookmarked] = useState(post.bookmarked)
     const [bookmarkCount, setBookmarkCount] = useState(post.bookmarkCount)
     const [viewCount, setViewCount] = useState(post.viewCount)
 
     useEffect(() => {
+        console.log(isBlogDetail)
         setBookmarked(post.isBookmarked)
         setBookmarkCount(post.bookmarkCount)
         setViewCount(post.viewCount)
@@ -77,9 +80,9 @@ export default function PostItem({ post }) {
                         aria-label={post.bookmarked ? "북마크 해제" : "북마크"}
                     >
                         {post.bookmarked ? (
-                            <BookmarkIcon fontSize="small" />
+                            <BookmarkIcon fontSize="small"/>
                         ) : (
-                            <BookmarkBorderIcon fontSize="small" />
+                            <BookmarkBorderIcon fontSize="small"/>
                         )}
                     </button>
                 )}
@@ -93,35 +96,37 @@ export default function PostItem({ post }) {
 
                 <div className={styles.metaRow}>
                     <div className={styles.source}>
-                        <a
-                            href={post.sourceUrl}
-                            rel="noopener noreferrer"
-                            className={styles.sourceLink}
-                            onClick={(e) => {
-                                stop(e)
-                                window.open(post.sourceUrl, "_blank", "noopener,noreferrer")
-                            }}
-                        >
-                            <img
-                                src={post.techBlog?.icon || ""}
-                                alt={post.techBlog?.title || ""}
-                                className={styles.sourceIcon}
-                            />
-                            <span className={styles.sourceName}>{post.techBlog?.title || ""}</span>
-                        </a>
+                        {!isBlogDetail &&
+                            <>
+                                <div
+                                    className={styles.sourceLink}
+                                    onClick={(e) => {
+                                        stop(e)
+                                        navigate(`/${post.techBlog.key}`)
+                                    }}
+                                >
+                                    <img
+                                        src={post.techBlog?.icon || ""}
+                                        alt={post.techBlog?.title || ""}
+                                        className={styles.sourceIcon}
+                                    />
+                                    <span className={styles.sourceName}>{post.techBlog?.title || ""}</span>
+                                </div>
 
-                        <span className={styles.dot}>·</span>
+                                <span className={styles.dot}>·</span>
+                            </>
+                        }
                         <time className={styles.date}>{formatRelativeDate(post.publishedAt)}</time>
                     </div>
 
                     <div className={styles.stats}>
             <span className={styles.stat}>
-              <BookmarkBorderIcon fontSize="inherit" />
+              <BookmarkBorderIcon fontSize="inherit"/>
                 {bookmarkCount}
             </span>
                         <span className={styles.dot}>·</span>
                         <span className={styles.stat}>
-              <VisibilityIcon fontSize="inherit" />
+              <VisibilityIcon fontSize="inherit"/>
                             {viewCount}
             </span>
                     </div>
