@@ -66,6 +66,7 @@
     color: #6b7280;
     font-weight: 300;
     transition: .2s;
+    cursor: pointer;
 }
 
 .moreButton:hover {

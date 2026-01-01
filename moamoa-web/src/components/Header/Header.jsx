@@ -7,7 +7,7 @@ import useAuth from "../../auth/AuthContext.jsx"
 import {useNavigate} from "react-router-dom";
 
 export default function Header() {
-    const { isLoggedIn, login, logout } = useAuth()
+    const { isLoggedIn, login, logout, authModal, openLogin, openSignup, closeAuthModal } = useAuth()
     const [modal, setModal] = useState(null) // null | "login" | "signup"
     const navigate = useNavigate()
 
@@ -28,25 +28,9 @@ export default function Header() {
 
             <HeaderUser
                 isLoggedIn={isLoggedIn}
-                onClickLogin={() => setModal("login")}
-                onClickLogout={() => logout()}
+                onClickLogin={openLogin}
+                onClickLogout={logout}
                 onClickMyPage={() => console.log("마이페이지")}
-            />
-
-            <LoginModal
-                open={modal === "login"}
-                onClose={() => setModal(null)}
-                onSubmit={async (form) => {
-                    await login(form)
-                    setModal(null)
-                }}
-                onClickSignup={() => setModal("signup")}
-            />
-
-            <SignupModal
-                open={modal === "signup"}
-                onClose={() => setModal(null)}
-                onClickLogin={() => setModal("login")}
             />
         </header>
     )

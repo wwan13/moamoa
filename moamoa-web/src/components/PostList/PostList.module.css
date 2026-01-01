@@ -11,3 +11,12 @@
     justify-content: center;
     margin-top: 24px;
 }
+
+.empty {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #6D6D6D;
+    font-size: 18px;
+}

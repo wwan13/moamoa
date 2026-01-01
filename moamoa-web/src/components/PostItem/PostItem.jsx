@@ -11,7 +11,7 @@ import {useNavigate} from "react-router-dom";
 
 export default function PostItem({post, isBlogDetail}) {
     const navigate = useNavigate()
-    const {isLoggedIn} = useAuth()
+    const { isLoggedIn, openLogin } = useAuth()
     const [bookmarked, setBookmarked] = useState(post.bookmarked)
     const [bookmarkCount, setBookmarkCount] = useState(post.bookmarkCount)
     const [viewCount, setViewCount] = useState(post.viewCount)
@@ -35,6 +35,11 @@ export default function PostItem({post, isBlogDetail}) {
     }
 
     const onToggleBookmark = async (postId) => {
+        if (!isLoggedIn) {
+            openLogin()
+            return
+        }
+
         const next = !bookmarked
 
         // optimistic (함수형 업데이트로)
@@ -68,24 +73,21 @@ export default function PostItem({post, isBlogDetail}) {
                     alt="thumbnail"
                     className={styles.thumbnailImage}
                 />
-
-                {isLoggedIn && (
-                    <button
-                        type="button"
-                        className={styles.bookmarkButton}
-                        onClick={(e) => {
-                            stop(e)
-                            onToggleBookmark(post.id)
-                        }}
-                        aria-label={post.bookmarked ? "북마크 해제" : "북마크"}
-                    >
-                        {post.bookmarked ? (
-                            <BookmarkIcon fontSize="small"/>
-                        ) : (
-                            <BookmarkBorderIcon fontSize="small"/>
-                        )}
-                    </button>
-                )}
+                <button
+                    type="button"
+                    className={styles.bookmarkButton}
+                    onClick={(e) => {
+                        stop(e)
+                        onToggleBookmark(post.id)
+                    }}
+                    aria-label={post.bookmarked ? "북마크 해제" : "북마크"}
+                >
+                    {post.bookmarked ? (
+                        <BookmarkIcon fontSize="small"/>
+                    ) : (
+                        <BookmarkBorderIcon fontSize="small"/>
+                    )}
+                </button>
             </div>
 
             <div className={styles.postInfo}>

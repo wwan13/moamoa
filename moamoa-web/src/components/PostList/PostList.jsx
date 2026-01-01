@@ -30,11 +30,18 @@ export default function PostList({
             />
 
             <div className={styles.list}>
-                {posts.map((p) => (
-                    <PostItem key={p.id} post={p} isBlogDetail={isBlogDetail}/>
-                ))}
+                {
+                    posts.length === 0 ? (
+                        <div className={styles.empty}>
+                            <p>게시글이 존재하지 않습니다.</p>
+                        </div>
+                    ) : (
+                        posts.map((p) => (
+                            <PostItem key={p.id} post={p} isBlogDetail={isBlogDetail}/>
+                        ))
+                    )
+                }
             </div>
-
             <div className={styles.paginationWrap}>
                 <Pagination
                     count={totalPages}

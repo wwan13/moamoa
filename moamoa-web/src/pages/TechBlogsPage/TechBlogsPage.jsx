@@ -9,7 +9,7 @@ import {useNavigate} from "react-router-dom";
 
 export default function TechBlogsPage() {
     const navigate = useNavigate()
-    const { isLoggedIn } = useAuth()
+    const { isLoggedIn, openLogin } = useAuth()
 
     const [blogCount, setBlogCount] = useState(0)
     const [blogs, setBlogs] = useState([])
@@ -51,6 +51,11 @@ export default function TechBlogsPage() {
     }, [blogs, search])
 
     const subscriptionToggle = async (techBlogId) => {
+        if (!isLoggedIn) {
+            openLogin()
+            return
+        }
+
         const wasSubscribed = subscribedBlogIdSet.has(techBlogId)
 
         // ✅ 구독 해제는 "먼저" 컨펌
@@ -128,7 +133,7 @@ export default function TechBlogsPage() {
 
                 {filteredBlogs.length === 0 ? (
                     <div className={styles.empty}>
-                        <p>검색 결과가 없습니다</p>
+                        <p>기술 블로그가 존재하지 않습니다.</p>
                     </div>
                 ) : (
                     <div className={styles.grid}>
@@ -149,20 +154,16 @@ export default function TechBlogsPage() {
                                     <div className={styles.subscription}>
                                         <p className={styles.subscriptionCount}>구독자 {blog.subscriptionCount}명</p>
 
-                                        {isLoggedIn && (
-                                            <>
-                                                <span>·</span>
-                                                <button
-                                                    className={isSubscribed ? styles.subscribing : styles.subButton}
-                                                    onClick={(e) => {
-                                                        stop(e)
-                                                        subscriptionToggle(blog.id)
-                                                    }}
-                                                >
-                                                    {isSubscribed ? "구독중" : "구독"}
-                                                </button>
-                                            </>
-                                        )}
+                                        <span>·</span>
+                                        <button
+                                            className={isSubscribed ? styles.subscribing : styles.subButton}
+                                            onClick={(e) => {
+                                                stop(e)
+                                                subscriptionToggle(blog.id)
+                                            }}
+                                        >
+                                            {isSubscribed ? "구독중" : "구독"}
+                                        </button>
                                     </div>
                                 </article>
                             )

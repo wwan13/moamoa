@@ -16,6 +16,9 @@ import GlobalSpinner from "../components/GlobalSpinner/GlobalSpinner.jsx"
 import GlobalAlertModal from "../components/alert/GlobalAlertModal.jsx"
 import GlobalToast from "../components/toast/GlobalToast.jsx"
 import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal.jsx"
+import useAuth from "../auth/AuthContext.jsx";
+import SignupModal from "../components/SignupModal/SignupModal.jsx";
+import LoginModal from "../components/LoginModal/LoginModal.jsx";
 
 export default function App() {
     const [loading, setLoading] = useState(false)
@@ -38,6 +41,8 @@ export default function App() {
         onConfirm: () => {},
         onCancel: () => {},
     })
+
+    const { isLoggedIn, login, logout, authModal, openLogin, openSignup, closeAuthModal } = useAuth()
 
     useEffect(() => {
         setOnLoadingChange(setLoading)
@@ -107,6 +112,19 @@ export default function App() {
             />
 
             <GlobalToast toast={toast} onClose={() => setToast(null)} />
+
+            <LoginModal
+                open={authModal === "login"}
+                onClose={closeAuthModal}
+                onSubmit={login}
+                onClickSignup={openSignup}
+            />
+
+            <SignupModal
+                open={authModal === "signup"}
+                onClose={closeAuthModal}
+                onClickLogin={openLogin}
+            />
 
             <header>
                 <Header />

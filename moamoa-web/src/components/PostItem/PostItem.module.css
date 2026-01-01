@@ -3,6 +3,7 @@
     display: flex;
     align-items: flex-start;
     gap: 28px;
+    cursor: pointer;
 }
 
 /* 썸네일 */

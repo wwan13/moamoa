@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { loginApi } from "../api/auth.api.js"
-import {setOnLogout, showGlobalAlert, showToast} from "../api/client.js"
+import { setOnLogout, showGlobalAlert, showToast } from "../api/client.js"
 
 const AuthContext = createContext(null)
 
@@ -10,10 +10,17 @@ const REFRESH_TOKEN_KEY = "refreshToken"
 export function AuthProvider({ children }) {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
 
+    // null | "login" | "signup"
+    const [authModal, setAuthModal] = useState(null)
+
     useEffect(() => {
         setIsLoggedIn(Boolean(localStorage.getItem(ACCESS_TOKEN_KEY)))
         setOnLogout(logout)
     }, [])
+
+    const openLogin = () => setAuthModal("login")
+    const openSignup = () => setAuthModal("signup")
+    const closeAuthModal = () => setAuthModal(null)
 
     const login = async ({ email, password }) => {
         const res = await loginApi(email, password, () => {
@@ -25,6 +32,7 @@ export function AuthProvider({ children }) {
         setIsLoggedIn(true)
 
         showToast("로그인 되었습니다.")
+        closeAuthModal() // ✅ 로그인 성공하면 모달 닫기
     }
 
     const logout = () => {
@@ -36,7 +44,18 @@ export function AuthProvider({ children }) {
     }
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
+        <AuthContext.Provider
+            value={{
+                isLoggedIn,
+                login,
+                logout,
+
+                authModal,
+                openLogin,
+                openSignup,
+                closeAuthModal,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     )
