@@ -98,7 +98,7 @@ class PostQueryRepository(
                     publishedAt = row.get("published_at", LocalDateTime::class.java) ?: LocalDateTime.MIN,
                     viewCount = row.get("post_view_count", Long::class.java) ?: 0L,
                     bookmarkCount = row.get("post_bookmark_count", Long::class.java) ?: 0L,
-                    isBookmarked = (row.get("is_bookmarked", Int::class.java) == 0),
+                    isBookmarked = (row.get("is_bookmarked", Int::class.java) == 1),
                     techBlog = TechBlogData(
                         id = row.get("tech_blog_id", Long::class.java) ?: 0L,
                         title = row.get("tech_blog_title", String::class.java).orEmpty(),
