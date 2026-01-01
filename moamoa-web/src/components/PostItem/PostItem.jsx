@@ -17,7 +17,6 @@ export default function PostItem({post, isBlogDetail}) {
     const [viewCount, setViewCount] = useState(post.viewCount)
 
     useEffect(() => {
-        console.log(isBlogDetail)
         setBookmarked(post.isBookmarked)
         setBookmarkCount(post.bookmarkCount)
         setViewCount(post.viewCount)
