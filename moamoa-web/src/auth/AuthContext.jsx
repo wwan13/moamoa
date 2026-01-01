@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { loginApi } from "../api/auth.api.js"
 import { setOnLogout, showGlobalAlert, showToast } from "../api/client.js"
+import {useNavigate} from "react-router-dom";
 
 const AuthContext = createContext(null)
 
@@ -8,13 +9,17 @@ const ACCESS_TOKEN_KEY = "accessToken"
 const REFRESH_TOKEN_KEY = "refreshToken"
 
 export function AuthProvider({ children }) {
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const [isLoggedIn, setIsLoggedIn] = useState(() =>
+        Boolean(localStorage.getItem("accessToken"))
+    )
 
     // null | "login" | "signup"
     const [authModal, setAuthModal] = useState(null)
 
+    const navigate = useNavigate()
+
     useEffect(() => {
-        setIsLoggedIn(Boolean(localStorage.getItem(ACCESS_TOKEN_KEY)))
+        // setIsLoggedIn(Boolean(localStorage.getItem(ACCESS_TOKEN_KEY)))
         setOnLogout(logout)
     }, [])
 
@@ -40,6 +45,7 @@ export function AuthProvider({ children }) {
         localStorage.removeItem(REFRESH_TOKEN_KEY)
         setIsLoggedIn(false)
 
+        navigate("/")
         showToast("로그아웃 되었습니다.")
     }
 

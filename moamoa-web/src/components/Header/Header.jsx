@@ -1,14 +1,10 @@
-import { useState } from "react"
 import styles from "./Header.module.css"
 import HeaderUser from "../HeaderUser/HeaderUser.jsx"
-import LoginModal from "../LoginModal/LoginModal.jsx"
-import SignupModal from "../SignupModal/SignupModal.jsx"
 import useAuth from "../../auth/AuthContext.jsx"
 import {useNavigate} from "react-router-dom";
 
 export default function Header() {
-    const { isLoggedIn, login, logout, authModal, openLogin, openSignup, closeAuthModal } = useAuth()
-    const [modal, setModal] = useState(null) // null | "login" | "signup"
+    const { isLoggedIn, logout, openLogin } = useAuth()
     const navigate = useNavigate()
 
     return (
@@ -30,7 +26,7 @@ export default function Header() {
                 isLoggedIn={isLoggedIn}
                 onClickLogin={openLogin}
                 onClickLogout={logout}
-                onClickMyPage={() => console.log("마이페이지")}
+                onClickMyPage={() => navigate("/my")}
             />
         </header>
     )
