@@ -8,16 +8,16 @@ import {bookmarkToggleApi} from "../../api/bookmakr.api.js";
 import {useEffect, useState} from "react";
 import useAuth from "../../auth/AuthContext.jsx";
 import {useNavigate} from "react-router-dom";
+import {showToast} from "../../api/client.js";
 
 export default function PostItem({post, isBlogDetail}) {
     const navigate = useNavigate()
     const { isLoggedIn, openLogin } = useAuth()
-    const [bookmarked, setBookmarked] = useState(post.bookmarked)
+    const [bookmarked, setBookmarked] = useState(post.isBookmarked)
     const [bookmarkCount, setBookmarkCount] = useState(post.bookmarkCount)
     const [viewCount, setViewCount] = useState(post.viewCount)
 
     useEffect(() => {
-        setBookmarked(post.isBookmarked)
         setBookmarkCount(post.bookmarkCount)
         setViewCount(post.viewCount)
     }, [post.id])
@@ -41,16 +41,18 @@ export default function PostItem({post, isBlogDetail}) {
 
         const next = !bookmarked
 
-        // optimistic (함수형 업데이트로)
         setBookmarked(next)
         setBookmarkCount(c => c + (next ? 1 : -1))
 
         try {
             const res = await bookmarkToggleApi(postId)
+            setBookmarked(res.bookmarked)
 
-            // bookmarked만 오든, 둘 다 오든 안전하게 처리
-            if (typeof res?.bookmarked === "boolean") setBookmarked(res.bookmarked)
-            if (typeof res?.bookmarkCount === "number") setBookmarkCount(res.bookmarkCount)
+            if (res.bookmarked) {
+                showToast("북마크 되었습니다.")
+            } else {
+                showToast("북마크 해제하였습니다.")
+            }
         } catch (e) {
             // rollback
             setBookmarked(!next)
@@ -81,7 +83,7 @@ export default function PostItem({post, isBlogDetail}) {
                     }}
                     aria-label={post.bookmarked ? "북마크 해제" : "북마크"}
                 >
-                    {post.bookmarked ? (
+                    {bookmarked ? (
                         <BookmarkIcon fontSize="small"/>
                     ) : (
                         <BookmarkBorderIcon fontSize="small"/>
