@@ -31,7 +31,7 @@ class AdminPostService(
         val techBlog = techBlogRepository.findById(command.techBlogId)
             ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
 
-        val techBlogClient = techBlogSources.get(techBlog.key)
+        val techBlogClient = techBlogSources[techBlog.key]
         val fetchedPosts = techBlogClient.getPosts().toList()
 
         return transactional {

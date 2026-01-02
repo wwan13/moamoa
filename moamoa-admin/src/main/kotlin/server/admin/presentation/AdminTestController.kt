@@ -15,7 +15,7 @@ class AdminTestController(
     suspend fun test(
         @PathVariable key: String
     ): String {
-        val result = techBlogSources.get(key).getPosts().toList()
+        val result = techBlogSources[key].getPosts().toList()
         println(result)
         return result.toString()
     }

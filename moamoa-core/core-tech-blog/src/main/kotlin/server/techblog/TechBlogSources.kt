@@ -10,7 +10,7 @@ class TechBlogSources(
     private val sourcesByLowerKey: Map<String, TechBlogSource> = techBlogSourceByKey
         .mapKeys { (key, _) -> key.lowercase() }
 
-    fun get(key: String): TechBlogSource {
+    operator fun get(key: String): TechBlogSource {
         return sourcesByLowerKey[key.lowercase() + SUFFIX]
             ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
     }
