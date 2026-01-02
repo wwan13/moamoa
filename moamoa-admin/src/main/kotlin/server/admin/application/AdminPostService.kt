@@ -77,7 +77,7 @@ class AdminPostService(
                 key = it.key,
                 title = it.title,
                 description = it.description,
-                thumbnail = it.thumbnail ?: techBlog.icon,
+                thumbnail = it.thumbnail,
                 url = it.url,
                 publishedAt = it.publishedAt,
                 techBlogId = techBlog.id

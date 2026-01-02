@@ -7,7 +7,7 @@ data class TechBlogPost(
     val title: String,
     val description: String,
     val categories: List<String>,
-    val thumbnail: String? = null,
+    val thumbnail: String,
     val publishedAt: LocalDateTime,
     val url: String
 )

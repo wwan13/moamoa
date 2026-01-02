@@ -53,7 +53,8 @@ class WoowabrosSource : TechBlogSource {
                     description = description,
                     categories = emptyList(),
                     publishedAt = publishedAt,
-                    url = url
+                    url = url,
+                    thumbnail = "https://i.imgur.com/xyE7Tom.png"
                 )
             }
         }

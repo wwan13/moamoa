@@ -52,7 +52,8 @@ class KakaoBankSource : TechBlogSource {
                     description = description,
                     categories = categories,
                     publishedAt = publishedAt,
-                    url = url
+                    url = url,
+                    thumbnail = "https://i.imgur.com/80OkMX7.png"
                 )
             }
         }
