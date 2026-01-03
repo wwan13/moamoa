@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react"
-import { loginApi } from "../api/auth.api.js"
-import { setOnLogout, showGlobalAlert, showToast } from "../api/client.js"
+import {loginApi, logoutApi} from "../api/auth.api.js"
+import {setOnLogout, showGlobalAlert, showGlobalConfirm, showToast} from "../api/client.js"
 import {useNavigate} from "react-router-dom";
 
 const AuthContext = createContext(null)
@@ -40,13 +40,25 @@ export function AuthProvider({ children }) {
         closeAuthModal() // ✅ 로그인 성공하면 모달 닫기
     }
 
-    const logout = () => {
-        localStorage.removeItem(ACCESS_TOKEN_KEY)
-        localStorage.removeItem(REFRESH_TOKEN_KEY)
-        setIsLoggedIn(false)
+    const logout = async () => {
+        const ok = await showGlobalConfirm({
+            message : "로그아웃 하시겠습니까?",
+            confirmText: "로그아웃"
+        })
+        if (!ok) return
 
-        navigate("/")
-        showToast("로그아웃 되었습니다.")
+        const res = await logoutApi()
+
+        if (res.success) {
+            localStorage.removeItem(ACCESS_TOKEN_KEY)
+            localStorage.removeItem(REFRESH_TOKEN_KEY)
+            setIsLoggedIn(false)
+
+            navigate("/")
+            showToast("로그아웃 되었습니다.")
+        } else {
+            showGlobalAlert("다시 시도해 주세요")
+        }
     }
 
     return (

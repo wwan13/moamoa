@@ -44,3 +44,16 @@ export function emailVerificationConfirmApi(email, code, onError) {
         }
     )
 }
+
+export function logoutApi(onError) {
+    return apiRequest(
+        "/api/auth/logout",
+        {
+            method: "POST"
+        },
+        {
+            onError: onError ?? ((err) => {
+            }),
+        }
+    )
+}
