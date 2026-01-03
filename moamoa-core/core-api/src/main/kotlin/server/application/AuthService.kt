@@ -113,4 +113,10 @@ class AuthService(
 
         return AuthTokens(accessToken, refreshToken)
     }
+
+    suspend fun logout(memberId: Long): LogoutResult {
+        refreshTokenCache.evict(memberId)
+
+        return LogoutResult(true)
+    }
 }

@@ -14,6 +14,9 @@ import server.application.ConfirmEmailCommand
 import server.application.ConfirmEmailResult
 import server.application.EmailVerificationResult
 import server.application.LoginCommand
+import server.application.LogoutResult
+import server.security.Passport
+import server.security.RequestPassport
 
 @RestController
 @RequestMapping("/api/auth")
@@ -55,5 +58,14 @@ class AuthController(
         val tokens = authService.reissue(refreshToken)
 
         return ResponseEntity.ok(tokens)
+    }
+
+    @PostMapping("/logout")
+    suspend fun logout(
+        @RequestPassport passport: Passport
+    ): ResponseEntity<LogoutResult> {
+        val response = authService.logout(passport.memberId)
+
+        return ResponseEntity.ok(response)
     }
 }
