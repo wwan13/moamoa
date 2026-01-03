@@ -1,9 +1,6 @@
 import styles from "./CategoryTabs.module.css"
-import {useNavigate} from "react-router-dom";
 
 export default function CategoryTabs({items, value, onChange, isBlogDetail}) {
-    const navigate = useNavigate()
-
     return (
         <div className={styles.wrap}>
             <nav className={styles.tab} aria-label="카테고리">
@@ -23,9 +20,6 @@ export default function CategoryTabs({items, value, onChange, isBlogDetail}) {
                         )
                     })}
                 </div>
-                <button className={styles.moreButton} onClick={() => navigate("/blogs")}>
-                    기술 블로그 전체 보기 >
-                </button>
             </nav>
         </div>
     )

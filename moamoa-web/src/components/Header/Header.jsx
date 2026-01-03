@@ -4,7 +4,7 @@ import useAuth from "../../auth/AuthContext.jsx"
 import {useNavigate} from "react-router-dom";
 
 export default function Header() {
-    const { isLoggedIn, logout, openLogin } = useAuth()
+    const { isLoggedIn, openLogin } = useAuth()
     const navigate = useNavigate()
 
     return (
@@ -25,7 +25,7 @@ export default function Header() {
             <HeaderUser
                 isLoggedIn={isLoggedIn}
                 onClickLogin={openLogin}
-                onClickLogout={logout}
+                onCLickAllBLog={() => navigate("/blogs")}
                 onClickMyPage={() => navigate("/my")}
             />
         </header>

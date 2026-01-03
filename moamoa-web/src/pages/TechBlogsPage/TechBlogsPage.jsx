@@ -6,6 +6,7 @@ import useAuth from "../../auth/AuthContext.jsx"
 import { subscribingBlogsApi, subscriptionToggleApi } from "../../api/subscription.api.js"
 import {showGlobalConfirm, showToast} from "../../api/client.js";
 import {useNavigate} from "react-router-dom";
+import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 
 export default function TechBlogsPage() {
     const navigate = useNavigate()
@@ -154,7 +155,21 @@ export default function TechBlogsPage() {
                                     <div className={styles.subscription}>
                                         <p className={styles.subscriptionCount}>구독자 {blog.subscriptionCount}명</p>
 
-                                        <span>·</span>
+                                        {/*<span>·</span>*/}
+                                        {/*<button*/}
+                                        {/*    className={isSubscribed ? styles.subscribing : styles.subButton}*/}
+                                        {/*    onClick={(e) => {*/}
+                                        {/*        stop(e)*/}
+                                        {/*        subscriptionToggle(blog.id)*/}
+                                        {/*    }}*/}
+                                        {/*>*/}
+                                        {/*    {isSubscribed ? "구독중" : "구독"}*/}
+                                        {/*</button>*/}
+
+                                        {/*<span>·</span>*/}
+                                        {/*<NotificationsNoneOutlinedIcon fontSize="10px"/>*/}
+                                    </div>
+                                    <div className={styles.subscription}>
                                         <button
                                             className={isSubscribed ? styles.subscribing : styles.subButton}
                                             onClick={(e) => {
@@ -164,6 +179,9 @@ export default function TechBlogsPage() {
                                         >
                                             {isSubscribed ? "구독중" : "구독"}
                                         </button>
+
+                                        <span>·</span>
+                                        <NotificationsNoneOutlinedIcon fontSize="10px"/>
                                     </div>
                                 </article>
                             )
