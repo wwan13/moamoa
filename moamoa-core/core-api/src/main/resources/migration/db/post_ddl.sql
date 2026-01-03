@@ -14,3 +14,7 @@ CREATE TABLE post
 
 ALTER TABLE post
     ADD CONSTRAINT FK_POST_ON_TECH_BLOG FOREIGN KEY (tech_blog_id) REFERENCES tech_blog (id);
+
+ALTER TABLE post
+    ADD CONSTRAINT uq_post_tech_blog_key
+        UNIQUE (tech_blog_id, post_key);
