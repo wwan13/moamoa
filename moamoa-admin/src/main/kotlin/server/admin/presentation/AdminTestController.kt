@@ -17,6 +17,7 @@ class AdminTestController(
     ): String {
         val result = techBlogSources[key].getPosts().toList()
         println(result)
+        println(result.size)
         return result.toString()
     }
 }
