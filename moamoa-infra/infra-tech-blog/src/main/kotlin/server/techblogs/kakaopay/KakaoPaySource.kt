@@ -12,8 +12,6 @@ import server.techblog.TechBlogSource
 import server.utill.PagingFinishedException
 import server.utill.fetchWithPaging
 import server.utill.jsoup
-import java.lang.IllegalStateException
-import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -26,14 +24,23 @@ class KakaoPaySource : TechBlogSource {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getPosts(size: Int?): Flow<TechBlogPost> {
+        val seenKeys = HashSet<String>(2048)
+
         val listFlow = fetchWithPaging(size, ::buildListUrl, timeoutMs = timeoutMs) { doc ->
             val items = doc.select("li:has(a[href^=/post/])")
             if (items.isEmpty()) throw PagingFinishedException()
 
-            items.mapNotNull { item ->
+            val parsed = items.mapNotNull { item ->
                 val linkEl = item.selectFirst("a[href^=/post/]") ?: return@mapNotNull null
+
+                val href = linkEl.attr("href").trim()
+                if (href.isBlank()) return@mapNotNull null
+
                 val url = linkEl.absUrl("href")
                 if (url.isBlank()) return@mapNotNull null
+
+                val key = extractKeyFromHref(href)
+                if (key.isBlank()) return@mapNotNull null
 
                 val title = item.selectFirst("strong")
                     ?.text()
@@ -54,20 +61,29 @@ class KakaoPaySource : TechBlogSource {
                 val thumbnail = item.selectFirst("img[alt]")
                     ?.absUrl("src")
                     ?.takeIf { it.isNotBlank() }
-                    ?: throw IllegalStateException("no thumbnail")
+                    ?: DEFAULT_THUMBNAIL
 
                 TechBlogPost(
-                    key = extractKey(url),
+                    key = key,
                     title = title,
                     description = description,
-                    categories = emptyList(),
+                    categories = emptyList(), // 상세에서 보강
                     thumbnail = thumbnail,
                     publishedAt = publishedAt,
                     url = url
                 )
             }
+
+            // ✅ key 기준 중복 제거
+            val unique = parsed.filter { seenKeys.add(it.key) }
+
+            // ✅ 이 페이지에서 새 글이 하나도 없으면 더 가도 의미 없으니 종료
+            if (unique.isEmpty()) throw PagingFinishedException()
+
+            unique
         }
 
+        // 카테고리 보강(중복 제거 후 수행해서 요청 낭비 방지)
         return listFlow.flatMapMerge(concurrency = 10) { base ->
             flow {
                 val categories = runCatching { fetchCategories(base.url) }
@@ -88,13 +104,19 @@ class KakaoPaySource : TechBlogSource {
             .distinct()
     }
 
-    private fun extractKey(url: String): String =
-        URI(url).path.trimEnd('/').substringAfterLast('/')
+    private fun extractKeyFromHref(href: String): String {
+        val cleaned = href.substringBefore('?').substringBefore('#')
+        return cleaned
+            .removePrefix("/post/")
+            .trim('/')
+            .trim()
+    }
 
     private fun parseDateTime(raw: String): LocalDateTime =
         LocalDate.parse(raw.trim(), DATE_FORMATTER).atStartOfDay()
 
     companion object {
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy. M. d")
+        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/80OkMX7.png"
     }
 }
