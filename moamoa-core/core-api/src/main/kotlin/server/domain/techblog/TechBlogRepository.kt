@@ -1,5 +1,6 @@
 package server.domain.techblog
 
+import kotlinx.coroutines.flow.Flow
 import org.springframework.data.r2dbc.repository.Modifying
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
@@ -7,6 +8,8 @@ import org.springframework.data.repository.query.Param
 
 interface TechBlogRepository : CoroutineCrudRepository<TechBlog, Long> {
     suspend fun findByKey(key: String): TechBlog?
+
+    fun findAllByOrderByTitleAsc(): Flow<TechBlog>
 
     @Modifying
     @Query(

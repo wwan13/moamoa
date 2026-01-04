@@ -1,5 +1,6 @@
 package server.application
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
@@ -14,7 +15,7 @@ class TechBlogService(
             ?: throw IllegalArgumentException("존재하지 않는 기술 블로그 입니다.")
     }
 
-    suspend fun findAll(): List<TechBlogData> {
-        return techBlogRepository.findAll().map(::TechBlogData).toList()
+    suspend fun findAll(): Flow<TechBlogData> {
+        return techBlogRepository.findAllByOrderByTitleAsc().map(::TechBlogData)
     }
 }

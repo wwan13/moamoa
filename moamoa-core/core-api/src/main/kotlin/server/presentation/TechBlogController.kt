@@ -1,5 +1,6 @@
 package server.presentation
 
+import kotlinx.coroutines.flow.toList
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -24,7 +25,7 @@ class TechBlogController(
 
     @GetMapping
     suspend fun findAll(): ResponseEntity<List<TechBlogData>> {
-        val response = techBlogService.findAll()
+        val response = techBlogService.findAll().toList()
         return ResponseEntity.ok(response)
     }
 }
