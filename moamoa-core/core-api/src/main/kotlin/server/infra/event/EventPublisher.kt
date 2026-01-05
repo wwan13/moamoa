@@ -1,18 +1,14 @@
 package server.infra.event
 
-import kotlinx.coroutines.reactor.awaitSingleOrNull
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
-import org.springframework.transaction.reactive.TransactionalEventPublisher
+import server.messaging.StreamEventPublisher
 
 @Component
 class EventPublisher(
-    applicationEventPublisher: ApplicationEventPublisher
+    private val streamEventPublisher: StreamEventPublisher
 ) {
 
-    private val transactionalEventPublisher = TransactionalEventPublisher(applicationEventPublisher)
-
-    suspend fun publish(event: Any) {
-        transactionalEventPublisher.publishEvent(event).awaitSingleOrNull()
+    suspend fun publish(event: Any, streamKey: String = "moamoa") {
+        streamEventPublisher.publish(streamKey, event)
     }
 }
