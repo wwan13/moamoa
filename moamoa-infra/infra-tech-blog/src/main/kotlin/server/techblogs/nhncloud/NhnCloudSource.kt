@@ -64,7 +64,7 @@ class NhnCloudSource(
                     key = p.postId.toString(),
                     title = title,
                     description = description,
-                    categories = emptyList(), // 요청대로 비움
+                    tags = emptyList(), // 요청대로 비움
                     thumbnail = thumbnail,
                     publishedAt = publishedAt,
                     url = postBaseUrl + p.postId

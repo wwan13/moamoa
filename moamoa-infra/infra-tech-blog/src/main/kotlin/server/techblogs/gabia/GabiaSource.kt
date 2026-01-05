@@ -45,7 +45,7 @@ class GabiaSource(
                     key = it.id.toString(),
                     title = it.title.rendered.cleanHtml(),
                     description = it.excerpt?.rendered?.cleanHtml().orEmpty(),
-                    categories = emptyList(), // 태그 필요하면 wp:term에서 추가
+                    tags = emptyList(), // 태그 필요하면 wp:term에서 추가
                     thumbnail = it.thumbnailUrl ?: DEFAULT_THUMBNAIL,
                     publishedAt = LocalDateTime.parse(it.date),
                     url = it.link

@@ -50,7 +50,7 @@ class KakaoBankSource : TechBlogSource {
                     key = extractKey(url),
                     title = title,
                     description = description,
-                    categories = categories,
+                    tags = categories,
                     publishedAt = publishedAt,
                     url = url,
                     thumbnail = "https://i.imgur.com/80OkMX7.png"

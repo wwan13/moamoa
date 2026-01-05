@@ -12,7 +12,7 @@ import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
 import server.utill.fetchWithPaging
 import server.utill.handlePagingFinished
-import server.utill.normalizeCategoryTitle
+import server.utill.normalizeTagTitle
 import server.utill.validateIsPagingFinished
 import java.net.URI
 import java.time.Instant
@@ -80,7 +80,7 @@ class NaverSource(
                     key = key,
                     title = title,
                     description = description,
-                    categories = emptyList(), // 상세에서 채움
+                    tags = emptyList(), // 상세에서 채움
                     thumbnail = thumbnail,
                     publishedAt = publishedAt,
                     url = absoluteUrl
@@ -99,13 +99,13 @@ class NaverSource(
                         .filter { it.isNotBlank() }
                         .forEach { add(it) }
                 }
-                    .map { it.normalizeCategoryTitle() }
+                    .map { it.normalizeTagTitle() }
                     .filter { it.isNotBlank() }
                     .distinct()
 
                 emit(
                     base.copy(
-                        categories = categories
+                        tags = categories
                     )
                 )
             }

@@ -67,7 +67,7 @@ class KakaoPaySource : TechBlogSource {
                     key = key,
                     title = title,
                     description = description,
-                    categories = emptyList(), // 상세에서 보강
+                    tags = emptyList(), // 상세에서 보강
                     thumbnail = thumbnail,
                     publishedAt = publishedAt,
                     url = url
@@ -88,7 +88,7 @@ class KakaoPaySource : TechBlogSource {
             flow {
                 val categories = runCatching { fetchCategories(base.url) }
                     .getOrDefault(emptyList())
-                emit(base.copy(categories = categories))
+                emit(base.copy(tags = categories))
             }
         }
     }

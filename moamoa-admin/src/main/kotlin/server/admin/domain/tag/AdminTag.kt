@@ -1,12 +1,12 @@
-package server.admin.domain.category
+package server.admin.domain.tag
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import support.admin.domain.BaseEntity
 
-@Table(name = "category")
-data class AdminCategory(
+@Table(name = "tag")
+data class AdminTag(
     @Id
     @Column("id")
     override val id: Long = 0,
