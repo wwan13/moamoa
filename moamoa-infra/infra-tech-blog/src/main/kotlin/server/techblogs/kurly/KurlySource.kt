@@ -72,7 +72,7 @@ class KurlySource : TechBlogSource {
                     key = extractKey(url),
                     title = title,
                     description = description,
-                    categories = emptyList(),
+                    tags = emptyList(),
                     thumbnail = fixedThumbnail,
                     publishedAt = publishedAt,
                     url = url

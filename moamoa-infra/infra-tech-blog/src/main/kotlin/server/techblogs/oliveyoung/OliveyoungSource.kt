@@ -50,7 +50,7 @@ class OliveyoungSource : TechBlogSource {
                 val publishedAt = dateText?.let { LocalDate.parse(it).atStartOfDay() } ?: LocalDateTime.MIN
 
                 // category: "Tech", "Culture" (날짜가 아닌 span 중 첫 번째)
-                val category = root.select("span")
+                val tag = root.select("span")
                     .asSequence()
                     .map { it.text().trim() }
                     .firstOrNull { it.isNotBlank() && !it.matches(DATE_REGEX) }
@@ -61,12 +61,12 @@ class OliveyoungSource : TechBlogSource {
                     .asSequence()
                     .map { it.text().trim() }
                     .filter { it.isNotBlank() }
-                    .filterNot { it == category }
+                    .filterNot { it == tag }
                     .filterNot { it == dateText }
                     .distinct()
                     .toList()
 
-                val categories = (listOf(category) + tags)
+                val categories = (listOf(tag) + tags)
                     .map { it.trim() }
                     .filter { it.isNotBlank() }
                     .distinct()
@@ -88,7 +88,7 @@ class OliveyoungSource : TechBlogSource {
                     key = key,
                     title = title,
                     description = description,
-                    categories = categories,
+                    tags = categories,
                     thumbnail = thumbnail,
                     publishedAt = publishedAt,
                     url = url

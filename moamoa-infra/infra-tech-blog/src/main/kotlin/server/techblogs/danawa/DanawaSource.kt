@@ -4,7 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
-import org.jsoup.nodes.Document
 import org.springframework.stereotype.Component
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
@@ -22,18 +21,16 @@ class DanawaSource : TechBlogSource {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getPosts(size: Int?): Flow<TechBlogPost> {
-        val categories = fetchCategories()
+        val tags = fetchTags()
 
-        return categories
+        return tags
             .asFlow()
-            .flatMapMerge(concurrency = 6) { category ->
-                fetchPostsByCategory(category)
+            .flatMapMerge(concurrency = 6) { tag ->
+                fetchPostsByTag(tag)
             }
     }
 
-    /* ================= 카테고리 ================= */
-
-    private suspend fun fetchCategories(): List<Category> = withContext(Dispatchers.IO) {
+    private suspend fun fetchTags(): List<Tag> = withContext(Dispatchers.IO) {
         val doc = jsoup(baseUrl, timeoutMs)
 
         doc.select("ul li a[href^=/category/]")
@@ -46,7 +43,7 @@ class DanawaSource : TechBlogSource {
 
                 if (href.isBlank() || name.isBlank()) return@mapNotNull null
 
-                Category(
+                Tag(
                     name = name,
                     url = baseUrl + href
                 )
@@ -54,10 +51,8 @@ class DanawaSource : TechBlogSource {
             .distinctBy { it.url }
     }
 
-    /* ================= 게시글 ================= */
-
-    private fun fetchPostsByCategory(category: Category): Flow<TechBlogPost> = flow {
-        val doc = jsoup(category.url, timeoutMs)
+    private fun fetchPostsByTag(tag: Tag): Flow<TechBlogPost> = flow {
+        val doc = jsoup(tag.url, timeoutMs)
 
         val posts = doc.select("div.content__post")
         for (post in posts) {
@@ -85,7 +80,7 @@ class DanawaSource : TechBlogSource {
                     key = extractKey(url),
                     title = title,
                     description = description,
-                    categories = listOf(category.name),
+                    tags = listOf(tag.name),
                     thumbnail = "https://i.imgur.com/KxL8Fxu.png",
                     publishedAt = parseDate(publishedAtRaw),
                     url = url
@@ -104,7 +99,7 @@ class DanawaSource : TechBlogSource {
 
     private val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
 
-    private data class Category(
+    private data class Tag(
         val name: String,
         val url: String
     )

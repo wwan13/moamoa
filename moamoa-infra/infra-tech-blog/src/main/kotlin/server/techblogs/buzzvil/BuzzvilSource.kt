@@ -82,7 +82,7 @@ class BuzzvilSource : TechBlogSource {
                     key = extractKey(url),
                     title = title,
                     description = description,
-                    categories = emptyList(),
+                    tags = emptyList(),
                     thumbnail = thumbnail,
                     publishedAt = publishedAt,
                     url = url
@@ -93,7 +93,7 @@ class BuzzvilSource : TechBlogSource {
         return listFlow.flatMapMerge(concurrency = 10) { base ->
             flow {
                 val categories = runCatching { fetchCategories(base.url) }.getOrDefault(emptyList())
-                emit(base.copy(categories = categories))
+                emit(base.copy(tags = categories))
             }
         }
     }

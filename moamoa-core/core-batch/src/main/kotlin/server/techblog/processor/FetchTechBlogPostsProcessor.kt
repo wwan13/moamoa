@@ -23,7 +23,7 @@ class FetchTechBlogPostsProcessor(
                     key = it.key,
                     title = it.title,
                     description = it.description,
-                    categories = it.categories,
+                    tags = it.tags,
                     thumbnail = it.thumbnail,
                     publishedAt = it.publishedAt,
                     url = it.url,

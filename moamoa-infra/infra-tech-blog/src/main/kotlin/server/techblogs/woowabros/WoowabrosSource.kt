@@ -51,7 +51,7 @@ class WoowabrosSource : TechBlogSource {
                     key = extractKey(url),
                     title = title,
                     description = description,
-                    categories = emptyList(),
+                    tags = emptyList(),
                     publishedAt = publishedAt,
                     url = url,
                     thumbnail = "https://i.imgur.com/xyE7Tom.png"
@@ -64,7 +64,7 @@ class WoowabrosSource : TechBlogSource {
                 val categories = runCatching {
                     fetchCategories(base.url)
                 }.getOrDefault(emptyList())
-                emit(base.copy(categories = categories))
+                emit(base.copy(tags = categories))
             }
         }
     }

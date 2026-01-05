@@ -1,12 +1,12 @@
-package server.domain.postcategory
+package server.admin.domain.posttag
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
-import support.domain.BaseEntity
+import support.admin.domain.BaseEntity
 
-@Table(name = "post_category")
-data class PostCategory(
+@Table(name = "post_tag")
+data class AdminPostTag(
     @Id
     @Column("id")
     override val id: Long = 0,
@@ -14,6 +14,6 @@ data class PostCategory(
     @Column("post_id")
     val postId: Long,
 
-    @Column("category_id")
-    val categoryId: Long,
+    @Column("tag_id")
+    val tagId: Long,
 ) : BaseEntity()

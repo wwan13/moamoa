@@ -44,7 +44,7 @@ class TossSource(
                     key = it.key,
                     title = it.title,
                     description = it.subtitle,
-                    categories = listOf(it.category),
+                    tags = listOf(it.category),
                     thumbnail = it.thumbnailConfig.imageUrl,
                     publishedAt = ZonedDateTime.parse(it.publishedTime).toLocalDateTime(),
                     url = postBaseUrl + it.key

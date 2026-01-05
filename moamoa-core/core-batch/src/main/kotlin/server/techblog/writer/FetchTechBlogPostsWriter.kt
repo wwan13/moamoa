@@ -26,9 +26,9 @@ class FetchTechBlogPostsWriter(
 
         val startedAt = jdbc.dbNow()
 
-        val categoryIdByTitle = upsertCategories(posts)
+        val tagIdByTitle = upsertTags(posts)
         val postIdMap = upsertPostsAndLoadIds(posts)
-        upsertPostCategories(posts, postIdMap, categoryIdByTitle)
+        upsertPostTags(posts, postIdMap, tagIdByTitle)
 
         val windowEnd = jdbc.dbNow()
         val newlyInsertedPostIds = findNewlyInsertedPostIds(posts, startedAt, windowEnd)
@@ -36,33 +36,33 @@ class FetchTechBlogPostsWriter(
         enqueueResultAfterCommit(newlyInsertedPostIds)
     }
 
-    private fun upsertCategories(posts: List<PostData>): Map<String, Long> {
-        val categories = posts.asSequence()
-            .flatMap { it.categories.asSequence() }
+    private fun upsertTags(posts: List<PostData>): Map<String, Long> {
+        val tags = posts.asSequence()
+            .flatMap { it.tags.asSequence() }
             .map { it.trim().lowercase() }
             .filter { it.isNotBlank() }
             .distinct()
             .toList()
 
-        if (categories.isNotEmpty()) {
-            val params = categories.map { mapOf("title" to it) }
+        if (tags.isNotEmpty()) {
+            val params = tags.map { mapOf("title" to it) }
             jdbc.batchUpdate(
                 """
-                INSERT IGNORE INTO category (title, created_at, last_modified_at)
+                INSERT IGNORE INTO tag (title, created_at, last_modified_at)
                 VALUES (:title, NOW(), NOW())
                 """.trimIndent(),
                 params.toTypedArray()
             )
         }
 
-        return if (categories.isEmpty()) emptyMap()
+        return if (tags.isEmpty()) emptyMap()
         else jdbc.query(
             """
             SELECT id, title
-            FROM category
+            FROM tag
             WHERE title IN (:titles)
             """.trimIndent(),
-            mapOf("titles" to categories)
+            mapOf("titles" to tags)
         ) { rs, _ ->
             rs.getString("title") to rs.getLong("id")
         }.toMap()
@@ -135,22 +135,22 @@ class FetchTechBlogPostsWriter(
         }.toMap()
     }
 
-    private fun upsertPostCategories(
+    private fun upsertPostTags(
         posts: List<PostData>,
         postIdMap: Map<Pair<Long, String>, Long>,
-        categoryIdByTitle: Map<String, Long>
+        tagIdByTitle: Map<String, Long>
     ) {
         val params = posts.flatMap { post ->
             val postId = postIdMap[post.techBlogId to post.key] ?: return@flatMap emptyList()
 
-            post.categories
+            post.tags
                 .asSequence()
                 .map { it.trim().lowercase() }
                 .filter { it.isNotBlank() }
                 .distinct()
-                .mapNotNull { category ->
-                    val categoryId = categoryIdByTitle[category] ?: return@mapNotNull null
-                    mapOf("postId" to postId, "categoryId" to categoryId)
+                .mapNotNull { tag ->
+                    val tagId = tagIdByTitle[tag] ?: return@mapNotNull null
+                    mapOf("postId" to postId, "tagId" to tagId)
                 }
                 .toList()
         }
@@ -159,15 +159,15 @@ class FetchTechBlogPostsWriter(
 
         jdbc.batchUpdate(
             """
-            INSERT IGNORE INTO post_category (
+            INSERT IGNORE INTO post_tag (
                 post_id,
-                category_id,
+                tag_id,
                 created_at,
                 last_modified_at
             )
             VALUES (
                 :postId,
-                :categoryId,
+                :tagId,
                 NOW(),
                 NOW()
             )
