@@ -1,3 +1,6 @@
+import useAuth from "../auth/AuthContext.jsx";
+import {useNavigate} from "react-router-dom";
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
 
 const ACCESS_TOKEN_KEY = "accessToken"
@@ -118,8 +121,11 @@ export function setOnLogout(handler) {
 async function reissueToken(baseUrl = "") {
     const refreshToken = getRefreshToken()
     if (!refreshToken) {
-        logout()
-        throw new Error("NO_REFRESH_TOKEN")
+        await showGlobalAlert("다시 로그인해 주세요.")
+        localStorage.removeItem(ACCESS_TOKEN_KEY)
+        localStorage.removeItem(REFRESH_TOKEN_KEY)
+        window.location.reload()
+        return
     }
 
     try {
@@ -132,15 +138,20 @@ async function reissueToken(baseUrl = "") {
         })
 
         if (!res.ok) {
-            const err =
-                (await safeJson(res)) ||
-                {status: res.status, message: "LOGIN_AGAIN"}
-            throw err
+            await showGlobalAlert("다시 로그인해 주세요.")
+            localStorage.removeItem(ACCESS_TOKEN_KEY)
+            localStorage.removeItem(REFRESH_TOKEN_KEY)
+            window.location.reload()
+            return
         }
 
         const data = await safeJson(res)
         if (!data?.accessToken) {
-            throw new Error("INVALID_REISSUE_RESPONSE")
+            await showGlobalAlert("다시 로그인해 주세요.")
+            localStorage.removeItem(ACCESS_TOKEN_KEY)
+            localStorage.removeItem(REFRESH_TOKEN_KEY)
+            window.location.reload()
+            return
         }
 
         setAccessToken(data.accessToken)
