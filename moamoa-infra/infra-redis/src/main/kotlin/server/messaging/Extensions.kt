@@ -1,10 +1,10 @@
 package server.messaging
 
 inline fun <reified T : Any> handleEvent(
-    streamKey: String = "moamoa",
+    stream: StreamDefinition,
     noinline handler: suspend (T) -> Unit
 ) = StreamEventHandler(
-    streamKey = streamKey,
+    stream = stream,
     type = T::class.java.simpleName,
     payloadClass = T::class.java,
     handler = handler

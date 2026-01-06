@@ -11,7 +11,7 @@ import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import java.time.Duration
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
@@ -22,15 +22,17 @@ internal class StreamReader(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val group = "moamoa"
-
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val jobs = ConcurrentHashMap<String, Job>()
 
+    private data class EnsureKey(val streamKey: String, val group: String)
+
+    private val ensured = ConcurrentHashMap.newKeySet<EnsureKey>()
+
     @PostConstruct
     fun start() {
-        handlers.streamKeys().forEach { streamKey ->
-            startLoopIfAbsent(streamKey)
+        handlers.streams().forEach { stream ->
+            startLoopIfAbsent(stream)
         }
     }
 
@@ -40,24 +42,23 @@ internal class StreamReader(
         scope.cancel()
     }
 
-    private fun startLoopIfAbsent(streamKey: String) {
-        jobs.computeIfAbsent(streamKey) {
-            scope.launch {
-                loopForStream(streamKey)
-            }
+    private fun startLoopIfAbsent(stream: StreamDefinition) {
+        val jobKey = "${stream.topic}::${stream.group}"
+        jobs.computeIfAbsent(jobKey) {
+            scope.launch { loopForStream(stream) }
         }
     }
 
-    private suspend fun loopForStream(streamKey: String) {
+    private suspend fun loopForStream(stream: StreamDefinition) {
         val ops = redis.opsForStream<String, String>()
-        val consumerName = "worker-${streamKey}-${UUID.randomUUID()}"
-        val consumer = Consumer.from(group, consumerName)
+        val consumerName = "worker-${stream.topic}-${stream.group}-${UUID.randomUUID()}"
+        val consumer = Consumer.from(stream.group, consumerName)
 
         val options = StreamReadOptions.empty()
             .block(Duration.ofSeconds(2))
-            .count(50)
+            .count(stream.batchSize.coerceAtLeast(1).toLong())
 
-        ensureGroupOnce(streamKey, ops)
+        ensureGroupOnce(stream, ops)
 
         while (currentCoroutineContext().isActive) {
             val records = try {
@@ -65,66 +66,102 @@ internal class StreamReader(
                     ops.read(
                         consumer,
                         options,
-                        StreamOffset.create(streamKey, ReadOffset.lastConsumed())
+                        StreamOffset.create(stream.topic.key, ReadOffset.lastConsumed())
                     )
                 } ?: emptyList()
             } catch (e: RedisSystemException) {
                 break
             } catch (e: Exception) {
                 if (e.message?.contains("Connection closed") == true) break
-                log.warn("read failed. streamKey={}", streamKey, e)
+                log.warn("read failed. streamKey={} group={}", stream.topic, stream.group, e)
                 delay(500)
                 continue
             }
 
             for (record in records) {
-                val type = record.value["type"]
-                val payloadJson = record.value["payload"]
-
-                if (type.isNullOrBlank() || payloadJson.isNullOrBlank()) {
-                    ack(ops, streamKey, record.id)
-                    continue
-                }
-
-                val handler = handlers.find<Any>(streamKey, type)
-                if (handler == null) {
-                    log.warn("No handler. streamKey={} type={}", streamKey, type)
-                    ack(ops, streamKey, record.id)
-                    continue
-                }
-
-                try {
-                    val event = objectMapper.readValue(payloadJson, handler.payloadClass)
-                    handler.handler(event)
-                    ack(ops, streamKey, record.id)
-                } catch (e: Exception) {
-                    log.warn(
-                        "Handler failed. streamKey={} type={} id={}",
-                        streamKey, type, record.id, e
-                    )
-                }
+                handleRecord(stream, ops, record)
             }
 
             if (records.isEmpty()) delay(50)
         }
     }
 
+    private suspend fun handleRecord(
+        stream: StreamDefinition,
+        ops: StreamOperations<String, String, String>,
+        record: MapRecord<String, String, String>,
+    ) {
+        val type = record.value["type"]
+        val payloadJson = record.value["payload"]
+
+        if (type.isNullOrBlank() || payloadJson.isNullOrBlank()) {
+            ack(ops, stream, record.id)
+            return
+        }
+
+        val handler = handlers.find<Any>(stream, type)
+        if (handler == null) {
+            log.warn("No handler. streamKey={} group={} type={}", stream.topic, stream.group, type)
+            ack(ops, stream, record.id)
+            return
+        }
+
+        val event = runCatching {
+            objectMapper.readValue(payloadJson, handler.payloadClass)
+        }.getOrElse { e ->
+            log.warn(
+                "payload deserialize failed. streamKey={} group={} type={} id={}",
+                stream.topic, stream.group, type, record.id, e
+            )
+            if (stream.ackWhenFail) ack(ops, stream, record.id)
+            return
+        }
+
+        if (stream.blocking) {
+            try {
+                handler.handler(event)
+                ack(ops, stream, record.id)
+            } catch (e: Exception) {
+                log.warn(
+                    "Handler failed. streamKey={} group={} type={} id={}",
+                    stream.topic, stream.group, type, record.id, e
+                )
+                if (stream.ackWhenFail) ack(ops, stream, record.id)
+            }
+            return
+        }
+
+        scope.launch {
+            try {
+                handler.handler(event)
+                ack(ops, stream, record.id)
+            } catch (e: Exception) {
+                log.warn(
+                    "Handler failed(non-blocking). streamKey={} group={} type={} id={}",
+                    stream.topic, stream.group, type, record.id, e
+                )
+                if (stream.ackWhenFail) ack(ops, stream, record.id)
+            }
+        }
+    }
+
     private suspend fun ensureGroupOnce(
-        streamKey: String,
+        stream: StreamDefinition,
         ops: StreamOperations<String, String, String>
     ) = withContext(Dispatchers.IO) {
+        if (!ensured.add(EnsureKey(stream.topic.key, stream.group))) return@withContext
         try {
-            ops.createGroup(streamKey, ReadOffset.from("0-0"), group)
-        } catch (e: Exception) {
-            // BUSYGROUP → 정상
+            ops.createGroup(stream.topic.key, ReadOffset.from("0-0"), stream.group)
+        } catch (_: Exception) {
+            // BUSYGROUP 등은 정상 취급
         }
     }
 
     private suspend fun ack(
         ops: StreamOperations<String, String, String>,
-        streamKey: String,
+        stream: StreamDefinition,
         recordId: RecordId
     ) = withContext(Dispatchers.IO) {
-        ops.acknowledge(streamKey, group, recordId)
+        ops.acknowledge(stream.topic.key, stream.group, recordId)
     }
 }

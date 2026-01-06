@@ -12,7 +12,8 @@ import server.domain.techblog.TechBlogSubscribeRemovedEvent
 import server.domain.techblogsubscription.TechBlogSubscription
 import server.domain.techblogsubscription.TechBlogSubscriptionRepository
 import server.infra.db.Transactional
-import server.infra.event.EventPublisher
+import server.messaging.StreamEventPublisher
+import server.messaging.StreamTopic
 
 @Service
 class TechBlogSubscriptionService(
@@ -20,7 +21,8 @@ class TechBlogSubscriptionService(
     private val techBlogSubscriptionRepository: TechBlogSubscriptionRepository,
     private val techBlogRepository: TechBlogRepository,
     private val memberRepository: MemberRepository,
-    private val eventPublisher: EventPublisher
+    private val eventPublisher: StreamEventPublisher,
+    private val defaultTopic: StreamTopic
 ) {
 
     suspend fun toggle(
@@ -37,7 +39,7 @@ class TechBlogSubscriptionService(
         val subscribing = techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
             ?.let { subscription ->
                 techBlogSubscriptionRepository.deleteById(subscription.id)
-                eventPublisher.publish(TechBlogSubscribeRemovedEvent(command.techBlogId))
+                eventPublisher.publish(defaultTopic, TechBlogSubscribeRemovedEvent(command.techBlogId))
                 false
             }
             ?: let {
@@ -47,7 +49,7 @@ class TechBlogSubscriptionService(
                     techBlogId = command.techBlogId
                 )
                 techBlogSubscriptionRepository.save(subscription)
-                eventPublisher.publish(TechBlogSubscribeCreatedEvent(command.techBlogId))
+                eventPublisher.publish(defaultTopic, TechBlogSubscribeCreatedEvent(command.techBlogId))
                 true
             }
 

@@ -18,9 +18,9 @@ class StreamEventPublisher(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun publish(streamKey: String, payload: Any) {
-        publishMono(streamKey, payload)
-            .doOnError { e -> log.warn("Redis XADD failed: streamKey={}", streamKey, e) }
+    fun publish(topic: StreamTopic, payload: Any) {
+        publishMono(topic.key, payload)
+            .doOnError { e -> log.warn("Redis XADD failed: streamKey={}", topic.key, e) }
             .onErrorResume { Mono.empty() }
             .subscribe()
     }

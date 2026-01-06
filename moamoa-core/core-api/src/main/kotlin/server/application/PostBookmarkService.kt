@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
 import server.domain.member.MemberRepository
 import server.domain.post.PostRepository
@@ -12,7 +11,8 @@ import server.domain.postbookmark.PostBookmarkCreatedEvent
 import server.domain.postbookmark.PostBookmarkRemovedEvent
 import server.domain.postbookmark.PostBookmarkRepository
 import server.infra.db.Transactional
-import server.infra.event.EventPublisher
+import server.messaging.StreamEventPublisher
+import server.messaging.StreamTopic
 
 @Service
 class PostBookmarkService(
@@ -20,7 +20,8 @@ class PostBookmarkService(
     private val postBookmarkRepository: PostBookmarkRepository,
     private val postRepository: PostRepository,
     private val memberRepository: MemberRepository,
-    private val eventPublisher: EventPublisher
+    private val eventPublisher: StreamEventPublisher,
+    private val defaultTopic: StreamTopic
 ) {
 
     suspend fun toggle(
@@ -37,7 +38,7 @@ class PostBookmarkService(
         val bookmarked = postBookmarkRepository.findByMemberIdAndPostId(memberId, command.postId)
             ?.let { postBookmark ->
                 postBookmarkRepository.deleteById(postBookmark.id)
-                eventPublisher.publish(PostBookmarkRemovedEvent(command.postId))
+                eventPublisher.publish(defaultTopic, PostBookmarkRemovedEvent(command.postId))
                 false
             }
             ?: run {
@@ -46,7 +47,7 @@ class PostBookmarkService(
                     postId = command.postId
                 )
                 postBookmarkRepository.save(postBookmark)
-                eventPublisher.publish(PostBookmarkCreatedEvent(command.postId))
+                eventPublisher.publish(defaultTopic, PostBookmarkCreatedEvent(command.postId))
                 true
             }
 
