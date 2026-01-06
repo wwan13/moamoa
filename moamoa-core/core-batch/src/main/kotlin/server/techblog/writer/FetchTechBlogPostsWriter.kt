@@ -5,7 +5,7 @@ import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import server.QueueMemory
+import server.queue.QueueMemory
 import server.common.time.dbNow
 import server.common.transaction.AfterCommitExecutor
 import server.techblog.dto.PostData

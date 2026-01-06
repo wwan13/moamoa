@@ -1,24 +1,27 @@
 package server.application
 
-import kotlinx.coroutines.reactor.mono
 import org.springframework.stereotype.Service
-import org.springframework.transaction.event.TransactionPhase
-import org.springframework.transaction.event.TransactionalEventListener
 import server.domain.techblog.TechBlogRepository
 import server.domain.techblog.TechBlogSubscribeCreatedEvent
 import server.domain.techblog.TechBlogSubscribeRemovedEvent
+import server.messaging.EventHandler
+import server.messaging.StreamDefinition
+import server.messaging.handleEvent
 
 @Service
 class TechBlogSubscriptionCountService(
+    private val defaultStream: StreamDefinition,
     private val techBlogRepository: TechBlogRepository
 ) {
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    fun subscriptionCreated(event: TechBlogSubscribeCreatedEvent) = mono {
-        techBlogRepository.incrementSubscriptionCount(event.techBlogId, +1)
-    }.subscribe()
+    @EventHandler
+    fun subscriptionCreated() =
+        handleEvent<TechBlogSubscribeCreatedEvent>(defaultStream) { event ->
+            techBlogRepository.incrementSubscriptionCount(event.techBlogId, +1)
+        }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    fun subscriptionRemoved(event: TechBlogSubscribeRemovedEvent) = mono {
-        techBlogRepository.incrementSubscriptionCount(event.techBlogId, -1)
-    }.subscribe()
+    @EventHandler
+    fun subscriptionRemoved() =
+        handleEvent<TechBlogSubscribeRemovedEvent>(defaultStream) { event ->
+            techBlogRepository.incrementSubscriptionCount(event.techBlogId, -1)
+        }
 }

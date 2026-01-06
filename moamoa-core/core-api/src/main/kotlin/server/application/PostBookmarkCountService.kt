@@ -1,24 +1,27 @@
 package server.application
 
-import kotlinx.coroutines.reactor.mono
 import org.springframework.stereotype.Service
-import org.springframework.transaction.event.TransactionPhase
-import org.springframework.transaction.event.TransactionalEventListener
 import server.domain.post.PostRepository
 import server.domain.postbookmark.PostBookmarkCreatedEvent
 import server.domain.postbookmark.PostBookmarkRemovedEvent
+import server.messaging.EventHandler
+import server.messaging.StreamDefinition
+import server.messaging.handleEvent
 
 @Service
 class PostBookmarkCountService(
+    private val defaultStream: StreamDefinition,
     private val postRepository: PostRepository
 ) {
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    fun bookmarkCreated(event: PostBookmarkCreatedEvent) = mono {
-        postRepository.incrementBookmarkCount(event.postId, +1)
-    }.subscribe()
+    @EventHandler
+    fun bookmarkCreated() =
+        handleEvent<PostBookmarkCreatedEvent>(defaultStream) { event ->
+            postRepository.incrementBookmarkCount(event.postId, +1)
+        }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    fun bookmarkRemoved(event: PostBookmarkRemovedEvent) = mono {
-        postRepository.incrementBookmarkCount(event.postId, -1)
-    }.subscribe()
+    @EventHandler
+    fun bookmarkRemoved() =
+        handleEvent<PostBookmarkRemovedEvent>(defaultStream) { event ->
+            postRepository.incrementBookmarkCount(event.postId, -1)
+        }
 }

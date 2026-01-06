@@ -3,7 +3,7 @@ package server.post.processor
 import kotlinx.coroutines.runBlocking
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
-import server.CacheMemory
+import server.cache.CacheMemory
 import server.post.dto.PostViewCount
 
 @Component

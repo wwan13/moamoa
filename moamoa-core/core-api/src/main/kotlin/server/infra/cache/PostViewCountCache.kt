@@ -1,7 +1,7 @@
 package server.infra.cache
 
 import org.springframework.stereotype.Component
-import server.CacheMemory
+import server.cache.CacheMemory
 
 @Component
 class PostViewCountCache(
