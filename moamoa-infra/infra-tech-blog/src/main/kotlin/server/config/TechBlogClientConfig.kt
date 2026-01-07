@@ -7,11 +7,11 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
-class TechBlogClientConfig {
+internal class TechBlogClientConfig {
 
     @Bean
     @ConditionalOnMissingBean(WebClient::class)
-    fun techBlogClient() = WebClient.builder()
+    fun techBlogClient(): WebClient = WebClient.builder()
         .exchangeStrategies(
             ExchangeStrategies.builder()
                 .codecs {

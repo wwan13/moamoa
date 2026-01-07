@@ -11,7 +11,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Component
-class KakaoBankSource : TechBlogSource {
+internal class KakaoBankSource : TechBlogSource {
 
     private val baseUrl: String = "https://tech.kakaobank.com"
 

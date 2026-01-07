@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import server.utill.PagingFinishedException
 
-fun <T> fetchWithPaging(
+internal fun <T> fetchWithPaging(
     pageSize: Int,
     targetCount: Int? = null,
     startPage: Int = 1,

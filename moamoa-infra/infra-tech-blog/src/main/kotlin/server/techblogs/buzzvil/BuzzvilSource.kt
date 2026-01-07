@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Component
-class BuzzvilSource : TechBlogSource {
+internal class BuzzvilSource : TechBlogSource {
 
     private val baseUrl = "https://tech.buzzvil.com"
     private val timeoutMs = 10_000

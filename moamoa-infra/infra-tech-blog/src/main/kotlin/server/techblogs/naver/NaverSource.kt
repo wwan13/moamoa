@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 @Component
-class NaverSource(
+internal class NaverSource(
     private val webClient: WebClient
 ) : TechBlogSource {
 

@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
-class KakaoPaySource : TechBlogSource {
+internal class KakaoPaySource : TechBlogSource {
 
     private val baseUrl = "https://tech.kakaopay.com"
     private val timeoutMs = 10_000

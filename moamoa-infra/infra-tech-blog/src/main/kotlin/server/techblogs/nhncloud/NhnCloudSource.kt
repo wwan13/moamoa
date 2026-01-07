@@ -13,7 +13,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
-class NhnCloudSource(
+internal class NhnCloudSource(
     private val webClient: WebClient
 ) : TechBlogSource {
 
