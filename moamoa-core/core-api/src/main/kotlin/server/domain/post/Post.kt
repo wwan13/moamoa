@@ -37,5 +37,8 @@ data class Post(
     val bookmarkCount: Long = 0,
 
     @Column("tech_blog_id")
-    val techBlogId: Long
+    val techBlogId: Long,
+
+    @Column("category_id")
+    val categoryId: Long,
 ) : BaseEntity()

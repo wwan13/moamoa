@@ -3,6 +3,7 @@ package server.admin.domain.post
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
+import server.admin.domain.category.AdminCategory
 import support.admin.domain.BaseEntity
 import java.time.LocalDateTime
 
@@ -31,5 +32,8 @@ internal data class AdminPost(
     val publishedAt: LocalDateTime,
 
     @Column("tech_blog_id")
-    val techBlogId: Long
+    val techBlogId: Long,
+
+    @Column("category_id")
+    val categoryId: Long,
 ) : BaseEntity()

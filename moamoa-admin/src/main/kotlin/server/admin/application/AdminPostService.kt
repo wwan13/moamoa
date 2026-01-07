@@ -3,6 +3,7 @@ package server.admin.application
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.admin.domain.post.AdminPost
+import server.admin.domain.category.AdminCategory
 import server.admin.domain.post.AdminPostRepository
 import server.admin.domain.posttag.AdminPostTag
 import server.admin.domain.posttag.AdminPostTagRepository
@@ -81,7 +82,8 @@ internal class AdminPostService(
                 thumbnail = it.thumbnail,
                 url = it.url,
                 publishedAt = it.publishedAt,
-                techBlogId = techBlog.id
+                techBlogId = techBlog.id,
+                categoryId = AdminCategory.UNDEFINED.id,
             )
         }
         return postRepository.saveAll(posts).toList()
