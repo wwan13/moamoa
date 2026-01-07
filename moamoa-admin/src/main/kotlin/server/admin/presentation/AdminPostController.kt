@@ -12,7 +12,7 @@ import server.admin.application.AdminPostService
 
 @RestController
 @RequestMapping("/api/admin/post")
-class AdminPostController(
+internal class AdminPostController(
     private val postService: AdminPostService
 ) {
 

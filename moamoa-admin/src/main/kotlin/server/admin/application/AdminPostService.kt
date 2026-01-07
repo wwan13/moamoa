@@ -15,7 +15,7 @@ import server.techblog.TechBlogPost
 import server.techblog.TechBlogSources
 
 @Service
-class AdminPostService(
+internal class AdminPostService(
     private val transactional: AdminTransactional,
     private val postRepository: AdminPostRepository,
     private val techBlogRepository: AdminTechBlogRepository,

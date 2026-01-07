@@ -2,4 +2,4 @@ package support.admin.uri
 
 import java.net.URI
 
-fun String.toUri(): URI = URI.create(this)
+internal fun String.toUri(): URI = URI.create(this)

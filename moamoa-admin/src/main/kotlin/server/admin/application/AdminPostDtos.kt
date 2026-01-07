@@ -1,10 +1,10 @@
 package server.admin.application
 
-data class AdminInitPostsCommand(
+internal data class AdminInitPostsCommand(
     val techBlogId: Long
 )
 
-data class AdminInitPostsResult(
+internal data class AdminInitPostsResult(
     val techBlog: AdminTechBlogData,
     val newPostCount: Int
 )

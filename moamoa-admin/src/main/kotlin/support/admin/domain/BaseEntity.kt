@@ -6,7 +6,7 @@ import org.springframework.data.domain.Persistable
 import org.springframework.data.relational.core.mapping.Column
 import java.time.LocalDateTime
 
-abstract class BaseEntity : Persistable<Long> {
+internal abstract class BaseEntity : Persistable<Long> {
     abstract val id: Long
 
     @CreatedDate

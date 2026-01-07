@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class AdminHealthController {
+internal class AdminHealthController {
 
     @GetMapping("/admin/health-check")
     suspend fun healthCheck(): ResponseEntity<String> {

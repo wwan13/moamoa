@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.*
 
 @RestControllerAdvice
-class AdminApiControllerAdvice {
+internal class AdminApiControllerAdvice {
 
     private val log = LoggerFactory.getLogger(javaClass)
 

@@ -1,3 +1,3 @@
 package server.admin
 
-class AdminApplication
+internal class AdminApplication
