@@ -13,7 +13,7 @@ import server.utill.validateIsPagingFinished
 import java.time.LocalDateTime
 
 @Component
-class GabiaSource(
+internal class GabiaSource(
     private val webClient: WebClient
 ) : TechBlogSource {
 

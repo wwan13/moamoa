@@ -9,7 +9,7 @@ import server.config.MailProperties
 import server.template.TemplateRenderer
 
 @Component
-class MailSender(
+class MailSender internal constructor(
     private val mailWebClient: WebClient,
     private val templateRenderer: TemplateRenderer,
     private val props: MailProperties

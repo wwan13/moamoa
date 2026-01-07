@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController
 import server.techblog.TechBlogSources
 
 @RestController
-class AdminTestController(
+internal class AdminTestController(
     private val techBlogSources: TechBlogSources
 ) {
 

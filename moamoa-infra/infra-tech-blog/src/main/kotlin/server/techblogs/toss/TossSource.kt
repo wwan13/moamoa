@@ -12,7 +12,7 @@ import server.utill.validateIsPagingFinished
 import java.time.ZonedDateTime
 
 @Component
-class TossSource(
+internal class TossSource(
     private val webClient: WebClient
 ) : TechBlogSource {
 

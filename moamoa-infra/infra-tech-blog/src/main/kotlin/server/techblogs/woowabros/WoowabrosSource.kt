@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Component
-class WoowabrosSource : TechBlogSource {
+internal class WoowabrosSource : TechBlogSource {
 
     private val baseUrl = "https://techblog.woowahan.com"
     private val timeoutMs = 10_000

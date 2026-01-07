@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
-class KurlySource : TechBlogSource {
+internal class KurlySource : TechBlogSource {
 
     private val baseUrl = "https://helloworld.kurly.com"
     private val timeoutMs = 10_000

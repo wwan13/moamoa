@@ -5,4 +5,4 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 @ConfigurationPropertiesScan
-class SecurityConfig
+internal class SecurityConfig

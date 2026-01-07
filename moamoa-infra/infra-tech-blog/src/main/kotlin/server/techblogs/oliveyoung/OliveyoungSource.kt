@@ -11,7 +11,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Component
-class OliveyoungSource : TechBlogSource {
+internal class OliveyoungSource : TechBlogSource {
 
     private val baseUrl = "https://oliveyoung.tech"
     private val timeoutMs = 10_000

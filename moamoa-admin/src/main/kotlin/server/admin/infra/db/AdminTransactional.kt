@@ -11,7 +11,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
-class AdminTransactional(
+internal class AdminTransactional(
     connectionFactory: ConnectionFactory
 ) {
 

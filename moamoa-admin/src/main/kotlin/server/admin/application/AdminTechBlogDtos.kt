@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size
 import org.hibernate.validator.constraints.URL
 import server.admin.domain.techblog.AdminTechBlog
 
-data class AdminCreateTechBlogCommand(
+internal data class AdminCreateTechBlogCommand(
     @field:NotBlank
     @field:Size(max = 100)
     val title: String,
@@ -23,7 +23,7 @@ data class AdminCreateTechBlogCommand(
     val blogUrl: String
 )
 
-data class AdminUpdateTechBlogCommand(
+internal data class AdminUpdateTechBlogCommand(
     @field:NotBlank
     @field:Size(max = 100)
     val title: String,
@@ -37,7 +37,7 @@ data class AdminUpdateTechBlogCommand(
     val blogUrl: String
 )
 
-data class AdminTechBlogData(
+internal data class AdminTechBlogData(
     val id: Long,
     val title: String,
     val icon: String,

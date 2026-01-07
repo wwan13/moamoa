@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Table
 import support.admin.domain.BaseEntity
 
 @Table(name = "tag")
-data class AdminTag(
+internal data class AdminTag(
     @Id
     @Column("id")
     override val id: Long = 0,

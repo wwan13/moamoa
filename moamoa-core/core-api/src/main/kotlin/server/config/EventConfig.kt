@@ -14,7 +14,7 @@ class EventConfig {
     @Bean
     fun defaultStream(
         defaultTopic: StreamTopic
-    ) = StreamDefinition(
+    ): StreamDefinition = StreamDefinition(
         topic = defaultTopic,
         group = "default-group",
         ackWhenFail = true,

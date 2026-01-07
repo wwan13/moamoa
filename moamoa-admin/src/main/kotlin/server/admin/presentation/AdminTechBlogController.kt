@@ -11,7 +11,7 @@ import support.admin.uri.toUri
 
 @RestController
 @RequestMapping("/api/admin/tech-blog")
-class AdminTechBlogController(
+internal class AdminTechBlogController(
     private val techBlogService: AdminTechBlogService
 ) {
     @PostMapping

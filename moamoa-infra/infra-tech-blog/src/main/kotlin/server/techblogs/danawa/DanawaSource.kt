@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
-class DanawaSource : TechBlogSource {
+internal class DanawaSource : TechBlogSource {
 
     private val baseUrl = "https://danawalab.github.io"
     private val timeoutMs = 10_000

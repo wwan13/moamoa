@@ -9,11 +9,11 @@ import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
 @ConfigurationPropertiesScan
-class MailConfig {
+internal class MailConfig {
 
     @Bean
     @ConditionalOnMissingBean(WebClient::class)
-    fun mailWebClient() = WebClient.builder()
+    fun mailWebClient(): WebClient = WebClient.builder()
         .exchangeStrategies(
             ExchangeStrategies.builder()
                 .codecs {

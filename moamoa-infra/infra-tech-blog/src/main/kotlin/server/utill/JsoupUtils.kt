@@ -8,7 +8,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import server.utill.PagingFinishedException
 
-fun <T> fetchWithPaging(
+internal fun <T> fetchWithPaging(
     targetCount: Int?,
     buildUrl: (page: Int) -> String,
     startPage: Int = 1,
@@ -42,7 +42,7 @@ fun <T> fetchWithPaging(
     }
 }
 
-fun jsoup(url: String, timeoutMs: Int = 10_000): Document {
+internal fun jsoup(url: String, timeoutMs: Int = 10_000): Document {
     val response = Jsoup.connect(url)
         .timeout(timeoutMs)
         .userAgent(

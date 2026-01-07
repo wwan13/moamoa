@@ -8,7 +8,7 @@ import server.config.SecurityProperties
 import java.util.*
 
 @Component
-class TokenProvider(
+class TokenProvider internal constructor(
     props: SecurityProperties
 ) {
 

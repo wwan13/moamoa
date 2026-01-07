@@ -7,7 +7,7 @@ import server.admin.infra.db.AdminTransactional
 import server.techblog.TechBlogSources
 
 @Service
-class AdminTechBlogService(
+internal class AdminTechBlogService(
     private val transactional: AdminTransactional,
     private val techBlogRepository: AdminTechBlogRepository,
     private val techBlogSources: TechBlogSources

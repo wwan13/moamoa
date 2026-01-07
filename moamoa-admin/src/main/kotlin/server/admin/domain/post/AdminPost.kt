@@ -7,7 +7,7 @@ import support.admin.domain.BaseEntity
 import java.time.LocalDateTime
 
 @Table(name = "post")
-data class AdminPost(
+internal data class AdminPost(
     @Id
     @Column("id")
     override val id: Long = 0,
