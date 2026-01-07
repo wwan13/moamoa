@@ -77,7 +77,8 @@ class FetchTechBlogPostsWriter(
                 "thumbnail" to it.thumbnail,
                 "url" to it.url,
                 "publishedAt" to it.publishedAt,
-                "techBlogId" to it.techBlogId
+                "techBlogId" to it.techBlogId,
+                "category" to 999
             )
         }
 
@@ -91,6 +92,7 @@ class FetchTechBlogPostsWriter(
                 url,
                 published_at,
                 tech_blog_id,
+                category,
                 created_at,
                 last_modified_at
             )
@@ -102,6 +104,7 @@ class FetchTechBlogPostsWriter(
                 :url,
                 :publishedAt,
                 :techBlogId,
+                :category,
                 NOW(),
                 NOW()
             )
