@@ -149,7 +149,7 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                     label="이메일"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.id)}
                     onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                     error={errors.email}
                     right={
@@ -171,7 +171,7 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                         label="인증번호"
                         placeholder="6자리 숫자"
                         value={code}
-                        onChange={(e) => setCode(e.target.value)}
+                        onChange={(e) => setCode(e.target.id)}
                         onBlur={() => setTouched((t) => ({ ...t, code: true }))}
                         error={errors.code}
                         success={codeVerified ? "인증 완료" : ""}   /* ✅ 에러 자리 = 성공 메시지 */
@@ -197,7 +197,7 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                     type="password"
                     placeholder="8~32자리, 특수문자 포함"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.id)}
                     onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                     error={errors.password}
                 />
@@ -207,7 +207,7 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                     type="password"
                     placeholder="비밀번호 재입력"
                     value={passwordConfirm}
-                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    onChange={(e) => setPasswordConfirm(e.target.id)}
                     onBlur={() => setTouched((t) => ({ ...t, passwordConfirm: true }))}
                     error={errors.passwordConfirm}
                 />

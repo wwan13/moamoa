@@ -2,14 +2,8 @@ import Pagination from "@mui/material/Pagination"
 import styles from "./PostList.module.css"
 import PostItem from "../PostItem/PostItem.jsx"
 import CategoryTabs from "../CategoryTab/CategoryTabs.jsx"
-
-const CATEGORY_ITEMS = [
-    {label: "전체", value: "ALL"},
-    // {label: "개발", value: "DEV"},
-    // {label: "데이터/ML", value: "DATA_ML"},
-    // {label: "디자인", value: "DESIGN"},
-    // {label: "프로덕트", value: "PRODUCT"},
-]
+import {useEffect, useState} from "react";
+import {categoryApi} from "../../api/category.api.js";
 
 export default function PostList({
                                      posts,
@@ -21,12 +15,26 @@ export default function PostList({
                                      isBlogDetail
                                  }) {
 
+    const [categories, setCategories] = useState([])
+    const [selected, setSelected] = useState(0)
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const res = await categoryApi()
+            setCategories([
+                { id: 0, key: "ALL", title: "전체" },
+                ...res,
+            ])
+        }
+        fetchCategories()
+    }, []);
+
     return (
         <>
             <CategoryTabs
-                items={CATEGORY_ITEMS}
-                value="ALL"
-                onChange={(next) => onChangeCategory(next)}
+                items={categories}
+                id={selected}
+                onChange={(next) => setSelected(next)}
             />
 
             <div className={styles.list}>
