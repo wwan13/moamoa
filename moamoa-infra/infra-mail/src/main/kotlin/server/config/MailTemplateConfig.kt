@@ -6,7 +6,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver
 
 @Configuration
-class MailTemplateConfig {
+internal class MailTemplateConfig {
 
     @Bean
     fun emailTemplateResolver(): ClassLoaderTemplateResolver {

@@ -5,7 +5,7 @@ import org.thymeleaf.context.Context
 import org.thymeleaf.spring6.SpringTemplateEngine
 
 @Component
-class TemplateRenderer(
+internal class TemplateRenderer(
     private val templateEngine: SpringTemplateEngine,
 ) {
 
