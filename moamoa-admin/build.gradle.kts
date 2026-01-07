@@ -7,13 +7,14 @@ tasks.getByName("jar") {
 }
 
 dependencies {
-    compileOnly("org.springframework.boot:spring-boot-starter-webflux")
-    compileOnly("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    compileOnly("org.springframework.boot:spring-boot-starter-data-r2dbc")
+    implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
     runtimeOnly("io.asyncer:r2dbc-mysql")
 
-    compileOnly(project(":moamoa-support:support-api-docs"))
+    implementation(project(":moamoa-support:support-api-docs"))
 
-    compileOnly(project(":moamoa-core:core-tech-blog"))
+    implementation(project(":moamoa-core:core-tech-blog"))
+    implementation(project(":moamoa-infra:infra-tech-blog"))
 }

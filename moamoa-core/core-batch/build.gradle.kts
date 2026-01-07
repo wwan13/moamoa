@@ -12,6 +12,6 @@ dependencies {
     runtimeOnly("com.mysql:mysql-connector-j")
 
     implementation(project(":moamoa-core:core-tech-blog"))
-    runtimeOnly(project(":moamoa-infra:infra-tech-blog"))
+    implementation(project(":moamoa-infra:infra-tech-blog"))
     implementation(project(":moamoa-infra:infra-redis"))
 }
