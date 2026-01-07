@@ -1,9 +1,11 @@
 package server.member.lookup
 
+import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 
 @Component
+@StepScope
 class MemberSubscriptionLookup(
     private val jdbc: NamedParameterJdbcTemplate
 ) {

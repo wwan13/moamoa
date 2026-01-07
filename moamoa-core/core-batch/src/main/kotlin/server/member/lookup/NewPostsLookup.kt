@@ -1,12 +1,14 @@
 package server.member.lookup
 
 import kotlinx.coroutines.runBlocking
+import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.member.dto.PostData
 import server.queue.QueueMemory
 
 @Component
+@StepScope
 class NewPostsLookup(
     private val queueMemory: QueueMemory,
     private val jdbc: NamedParameterJdbcTemplate
