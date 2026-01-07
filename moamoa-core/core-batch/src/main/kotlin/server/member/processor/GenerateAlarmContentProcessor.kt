@@ -9,7 +9,6 @@ import server.member.lookup.MemberSubscriptionLookup
 import server.member.lookup.NewPostsLookup
 
 @Component
-@StepScope
 class GenerateAlarmContentProcessor(
     private val memberSubscriptionLookup: MemberSubscriptionLookup,
     private val newPostsLookup: NewPostsLookup
