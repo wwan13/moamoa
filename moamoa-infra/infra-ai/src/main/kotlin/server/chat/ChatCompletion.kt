@@ -13,9 +13,26 @@ class ChatCompletion internal constructor(
     private val props: AiProperties,
     private val webClient: WebClient
 ) {
-    suspend fun invoke(vararg prompts: Prompt): String {
+
+    suspend fun invoke(
+        vararg prompts: Prompt,
+        temperature: Double = 0.0
+    ): String =
+        invokeInternal(prompts.toList(), temperature)
+
+    suspend fun invoke(
+        prompts: List<Prompt>,
+        temperature: Double = 0.0
+    ): String =
+        invokeInternal(prompts, temperature)
+
+    private suspend fun invokeInternal(
+        prompts: List<Prompt>,
+        temperature: Double
+    ): String {
         val request = Request(
             model = props.model,
+            temperature = temperature,
             messages = prompts.map {
                 ChatMessage(
                     role = it.role,
@@ -42,6 +59,7 @@ class ChatCompletion internal constructor(
     private data class Request(
         val model: String,
         val messages: List<ChatMessage>,
+        val temperature: Double
     )
 
     private data class ChatCompletionResponse(
