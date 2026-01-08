@@ -10,6 +10,7 @@ include("moamoa-infra:infra-redis")
 include("moamoa-infra:infra-mail")
 include("moamoa-infra:infra-tech-blog")
 include("moamoa-infra:infra-security")
+include("moamoa-infra:infra-ai")
 
 include("moamoa-support")
 include("moamoa-support:support-api-docs")
