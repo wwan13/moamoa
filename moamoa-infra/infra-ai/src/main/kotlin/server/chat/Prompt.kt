@@ -1,6 +1,6 @@
 package server.chat
 
-sealed class Prompt(
+data class Prompt(
     val role: String,
     val message: String
 ) {
@@ -8,7 +8,14 @@ sealed class Prompt(
         SYSTEM("system"), USER("user"), ASSISTANT("assistant")
     }
 
-    class System(message: String) : Prompt(Role.SYSTEM.value, message)
-    class User(message: String) : Prompt(Role.USER.value, message)
-    class Assistant(message: String) : Prompt(Role.ASSISTANT.value, message)
+    companion object {
+        fun system(message: String): Prompt =
+            Prompt(Role.SYSTEM.value, message)
+
+        fun user(message: String): Prompt =
+            Prompt(Role.USER.value, message)
+
+        fun assistant(message: String): Prompt =
+            Prompt(Role.ASSISTANT.value, message)
+    }
 }
