@@ -7,6 +7,7 @@ import server.feature.post.command.application.PostService
 import server.feature.post.query.PostList
 import server.feature.post.query.PostQueryConditions
 import server.feature.post.query.PostQueryService
+import server.feature.post.query.SubscribingPostQueryService
 import server.feature.post.query.TechBlogPostQueryConditions
 import server.feature.post.query.TechBlogPostQueryService
 import server.security.Passport
@@ -18,6 +19,7 @@ class PostController(
     private val postService: PostService,
     private val postQueryService: PostQueryService,
     private val techBlogPostQueryService: TechBlogPostQueryService,
+    private val subscribingPostQueryService: SubscribingPostQueryService
 ) {
 
     @PostMapping("/{postId}/view")
@@ -43,8 +45,18 @@ class PostController(
     suspend fun findAllByTechBlogConditions(
         conditions: TechBlogPostQueryConditions,
         @RequestPassport passport: Passport?
-    ): ResponseEntity<PostList?> {
+    ): ResponseEntity<PostList> {
         val response = techBlogPostQueryService.findAllByConditions(conditions, passport)
+
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/subscription")
+    suspend fun findAllBySubscribingConditions(
+        conditions: PostQueryConditions,
+        @RequestPassport passport: Passport
+    ): ResponseEntity<PostList> {
+        val response = subscribingPostQueryService.findAllByConditions(conditions, passport)
 
         return ResponseEntity.ok(response)
     }
