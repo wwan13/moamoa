@@ -6,7 +6,6 @@ import java.time.LocalDateTime
 data class PostQueryConditions(
     val page: Long?,
     val size: Long?,
-    val techBlogId: Long?
 )
 
 data class PostList(
@@ -33,4 +32,10 @@ data class PostSummary(
     val viewCount: Long,
     val bookmarkCount: Long,
     val techBlog: TechBlogData
+)
+
+data class TechBlogPostQueryConditions(
+    val techBlogKey: String,
+    val page: Long?,
+    val size: Long?
 )

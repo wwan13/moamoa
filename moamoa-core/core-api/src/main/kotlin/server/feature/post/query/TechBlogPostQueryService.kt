@@ -11,20 +11,20 @@ import support.paging.Paging
 import support.paging.calculateTotalPage
 
 @Service
-class PostQueryService(
+class TechBlogPostQueryService(
     private val databaseClient: DatabaseClient,
 ) {
 
-    suspend fun findByConditions(
-        conditions: PostQueryConditions,
-        passport: Passport?
+    suspend fun findAllByConditions(
+        conditions: TechBlogPostQueryConditions,
+        passport: Passport?,
     ): PostList {
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
 
-        val totalCount = countAll()
+        val totalCount = countByTechBlogKey(conditions.techBlogKey)
 
         val meta = PostListMeta(
             page = paging.page,
@@ -33,17 +33,19 @@ class PostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        val posts = findAll(
+        val posts = findAllByTechBlogKey(
             paging = paging,
+            techBlogKey = conditions.techBlogKey,
             memberId = passport?.memberId
         ).toList()
 
         return PostList(meta, posts)
     }
 
-    private suspend fun findAll(
+    private suspend fun findAllByTechBlogKey(
         paging: Paging,
-        memberId: Long?
+        techBlogKey: String,
+        memberId: Long?,
     ): Flow<PostSummary> {
         val offset = (paging.page - 1L) * paging.size
 
@@ -56,6 +58,7 @@ class PostQueryService(
                 LEFT JOIN post_bookmark pb
                   ON pb.post_id = p.id
                  AND pb.member_id = :memberId
+                WHERE t.tech_blog_key = :techBlogKey
                 ORDER BY p.published_at DESC
                 LIMIT :limit OFFSET :offset
             """.trimIndent()
@@ -65,16 +68,20 @@ class PostQueryService(
                     FALSE AS is_bookmarked
                 FROM post p
                 INNER JOIN tech_blog t ON t.id = p.tech_blog_id
+                WHERE t.tech_blog_key = :techBlogKey
                 ORDER BY p.published_at DESC
                 LIMIT :limit OFFSET :offset
             """.trimIndent()
         }
 
         var spec = databaseClient.sql(sql)
+            .bind("techBlogKey", techBlogKey)
             .bind("limit", paging.size)
             .bind("offset", offset)
 
-        if (memberId != null) spec = spec.bind("memberId", memberId)
+        if (memberId != null) {
+            spec = spec.bind("memberId", memberId)
+        }
 
         return spec
             .map { row, _ -> mapToPostSummary(row) }
@@ -82,13 +89,16 @@ class PostQueryService(
             .asFlow()
     }
 
-    private suspend fun countAll(): Long {
+    private suspend fun countByTechBlogKey(techBlogKey: String): Long {
         val sql = """
             SELECT COUNT(*) AS cnt
-            FROM post
+            FROM post p
+            INNER JOIN tech_blog t ON t.id = p.tech_blog_id
+            WHERE t.tech_blog_key = :techBlogKey
         """.trimIndent()
 
         return databaseClient.sql(sql)
+            .bind("techBlogKey", techBlogKey)
             .map { row, _ -> row.get("cnt", Long::class.java) ?: 0L }
             .one()
             .awaitSingle()
