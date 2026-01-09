@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {findByTechBlogKeyApi} from "../../api/techblog.api.js";
 import {showGlobalAlert, showGlobalConfirm, showToast} from "../../api/client.js";
-import {postsApi} from "../../api/post.api.js";
+import {postsByTechBlogKeyApi} from "../../api/post.api.js";
 import PostList from "../../components/PostList/PostList.jsx";
 import {usePagingQuery} from "../../hooks/usePagingQuery.js";
 import {subscribingBlogsApi, subscriptionToggleApi} from "../../api/subscription.api.js";
@@ -33,9 +33,9 @@ export default function TechBlogDetailPage() {
                 setTechBlogId(techBlogRes.id)
                 setSubCount(techBlogRes.subscriptionCount)
 
-                const postsPromise = postsApi({
+                const postsPromise = postsByTechBlogKeyApi({
                     page: page,
-                    techBlogId: techBlogRes.id,
+                    techBlogKey: key,
                 })
 
                 const subsPromise = isLoggedIn ? subscribingBlogsApi() : Promise.resolve([])
