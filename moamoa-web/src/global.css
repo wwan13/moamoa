@@ -11,3 +11,8 @@ button:focus {
 button:focus-visible {
     outline: none;
 }
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
