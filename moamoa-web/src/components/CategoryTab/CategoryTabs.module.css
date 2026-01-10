@@ -1,9 +1,9 @@
 .wrap {
-    padding-bottom: 52px;
-    /*position: sticky;*/
-    /*top: calc(60px + 16px);*/
-    /*background-color: #ffffff;*/
-    /*z-index: 10000;*/
+    /*padding-bottom: 52px;*/
+    top: calc(64px);
+    background-color: #ffffff;
+    z-index: 10000;
+    position: sticky;
 }
 
 .tab {
@@ -56,4 +56,24 @@
 .tabItem:focus,
 .tabItem:focus-visible {
     outline: none;
+}
+
+.subscriptions {
+    border: none;
+    outline: none;
+    cursor: pointer;
+    background: none;
+    color: #6b7280;
+    box-sizing: border-box;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    /*margin: 0;*/
+    /*height: 20px;*/
+    /*font-size: 14px;*/
+}
+
+.subscriptions > p {
+    font-size: 14px;
+    margin: 0;
 }

@@ -3,5 +3,35 @@
     top: calc(60px + 16px); /* 헤더 + 여유 */
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    transition: .2s ease;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    outline: none;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.active {
+    background-color: #f3f4f6;
+}
+
+.header:hover {
+    background-color: #f3f4f6;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #252525;
 }

@@ -85,8 +85,9 @@
 }
 
 .subIngButton {
+    box-sizing: border-box;
     outline: none;
-    border: 2px solid #90AB8B;
+    border: 1px solid #90AB8B;
     background-color: #ffffff;
     width: 84px;
     height: 32px;

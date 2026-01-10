@@ -1,8 +1,9 @@
 .list {
     display: flex;
     flex-direction: column;
-    gap: 52px;
+    gap: 44px;
     overflow: hidden;
+    padding-top: 44px;
 }
 
 .paginationWrap {

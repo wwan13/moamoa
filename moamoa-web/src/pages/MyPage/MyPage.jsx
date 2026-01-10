@@ -20,12 +20,7 @@ export default function MyPage() {
                 <p className={styles.sectionTitle}>활동</p>
                 <div className={styles.buttons}>
                     <button className={styles.button}>
-                        <p className={styles.buttonText}>북마크한 게시글</p>
-                        <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
-                    </button>
-                    <div className={styles.divider}/>
-                    <button className={styles.button}>
-                        <p className={styles.buttonText}>구독한 기술 블로그</p>
+                        <p className={styles.buttonText}>구독 관리</p>
                         <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
                     </button>
                 </div>

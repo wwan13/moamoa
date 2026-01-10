@@ -44,3 +44,35 @@ export function postsByTechBlogKeyApi({ page, techBlogKey } = {}, onError) {
         { onError: onError ?? (() => {}) }
     )
 }
+
+export function postsBySubscriptionApi({ page } = {}, onError) {
+    const params = new URLSearchParams()
+
+    if (page && page > 1) params.set("page", page)
+    params.set("size", 20)
+
+    const query = params.toString()
+    const url = query ? `/api/post/subscription?${query}` : "/api/post/subscription"
+
+    return apiRequest(
+        url,
+        { method: "GET" },
+        { onError: onError ?? (() => {}) }
+    )
+}
+
+export function postsByBookmarkApi({ page } = {}, onError) {
+    const params = new URLSearchParams()
+
+    if (page && page > 1) params.set("page", page)
+    params.set("size", 20)
+
+    const query = params.toString()
+    const url = query ? `/api/post/bookmark?${query}` : "/api/post/bookmark"
+
+    return apiRequest(
+        url,
+        { method: "GET" },
+        { onError: onError ?? (() => {}) }
+    )
+}

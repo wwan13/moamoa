@@ -52,19 +52,15 @@
 }
 
 .logoutButton {
-    width: 100%;
+    text-decoration: underline;
     outline: none;
     border: none;
-    height: 48px;
-    font-size: 16px;
-    font-weight: 500;
-    background: #D34646;
-    color: #ffffff;
-    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #787878;
     cursor: pointer;
-}
-
-.logoutButton:hover {
-    opacity: 0.80;
-    transition: .3s;
+    background: none;
+    padding: 0;
+    width: 80px;
+    margin: 0 auto;
 }

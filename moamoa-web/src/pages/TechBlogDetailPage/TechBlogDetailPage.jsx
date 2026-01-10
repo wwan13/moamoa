@@ -122,7 +122,7 @@ export default function TechBlogDetailPage() {
                             page={page}
                             totalPages={totalPages}
                             onChangePage={setPage}
-                            isBlogDetail={true}
+                            emptyMessage={"기술 블로그에 게시글이 존재하지 않습니다."}
                         />
                     </div>
                 </div>
