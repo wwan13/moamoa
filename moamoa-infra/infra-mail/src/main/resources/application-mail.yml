@@ -1,4 +1,4 @@
 mail:
   api-key: ${MAIL_API_KEY}
-  domain: mail.algolingo.kro.kr
-  from: "모아모아 <support@mail.algolingo.kro.kr>"
+  domain: ${MAIL_DOMAIN}
+  from: ${MAIL_FROM}

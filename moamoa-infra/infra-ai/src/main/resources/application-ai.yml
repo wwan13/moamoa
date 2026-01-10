@@ -1,4 +1,4 @@
 ai:
   secret-key: ${AI_SECRET_KEY}
-  model: qwen/qwen2.5-vl-7b
+  model: ${AI_MODEL}
   base-url: ${AI_BASE_URL}
