@@ -1,9 +1,9 @@
-package server.feature.techblog.application
+package server.feature.techblog.command.application
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Service
-import server.feature.techblog.domain.TechBlogRepository
+import server.feature.techblog.command.domain.TechBlogRepository
 
 @Service
 class TechBlogService(

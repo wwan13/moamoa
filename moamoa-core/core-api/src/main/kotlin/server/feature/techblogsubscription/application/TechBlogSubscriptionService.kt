@@ -6,10 +6,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.feature.member.domain.MemberRepository
-import server.feature.techblog.application.TechBlogData
-import server.feature.techblog.domain.TechBlogRepository
-import server.feature.techblog.domain.TechBlogSubscribeCreatedEvent
-import server.feature.techblog.domain.TechBlogSubscribeRemovedEvent
+import server.feature.techblog.command.application.TechBlogData
+import server.feature.techblog.command.domain.TechBlogRepository
+import server.feature.techblog.command.domain.TechBlogSubscribeCreatedEvent
+import server.feature.techblog.command.domain.TechBlogSubscribeRemovedEvent
 import server.feature.techblogsubscription.domain.TechBlogSubscription
 import server.feature.techblogsubscription.domain.TechBlogSubscriptionRepository
 import server.infra.db.Transactional

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import server.feature.techblogsubscription.application.NotificationEnabledToggleCommand
 import server.feature.techblogsubscription.application.NotificationEnabledToggleResult
-import server.feature.techblog.application.TechBlogData
+import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblogsubscription.application.TechBlogSubscriptionService
 import server.feature.techblogsubscription.application.TechBlogSubscriptionToggleCommand
 import server.feature.techblogsubscription.application.TechBlogSubscriptionToggleResult

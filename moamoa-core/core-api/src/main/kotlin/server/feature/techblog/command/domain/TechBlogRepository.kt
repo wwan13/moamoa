@@ -1,4 +1,4 @@
-package server.feature.techblog.domain
+package server.feature.techblog.command.domain
 
 import kotlinx.coroutines.flow.Flow
 import org.springframework.data.r2dbc.repository.Modifying

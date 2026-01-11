@@ -1,6 +1,6 @@
 package server.feature.post.query
 
-import server.feature.techblog.application.TechBlogData
+import server.feature.techblog.command.application.TechBlogData
 import java.time.LocalDateTime
 
 data class PostQueryConditions(

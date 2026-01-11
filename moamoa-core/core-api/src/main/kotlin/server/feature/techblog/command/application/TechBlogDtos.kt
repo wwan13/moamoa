@@ -1,6 +1,6 @@
-package server.feature.techblog.application
+package server.feature.techblog.command.application
 
-import server.feature.techblog.domain.TechBlog
+import server.feature.techblog.command.domain.TechBlog
 
 data class TechBlogData(
     val id: Long,
