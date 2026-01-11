@@ -1,7 +1,7 @@
 package server.feature.post.query
 
 import io.r2dbc.spi.Row
-import server.feature.techblog.application.TechBlogData
+import server.feature.techblog.command.application.TechBlogData
 import java.time.LocalDateTime
 
 const val POST_QUERY_BASE_SELECT = """
