@@ -20,7 +20,12 @@ export default function MyPage() {
                 <p className={styles.sectionTitle}>활동</p>
                 <div className={styles.buttons}>
                     <button className={styles.button} onClick={() => navigate("/subscription")}>
-                        <p className={styles.buttonText}>구독 관리</p>
+                        <p className={styles.buttonText}>모든 구독 블로그</p>
+                        <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
+                    </button>
+                    <div className={styles.divider}/>
+                    <button className={styles.button} onClick={() => console.log("asd")}>
+                        <p className={styles.buttonText}>블로그 요청 내역</p>
                         <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
                     </button>
                 </div>

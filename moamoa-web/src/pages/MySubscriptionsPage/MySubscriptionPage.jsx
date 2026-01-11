@@ -1,6 +1,7 @@
 import styles from "./MySubscriptionPage.module.css"
 import {useEffect, useState} from "react";
 import {subscribingBlogsApi} from "../../api/subscription.api.js";
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 
 export default function MySubscriptionPage() {
     const [techBlogs, setTechBlogs] = useState([])
@@ -31,12 +32,16 @@ export default function MySubscriptionPage() {
                                 />
                             </div>
                             <div className={styles.infoWrap}>
-                                <div>
+                                <div className={styles.left}>
                                     <p className={styles.techBlogTitle}>{techBlog.title}</p>
                                     <p className={styles.techBlogSub}>구독자 {techBlog.subscriptionCount}명 · 게시글 1개</p>
+                                    <p className={styles.techBlogUrl}>{techBlog.blogUrl}</p>
                                 </div>
-                                <div>
-                                    <button>구독중</button>
+                                <div className={styles.right}>
+                                    <button className={styles.subIngButton}>구독중</button>
+                                    <button className={styles.alarmIngButton}>
+                                        <NotificationsNoneOutlinedIcon sx={{ fontSize: 18, color: "#A2A2A2", fontWeight: 800 }}/>
+                                    </button>
                                 </div>
                             </div>
                         </div>

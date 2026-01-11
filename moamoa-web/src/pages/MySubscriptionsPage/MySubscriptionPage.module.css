@@ -19,6 +19,7 @@
     display: flex;
     gap: 24px;
     align-items: center;
+    cursor: pointer;
 }
 
 .iconWrap {
@@ -44,13 +45,87 @@
     justify-content: space-between;
 }
 
+.left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
 .techBlogTitle {
     font-size: 20px;
     font-weight: 600;
     color: #252525;
+    margin: 0 0 6px 0;
+    transition: .2s ease;
+}
+
+.item:hover .techBlogTitle {
+    color: #90AB8B;
 }
 
 .techBlogSub {
     color: #A8A8A8;
     font-size: 14px;
+    margin: 0;
+}
+
+.techBlogUrl {
+    font-size: 14px;
+    color: #A8A8A8;
+    text-decoration: underline;
+    outline: none;
+    border: none;
+    background-color: #fff;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    margin: 0;
+}
+
+.right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subButton {
+    outline: none;
+    border: none;
+    background-color: #90AB8B;
+    width: 64px;
+    height: 32px;
+    border-radius: 18px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer
+}
+
+.subIngButton {
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    background-color: #f3f4f6;
+    width: 84px;
+    height: 32px;
+    border-radius: 18px;
+    color: #A2A2A2;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.alarmIngButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    background-color: #f3f4f6;
+    border-radius: 999px;
+    cursor: pointer;
 }

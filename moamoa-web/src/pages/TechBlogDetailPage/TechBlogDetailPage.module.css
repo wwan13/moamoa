@@ -87,12 +87,12 @@
 .subIngButton {
     box-sizing: border-box;
     outline: none;
-    border: 1px solid #90AB8B;
-    background-color: #ffffff;
+    border: none;
+    background-color: #f3f4f6;
     width: 84px;
     height: 32px;
     border-radius: 18px;
-    color: #90AB8B;
+    color: #A2A2A2;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer
