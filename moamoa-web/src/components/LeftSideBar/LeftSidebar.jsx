@@ -1,5 +1,5 @@
 import styles from "./LeftSidebar.module.css"
-import Subscriptions from "../subscriptions/Subscriptions.jsx"
+import Subscriptions from "../Subscriptions/Subscriptions.jsx"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
 export default function LeftSidebar({
