@@ -19,7 +19,7 @@ export default function MyPage() {
             <section className={styles.section}>
                 <p className={styles.sectionTitle}>활동</p>
                 <div className={styles.buttons}>
-                    <button className={styles.button}>
+                    <button className={styles.button} onClick={() => navigate("/subscription")}>
                         <p className={styles.buttonText}>구독 관리</p>
                         <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
                     </button>

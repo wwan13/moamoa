@@ -3,6 +3,7 @@ import MainPage from "../pages/MainPage/MainPage.jsx"
 import TechBlogsPage from "../pages/TechBlogsPage/TechBlogsPage.jsx";
 import TechBlogDetailPage from "../pages/TechBlogDetailPage/TechBlogDetailPage.jsx";
 import MyPage from "../pages/MyPage/MyPage.jsx";
+import MySubscriptionPage from "../pages/MySubscriptionsPage/MySubscriptionPage.jsx";
 
 export default function AppRoutes() {
     return (
@@ -10,6 +11,7 @@ export default function AppRoutes() {
             <Route path="/" element={<MainPage />} />
             <Route path="/blogs" element={<TechBlogsPage />} />
             <Route path="/:key" element={<TechBlogDetailPage />} />
+            <Route path="/subscription" element={<MySubscriptionPage />} />
             <Route path="/my" element={<MyPage />} />
         </Routes>
     )

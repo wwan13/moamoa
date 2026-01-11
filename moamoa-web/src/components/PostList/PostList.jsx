@@ -3,7 +3,7 @@ import styles from "./PostList.module.css"
 import PostItem from "../PostItem/PostItem.jsx"
 import CategoryTabs from "../CategoryTab/CategoryTabs.jsx"
 import { useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import {useNavigate, useSearchParams} from "react-router-dom"
 
 export default function PostList({
                                      posts,
@@ -17,6 +17,7 @@ export default function PostList({
 
     const [categories, setCategories] = useState([])
     const [selected, setSelected] = useState(0)
+    const navigate = useNavigate()
 
     useEffect(() => {
         setCategories([{ id: 0, key: "ALL", title: "전체" }])
@@ -37,6 +38,7 @@ export default function PostList({
                 id={selected}
                 onChange={(next) => setSelected(next)}
                 isSubscribing={type==="subscribed"}
+                onClickSubscriptions={() => navigate("/subscription")}
             />
 
             <div className={styles.list}>
