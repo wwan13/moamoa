@@ -1,6 +1,6 @@
 .wrap {
     /*padding-bottom: 52px;*/
-    top: calc(64px);
+    top: calc(60px);
     background-color: #ffffff;
     z-index: 10000;
     position: sticky;

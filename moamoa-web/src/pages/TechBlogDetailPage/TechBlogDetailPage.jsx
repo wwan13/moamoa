@@ -104,7 +104,7 @@ export default function TechBlogDetailPage() {
                         <button
                             className={styles.subIngButton}
                             onClick={onSubButtonToggle}
-                        >구독 해제</button>
+                        >구독중</button>
                         :
                         <button
                             className={styles.subButton}

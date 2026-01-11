@@ -76,6 +76,7 @@ export default function MainPage() {
         }
 
         if (type === TYPES.ALL) {
+            setEmptyMessage("게시글이 존재하지 않습니다.")
             fetchAllPosts()
         } else if (type === TYPES.SUBSCRIBED) {
             if (blogKey === null) {
