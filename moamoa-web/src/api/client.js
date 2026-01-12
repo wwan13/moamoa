@@ -193,7 +193,7 @@ export class ApiError extends Error {
 /**
  * 공통 API 함수
  */
-const LOADING_DELAY_MS = 200 // 이 시간보다 오래 걸리면 로딩 켬
+const LOADING_DELAY_MS = 500 // 이 시간보다 오래 걸리면 로딩 켬
 
 export async function apiRequest(path, options = {}, config = {}) {
     const {
