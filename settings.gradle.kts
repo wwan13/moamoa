@@ -17,3 +17,5 @@ include("moamoa-support:support-api-docs")
 include("moamoa-support:support-templates")
 
 include("moamoa-admin")
+
+include("moamoa-web")
