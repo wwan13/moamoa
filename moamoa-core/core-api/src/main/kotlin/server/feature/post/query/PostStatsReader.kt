@@ -6,11 +6,11 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Component
 
 @Component
-class PostBookmarkCountReader(
+class PostStatsReader(
     private val databaseClient: DatabaseClient,
 ) {
 
-    suspend fun findBookmarkCountMap(postIds: List<Long>): Map<Long, Long> {
+    suspend fun findBookmarkCountMap(postIds: List<Long>): Map<Long, PostStats> {
         if (postIds.isEmpty()) return emptyMap()
 
         val placeholders = postIds.indices.joinToString(",") { ":id$it" }
@@ -19,6 +19,7 @@ class PostBookmarkCountReader(
             SELECT 
                 p.id AS post_id,
                 p.bookmark_count AS bookmark_count
+                p.view_count AS view_count
             FROM post p
             WHERE p.id IN ($placeholders)
         """.trimIndent()
@@ -32,12 +33,17 @@ class PostBookmarkCountReader(
         return spec
             .map { row, _ ->
                 val postId = row.get("post_id", Long::class.java) ?: 0L
-                val count = row.get("bookmark_count", Long::class.java) ?: 0L
-                postId to count
+                val bookmarkCount = row.get("bookmark_count", Long::class.java) ?: 0L
+                val viewCount = row.get("view_count", Long::class.java) ?: 0L
+                PostStats(
+                    postId = postId,
+                    bookmarkCount = bookmarkCount,
+                    viewCount = viewCount,
+                )
             }
             .all()
             .asFlow()
             .toList()
-            .toMap()
+            .associateBy { it.postId }
     }
 }

@@ -18,7 +18,7 @@ class PostQueryService(
     private val databaseClient: DatabaseClient,
     private val postListCache: PostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
-    private val postBookmarkCountReader: PostBookmarkCountReader,
+    private val postStatsReader: PostStatsReader,
 ) {
 
     suspend fun findByConditions(
@@ -49,7 +49,7 @@ class PostQueryService(
         val postIds = basePosts.map { it.id }
 
         val bookmarkCountMapDeferred = async {
-            postBookmarkCountReader.findBookmarkCountMap(postIds)
+            postStatsReader.findBookmarkCountMap(postIds)
         }
 
         val bookmarkedIdSetDeferred = async {
@@ -60,12 +60,13 @@ class PostQueryService(
             )
         }
 
-        val bookmarkCountMap = bookmarkCountMapDeferred.await()
         val bookmarkedIdSet = bookmarkedIdSetDeferred.await()
+        val postStatsByPostId = bookmarkCountMapDeferred.await()
 
         val posts = basePosts.map { post ->
             post.copy(
-                bookmarkCount = bookmarkCountMap[post.id] ?: post.bookmarkCount,
+                bookmarkCount = postStatsByPostId[post.id]?.bookmarkCount ?: post.bookmarkCount,
+                viewCount = postStatsByPostId[post.id]?.viewCount ?: post.viewCount,
                 isBookmarked = bookmarkedIdSet.contains(post.id),
             )
         }
