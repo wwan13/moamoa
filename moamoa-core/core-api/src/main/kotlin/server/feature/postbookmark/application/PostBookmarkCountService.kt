@@ -10,18 +10,18 @@ import server.messaging.handleEvent
 
 @Service
 class PostBookmarkCountService(
-    private val defaultStream: StreamDefinition,
+    private val countProcessingStream: StreamDefinition,
     private val postRepository: PostRepository
 ) {
     @EventHandler
     fun bookmarkCreated() =
-        handleEvent<PostBookmarkCreatedEvent>(defaultStream) { event ->
+        handleEvent<PostBookmarkCreatedEvent>(countProcessingStream) { event ->
             postRepository.incrementBookmarkCount(event.postId, +1)
         }
 
     @EventHandler
     fun bookmarkRemoved() =
-        handleEvent<PostBookmarkRemovedEvent>(defaultStream) { event ->
+        handleEvent<PostBookmarkRemovedEvent>(countProcessingStream) { event ->
             postRepository.incrementBookmarkCount(event.postId, -1)
         }
 }

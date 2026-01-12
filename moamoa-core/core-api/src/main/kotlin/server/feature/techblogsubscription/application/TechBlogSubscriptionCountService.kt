@@ -10,18 +10,18 @@ import server.messaging.handleEvent
 
 @Service
 class TechBlogSubscriptionCountService(
-    private val defaultStream: StreamDefinition,
+    private val countProcessingStream: StreamDefinition,
     private val techBlogRepository: TechBlogRepository
 ) {
     @EventHandler
     fun subscriptionCreated() =
-        handleEvent<TechBlogSubscribeCreatedEvent>(defaultStream) { event ->
+        handleEvent<TechBlogSubscribeCreatedEvent>(countProcessingStream) { event ->
             techBlogRepository.incrementSubscriptionCount(event.techBlogId, +1)
         }
 
     @EventHandler
     fun subscriptionRemoved() =
-        handleEvent<TechBlogSubscribeRemovedEvent>(defaultStream) { event ->
+        handleEvent<TechBlogSubscribeRemovedEvent>(countProcessingStream) { event ->
             techBlogRepository.incrementSubscriptionCount(event.techBlogId, -1)
         }
 }

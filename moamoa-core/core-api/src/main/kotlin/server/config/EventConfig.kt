@@ -21,4 +21,26 @@ class EventConfig {
         blocking = false,
         batchSize = 10,
     )
+
+    @Bean
+    fun countProcessingStream(
+        defaultTopic: StreamTopic,
+    ): StreamDefinition = StreamDefinition(
+        topic = defaultTopic,
+        group = "count-processing-group",
+        ackWhenFail = true,
+        blocking = false,
+        batchSize = 10,
+    )
+
+    @Bean
+    fun cacheHandlingStream(
+        defaultTopic: StreamTopic,
+    ): StreamDefinition = StreamDefinition(
+        topic = defaultTopic,
+        group = "cache-handling-group",
+        ackWhenFail = true,
+        blocking = false,
+        batchSize = 10,
+    )
 }
