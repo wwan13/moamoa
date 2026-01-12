@@ -40,7 +40,8 @@ class PostBookmarkService(
         val bookmarked = postBookmarkRepository.findByMemberIdAndPostId(memberId, command.postId)
             ?.let { postBookmark ->
                 postBookmarkRepository.deleteById(postBookmark.id)
-                eventPublisher.publish(defaultTopic, PostBookmarkRemovedEvent(command.postId))
+                val event = PostBookmarkRemovedEvent(memberId, command.postId)
+                eventPublisher.publish(defaultTopic, event)
                 false
             }
             ?: run {
@@ -49,7 +50,8 @@ class PostBookmarkService(
                     postId = command.postId
                 )
                 postBookmarkRepository.save(postBookmark)
-                eventPublisher.publish(defaultTopic, PostBookmarkCreatedEvent(command.postId))
+                val event = PostBookmarkCreatedEvent(memberId, command.postId)
+                eventPublisher.publish(defaultTopic, event)
                 true
             }
 

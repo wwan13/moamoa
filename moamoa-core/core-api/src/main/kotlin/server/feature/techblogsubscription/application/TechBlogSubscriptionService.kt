@@ -40,7 +40,8 @@ class TechBlogSubscriptionService(
         val subscribing = techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
             ?.let { subscription ->
                 techBlogSubscriptionRepository.deleteById(subscription.id)
-                eventPublisher.publish(defaultTopic, TechBlogSubscribeRemovedEvent(command.techBlogId))
+                val event = TechBlogSubscribeRemovedEvent(memberId, command.techBlogId)
+                eventPublisher.publish(defaultTopic, event)
                 false
             }
             ?: let {
@@ -50,7 +51,8 @@ class TechBlogSubscriptionService(
                     techBlogId = command.techBlogId
                 )
                 techBlogSubscriptionRepository.save(subscription)
-                eventPublisher.publish(defaultTopic, TechBlogSubscribeCreatedEvent(command.techBlogId))
+                val event = TechBlogSubscribeCreatedEvent(memberId, command.techBlogId)
+                eventPublisher.publish(defaultTopic, event)
                 true
             }
 
