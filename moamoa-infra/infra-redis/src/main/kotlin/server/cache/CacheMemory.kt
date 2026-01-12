@@ -1,5 +1,6 @@
 package server.cache
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
@@ -15,13 +16,19 @@ class CacheMemory(
 
     private val valueOps get() = reactiveRedisTemplate.opsForValue()
 
+
     final suspend inline fun <reified T> get(key: String): T? {
-        return get(key, T::class.java)
+        return get(key, object : TypeReference<T>() {})
     }
 
     suspend fun <T> get(key: String, type: Class<T>): T? {
         val json = valueOps.get(key).awaitFirstOrNull() ?: return null
         return runCatching { objectMapper.readValue(json, type) }.getOrNull()
+    }
+
+    suspend fun <T> get(key: String, typeRef: TypeReference<T>): T? {
+        val json = valueOps.get(key).awaitFirstOrNull() ?: return null
+        return runCatching { objectMapper.readValue(json, typeRef) }.getOrNull()
     }
 
     suspend fun <T> set(
