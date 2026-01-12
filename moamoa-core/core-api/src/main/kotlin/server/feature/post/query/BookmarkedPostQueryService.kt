@@ -89,7 +89,7 @@ class BookmarkedPostQueryService(
             INNER JOIN post p ON p.id = pb.post_id
             INNER JOIN tech_blog t ON t.id = p.tech_blog_id
             WHERE pb.member_id = :memberId
-            ORDER BY p.published_at DESC
+            ORDER BY pb.created_at DESC
             LIMIT :limit OFFSET :offset
         """.trimIndent()
 
