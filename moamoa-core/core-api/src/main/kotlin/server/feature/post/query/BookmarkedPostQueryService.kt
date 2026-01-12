@@ -17,7 +17,7 @@ import support.paging.calculateTotalPage
 class BookmarkedPostQueryService(
     private val databaseClient: DatabaseClient,
     private val bookmarkedPostListCache: BookmarkedPostListCache,
-    private val postBookmarkCountReader: PostBookmarkCountReader,
+    private val postStatsReader: PostStatsReader,
 ) {
 
     suspend fun findAllByConditions(
@@ -48,14 +48,15 @@ class BookmarkedPostQueryService(
         val postIds = basePosts.map { it.id }
 
         val bookmarkCountMapDeferred = async {
-            postBookmarkCountReader.findBookmarkCountMap(postIds)
+            postStatsReader.findPostStatsMap(postIds)
         }
 
-        val bookmarkCountMap = bookmarkCountMapDeferred.await()
+        val postStatsByPostId = bookmarkCountMapDeferred.await()
 
         val posts = basePosts.map { post ->
             post.copy(
-                bookmarkCount = bookmarkCountMap[post.id] ?: post.bookmarkCount,
+                bookmarkCount = postStatsByPostId[post.id]?.bookmarkCount ?: post.bookmarkCount,
+                viewCount = postStatsByPostId[post.id]?.viewCount ?: post.viewCount,
                 isBookmarked = true,
             )
         }
@@ -89,7 +90,7 @@ class BookmarkedPostQueryService(
             INNER JOIN post p ON p.id = pb.post_id
             INNER JOIN tech_blog t ON t.id = p.tech_blog_id
             WHERE pb.member_id = :memberId
-            ORDER BY p.published_at DESC
+            ORDER BY pb.created_at DESC
             LIMIT :limit OFFSET :offset
         """.trimIndent()
 
