@@ -52,7 +52,7 @@ export function postsBySubscriptionApi({ page } = {}, onError) {
     params.set("size", 20)
 
     const query = params.toString()
-    const url = query ? `/api/post/subscription?${query}` : "/api/post/subscription"
+    const url = query ? `/api/post/subscribed?${query}` : "/api/post/subscription"
 
     return apiRequest(
         url,
@@ -68,7 +68,7 @@ export function postsByBookmarkApi({ page } = {}, onError) {
     params.set("size", 20)
 
     const query = params.toString()
-    const url = query ? `/api/post/bookmark?${query}` : "/api/post/bookmark"
+    const url = query ? `/api/post/bookmarked?${query}` : "/api/post/bookmark"
 
     return apiRequest(
         url,
