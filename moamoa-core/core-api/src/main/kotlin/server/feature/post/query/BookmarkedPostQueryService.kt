@@ -6,6 +6,7 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Service
+import server.infra.cache.BookmarkedPostListCache
 import server.security.Passport
 import support.paging.Paging
 import support.paging.calculateTotalPage
@@ -13,6 +14,7 @@ import support.paging.calculateTotalPage
 @Service
 class BookmarkedPostQueryService(
     private val databaseClient: DatabaseClient,
+    private val bookmarkedPostListCache: BookmarkedPostListCache
 ) {
 
     suspend fun findAllByConditions(
@@ -33,12 +35,27 @@ class BookmarkedPostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        val posts = findBookmarkedPosts(
+        val posts = loadPosts(
             paging = paging,
             memberId = passport.memberId
-        ).toList()
+        )
 
         return PostList(meta, posts)
+    }
+
+    private suspend fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
+        if (paging.page > 5) {
+            return findBookmarkedPosts(paging, memberId).toList()
+        }
+
+        val fromCache = bookmarkedPostListCache.get(memberId, paging.page)
+        if (fromCache != null) {
+            return fromCache
+        }
+
+        return findBookmarkedPosts(paging, memberId).toList().also {
+            bookmarkedPostListCache.set(memberId, paging.page, it)
+        }
     }
 
     private suspend fun findBookmarkedPosts(
