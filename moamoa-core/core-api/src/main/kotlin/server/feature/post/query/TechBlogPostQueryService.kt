@@ -1,9 +1,9 @@
 package server.feature.post.query
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.r2dbc.core.DatabaseClient
@@ -17,19 +17,25 @@ import support.paging.calculateTotalPage
 class TechBlogPostQueryService(
     private val databaseClient: DatabaseClient,
     private val techBlogPostListCache: TechBlogPostListCache,
-    private val bookmarkedPostReader: BookmarkedPostReader
+    private val bookmarkedPostReader: BookmarkedPostReader,
+    private val postBookmarkCountReader: PostBookmarkCountReader,
 ) {
 
     suspend fun findAllByConditions(
         conditions: TechBlogPostQueryConditions,
         passport: Passport?,
-    ): PostList {
+    ): PostList = coroutineScope {
+
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
 
-        val totalCount = countByTechBlogKey(conditions.techBlogKey)
+        val totalCountDeferred = async { countByTechBlogKey(conditions.techBlogKey) }
+        val basePostsDeferred = async { loadPosts(paging, conditions.techBlogKey) }
+
+        val totalCount = totalCountDeferred.await()
+        val basePosts = basePostsDeferred.await()
 
         val meta = PostListMeta(
             page = paging.page,
@@ -38,19 +44,33 @@ class TechBlogPostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        val basePosts = loadPosts(paging, conditions.techBlogKey)
+        if (basePosts.isEmpty()) return@coroutineScope PostList(meta, basePosts)
 
-        return if (passport != null && basePosts.isNotEmpty()) {
-            val bookmarkedIds = bookmarkedPostReader.findBookmarkedPostIdSet(
-                memberId = passport.memberId,
-                postIds = basePosts.map { it.id })
-            val posts = basePosts.map {
-                it.copy(isBookmarked = bookmarkedIds.contains(it.id))
-            }
-            PostList(meta, posts)
-        } else {
-            PostList(meta, basePosts)
+        val postIds = basePosts.map { it.id }
+
+        val bookmarkCountMapDeferred = async {
+            postBookmarkCountReader.findBookmarkCountMap(postIds)
         }
+
+        val bookmarkedIdSetDeferred = async {
+            if (passport == null) emptySet()
+            else bookmarkedPostReader.findBookmarkedPostIdSet(
+                memberId = passport.memberId,
+                postIds = postIds
+            )
+        }
+
+        val bookmarkCountMap = bookmarkCountMapDeferred.await()
+        val bookmarkedIdSet = bookmarkedIdSetDeferred.await()
+
+        val posts = basePosts.map { post ->
+            post.copy(
+                bookmarkCount = bookmarkCountMap[post.id] ?: post.bookmarkCount,
+                isBookmarked = bookmarkedIdSet.contains(post.id),
+            )
+        }
+
+        PostList(meta, posts)
     }
 
     private suspend fun loadPosts(
@@ -58,20 +78,18 @@ class TechBlogPostQueryService(
         techBlogKey: String,
     ): List<PostSummary> {
         if (paging.page > 5) {
-            return findAllByTechBlogKey(paging, techBlogKey).toList()
+            return fetchBasePostsByTechBlogKey(paging, techBlogKey).toList()
         }
 
-        val fromCache = techBlogPostListCache.get(techBlogKey, paging.page)
-        if (fromCache != null) {
-            return fromCache
-        }
+        val cached = techBlogPostListCache.get(techBlogKey, paging.page)
+        if (cached != null) return cached
 
-        return findAllByTechBlogKey(paging, techBlogKey).toList().also {
+        return fetchBasePostsByTechBlogKey(paging, techBlogKey).toList().also {
             techBlogPostListCache.set(techBlogKey, paging.page, it)
         }
     }
 
-    private suspend fun findAllByTechBlogKey(
+    private suspend fun fetchBasePostsByTechBlogKey(
         paging: Paging,
         techBlogKey: String,
     ): Flow<PostSummary> {

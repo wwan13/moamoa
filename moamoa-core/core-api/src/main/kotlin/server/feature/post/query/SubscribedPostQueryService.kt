@@ -1,5 +1,7 @@
 package server.feature.post.query
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
@@ -14,19 +16,26 @@ import support.paging.calculateTotalPage
 @Service
 class SubscribedPostQueryService(
     private val databaseClient: DatabaseClient,
-    private val subscribedPostListCache: SubscribedPostListCache
+    private val subscribedPostListCache: SubscribedPostListCache,
+    private val bookmarkedPostReader: BookmarkedPostReader,
+    private val postBookmarkCountReader: PostBookmarkCountReader,
 ) {
 
     suspend fun findAllByConditions(
         conditions: PostQueryConditions,
         passport: Passport,
-    ): PostList {
+    ): PostList = coroutineScope {
+
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
 
-        val totalCount = countSubscribingPosts(memberId = passport.memberId)
+        val totalCountDeferred = async { countSubscribingPosts(memberId = passport.memberId) }
+        val basePostsDeferred = async { loadPosts(memberId = passport.memberId, paging = paging) }
+
+        val totalCount = totalCountDeferred.await()
+        val basePosts = basePostsDeferred.await()
 
         val meta = PostListMeta(
             page = paging.page,
@@ -35,30 +44,48 @@ class SubscribedPostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        val posts = loadPosts(
-            paging = paging,
-            memberId = passport.memberId
-        )
+        if (basePosts.isEmpty()) return@coroutineScope PostList(meta, basePosts)
 
-        return PostList(meta, posts)
+        val postIds = basePosts.map { it.id }
+
+        val bookmarkCountMapDeferred = async {
+            postBookmarkCountReader.findBookmarkCountMap(postIds)
+        }
+
+        val bookmarkedIdSetDeferred = async {
+            bookmarkedPostReader.findBookmarkedPostIdSet(
+                memberId = passport.memberId,
+                postIds = postIds
+            )
+        }
+
+        val bookmarkCountMap = bookmarkCountMapDeferred.await()
+        val bookmarkedIdSet = bookmarkedIdSetDeferred.await()
+
+        val posts = basePosts.map { post ->
+            post.copy(
+                bookmarkCount = bookmarkCountMap[post.id] ?: post.bookmarkCount,
+                isBookmarked = bookmarkedIdSet.contains(post.id),
+            )
+        }
+
+        PostList(meta, posts)
     }
 
     private suspend fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
         if (paging.page > 5) {
-            return findSubscribingPosts(paging, memberId).toList()
+            return fetchSubscribingBasePosts(paging, memberId).toList()
         }
 
-        val fromCache = subscribedPostListCache.get(memberId, paging.page)
-        if (fromCache != null) {
-            return fromCache
-        }
+        val cached = subscribedPostListCache.get(memberId, paging.page)
+        if (cached != null) return cached
 
-        return findSubscribingPosts(paging, memberId).toList().also {
+        return fetchSubscribingBasePosts(paging, memberId).toList().also {
             subscribedPostListCache.set(memberId, paging.page, it)
         }
     }
 
-    private suspend fun findSubscribingPosts(
+    private suspend fun fetchSubscribingBasePosts(
         paging: Paging,
         memberId: Long,
     ): Flow<PostSummary> {
@@ -66,13 +93,10 @@ class SubscribedPostQueryService(
 
         val sql = """
             $POST_QUERY_BASE_SELECT,
-                (pb.post_id IS NOT NULL) AS is_bookmarked
+                0 AS is_bookmarked
             FROM tech_blog_subscription s
             INNER JOIN tech_blog t ON t.id = s.tech_blog_id
             INNER JOIN post p ON p.tech_blog_id = t.id
-            LEFT JOIN post_bookmark pb
-              ON pb.post_id = p.id
-             AND pb.member_id = :memberId
             WHERE s.member_id = :memberId
             ORDER BY p.published_at DESC
             LIMIT :limit OFFSET :offset

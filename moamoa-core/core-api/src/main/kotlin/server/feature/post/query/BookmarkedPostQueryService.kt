@@ -1,5 +1,7 @@
 package server.feature.post.query
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
@@ -14,19 +16,25 @@ import support.paging.calculateTotalPage
 @Service
 class BookmarkedPostQueryService(
     private val databaseClient: DatabaseClient,
-    private val bookmarkedPostListCache: BookmarkedPostListCache
+    private val bookmarkedPostListCache: BookmarkedPostListCache,
+    private val postBookmarkCountReader: PostBookmarkCountReader,
 ) {
 
     suspend fun findAllByConditions(
         conditions: PostQueryConditions,
         passport: Passport,
-    ): PostList {
+    ): PostList = coroutineScope {
+
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
 
-        val totalCount = countBookmarkedPosts(memberId = passport.memberId)
+        val totalCountDeferred = async { countBookmarkedPosts(memberId = passport.memberId) }
+        val basePostsDeferred = async { loadPosts(memberId = passport.memberId, paging = paging) }
+
+        val totalCount = totalCountDeferred.await()
+        val basePosts = basePostsDeferred.await()
 
         val meta = PostListMeta(
             page = paging.page,
@@ -35,30 +43,40 @@ class BookmarkedPostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        val posts = loadPosts(
-            paging = paging,
-            memberId = passport.memberId
-        )
+        if (basePosts.isEmpty()) return@coroutineScope PostList(meta, basePosts)
 
-        return PostList(meta, posts)
+        val postIds = basePosts.map { it.id }
+
+        val bookmarkCountMapDeferred = async {
+            postBookmarkCountReader.findBookmarkCountMap(postIds)
+        }
+
+        val bookmarkCountMap = bookmarkCountMapDeferred.await()
+
+        val posts = basePosts.map { post ->
+            post.copy(
+                bookmarkCount = bookmarkCountMap[post.id] ?: post.bookmarkCount,
+                isBookmarked = true,
+            )
+        }
+
+        PostList(meta, posts)
     }
 
     private suspend fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
         if (paging.page > 5) {
-            return findBookmarkedPosts(paging, memberId).toList()
+            return fetchBookmarkedBasePosts(paging, memberId).toList()
         }
 
-        val fromCache = bookmarkedPostListCache.get(memberId, paging.page)
-        if (fromCache != null) {
-            return fromCache
-        }
+        val cached = bookmarkedPostListCache.get(memberId, paging.page)
+        if (cached != null) return cached
 
-        return findBookmarkedPosts(paging, memberId).toList().also {
+        return fetchBookmarkedBasePosts(paging, memberId).toList().also {
             bookmarkedPostListCache.set(memberId, paging.page, it)
         }
     }
 
-    private suspend fun findBookmarkedPosts(
+    private suspend fun fetchBookmarkedBasePosts(
         paging: Paging,
         memberId: Long,
     ): Flow<PostSummary> {
@@ -66,7 +84,7 @@ class BookmarkedPostQueryService(
 
         val sql = """
             $POST_QUERY_BASE_SELECT,
-                TRUE AS is_bookmarked
+                1 AS is_bookmarked
             FROM post_bookmark pb
             INNER JOIN post p ON p.id = pb.post_id
             INNER JOIN tech_blog t ON t.id = p.tech_blog_id

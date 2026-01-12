@@ -1,9 +1,9 @@
 package server.feature.post.query
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.r2dbc.core.DatabaseClient
@@ -17,19 +17,25 @@ import support.paging.calculateTotalPage
 class PostQueryService(
     private val databaseClient: DatabaseClient,
     private val postListCache: PostListCache,
-    private val bookmarkedPostReader: BookmarkedPostReader
+    private val bookmarkedPostReader: BookmarkedPostReader,
+    private val postBookmarkCountReader: PostBookmarkCountReader,
 ) {
 
     suspend fun findByConditions(
         conditions: PostQueryConditions,
         passport: Passport?
-    ): PostList {
+    ): PostList = coroutineScope {
+
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
 
-        val totalCount = countAll()
+        val totalCountDeferred = async { countAll() }
+        val basePostsDeferred = async { loadPosts(paging) }
+
+        val totalCount = totalCountDeferred.await()
+        val basePosts = basePostsDeferred.await()
 
         val meta = PostListMeta(
             page = paging.page,
@@ -38,37 +44,49 @@ class PostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        val basePosts = loadPosts(paging)
+        if (basePosts.isEmpty()) return@coroutineScope PostList(meta, basePosts)
 
-        return if (passport != null && basePosts.isNotEmpty()) {
-            val bookmarkedIds = bookmarkedPostReader.findBookmarkedPostIdSet(
-                memberId = passport.memberId,
-                postIds = basePosts.map { it.id })
-            val posts = basePosts.map {
-                it.copy(isBookmarked = bookmarkedIds.contains(it.id))
-            }
-            PostList(meta, posts)
-        } else {
-            PostList(meta, basePosts)
+        val postIds = basePosts.map { it.id }
+
+        val bookmarkCountMapDeferred = async {
+            postBookmarkCountReader.findBookmarkCountMap(postIds)
         }
+
+        val bookmarkedIdSetDeferred = async {
+            if (passport == null) emptySet()
+            else bookmarkedPostReader.findBookmarkedPostIdSet(
+                memberId = passport.memberId,
+                postIds = postIds
+            )
+        }
+
+        val bookmarkCountMap = bookmarkCountMapDeferred.await()
+        val bookmarkedIdSet = bookmarkedIdSetDeferred.await()
+
+        val posts = basePosts.map { post ->
+            post.copy(
+                bookmarkCount = bookmarkCountMap[post.id] ?: post.bookmarkCount,
+                isBookmarked = bookmarkedIdSet.contains(post.id),
+            )
+        }
+
+        PostList(meta, posts)
     }
 
     private suspend fun loadPosts(paging: Paging): List<PostSummary> {
         if (paging.page > 5) {
-            return findAll(paging).toList()
+            return fetchBasePosts(paging).toList()
         }
 
-        val fromCache = postListCache.get(paging.page)
-        if (fromCache != null) {
-            return fromCache
-        }
+        val cached = postListCache.get(paging.page)
+        if (cached != null) return cached
 
-        return findAll(paging).toList().also {
+        return fetchBasePosts(paging).toList().also {
             postListCache.set(paging.page, it)
         }
     }
 
-    private suspend fun findAll(paging: Paging): Flow<PostSummary> {
+    private suspend fun fetchBasePosts(paging: Paging): Flow<PostSummary> {
         val offset = (paging.page - 1L) * paging.size
 
         val sql = """
