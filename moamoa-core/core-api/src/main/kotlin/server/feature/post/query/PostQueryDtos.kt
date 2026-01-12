@@ -39,3 +39,9 @@ data class TechBlogPostQueryConditions(
     val page: Long?,
     val size: Long?
 )
+
+data class PostStats(
+    val postId: Long,
+    val viewCount: Long,
+    val bookmarkCount: Long,
+)
