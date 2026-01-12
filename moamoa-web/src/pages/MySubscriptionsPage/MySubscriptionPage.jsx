@@ -1,7 +1,7 @@
 import styles from "./MySubscriptionPage.module.css"
 import {useEffect, useState} from "react";
-import {subscribingBlogsApi} from "../../api/subscription.api.js";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
+import {subscribingTechBlogsApi} from "../../api/techblog.api.js";
 
 export default function MySubscriptionPage() {
     const [techBlogs, setTechBlogs] = useState([])
@@ -9,8 +9,8 @@ export default function MySubscriptionPage() {
     useEffect(() => {
         const fetchSubscriptions = async () => {
             try {
-                const subsRes = await subscribingBlogsApi()
-                setTechBlogs(subsRes)
+                const subsRes = await subscribingTechBlogsApi()
+                setTechBlogs(subsRes.techBlogs)
             } catch (e) {
             }
         }
@@ -34,7 +34,7 @@ export default function MySubscriptionPage() {
                             <div className={styles.infoWrap}>
                                 <div className={styles.left}>
                                     <p className={styles.techBlogTitle}>{techBlog.title}</p>
-                                    <p className={styles.techBlogSub}>구독자 {techBlog.subscriptionCount}명 · 게시글 1개</p>
+                                    <p className={styles.techBlogSub}>구독자 {techBlog.subscriptionCount}명 · 게시글 {techBlog.postCount}개</p>
                                     <p className={styles.techBlogUrl}>{techBlog.blogUrl}</p>
                                 </div>
                                 <div className={styles.right}>

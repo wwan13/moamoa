@@ -14,7 +14,6 @@ export default function TechBlogsPage() {
 
     const [blogCount, setBlogCount] = useState(0)
     const [blogs, setBlogs] = useState([])
-    const [subscriptions, setSubscriptions] = useState([])
     const [search, setSearch] = useState("")
 
     const animated = useCountUp(blogCount, 900)
@@ -22,23 +21,13 @@ export default function TechBlogsPage() {
     useEffect(() => {
         const fetchBlogs = async () => {
             const res = await techBlogsApi()
-            setBlogs(res)
-            setBlogCount(res.length)
-        }
-
-        const fetchSubscriptions = async () => {
-            if (!isLoggedIn) return
-            const res = await subscribingBlogsApi()
-            setSubscriptions(res)
+            console.log(res)
+            setBlogs(res.techBlogs)
+            setBlogCount(res.meta.totalCount)
         }
 
         fetchBlogs()
-        fetchSubscriptions()
     }, [isLoggedIn])
-
-    const subscribedBlogIdSet = useMemo(() => {
-        return new Set(subscriptions.map((s) => s.id))
-    }, [subscriptions])
 
     const filteredBlogs = useMemo(() => {
         const q = search.trim().toLowerCase()
@@ -51,15 +40,15 @@ export default function TechBlogsPage() {
         })
     }, [blogs, search])
 
-    const subscriptionToggle = async (techBlogId) => {
+    const subscriptionToggle = async (blog) => {
         if (!isLoggedIn) {
             openLogin()
             return
         }
 
-        const wasSubscribed = subscribedBlogIdSet.has(techBlogId)
+        const wasSubscribed = !!blog.subscribed
+        const techBlogId = blog.id
 
-        // ✅ 구독 해제는 "먼저" 컨펌
         if (wasSubscribed) {
             const ok = await showGlobalConfirm({
                 title: "구독 해제",
@@ -67,29 +56,39 @@ export default function TechBlogsPage() {
                 confirmText: "해제",
                 cancelText: "유지",
             })
-
             if (!ok) return
         }
 
-        // ✅ optimistic update
-        setSubscriptions((prev) => {
-            if (wasSubscribed) return prev.filter((s) => s.id !== techBlogId)
-            return [...prev, { id: techBlogId }]
-        })
+        // ✅ optimistic update: blog.subscribed + (있다면) 카운트도 같이
+        setBlogs((prev) =>
+            prev.map((b) =>
+                b.id === techBlogId
+                    ? {
+                        ...b,
+                        subscribed: !wasSubscribed,
+                        // 선택: 서버가 subscriptionCount도 의미 있게 준다면 같이 토글
+                        subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+                    }
+                    : b
+            )
+        )
 
         try {
             await subscriptionToggleApi(techBlogId)
-
-            // ✅ 성공 토스트
             showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
         } catch (e) {
             // ✅ rollback
-            setSubscriptions((prev) => {
-                if (wasSubscribed) return [...prev, { id: techBlogId }]
-                return prev.filter((s) => s.id !== techBlogId)
-            })
-
-            // 실패 메시지(원하면 alert로 바꿔도 됨)
+            setTechBlogs((prev) =>
+                prev.map((b) =>
+                    b.id === techBlogId
+                        ? {
+                            ...b,
+                            subscribed: wasSubscribed,
+                            subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
+                        }
+                        : b
+                )
+            )
             showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
         }
     }
@@ -139,8 +138,6 @@ export default function TechBlogsPage() {
                 ) : (
                     <div className={styles.grid}>
                         {filteredBlogs.map((blog) => {
-                            const isSubscribed = subscribedBlogIdSet.has(blog.id)
-
                             return (
                                 <article
                                     key={blog.id}
@@ -153,7 +150,7 @@ export default function TechBlogsPage() {
                                     <p className={styles.blogName}>{blog.title}</p>
 
                                     <div className={styles.subscription}>
-                                        <p className={styles.subscriptionCount}>구독자 {blog.subscriptionCount}명</p>
+                                        <p className={styles.subscriptionCount}>구독자 {blog.subscriptionCount}명 · 게시글 {blog.postCount}개</p>
 
                                         {/*<span>·</span>*/}
                                         {/*<button*/}
@@ -171,13 +168,13 @@ export default function TechBlogsPage() {
                                     </div>
                                     <div className={styles.subscription}>
                                         <button
-                                            className={isSubscribed ? styles.subscribing : styles.subButton}
+                                            className={blog.subscribed ? styles.subscribing : styles.subButton}
                                             onClick={(e) => {
                                                 stop(e)
-                                                subscriptionToggle(blog.id)
+                                                subscriptionToggle(blog)
                                             }}
                                         >
-                                            {isSubscribed ? "구독중" : "구독"}
+                                            {blog.subscribed ? "구독중" : "구독"}
                                         </button>
 
                                         <span>·</span>

@@ -25,3 +25,16 @@ export function findByTechBlogKeyApi(key, onError) {
         }
     )
 }
+
+export function subscribingTechBlogsApi(onError) {
+    return apiRequest(
+        "/api/tech-blog/subscription",
+        {
+            method: "GET",
+        },
+        {
+            onError: onError ?? ((err) => {
+            }),
+        }
+    )
+}
