@@ -11,7 +11,7 @@ import support.paging.Paging
 import support.paging.calculateTotalPage
 
 @Service
-class SubscribingPostQueryService(
+class SubscribedPostQueryService(
     private val databaseClient: DatabaseClient,
 ) {
 

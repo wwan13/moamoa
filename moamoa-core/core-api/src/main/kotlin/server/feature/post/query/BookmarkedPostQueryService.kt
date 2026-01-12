@@ -11,7 +11,7 @@ import support.paging.Paging
 import support.paging.calculateTotalPage
 
 @Service
-class BookmarkPostQueryService(
+class BookmarkedPostQueryService(
     private val databaseClient: DatabaseClient,
 ) {
 

@@ -4,11 +4,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import server.feature.post.command.application.IncreaseViewCountResult
 import server.feature.post.command.application.PostService
-import server.feature.post.query.BookmarkPostQueryService
+import server.feature.post.query.BookmarkedPostQueryService
 import server.feature.post.query.PostList
 import server.feature.post.query.PostQueryConditions
 import server.feature.post.query.PostQueryService
-import server.feature.post.query.SubscribingPostQueryService
+import server.feature.post.query.SubscribedPostQueryService
 import server.feature.post.query.TechBlogPostQueryConditions
 import server.feature.post.query.TechBlogPostQueryService
 import server.security.Passport
@@ -20,8 +20,8 @@ class PostController(
     private val postService: PostService,
     private val postQueryService: PostQueryService,
     private val techBlogPostQueryService: TechBlogPostQueryService,
-    private val subscribingPostQueryService: SubscribingPostQueryService,
-    private val bookmarkPostQueryService: BookmarkPostQueryService,
+    private val subscribedPostQueryService: SubscribedPostQueryService,
+    private val bookmarkedPostQueryService: BookmarkedPostQueryService,
 ) {
 
     @PostMapping("/{postId}/view")
@@ -53,22 +53,22 @@ class PostController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/subscription")
-    suspend fun findAllBySubscribingConditions(
+    @GetMapping("/subscribed")
+    suspend fun findAllBySubscribedConditions(
         conditions: PostQueryConditions,
         @RequestPassport passport: Passport
     ): ResponseEntity<PostList> {
-        val response = subscribingPostQueryService.findAllByConditions(conditions, passport)
+        val response = subscribedPostQueryService.findAllByConditions(conditions, passport)
 
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/bookmark")
-    suspend fun findAllByBookmarkConditions(
+    @GetMapping("/bookmarked")
+    suspend fun findAllByBookmarkedConditions(
         conditions: PostQueryConditions,
         @RequestPassport passport: Passport
     ): ResponseEntity<PostList> {
-        val response = bookmarkPostQueryService.findAllByConditions(conditions, passport)
+        val response = bookmarkedPostQueryService.findAllByConditions(conditions, passport)
 
         return ResponseEntity.ok(response)
     }
