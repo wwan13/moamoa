@@ -49,7 +49,7 @@ class SubscribedPostQueryService(
         val postIds = basePosts.map { it.id }
 
         val bookmarkCountMapDeferred = async {
-            postStatsReader.findBookmarkCountMap(postIds)
+            postStatsReader.findPostStatsMap(postIds)
         }
 
         val bookmarkedIdSetDeferred = async {
