@@ -2,6 +2,8 @@ package server.feature.post.query
 
 import io.r2dbc.spi.Row
 import server.feature.techblog.command.application.TechBlogData
+import server.infra.db.getInt01
+import server.infra.db.getOrDefault
 import java.time.LocalDateTime
 
 const val POST_QUERY_BASE_SELECT = """
@@ -25,22 +27,22 @@ const val POST_QUERY_BASE_SELECT = """
 """
 
 fun mapToPostSummary(row: Row): PostSummary = PostSummary(
-    id = row.get("post_id", Long::class.java) ?: 0L,
-    key = row.get("post_key", String::class.java).orEmpty(),
-    title = row.get("post_title", String::class.java).orEmpty(),
-    description = row.get("post_description", String::class.java).orEmpty(),
-    thumbnail = row.get("post_thumbnail", String::class.java).orEmpty(),
-    url = row.get("post_url", String::class.java).orEmpty(),
-    publishedAt = row.get("published_at", LocalDateTime::class.java) ?: LocalDateTime.MIN,
-    viewCount = row.get("post_view_count", Long::class.java) ?: 0L,
-    bookmarkCount = row.get("post_bookmark_count", Long::class.java) ?: 0L,
-    isBookmarked = (row.get("is_bookmarked", Int::class.java) == 1),
+    id = row.getOrDefault("post_id", 0L),
+    key = row.getOrDefault("post_key", ""),
+    title = row.getOrDefault("post_title", ""),
+    description = row.getOrDefault("post_description", ""),
+    thumbnail = row.getOrDefault("post_thumbnail", ""),
+    url = row.getOrDefault("post_url", ""),
+    publishedAt = row.getOrDefault("published_at", LocalDateTime.MIN),
+    viewCount = row.getOrDefault("post_view_count", 0L),
+    bookmarkCount = row.getOrDefault("post_bookmark_count", 0L),
+    isBookmarked = row.getInt01("is_bookmarked"),
     techBlog = TechBlogData(
-        id = row.get("tech_blog_id", Long::class.java) ?: 0L,
-        title = row.get("tech_blog_title", String::class.java).orEmpty(),
-        key = row.get("tech_blog_key", String::class.java).orEmpty(),
-        blogUrl = row.get("tech_blog_url", String::class.java).orEmpty(),
-        icon = row.get("tech_blog_icon", String::class.java).orEmpty(),
-        subscriptionCount = row.get("tech_blog_subscription_count", Long::class.java) ?: 0L
+        id = row.getOrDefault("tech_blog_id", 0L),
+        title = row.getOrDefault("tech_blog_title", ""),
+        key = row.getOrDefault("tech_blog_key", ""),
+        blogUrl = row.getOrDefault("tech_blog_url", ""),
+        icon = row.getOrDefault("tech_blog_icon", ""),
+        subscriptionCount = row.getOrDefault("tech_blog_subscription_count", 0L),
     )
 )

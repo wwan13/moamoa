@@ -1,6 +1,8 @@
 package server.feature.techblog.query
 
 import io.r2dbc.spi.Row
+import server.infra.db.getInt01
+import server.infra.db.getOrDefault
 
 const val TECH_BLOG_QUERY_BASE_SELECT = """
     SELECT
@@ -13,15 +15,14 @@ const val TECH_BLOG_QUERY_BASE_SELECT = """
         COALESCE(pc.post_count, 0) AS tech_blog_post_count
 """
 
-fun mapToTechBlogSummary(row: Row): TechBlogSummary =
-    TechBlogSummary(
-        id = row.get("tech_blog_id", Long::class.java) ?: 0L,
-        title = row.get("tech_blog_title", String::class.java).orEmpty(),
-        icon = row.get("tech_blog_icon", String::class.java).orEmpty(),
-        blogUrl = row.get("tech_blog_url", String::class.java).orEmpty(),
-        key = row.get("tech_blog_key", String::class.java).orEmpty(),
-        subscriptionCount = row.get("tech_blog_subscription_count", Long::class.java) ?: 0L,
-        postCount = row.get("tech_blog_post_count", Long::class.java) ?: 0L,
-        subscribed =(row.get("is_subscribed", Int::class.java) ?: 0) == 1,
-        notificationEnabled = (row.get("notification_enabled", Int::class.java) ?: 0) == 1
-    )
+fun mapToTechBlogSummary(row: Row): TechBlogSummary = TechBlogSummary(
+    id = row.getOrDefault("tech_blog_id", 0L),
+    title = row.getOrDefault("tech_blog_title", ""),
+    icon = row.getOrDefault("tech_blog_icon", ""),
+    blogUrl = row.getOrDefault("tech_blog_url", ""),
+    key = row.getOrDefault("tech_blog_key", ""),
+    subscriptionCount = row.getOrDefault("tech_blog_subscription_count", 0L),
+    postCount = row.getOrDefault("tech_blog_post_count", 0L),
+    subscribed = row.getInt01("is_subscribed"),
+    notificationEnabled = row.getInt01("notification_enabled"),
+)
