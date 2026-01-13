@@ -34,11 +34,22 @@ class EventConfig {
     )
 
     @Bean
-    fun cacheHandlingStream(
+    fun postCacheHandlingStream(
         defaultTopic: StreamTopic,
     ): StreamDefinition = StreamDefinition(
         topic = defaultTopic,
-        group = "cache-handling-group",
+        group = "post-cache-handling-group",
+        ackWhenFail = true,
+        blocking = false,
+        batchSize = 10,
+    )
+
+    @Bean
+    fun techBlogCacheHandlingStream(
+        defaultTopic: StreamTopic,
+    ): StreamDefinition = StreamDefinition(
+        topic = defaultTopic,
+        group = "tech-blog-cache-handling-group",
         ackWhenFail = true,
         blocking = false,
         batchSize = 10,
