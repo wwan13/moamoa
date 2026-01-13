@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.application.TechBlogService
-import server.feature.techblog.query.SubscribingTechBlogQueryService
+import server.feature.techblog.query.SubscribedTechBlogQueryService
 import server.feature.techblog.query.TechBlogList
 import server.feature.techblog.query.TechBlogQueryService
 import server.security.Passport
@@ -18,7 +18,7 @@ import server.security.RequestPassport
 class TechBlogController(
     private val techBlogService: TechBlogService,
     private val techBlogQueryService: TechBlogQueryService,
-    private val subscribingTechBlogQueryService: SubscribingTechBlogQueryService
+    private val subscribedTechBlogQueryService: SubscribedTechBlogQueryService
 ) {
 
     @GetMapping("/{techBlogKey}")
@@ -41,7 +41,7 @@ class TechBlogController(
     suspend fun findSubscribingTechBlogs(
         @RequestPassport passport: Passport
     ): ResponseEntity<TechBlogList> {
-        val response = subscribingTechBlogQueryService.findSubscribingTechBlogs(passport)
+        val response = subscribedTechBlogQueryService.findSubscribingTechBlogs(passport)
         return ResponseEntity.ok(response)
     }
 }

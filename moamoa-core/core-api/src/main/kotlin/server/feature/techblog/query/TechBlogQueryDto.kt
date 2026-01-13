@@ -20,3 +20,15 @@ data class TechBlogSummary(
     val subscribed: Boolean,
     val notificationEnabled: Boolean,
 )
+
+data class TechBlogStats(
+    val techBlogId: Long,
+    val subscriptionCount: Long,
+    val postCount: Long,
+)
+
+data class TechBlogSubscriptionInfo(
+    val techBlogId: Long,
+    val subscribed: Boolean,
+    val notificationEnabled: Boolean,
+)
