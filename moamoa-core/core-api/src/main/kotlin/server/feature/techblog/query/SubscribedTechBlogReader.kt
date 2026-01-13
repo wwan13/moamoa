@@ -37,22 +37,20 @@ class SubscribedTechBlogReader(
         techBlogSubscriptionCache.get(memberId)?.let { return it }
 
         val sql = """
-            SELECT
-                s.tech_blog_id AS tech_blog_id,
-                COALESCE(s.notification_enabled, 0) AS notification_enabled
-            FROM tech_blog_subscription s
-            WHERE s.member_id = :memberId
-        """.trimIndent()
+                SELECT
+                    s.tech_blog_id AS tech_blog_id,
+                    COALESCE(s.notification_enabled, 0) AS notification_enabled
+                FROM tech_blog_subscription s
+                WHERE s.member_id = :memberId
+            """.trimIndent()
 
         val list = databaseClient.sql(sql)
             .bind("memberId", memberId)
             .map { row, _ ->
-                val id = row.get("tech_blog_id", Long::class.java) ?: 0L
-                val enabled = (row.get("notification_enabled", Int::class.java) ?: 0) == 1
                 TechBlogSubscriptionInfo(
-                    techBlogId = id,
+                    techBlogId = row.get("tech_blog_id", Long::class.java) ?: 0L,
                     subscribed = true,
-                    notificationEnabled = enabled,
+                    notificationEnabled = (row.get("notification_enabled", Int::class.java) ?: 0) == 1,
                 )
             }
             .all()
