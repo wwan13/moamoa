@@ -129,3 +129,19 @@
     border-radius: 999px;
     cursor: pointer;
 }
+
+.alarmButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    background-color: #90AB8B;
+    color: #ffffff;
+    border-radius: 999px;
+    cursor: pointer;
+}
+

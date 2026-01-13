@@ -78,7 +78,7 @@ export default function TechBlogsPage() {
             showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
         } catch (e) {
             // ✅ rollback
-            setTechBlogs((prev) =>
+            setBlogs((prev) =>
                 prev.map((b) =>
                     b.id === techBlogId
                         ? {

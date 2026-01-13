@@ -26,3 +26,17 @@ export function subscriptionToggleApi(techBlogId, onError) {
         }
     )
 }
+
+export function notificationToggleApi(techBlogId, onError) {
+    return apiRequest(
+        "/api/tech-blog-subscription/notification-enabled",
+        {
+            method: "PATCH",
+            body: JSON.stringify({ techBlogId})
+        },
+        {
+            onError: onError ?? ((err) => {
+            }),
+        }
+    )
+}
