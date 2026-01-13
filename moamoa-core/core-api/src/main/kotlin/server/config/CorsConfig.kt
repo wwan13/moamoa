@@ -20,6 +20,7 @@ class CorsConfig {
             allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
             allowCredentials = true
+            maxAge = 3600
         }
 
         val source = UrlBasedCorsConfigurationSource().apply {
