@@ -5,9 +5,19 @@ import NotificationsOffOutlinedIcon from '@mui/icons-material/NotificationsOffOu
 import {subscribingTechBlogsApi} from "../../api/techblog.api.js";
 import {showGlobalConfirm, showToast} from "../../api/client.js";
 import {notificationToggleApi, subscriptionToggleApi} from "../../api/subscription.api.js";
+import useAuth from "../../auth/AuthContext.jsx";
+import {useNavigate} from "react-router-dom";
 
 export default function MySubscriptionPage() {
     const [techBlogs, setTechBlogs] = useState([])
+    const { isLoggedIn, logout } = useAuth()
+    const navigate = useNavigate()
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            navigate("/")
+        }
+    }, [isLoggedIn]);
 
     useEffect(() => {
         const fetchSubscriptions = async () => {

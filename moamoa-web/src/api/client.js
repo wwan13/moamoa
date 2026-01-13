@@ -121,11 +121,7 @@ export function setOnLogout(handler) {
 async function reissueToken(baseUrl = "") {
     const refreshToken = getRefreshToken()
     if (!refreshToken) {
-        await showGlobalAlert("다시 로그인해 주세요.")
-        localStorage.removeItem(ACCESS_TOKEN_KEY)
-        localStorage.removeItem(REFRESH_TOKEN_KEY)
-        window.location.reload()
-        return
+        throw Error()
     }
 
     try {
@@ -138,20 +134,12 @@ async function reissueToken(baseUrl = "") {
         })
 
         if (!res.ok) {
-            await showGlobalAlert("다시 로그인해 주세요.")
-            localStorage.removeItem(ACCESS_TOKEN_KEY)
-            localStorage.removeItem(REFRESH_TOKEN_KEY)
-            window.location.reload()
-            return
+            throw Error()
         }
 
         const data = await safeJson(res)
         if (!data?.accessToken) {
-            await showGlobalAlert("다시 로그인해 주세요.")
-            localStorage.removeItem(ACCESS_TOKEN_KEY)
-            localStorage.removeItem(REFRESH_TOKEN_KEY)
-            window.location.reload()
-            return
+            throw Error()
         }
 
         setAccessToken(data.accessToken)
@@ -253,8 +241,7 @@ export async function apiRequest(path, options = {}, config = {}) {
             try {
                 await ensureReissued(baseUrl)
             } catch (e) {
-                onServerError({ message: "잠시 후 다시 시도해 주세요." })
-                throw e
+                return
             }
 
             return await apiRequest(path, options, { ...config, retry: false })

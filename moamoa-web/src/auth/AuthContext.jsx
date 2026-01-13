@@ -20,7 +20,12 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // setIsLoggedIn(Boolean(localStorage.getItem(ACCESS_TOKEN_KEY)))
-        setOnLogout(logout)
+        setOnLogout(async () => {
+            await showGlobalAlert("다시 로그인해 주세요.")
+            localStorage.removeItem(ACCESS_TOKEN_KEY)
+            localStorage.removeItem(REFRESH_TOKEN_KEY)
+            setIsLoggedIn(false)
+        })
     }, [])
 
     const openLogin = () => setAuthModal("login")

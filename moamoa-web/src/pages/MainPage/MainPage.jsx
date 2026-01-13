@@ -29,17 +29,27 @@ export default function MainPage() {
 
     const [emptyMessage, setEmptyMessage] = useState("게시글이 존재하지 않습니다.")
 
-    // ✅ 공통: subscriptions
     useEffect(() => {
-        if (!isLoggedIn) return
-        const fetchSubscriptions = async () => {
-            try {
-                const subsRes = await subscribingBlogsApi()
-                setSubs(subsRes)
-            } catch (e) {
-            }
+        if (!isLoggedIn && type !== TYPES.ALL) {
+            setSearchParams((prev) => {
+                const p = new URLSearchParams(prev)
+                p.delete("type")
+                p.delete("techBlog")
+                p.delete("page")
+                return p
+            })
         }
-        fetchSubscriptions()
+
+        if (isLoggedIn) {
+            const fetchSubscriptions = async () => {
+                try {
+                    const subsRes = await subscribingBlogsApi()
+                    setSubs(subsRes)
+                } catch (e) {
+                }
+            }
+            fetchSubscriptions()
+        }
     }, [isLoggedIn])
 
     // ✅ posts는 type/blogKey/page에 따라 갱신
