@@ -47,11 +47,11 @@ class BookmarkedPostQueryService(
 
         val postIds = basePosts.map { it.id }
 
-        val bookmarkCountMapDeferred = async {
+        val postStatsMapDeferred = async {
             postStatsReader.findPostStatsMap(postIds)
         }
 
-        val postStatsByPostId = bookmarkCountMapDeferred.await()
+        val postStatsByPostId = postStatsMapDeferred.await()
 
         val posts = basePosts.map { post ->
             post.copy(
