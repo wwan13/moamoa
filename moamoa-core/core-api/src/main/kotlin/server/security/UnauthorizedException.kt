@@ -1,3 +1,3 @@
 package server.security
 
-class UnauthorizedException : RuntimeException()
+class UnauthorizedException : RuntimeException("LOGIN_AGAIN")
