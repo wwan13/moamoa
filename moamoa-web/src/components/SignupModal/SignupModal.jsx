@@ -3,8 +3,7 @@ import styles from "./SignupModal.module.css"
 import ModalShell from "../ModalShell/ModalShell.jsx"
 import TextInput from "../ui/TextInput.jsx"
 import Button from "../ui/Button.jsx"
-import {emailVerificationApi, emailVerificationConfirmApi} from "../../api/auth.api.js";
-import {showGlobalAlert, showToast} from "../../api/client.js";
+import useAuth from "../../auth/AuthContext.jsx"
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PASSWORD_REGEX = /^(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,32}$/
@@ -17,15 +16,15 @@ function formatMMSS(totalSec) {
     return `${m}:${s}`
 }
 
-export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
+export default function SignupModal({ open, onClose, onClickLogin }) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [passwordConfirm, setPasswordConfirm] = useState("")
     const [code, setCode] = useState("")
     const [codeSent, setCodeSent] = useState(false)
 
-    const [expiresSec, setExpiresSec] = useState(0)      // ✅ 추가: 타이머
-    const [codeVerified, setCodeVerified] = useState(false) // ✅ 추가: 인증 완료 여부
+    const [expiresSec, setExpiresSec] = useState(0)
+    const [codeVerified, setCodeVerified] = useState(false)
 
     const [touched, setTouched] = useState({
         email: false,
@@ -33,6 +32,18 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
         passwordConfirm: false,
         code: false,
     })
+
+    // ✅ mutations (AuthContext에서 제공한다고 가정)
+    const {
+        sendEmailVerificationCode,
+        verifyEmailCode,
+        signup,
+        isSendCodeLoading,
+        isVerifyCodeLoading,
+        isSignupLoading,
+    } = useAuth()
+
+    const isLoading = isSendCodeLoading || isVerifyCodeLoading || isSignupLoading
 
     useEffect(() => {
         if (!open) return
@@ -87,15 +98,17 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
 
     if (!open) return null
 
-    const canSendCode = EMAIL_REGEX.test(email) && !codeVerified
+    const canSendCode = !isLoading && EMAIL_REGEX.test(email) && !codeVerified
     const canVerifyCode =
+        !isLoading &&
         codeSent &&
         !codeVerified &&
         expiresSec > 0 &&
         /^[0-9]{6}$/.test(code)
 
     const canSubmit =
-        codeVerified && // ✅ 인증 완료 필수
+        !isLoading &&
+        codeVerified &&
         !errors.email &&
         !errors.password &&
         !errors.passwordConfirm &&
@@ -105,41 +118,42 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
 
     const handleSendCode = async () => {
         setTouched((t) => ({ ...t, email: true }))
-
         if (!EMAIL_REGEX.test(email)) return
 
-        await emailVerificationApi(email, (err) => {
-            showGlobalAlert("이미 존재하는 이메일 입니다.")
-        })
-        showToast("인증번호가 전송되었습니다.")
-
-        setCodeSent(true)
-        setCodeVerified(false)
-        setCode("")
-        setExpiresSec(CODE_TTL_SEC)
+        try {
+            await sendEmailVerificationCode({ email })
+            setCodeSent(true)
+            setCodeVerified(false)
+            setCode("")
+            setExpiresSec(CODE_TTL_SEC)
+        } catch {
+            // 에러 알림은 mutation onError에서 처리
+        }
     }
 
     const handleVerifyCode = async () => {
         setTouched((t) => ({ ...t, code: true }))
-
         if (!canVerifyCode) return
 
-        await emailVerificationConfirmApi(email, code, (err) => {
-            showGlobalAlert("인증번호가 올바르지 않습니다.")
-        })
-
-        showToast("인증되었습니다.")
-        setCodeVerified(true)
+        try {
+            await verifyEmailCode({ email, code })
+            setCodeVerified(true)
+        } catch {
+            // 에러 알림은 mutation onError에서 처리
+        }
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-
         setTouched({ email: true, password: true, passwordConfirm: true, code: true })
-
         if (!canSubmit) return
 
-        onSubmit?.({ email, password, code })
+        try {
+            await signup({ email, password, code })
+            onClose?.()
+        } catch {
+            // 에러 알림은 mutation onError에서 처리
+        }
     }
 
     return (
@@ -160,10 +174,10 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                             disabled={!canSendCode}
                             aria-disabled={!canSendCode}
                         >
-                            인증번호 전송
+                            {isSendCodeLoading ? "전송 중..." : "인증번호 전송"}
                         </Button>
                     }
-                    disabled={codeVerified}  /* ✅ 인증 완료 시 이메일 잠금(원치 않으면 제거) */
+                    disabled={codeVerified || isLoading}
                 />
 
                 {codeSent ? (
@@ -174,10 +188,10 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                         onChange={(e) => setCode(e.target.value)}
                         onBlur={() => setTouched((t) => ({ ...t, code: true }))}
                         error={errors.code}
-                        success={codeVerified ? "인증 완료" : ""}   /* ✅ 에러 자리 = 성공 메시지 */
-                        labelRight={!codeVerified ? formatMMSS(expiresSec) : ""} /* ✅ 3분 타이머 */
+                        success={codeVerified ? "인증 완료" : ""}
+                        labelRight={!codeVerified ? formatMMSS(expiresSec) : ""}
                         inputMode="numeric"
-                        disabled={codeVerified} /* ✅ 인증 완료 시 입력 비활성화 */
+                        disabled={codeVerified || isLoading}
                         right={
                             <Button
                                 type="button"
@@ -186,7 +200,7 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                                 disabled={!canVerifyCode}
                                 aria-disabled={!canVerifyCode}
                             >
-                                확인
+                                {isVerifyCodeLoading ? "확인 중..." : "확인"}
                             </Button>
                         }
                     />
@@ -200,6 +214,7 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                     onChange={(e) => setPassword(e.target.value)}
                     onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                     error={errors.password}
+                    disabled={isLoading}
                 />
 
                 <TextInput
@@ -210,17 +225,18 @@ export default function SignupModal({ open, onClose, onSubmit, onClickLogin }) {
                     onChange={(e) => setPasswordConfirm(e.target.value)}
                     onBlur={() => setTouched((t) => ({ ...t, passwordConfirm: true }))}
                     error={errors.passwordConfirm}
+                    disabled={isLoading}
                 />
 
                 <div className={styles.submitButtonWrap}>
                     <Button type="submit" disabled={!canSubmit} aria-disabled={!canSubmit}>
-                        회원가입
+                        {isSignupLoading ? "가입 중..." : "회원가입"}
                     </Button>
                 </div>
 
                 <div className={styles.footer}>
                     <span>이미 계정이 있나요?</span>
-                    <Button type="button" variant="link" onClick={onClickLogin}>
+                    <Button type="button" variant="link" onClick={onClickLogin} disabled={isLoading}>
                         로그인
                     </Button>
                 </div>

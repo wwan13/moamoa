@@ -1,14 +1,5 @@
-import {apiRequest} from "./client.js";
+import { http } from "./client.js"
 
-export function categoryApi(onError) {
-    return apiRequest(
-        "/api/category",
-        {
-            method: "GET",
-        },
-        {
-            onError: onError ?? ((err) => {
-            }),
-        }
-    )
+export const categoryApi = {
+    list: (config) => http.get("/api/category", config),
 }

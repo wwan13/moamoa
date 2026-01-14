@@ -1,89 +1,131 @@
 import styles from "./TechBlogDetailPage.module.css"
 import useAuth from "../../auth/AuthContext.jsx"
-import {useEffect, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
-import {findByTechBlogKeyApi} from "../../api/techblog.api.js";
-import {showGlobalAlert, showGlobalConfirm, showToast} from "../../api/client.js";
-import {postsByTechBlogKeyApi} from "../../api/post.api.js";
-import PostList from "../../components/PostList/PostList.jsx";
-import {usePagingQuery} from "../../hooks/usePagingQuery.js";
-import {subscribingBlogsApi, subscriptionToggleApi} from "../../api/subscription.api.js";
+import { useEffect, useMemo, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { showGlobalAlert, showGlobalConfirm, showToast } from "../../api/client.js"
+import PostList from "../../components/PostList/PostList.jsx"
+import { usePagingQuery } from "../../hooks/usePagingQuery.js"
+import { useQueryClient } from "@tanstack/react-query"
+
+import { useTechBlogByKeyQuery } from "../../queries/techBlog.queries.js"
+import { usePostsByTechBlogKeyQuery } from "../../queries/post.queries.js"
+import { useSubscribingBlogsQuery } from "../../queries/techBlogSubscription.queries.js"
+import { useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
+
+const SKELETON_DELAY_MS = 1000
 
 export default function TechBlogDetailPage() {
-    const { isLoggedIn } = useAuth()
+    const { isLoggedIn, openLogin } = useAuth()
     const navigate = useNavigate()
     const { key } = useParams()
-    const [techBlogId, setTechBlogId] = useState(0)
+    const qc = useQueryClient()
 
-    const [techBlog, setTechBlog] = useState("")
-    const [totalPostCount, setTotalPostCount] = useState(0)
+    const { page, setPage } = usePagingQuery()
+
+    // ✅ tech blog detail (query)
+    const techBlogQuery = useTechBlogByKeyQuery({ key })
+
+    // ✅ posts by tech blog (query)
+    const postsQuery = usePostsByTechBlogKeyQuery(
+        { page, techBlogKey: key },
+        { enabled: !!key }
+    )
+
+    // ✅ my subscribing blogs (query, only when logged in)
+    const subsQuery = useSubscribingBlogsQuery({ enabled: isLoggedIn })
+
+    // ✅ subscription toggle (mutation)
+    const subToggle = useSubscriptionToggleMutation()
+
+    // ✅ techBlog data
+    const techBlog = techBlogQuery.data
+    const postsRes = postsQuery.data
+
+    const posts = postsRes?.posts ?? []
+    const totalPages = postsRes?.meta?.totalPages ?? 0
+    const totalPostCount = postsRes?.meta?.totalCount ?? 0
+
+    // ✅ 구독 여부: techBlog가 로드된 다음에 subsQuery에서 판별
+    const subscribed = useMemo(() => {
+        if (!isLoggedIn) return false
+        if (!techBlog) return false
+
+        const subs = subsQuery.data ?? []
+        return Array.isArray(subs)
+            ? subs.some(
+                (s) =>
+                    s.techBlogId === techBlog.id ||
+                    s.techBlog?.id === techBlog.id ||
+                    s.id === techBlog.id
+            )
+            : false
+    }, [isLoggedIn, subsQuery.data, techBlog])
+
+    // ✅ 구독자 수는 detail에서 보이니까 optimistic을 위해 로컬로만 들고감
     const [subCount, setSubCount] = useState(0)
-    const [posts, setPosts] = useState([])
-
-    const { page, size, setPage } = usePagingQuery()
-    const [totalPages, setTotalPages] = useState(1)
-
-    const [sub, setSub] = useState(false)
-
     useEffect(() => {
-        const fetch = async () => {
-            try {
-                const techBlogRes = await findByTechBlogKeyApi(key)
-                setTechBlog(techBlogRes)
-                setTechBlogId(techBlogRes.id)
-                setSubCount(techBlogRes.subscriptionCount)
+        if (techBlog?.subscriptionCount != null) setSubCount(techBlog.subscriptionCount)
+    }, [techBlog?.id])
 
-                const postsPromise = postsByTechBlogKeyApi({
-                    page: page,
-                    techBlogKey: key,
-                })
-
-                const subsPromise = isLoggedIn ? subscribingBlogsApi() : Promise.resolve([])
-
-                const [postsRes, subsRes] = await Promise.all([postsPromise, subsPromise])
-
-                setPosts(postsRes.posts)
-                setTotalPages(postsRes.meta.totalPages)
-                setTotalPostCount(postsRes.meta.totalCount)
-
-                // ✅ 구독 여부 판별 (subsRes 구조에 맞게 id 경로만 맞추면 됨)
-                const subscribed = Array.isArray(subsRes)
-                    ? subsRes.some((s) => s.techBlogId === techBlogRes.id || s.techBlog?.id === techBlogRes.id || s.id === techBlogRes.id)
-                    : false
-
-                setSub(isLoggedIn ? subscribed : false)
-
-                window.scrollTo({ top: 0, behavior: "smooth" })
-            } catch (e) {
-                await showGlobalAlert(e.message)
+    // ✅ 에러 처리 (쿼리 실패 시)
+    useEffect(() => {
+        if (techBlogQuery.isError) {
+            ;(async () => {
+                await showGlobalAlert("기술 블로그 정보를 불러오지 못했어요.")
                 navigate(-1)
-            }
+            })()
         }
+    }, [techBlogQuery.isError])
 
-        fetch()
-    }, [isLoggedIn, key, page])
+    // ✅ top scroll (데이터 바뀔 때)
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }, [key, page])
+
+    // ✅ (조회) 1초 이상만 스켈레톤: PostList 내부가 처리하지만, 상단도 같이 쓰고 싶으면 여기서도 쓸 수 있음
+    const [showHeaderSkeleton, setShowHeaderSkeleton] = useState(false)
+    useEffect(() => {
+        let timer = null
+        const loading = techBlogQuery.isPending
+        if (loading) timer = setTimeout(() => setShowHeaderSkeleton(true), SKELETON_DELAY_MS)
+        else setShowHeaderSkeleton(false)
+        return () => timer && clearTimeout(timer)
+    }, [techBlogQuery.isPending])
 
     const onSubButtonToggle = async () => {
-        if (sub) {
+        if (!isLoggedIn) {
+            openLogin?.()
+            return
+        }
+        if (!techBlog) return
+        if (subToggle.isPending) return
+
+        if (subscribed) {
             const ok = await showGlobalConfirm({
                 title: "구독 해제",
                 message: "이 기술 블로그 구독을 해제할까요?",
                 confirmText: "해제",
                 cancelText: "유지",
             })
-
             if (!ok) return
         }
 
-        const res = await subscriptionToggleApi(techBlogId)
-        setSub(res.subscribing)
+        const wasSubscribed = subscribed
 
-        if (res.subscribing) {
-            setSubCount((c) => c + 1)
-            showToast("구독했어요.")
-        } else {
-            setSubCount((c) => c - 1)
-            showToast("구독을 해제했어요.")
+        // optimistic: 구독자 수만 즉시 반영
+        setSubCount((c) => c + (wasSubscribed ? -1 : 1))
+
+        try {
+            await subToggle.mutateAsync({ techBlogId: techBlog.id })
+
+            // 구독 목록/구독 기반 posts 등에 영향 → invalidate는 mutation 훅에 이미 들어있어도 OK
+            qc.invalidateQueries({ queryKey: ["techBlogs", "subscribed"] })
+
+            showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
+        } catch {
+            // rollback
+            setSubCount((c) => c + (wasSubscribed ? 1 : -1))
+            showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
         }
     }
 
@@ -91,40 +133,58 @@ export default function TechBlogDetailPage() {
         <>
             <div className={styles.blogInfo}>
                 <div className={styles.iconWrap}>
-                    <img src={techBlog.icon} alt="icon" className={styles.icon}/>
+                    {showHeaderSkeleton ? (
+                        <div className={`${styles.icon} ${styles.skeleton}`} />
+                    ) : (
+                        <img src={techBlog?.icon || ""} alt="icon" className={styles.icon} />
+                    )}
                 </div>
+
                 <div className={styles.detail}>
                     <div className={styles.blogDetail}>
-                        <p className={styles.blogTitle}>{techBlog.title}</p>
-                        <p className={styles.blogStats}>구독자 {subCount}명 · 게시글 {totalPostCount}개</p>
-                        <button className={styles.blogLink}
-                                onClick={() => window.open(techBlog.blogUrl)}>{techBlog.blogUrl}</button>
+                        {showHeaderSkeleton ? (
+                            <>
+                                <div className={`${styles.skeletonLine} ${styles.skeleton}`} />
+                                <div className={`${styles.skeletonLineShort} ${styles.skeleton}`} />
+                                <div className={`${styles.skeletonLineShort} ${styles.skeleton}`} />
+                            </>
+                        ) : (
+                            <>
+                                <p className={styles.blogTitle}>{techBlog?.title || ""}</p>
+                                <p className={styles.blogStats}>
+                                    구독자 {subCount}명 · 게시글 {totalPostCount}개
+                                </p>
+                                <button
+                                    className={styles.blogLink}
+                                    onClick={() => techBlog?.blogUrl && window.open(techBlog.blogUrl)}
+                                >
+                                    {techBlog?.blogUrl || ""}
+                                </button>
+                            </>
+                        )}
                     </div>
-                    {sub ?
-                        <button
-                            className={styles.subIngButton}
-                            onClick={onSubButtonToggle}
-                        >구독중</button>
-                        :
-                        <button
-                            className={styles.subButton}
-                            onClick={onSubButtonToggle}
-                        >구독</button>
-                    }
+
+                    {/* mutation이므로 스켈레톤 X, 버튼 상태만 */}
+                    <button
+                        className={subscribed ? styles.subIngButton : styles.subButton}
+                        onClick={onSubButtonToggle}
+                        disabled={subToggle.isPending || techBlogQuery.isPending}
+                    >
+                        {subToggle.isPending ? "처리 중..." : subscribed ? "구독중" : "구독"}
+                    </button>
                 </div>
             </div>
-            <div className={styles.wrap}>
 
-                <div>
-                    <div className={styles.posts}>
-                        <PostList
-                            posts={posts}
-                            page={page}
-                            totalPages={totalPages}
-                            onChangePage={setPage}
-                            emptyMessage={"기술 블로그에 게시글이 존재하지 않습니다."}
-                        />
-                    </div>
+            <div className={styles.wrap}>
+                <div className={styles.posts}>
+                    <PostList
+                        posts={posts}
+                        totalPages={totalPages}
+                        type="subscribed"
+                        isBlogDetail
+                        emptyMessage="기술 블로그에 게시글이 존재하지 않습니다."
+                        isLoading={postsQuery.isPending}
+                    />
                 </div>
             </div>
         </>

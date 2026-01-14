@@ -1,78 +1,44 @@
-import {apiRequest} from "./client.js";
+// posts.api.js
+import { http } from "./client.js"
 
-export function postsApi({ page } = {}, onError) {
+const SIZE = 20
+
+function buildQuery(paramsObj = {}) {
     const params = new URLSearchParams()
-
-    if (page && page > 1) params.set("page", page)
-    params.set("size", 20)
-
-    const query = params.toString()
-    const url = query ? `/api/post?${query}` : "/api/post"
-
-    return apiRequest(
-        url,
-        { method: "GET" },
-        { onError: onError ?? (() => {}) }
-    )
+    Object.entries(paramsObj).forEach(([k, v]) => {
+        if (v === undefined || v === null || v === "") return
+        params.set(k, String(v))
+    })
+    const q = params.toString()
+    return q ? `?${q}` : ""
 }
 
-export function postsViewCountApi(postId, onError) {
-    return apiRequest(
-        `/api/post/${postId}/view`,
-        {
-            method: "POST",
-        },
-        {
-            onError: onError ?? (() => {}),
-        }
-    )
-}
+export const postsApi = {
+    list: ({ page } = {}, config) => {
+        const query = buildQuery({ page: page && page > 1 ? page : undefined, size: SIZE })
+        return http.get(`/api/post${query}`, config)
+    },
 
-export function postsByTechBlogKeyApi({ page, techBlogKey } = {}, onError) {
-    const params = new URLSearchParams()
+    listByTechBlogKey: ({ page, techBlogKey } = {}, config) => {
+        const query = buildQuery({
+            page: page && page > 1 ? page : undefined,
+            size: SIZE,
+            techBlogKey,
+        })
+        return http.get(`/api/post/tech-blog${query}`, config)
+    },
 
-    if (page && page > 1) params.set("page", page)
-    params.set("size", 20)
-    params.set("techBlogKey", techBlogKey)
+    listBySubscription: ({ page } = {}, config) => {
+        const query = buildQuery({ page: page && page > 1 ? page : undefined, size: SIZE })
+        // ✅ 네 코드가 subscribed/subscription 섞여있어서, 원래 쓰던 엔드포인트로 통일
+        return http.get(`/api/post/subscribed${query}`, config)
+    },
 
-    const query = params.toString()
-    const url = query ? `/api/post/tech-blog?${query}` : "/api/post/tech-blog"
+    listByBookmark: ({ page } = {}, config) => {
+        const query = buildQuery({ page: page && page > 1 ? page : undefined, size: SIZE })
+        return http.get(`/api/post/bookmarked${query}`, config)
+    },
 
-    return apiRequest(
-        url,
-        { method: "GET" },
-        { onError: onError ?? (() => {}) }
-    )
-}
-
-export function postsBySubscriptionApi({ page } = {}, onError) {
-    const params = new URLSearchParams()
-
-    if (page && page > 1) params.set("page", page)
-    params.set("size", 20)
-
-    const query = params.toString()
-    const url = query ? `/api/post/subscribed?${query}` : "/api/post/subscription"
-
-    return apiRequest(
-        url,
-        { method: "GET" },
-        { onError: onError ?? (() => {}) }
-    )
-}
-
-export function postsByBookmarkApi({ page } = {}, onError) {
-    const params = new URLSearchParams()
-
-    if (page && page > 1) params.set("page", page)
-    params.set("size", 20)
-
-    const query = params.toString()
-    const url = query ? `/api/post/bookmarked?${query}` : "/api/post/bookmark"
-
-    return apiRequest(
-        url,
-        { method: "GET" },
-        { onError: onError ?? (() => {}) }
-    )
+    increaseViewCount: ({ postId }, config) =>
+        http.post(`/api/post/${postId}/view`, {}, config),
 }

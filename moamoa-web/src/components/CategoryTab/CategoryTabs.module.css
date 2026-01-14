@@ -77,3 +77,27 @@
     font-size: 14px;
     margin: 0;
 }
+
+/* 기존 스타일 그대로 두고 추가 */
+.skeleton {
+    height: 32px;
+    width: 80px;
+    border-radius: 16px;
+    background: linear-gradient(
+            90deg,
+            #eee 25%,
+            #f5f5f5 37%,
+            #eee 63%
+    );
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}

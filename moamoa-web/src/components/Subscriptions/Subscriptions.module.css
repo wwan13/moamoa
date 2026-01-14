@@ -171,3 +171,42 @@
 .more:focus-visible {
     outline: none;
 }
+
+/* Subscriptions.module.css 에 추가 */
+
+/* 공통 스켈레톤 */
+.skeleton {
+    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 6px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}
+
+.skeletonRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: default;
+}
+
+.skeletonCircle {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+}
+
+.skeletonLine {
+    height: 12px;
+    width: 70%;
+    border-radius: 6px;
+}
+
+/* 기존 클래스에 덮어쓰기 쉬우려고 avatar에도 적용 가능 */
+.avatar.skeletonCircle {
+    background: none; /* img 기본 제거용 */
+}
