@@ -9,7 +9,7 @@ export default function Footer() {
                     alt="moamoa-grey"
                     className={styles.moamoaIcon}
                 />
-                <p className={styles.copy}>© 2025 moamoa, All Rights Reserved.</p>
+                <p className={styles.copy}>© 2026 moamoa, All Rights Reserved.</p>
             </div>
             <a
                 href=""

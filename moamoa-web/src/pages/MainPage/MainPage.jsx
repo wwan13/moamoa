@@ -144,7 +144,7 @@ export default function MainPage() {
         <>
             <section className={styles.banner}>
                 <img
-                    src="https://i.imgur.com/DGEtQPi.png"
+                    src="https://i.imgur.com/Nl4XwSt.png"
                     alt="banner"
                     className={styles.bannerImage}
                 />
