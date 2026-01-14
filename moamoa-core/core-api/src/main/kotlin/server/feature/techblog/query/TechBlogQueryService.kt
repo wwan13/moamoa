@@ -1,8 +1,10 @@
 package server.feature.techblog.query
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Service
@@ -15,6 +17,7 @@ class TechBlogQueryService(
     private val techBlogListCache: TechBlogListCache,
     private val techBlogStatsReader: TechBlogStatsReader,
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
+    private val cacheWarmupScope: CoroutineScope,
 ) {
 
     suspend fun findAll(passport: Passport?): TechBlogList = coroutineScope {
@@ -65,7 +68,7 @@ class TechBlogQueryService(
             ORDER BY t.title ASC
         """.trimIndent()
 
-        val list = databaseClient.sql(sql)
+        return databaseClient.sql(sql)
             .map { row, _ ->
                 TechBlogSummary(
                     id = row.get("tech_blog_id", Long::class.java) ?: 0L,
@@ -82,8 +85,10 @@ class TechBlogQueryService(
             .all()
             .asFlow()
             .toList()
-
-        techBlogListCache.set(list)
-        return list
+            .also {
+                cacheWarmupScope.launch {
+                    techBlogListCache.set(it)
+                }
+            }
     }
 }
