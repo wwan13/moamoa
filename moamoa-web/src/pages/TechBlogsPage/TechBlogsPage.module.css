@@ -301,6 +301,12 @@
     margin-top: 12px;
 }
 
+.skeletonCircle {
+    width: 60px;
+    height: 60px;
+    border-radius: 100%;
+}
+
 .skeletonLineShort {
     height: 12px;
     width: 90%;
@@ -308,7 +314,7 @@
 }
 
 .skeletonBtn {
-    height: 32px;
+    height: 16px;
     width: 72px;
     border-radius: 10px;
 }

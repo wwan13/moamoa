@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTechBlogsQuery } from "../../queries/techBlog.queries.js"
 import { useSubscribingBlogsQuery, useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
 
-const SKELETON_DELAY_MS = 1000
+const SKELETON_DELAY_MS = 300
 const SKELETON_COUNT = 12
 
 export default function TechBlogsPage() {
@@ -134,7 +134,8 @@ export default function TechBlogsPage() {
                 <div className={styles.infoInner}>
                     <div className={styles.textSection}>
                         <h1 className={styles.title}>
-                            <span className={styles.count}>{animated}</span>개의 기술 블로그를
+                            <span className={styles.count}>{animated}</span>
+                            개의 기술 블로그를
                             <br />
                             모아보고 있어요
                         </h1>
@@ -167,7 +168,7 @@ export default function TechBlogsPage() {
                         {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                             <article key={`s-${i}`} className={`${styles.card} ${styles.skeletonCard}`}>
                                 <div className={styles.logoWrap}>
-                                    <div className={`${styles.logo} ${styles.skeleton}`} />
+                                    <div className={`${styles.logo} ${styles.skeleton} ${styles.skeletonCircle}`} />
                                 </div>
                                 <div className={`${styles.skeletonLine} ${styles.skeleton}`} />
                                 <div className={`${styles.skeletonLineShort} ${styles.skeleton}`} />
