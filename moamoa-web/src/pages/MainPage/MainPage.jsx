@@ -13,6 +13,7 @@ import {
     usePostsBySubscriptionQuery,
     usePostsByTechBlogKeyQuery,
 } from "../../queries/post.queries.js"
+import {useSubscribingTechBlogsQuery} from "../../queries/techBlog.queries.js";
 
 const TYPES = {
     ALL: "all",
@@ -43,11 +44,11 @@ export default function MainPage() {
     }, [isLoggedIn, type, setSearchParams])
 
     // ✅ 구독 블로그 목록 (LeftSidebar용)
-    const subsQuery = useSubscribingBlogsQuery({
+    const subsQuery = useSubscribingTechBlogsQuery({
         enabled: isLoggedIn,
     })
 
-    const subs = subsQuery.data ?? []
+    const subs = subsQuery.data?.techBlogs ?? []
 
     // ✅ posts 쿼리: type/blogKey에 따라 1개만 활성화
     const allPostsQuery = usePostsQuery(
@@ -142,7 +143,7 @@ export default function MainPage() {
                             blogKey={blogKey}
                             onSelectType={onSelectType}
                             onSelectBlog={onSelectBlog}
-                            isLoading={isPostsLoading}
+                            isLoading={isSubsLoading}
                         />
                     </aside>
 

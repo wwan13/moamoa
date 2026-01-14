@@ -6,17 +6,20 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 const SKELETON_DELAY_MS = 300
 
 export default function Subscriptions({
-                                          items = [],
+                                          items,
                                           maxVisible = 5,
                                           onClickItem,
                                           onClickHeader,
                                           headerActive = false,
                                           activeBlogKey = null,
-                                          isLoading = false, // ✅ 조회 로딩
+                                          isLoading = false,
                                       }) {
     const [expanded, setExpanded] = useState(false)
 
-    // ✅ 1초 이상일 때만 스켈레톤
+    // ✅ items를 무조건 배열로 보정 (라우팅/캐시 타이밍으로 객체/undefined가 들어와도 안전)
+    const safeItems = useMemo(() => (Array.isArray(items) ? items : []), [items])
+
+    // ✅ 300ms 이상 로딩일 때만 스켈레톤 표시
     const [showSkeleton, setShowSkeleton] = useState(false)
     useEffect(() => {
         let timer = null
@@ -28,13 +31,14 @@ export default function Subscriptions({
         return () => timer && clearTimeout(timer)
     }, [isLoading])
 
-    const hasMore = items.length > maxVisible
+    // ✅ 더보기 여부/보이는 목록 계산
+    const hasMore = safeItems.length > maxVisible
     const visibleItems = useMemo(() => {
-        if (!hasMore) return items
-        return expanded ? items : items.slice(0, maxVisible)
-    }, [items, expanded, hasMore, maxVisible])
+        if (!hasMore) return safeItems
+        return expanded ? safeItems : safeItems.slice(0, maxVisible)
+    }, [safeItems, expanded, hasMore, maxVisible])
 
-    // ✅ 로딩 중: 리스트 스켈레톤
+    // ✅ 스켈레톤
     if (showSkeleton) {
         return (
             <div className={styles.wrap} aria-busy="true">
@@ -50,10 +54,10 @@ export default function Subscriptions({
 
                 <ul className={styles.list}>
                     {Array.from({ length: maxVisible }).map((_, i) => (
-                        <li key={i}>
+                        <li key={`s-${i}`}>
                             <div className={`${styles.item} ${styles.skeletonRow}`}>
-                                <div className={`${styles.avatarWrap}  ${styles.skeleton} ${styles.skeletonCircle}`}>
-                                    <div className={`${styles.avatar}`} />
+                                <div className={`${styles.avatarWrap} ${styles.skeleton} ${styles.skeletonCircle}`}>
+                                    <div className={styles.avatar} />
                                 </div>
                                 <div className={`${styles.skeleton} ${styles.skeletonLine}`} />
                             </div>
@@ -64,8 +68,8 @@ export default function Subscriptions({
         )
     }
 
-    // ✅ 로딩 끝났는데 비어있음
-    if (items.length === 0) {
+    // ✅ 비어있음
+    if (safeItems.length === 0) {
         return (
             <div className={styles.wrap}>
                 <button
@@ -76,6 +80,7 @@ export default function Subscriptions({
                     <span className={styles.title}>구독</span>
                     <ArrowForwardIosIcon sx={{ fontSize: 14, color: "#252525" }} />
                 </button>
+
                 <div className={styles.empty}>
                     구독중인 기술 블로그가 <br /> 없습니다
                 </div>
@@ -98,14 +103,19 @@ export default function Subscriptions({
                 {visibleItems.map((it) => {
                     const isActiveItem = !!activeBlogKey && activeBlogKey === it.key
                     return (
-                        <li key={it.id}>
+                        <li key={it.id ?? it.key}>
                             <button
                                 type="button"
                                 className={`${styles.item} ${isActiveItem ? styles.activeItem : ""}`}
                                 onClick={() => onClickItem?.(it)}
                             >
                                 <div className={styles.avatarWrap}>
-                                    <img className={styles.avatar} src={it.icon} alt={it.title} />
+                                    <img
+                                        className={styles.avatar}
+                                        src={it.icon}
+                                        alt={it.title ?? "tech blog"}
+                                        loading="lazy"
+                                    />
                                 </div>
                                 <span className={styles.name} title={it.title}>
                   {it.title}
