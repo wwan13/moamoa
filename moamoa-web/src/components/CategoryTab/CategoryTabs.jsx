@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import styles from "./CategoryTabs.module.css"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
-const SKELETON_DELAY_MS = 1000
+const SKELETON_DELAY_MS = 500
 
 export default function CategoryTabs({
                                          items = [],
@@ -30,8 +30,8 @@ export default function CategoryTabs({
             <nav className={styles.tab} aria-label="카테고리">
                 <div className={styles.tabList}>
                     {showSkeleton
-                        ? Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className={`${styles.tabItem} ${styles.skeleton}`} />
+                        ? Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className={`${styles.skeletonTab}`} />
                         ))
                         : items.map((it) => {
                             const active = it.id === id

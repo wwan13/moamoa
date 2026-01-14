@@ -3,7 +3,7 @@ import styles from "./Subscriptions.module.css"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
-const SKELETON_DELAY_MS = 1000
+const SKELETON_DELAY_MS = 500
 
 export default function Subscriptions({
                                           items = [],
@@ -52,10 +52,10 @@ export default function Subscriptions({
                     {Array.from({ length: maxVisible }).map((_, i) => (
                         <li key={i}>
                             <div className={`${styles.item} ${styles.skeletonRow}`}>
-                                <div className={styles.avatarWrap}>
-                                    <div className={`${styles.avatar} ${styles.skeletonCircle}`} />
+                                <div className={`${styles.avatarWrap}  ${styles.skeleton} ${styles.skeletonCircle}`}>
+                                    <div className={`${styles.avatar}`} />
                                 </div>
-                                <div className={`${styles.skeletonLine}`} />
+                                <div className={`${styles.skeleton} ${styles.skeletonLine}`} />
                             </div>
                         </li>
                     ))}

@@ -142,7 +142,7 @@ export default function MainPage() {
                             blogKey={blogKey}
                             onSelectType={onSelectType}
                             onSelectBlog={onSelectBlog}
-                            isLoading={isSubsLoading}
+                            isLoading={isPostsLoading}
                         />
                     </aside>
 

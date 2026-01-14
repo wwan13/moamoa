@@ -75,22 +75,22 @@ export default function PostItem({post, isBlogDetail, isLoading = false}) {
             <article className={`${styles.card} ${styles.skeletonCard}`} aria-busy="true">
                 <div className={styles.thumbnailWrap}>
                     <div className={`${styles.thumbnailImage} ${styles.skeleton}`}/>
-                    <div className={`${styles.bookmarkButton} ${styles.skeletonCircle}`}/>
+                    <div className={`${styles.bookmarkButton} ${styles.skeleton} ${styles.skeletonCircle}`}/>
                 </div>
 
                 <div className={styles.postInfo}>
                     <div>
-                        <div className={`${styles.title} ${styles.skeletonLine}`}/>
-                        <div className={`${styles.summary} ${styles.skeletonLine}`}/>
-                        <div className={`${styles.summary} ${styles.skeletonLineShort}`}/>
+                        <div className={`${styles.title} ${styles.skeleton} ${styles.skeletonLine}`}/>
+                        <div className={`${styles.summary} ${styles.skeleton}  ${styles.skeletonLine}`}/>
+                        <div className={`${styles.summary} ${styles.skeleton} ${styles.skeletonLineShort}`}/>
                     </div>
 
-                    <div className={styles.metaRow}>
-                        <div className={styles.source}>
-                            <div className={`${styles.skeletonLineShort} ${styles.skeleton}`}/>
+                    <div className={`${styles.metaRow} ${styles.skeleton} ${styles.skeletonLineShort}`}>
+                        <div className={`${styles.source}`}>
+                            <div className={`${styles.skeletonLineShort}`}/>
                         </div>
                         <div className={styles.stats}>
-                            <div className={`${styles.skeletonLineShort} ${styles.skeleton}`}/>
+                            <div className={`${styles.skeletonLineShort}`}/>
                         </div>
                     </div>
                 </div>
