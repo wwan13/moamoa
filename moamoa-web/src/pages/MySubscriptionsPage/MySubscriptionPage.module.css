@@ -179,3 +179,7 @@
     height: 34px;
     border-radius: 999px;
 }
+
+.skeletonCircle {
+    border-radius: 999px;
+}

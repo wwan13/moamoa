@@ -13,7 +13,7 @@ import {
     useNotificationToggleMutation,
 } from "../../queries/techBlogSubscription.queries.js"
 
-const SKELETON_DELAY_MS = 1000
+const SKELETON_DELAY_MS = 300
 const SKELETON_COUNT = 8
 
 export default function MySubscriptionPage() {
@@ -130,8 +130,8 @@ export default function MySubscriptionPage() {
         if (showSkeleton) {
             return Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                 <div key={`s-${i}`} className={styles.item} aria-busy="true">
-                    <div className={styles.iconWrap}>
-                        <div className={`${styles.icon} ${styles.skeleton}`} />
+                    <div className={`${styles.iconWrap} ${styles.skeleton} ${styles.skeletonCircle}`}>
+                        <div className={`${styles.icon}`} />
                     </div>
                     <div className={styles.infoWrap}>
                         <div className={styles.left}>
