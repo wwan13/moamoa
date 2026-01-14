@@ -26,3 +26,26 @@
     cursor: pointer;
     text-decoration: underline;
 }
+
+/* LoginModal.module.css 에 추가 */
+.skeleton {
+    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 6px;
+}
+
+.skeletonLine {
+    height: 12px;
+    width: 100%;
+    margin-top: 12px;
+}
+
+.loadingHint {
+    margin-top: 8px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}

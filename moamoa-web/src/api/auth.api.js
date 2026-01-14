@@ -1,59 +1,22 @@
-import {apiRequest, showGlobalAlert} from "./client.js";
+import { http } from "./client.js"
 
-export function loginApi(email, password, onError) {
-    return apiRequest(
-        "/api/auth/login",
-        {
-            method: "POST",
-            body: JSON.stringify({ email, password }),
-        },
-        {
-            onError: onError ?? ((err) => {
-            }),
-        }
-    )
-}
+export const authApi = {
+    login: ({ email, password }, config) =>
+        http.post("/api/auth/login", { email, password }, config),
 
-export function emailVerificationApi(email, onError) {
-    return apiRequest(
-        "/api/auth/email-verification",
-        {
-            method: "POST",
-            body: JSON.stringify({ email }),
-        },
-        {
-            onError: onError ?? ((err) => {
-            }),
-        }
-    )
-}
+    emailVerification: ({ email }, config) =>
+        http.post("/api/auth/email-verification", { email }, config),
 
-export function emailVerificationConfirmApi(email, code, onError) {
-    return apiRequest(
-        "/api/auth/email-verification/confirm",
-        {
-            method: "POST",
-            body: JSON.stringify({
-                email,
-                code: String(code),
-            }),
-        },
-        {
-            onError: onError ?? ((err) => {
-            }),
-        }
-    )
-}
+    emailVerificationConfirm: ({ email, code }, config) =>
+        http.post(
+            "/api/auth/email-verification/confirm",
+            { email, code: String(code) },
+            config
+        ),
 
-export function logoutApi(onError) {
-    return apiRequest(
-        "/api/auth/logout",
-        {
-            method: "POST"
-        },
-        {
-            onError: onError ?? ((err) => {
-            }),
-        }
-    )
+    signup: ({ email, password }, config) =>
+        http.post("/api/auth/signup", { email, password }, config),
+
+    logout: (config) =>
+        http.post("/api/auth/logout", {}, config),
 }

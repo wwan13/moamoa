@@ -1,40 +1,12 @@
-import {apiRequest, showGlobalAlert} from "./client.js";
+// techBlog.api.js
+import { http } from "./client.js"
 
-export function techBlogsApi(onError) {
-    return apiRequest(
-        "/api/tech-blog",
-        {
-            method: "GET",
-        },
-        {
-            onError: onError ?? ((err) => {
-            }),
-        }
-    )
-}
+export const techBlogApi = {
+    list: (config) => http.get("/api/tech-blog", config),
 
-export function findByTechBlogKeyApi(key, onError) {
-    return apiRequest(
-        `/api/tech-blog/${key}`,
-        {
-            method: "GET",
-        },
-        {
-            onError: onError ?? ((err) => {
-            }),
-        }
-    )
-}
+    findByKey: ({ key }, config) =>
+        http.get(`/api/tech-blog/${key}`, config),
 
-export function subscribingTechBlogsApi(onError) {
-    return apiRequest(
-        "/api/tech-blog/subscription",
-        {
-            method: "GET",
-        },
-        {
-            onError: onError ?? ((err) => {
-            }),
-        }
-    )
+    listSubscribed: (config) =>
+        http.get("/api/tech-blog/subscription", config),
 }

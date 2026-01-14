@@ -32,22 +32,25 @@
 /* 북마크 버튼 */
 .bookmarkButton {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 8px;
+    left: 8px;
 
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 999px;
 
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    border: 1px solid rgba(229, 231, 235, 0.9);
+    border: 1px solid rgba(229, 231, 235, 0.5);
     background: rgba(255, 255, 255, 0.85);
+    /*border: none;*/
+    /*background: none;*/
 
     cursor: pointer;
     padding: 0;
+    margin: 0;
 }
 
 .bookmarkButton:focus,
@@ -157,4 +160,37 @@
 
 .dot {
     color: #9ca3af;
+}
+
+/* 공통 스켈레톤 */
+.skeleton {
+    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 6px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}
+
+.skeletonCard {
+    cursor: default;
+}
+
+.skeletonLine {
+    height: 16px;
+    width: 100%;
+}
+
+.skeletonLineShort {
+    height: 14px;
+    width: 60%;
+}
+
+.skeletonCircle {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
 }

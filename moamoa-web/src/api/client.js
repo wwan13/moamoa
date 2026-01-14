@@ -1,31 +1,37 @@
-import useAuth from "../auth/AuthContext.jsx";
-import {useNavigate} from "react-router-dom";
-
+// apiClient.js
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
 
 const ACCESS_TOKEN_KEY = "accessToken"
-const REFRESH_TOKEN_KEY = "refreshToken" // 너가 쓰는 키로 맞춰
+const REFRESH_TOKEN_KEY = "refreshToken"
 
-let onLoginRequired = () => {} // 외부에서 주입
-
-let onLoadingChange = () => {}
-
-export function setOnLoadingChange(handler) {
-    onLoadingChange = typeof handler === "function" ? handler : () => {}
+let onLoginRequired = () => {}
+export function setOnLoginRequired(handler) {
+    onLoginRequired = typeof handler === "function" ? handler : () => {}
 }
 
 let onServerError = () => {}
-
 export function setOnServerError(handler) {
     onServerError = typeof handler === "function" ? handler : () => {}
 }
 
-let onGlobalAlert = () => {}
+let onLogout = () => {}
+export function setOnLogout(handler) {
+    onLogout = typeof handler === "function" ? handler : () => {}
+}
 
+let onToast = () => {}
+export function setOnToast(handler) {
+    onToast = typeof handler === "function" ? handler : () => {}
+}
+export function showToast(message, options = {}) {
+    const { type = "default", duration = 2000 } = options
+    onToast({ message, type, duration })
+}
+
+let onGlobalAlert = () => {}
 export function setOnGlobalAlert(handler) {
     onGlobalAlert = typeof handler === "function" ? handler : () => {}
 }
-
 export function showGlobalAlert(params) {
     const { message, title = "오류" } =
         typeof params === "string" ? { message: params } : params ?? {}
@@ -34,31 +40,15 @@ export function showGlobalAlert(params) {
         onGlobalAlert({
             title,
             message: message ?? "알 수 없는 오류가 발생했어요.",
-            onClose: resolve, // ✅ 닫힐 때 resolve
+            onClose: resolve,
         })
     })
 }
 
-let onToast = () => {}
-
-export function setOnToast(handler) {
-    onToast = typeof handler === "function" ? handler : () => {}
-}
-
-export function showToast(message, options = {}) {
-    const {
-        type = "default", // default | success | error
-        duration = 2000,
-    } = options
-    onToast({ message, type, duration })
-}
-
 let onGlobalConfirm = () => {}
-
 export function setOnGlobalConfirm(handler) {
     onGlobalConfirm = typeof handler === "function" ? handler : () => {}
 }
-
 export function showGlobalConfirm({
                                       message,
                                       title = "확인",
@@ -77,26 +67,17 @@ export function showGlobalConfirm({
     })
 }
 
-let isRefreshing = false
-let refreshPromise = null
-
-export function setOnLoginRequired(handler) {
-    onLoginRequired = typeof handler === "function" ? handler : () => {}
-}
-
 function getAccessToken() {
     return localStorage.getItem(ACCESS_TOKEN_KEY)
 }
-
 function setAccessToken(token) {
     localStorage.setItem(ACCESS_TOKEN_KEY, token)
 }
-
 function getRefreshToken() {
     return localStorage.getItem(REFRESH_TOKEN_KEY)
 }
 
-// 서버가 204(바디 없음) 줄 수도 있어서 안전하게 처리
+// 204 대응
 async function safeJson(res) {
     const text = await res.text()
     if (!text) return null
@@ -107,22 +88,21 @@ async function safeJson(res) {
     }
 }
 
-let onLogout = () => {}
-
-export function setOnLogout(handler) {
-    onLogout = typeof handler === "function" ? handler : () => {}
+export class ApiError extends Error {
+    constructor({ status, message, body }) {
+        super(message)
+        this.name = "ApiError"
+        this.status = status
+        this.body = body
+    }
 }
 
-/**
- * Reissue API 호출
- * - 너의 백엔드 스펙에 맞게 URL/바디/응답을 수정해줘.
- * - 여기서는 refreshToken을 바디로 보내고 accessToken을 받는 형태로 가정.
- */
+let isRefreshing = false
+let refreshPromise = null
+
 async function reissueToken(baseUrl = "") {
     const refreshToken = getRefreshToken()
-    if (!refreshToken) {
-        throw Error()
-    }
+    if (!refreshToken) throw new Error("NO_REFRESH_TOKEN")
 
     try {
         const res = await fetch(`${baseUrl}/api/auth/reissue`, {
@@ -133,20 +113,15 @@ async function reissueToken(baseUrl = "") {
             },
         })
 
-        if (!res.ok) {
-            throw Error()
-        }
+        if (!res.ok) throw new Error("REISSUE_FAILED")
 
         const data = await safeJson(res)
-        if (!data?.accessToken) {
-            throw Error()
-        }
+        if (!data?.accessToken) throw new Error("INVALID_REISSUE_RESPONSE")
 
         setAccessToken(data.accessToken)
         if (data.refreshToken) {
             localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken)
         }
-
         return data.accessToken
     } catch (e) {
         onLogout()
@@ -170,90 +145,74 @@ async function ensureReissued(baseUrl) {
     return refreshPromise
 }
 
-export class ApiError extends Error {
-    constructor({ status, message }) {
-        super(message)
-        this.status = status
-        this.message = message
+/**
+ * React Query에서 쓰기 좋은 fetcher
+ * - queryFn/mutationFn에 바로 넣을 수 있게 구성
+ */
+export async function apiRequest(path, options = {}, config = {}) {
+    const {
+        baseUrl = BASE_URL,
+        retry = true, // TOKEN_EXPIRED일 때 1회 재시도
+        signal, // react-query에서 abort 전달 가능
+    } = config
+
+    const headers = new Headers(options.headers || {})
+    headers.set("Accept", "application/json")
+
+    // body가 있고 FormData가 아니면 JSON 기본
+    if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json")
     }
+
+    const token = getAccessToken()
+    if (token) headers.set("Authorization", `Bearer ${token}`)
+
+    const res = await fetch(`${baseUrl}${path}`, {
+        ...options,
+        headers,
+        signal,
+    })
+
+    if (res.ok) return await safeJson(res)
+
+    const errBody = (await safeJson(res)) || { status: res.status, message: "UNKNOWN" }
+    const status = errBody.status ?? res.status
+    const message = errBody.message ?? "UNKNOWN"
+
+    // 로그인 다시 필요
+    if (status === 401 && message === "LOGIN_AGAIN") {
+        onLoginRequired()
+        throw new ApiError({ status, message, body: errBody })
+    }
+
+    // 토큰 만료 → 1회 재발급 후 재요청
+    if (status === 401 && message === "TOKEN_EXPIRED") {
+        if (!retry) {
+            onLoginRequired()
+            throw new ApiError({ status, message: "LOGIN_AGAIN", body: errBody })
+        }
+
+        await ensureReissued(baseUrl)
+
+        // ✅ 재요청은 retry:false로 한번만
+        return await apiRequest(path, options, { ...config, retry: false })
+    }
+
+    if (status === 500) onServerError({ message: "잠시 후 다시 시도해 주세요." })
+
+    throw new ApiError({ status, message, body: errBody })
 }
 
 /**
- * 공통 API 함수
+ * 편의 함수들: 컴포넌트/훅에서 더 짧게 쓰기
  */
-const LOADING_DELAY_MS = 500 // 이 시간보다 오래 걸리면 로딩 켬
-
-export async function apiRequest(path, options = {}, config = {}) {
-    const {
-        retry = true,
-        onError,
-        baseUrl = BASE_URL,
-        showLoading = true,
-    } = config
-
-    let loadingTimer = null
-    let loadingShown = false
-
-    if (showLoading) {
-        loadingTimer = setTimeout(() => {
-            loadingShown = true
-            onLoadingChange(true)
-        }, LOADING_DELAY_MS)
-    }
-
-    try {
-        const headers = new Headers(options.headers || {})
-        headers.set("Accept", "application/json")
-
-        if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
-            headers.set("Content-Type", "application/json")
-        }
-
-        const token = getAccessToken()
-        if (token) headers.set("Authorization", `Bearer ${token}`)
-
-        const res = await fetch(`${baseUrl}${path}`, {
-            ...options,
-            headers,
-        })
-
-        if (res.ok) return await safeJson(res)
-
-        const errBody = (await safeJson(res)) || { status: res.status, message: "UNKNOWN" }
-        const status = errBody.status ?? res.status
-        const message = errBody.message ?? "UNKNOWN"
-
-        if (status === 401 && message === "LOGIN_AGAIN") {
-            onLoginRequired()
-            const err = new ApiError({ status, message })
-            onError?.(err)
-            throw err
-        }
-
-        if (status === 401 && message === "TOKEN_EXPIRED") {
-            if (!retry) {
-                onLoginRequired()
-                const err = new ApiError({ status, message: "LOGIN_AGAIN" })
-                onError?.(err)
-                throw err
-            }
-
-            try {
-                await ensureReissued(baseUrl)
-            } catch (e) {
-                return
-            }
-
-            return await apiRequest(path, options, { ...config, retry: false })
-        }
-
-        if (status === 500) onServerError({ message: "잠시 후 다시 시도해 주세요." })
-
-        const err = new ApiError({ status, message })
-        onError?.(err)
-        throw err
-    } finally {
-        if (loadingTimer) clearTimeout(loadingTimer)
-        if (loadingShown) onLoadingChange(false)
-    }
+export const http = {
+    get: (path, config = {}) => apiRequest(path, { method: "GET" }, config),
+    post: (path, body, config = {}) =>
+        apiRequest(path, { method: "POST", body: body instanceof FormData ? body : JSON.stringify(body) }, config),
+    put: (path, body, config = {}) =>
+        apiRequest(path, { method: "PUT", body: body instanceof FormData ? body : JSON.stringify(body) }, config),
+    patch: (path, body, config = {}) =>
+        apiRequest(path, { method: "PATCH", body: body instanceof FormData ? body : JSON.stringify(body) }, config),
+    del: (path, config = {}) => apiRequest(path, { method: "DELETE" }, config),
 }

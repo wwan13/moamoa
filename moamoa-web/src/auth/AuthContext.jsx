@@ -1,7 +1,12 @@
-import { createContext, useContext, useEffect, useState } from "react"
-import {loginApi, logoutApi} from "../api/auth.api.js"
-import {setOnLogout, showGlobalAlert, showGlobalConfirm, showToast} from "../api/client.js"
-import {useNavigate} from "react-router-dom";
+import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries.js"
+import {
+    setOnLogout,
+    showGlobalAlert,
+    showGlobalConfirm,
+    showToast,
+} from "../api/client.js"
 
 const AuthContext = createContext(null)
 
@@ -10,7 +15,7 @@ const REFRESH_TOKEN_KEY = "refreshToken"
 
 export function AuthProvider({ children }) {
     const [isLoggedIn, setIsLoggedIn] = useState(() =>
-        Boolean(localStorage.getItem("accessToken"))
+        Boolean(localStorage.getItem(ACCESS_TOKEN_KEY))
     )
 
     // null | "login" | "signup"
@@ -18,8 +23,11 @@ export function AuthProvider({ children }) {
 
     const navigate = useNavigate()
 
+    // ✅ React Query mutations
+    const loginMutation = useLoginMutation()
+    const logoutMutation = useLogoutMutation()
+
     useEffect(() => {
-        // setIsLoggedIn(Boolean(localStorage.getItem(ACCESS_TOKEN_KEY)))
         setOnLogout(async () => {
             await showGlobalAlert("다시 로그인해 주세요.")
             localStorage.removeItem(ACCESS_TOKEN_KEY)
@@ -32,56 +40,76 @@ export function AuthProvider({ children }) {
     const openSignup = () => setAuthModal("signup")
     const closeAuthModal = () => setAuthModal(null)
 
+    // ✅ 기존처럼 await login(...) 가능하게 유지
     const login = async ({ email, password }) => {
-        const res = await loginApi(email, password, () => {
-            showGlobalAlert("이메일 또는 비밀번호가 일치하지 않습니다.")
-        })
+        try {
+            const res = await loginMutation.mutateAsync({ email, password })
 
-        localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken)
-        localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken)
-        setIsLoggedIn(true)
+            localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken)
+            localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken)
+            setIsLoggedIn(true)
 
-        showToast("로그인 되었습니다.")
-        closeAuthModal() // ✅ 로그인 성공하면 모달 닫기
+            showToast("로그인 되었습니다.")
+            closeAuthModal()
+            return res
+        } catch (e) {
+            await showGlobalAlert("이메일 또는 비밀번호가 일치하지 않습니다.")
+            throw e
+        }
     }
 
     const logout = async () => {
         const ok = await showGlobalConfirm({
-            message : "로그아웃 하시겠습니까?",
-            confirmText: "로그아웃"
+            message: "로그아웃 하시겠습니까?",
+            confirmText: "로그아웃",
         })
         if (!ok) return
 
-        const res = await logoutApi()
+        try {
+            const res = await logoutMutation.mutateAsync()
 
-        if (res.success) {
-            localStorage.removeItem(ACCESS_TOKEN_KEY)
-            localStorage.removeItem(REFRESH_TOKEN_KEY)
-            setIsLoggedIn(false)
+            if (res?.success) {
+                localStorage.removeItem(ACCESS_TOKEN_KEY)
+                localStorage.removeItem(REFRESH_TOKEN_KEY)
+                setIsLoggedIn(false)
 
-            navigate("/")
-            showToast("로그아웃 되었습니다.")
-        } else {
-            showGlobalAlert("다시 시도해 주세요")
+                navigate("/")
+                showToast("로그아웃 되었습니다.")
+            } else {
+                await showGlobalAlert("다시 시도해 주세요")
+            }
+        } catch (e) {
+            await showGlobalAlert("다시 시도해 주세요")
+            throw e
         }
     }
 
-    return (
-        <AuthContext.Provider
-            value={{
-                isLoggedIn,
-                login,
-                logout,
+    const value = useMemo(
+        () => ({
+            isLoggedIn,
 
-                authModal,
-                openLogin,
-                openSignup,
-                closeAuthModal,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
+            // 기존 API
+            login,
+            logout,
+
+            // 로딩 상태도 전역에서 노출 (원하면 컴포넌트가 사용 가능)
+            isLoginLoading: loginMutation.isPending,
+            isLogoutLoading: logoutMutation.isPending,
+
+            authModal,
+            openLogin,
+            openSignup,
+            closeAuthModal,
+        }),
+        [
+            isLoggedIn,
+            authModal,
+            loginMutation.isPending,
+            logoutMutation.isPending,
+        ]
     )
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export default function useAuth() {
