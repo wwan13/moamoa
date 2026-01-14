@@ -5,7 +5,7 @@ export default function Footer() {
         <footer className={styles.footer}>
             <div className={styles.moamoa}>
                 <img
-                    src="https://i.imgur.com/LwlH4lc.png"
+                    src="https://i.imgur.com/pv3B8dc.png"
                     alt="moamoa-grey"
                     className={styles.moamoaIcon}
                 />

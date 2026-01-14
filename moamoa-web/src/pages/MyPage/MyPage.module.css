@@ -30,6 +30,7 @@
     flex-direction: column;
     gap: 1px;
 }
+
 .button {
     outline: none;
     background: none;
