@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import styles from "./Subscriptions.module.css"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
+
+const SKELETON_DELAY_MS = 1000
 
 export default function Subscriptions({
                                           items = [],
@@ -10,8 +12,21 @@ export default function Subscriptions({
                                           onClickHeader,
                                           headerActive = false,
                                           activeBlogKey = null,
+                                          isLoading = false, // ✅ 조회 로딩
                                       }) {
     const [expanded, setExpanded] = useState(false)
+
+    // ✅ 1초 이상일 때만 스켈레톤
+    const [showSkeleton, setShowSkeleton] = useState(false)
+    useEffect(() => {
+        let timer = null
+        if (isLoading) {
+            timer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS)
+        } else {
+            setShowSkeleton(false)
+        }
+        return () => timer && clearTimeout(timer)
+    }, [isLoading])
 
     const hasMore = items.length > maxVisible
     const visibleItems = useMemo(() => {
@@ -19,6 +34,37 @@ export default function Subscriptions({
         return expanded ? items : items.slice(0, maxVisible)
     }, [items, expanded, hasMore, maxVisible])
 
+    // ✅ 로딩 중: 리스트 스켈레톤
+    if (showSkeleton) {
+        return (
+            <div className={styles.wrap} aria-busy="true">
+                <button
+                    type="button"
+                    className={`${styles.header} ${headerActive ? styles.active : ""}`}
+                    onClick={onClickHeader}
+                    disabled
+                >
+                    <span className={styles.title}>구독</span>
+                    <ArrowForwardIosIcon sx={{ fontSize: 14, color: "#252525" }} />
+                </button>
+
+                <ul className={styles.list}>
+                    {Array.from({ length: maxVisible }).map((_, i) => (
+                        <li key={i}>
+                            <div className={`${styles.item} ${styles.skeletonRow}`}>
+                                <div className={styles.avatarWrap}>
+                                    <div className={`${styles.avatar} ${styles.skeletonCircle}`} />
+                                </div>
+                                <div className={`${styles.skeletonLine}`} />
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        )
+    }
+
+    // ✅ 로딩 끝났는데 비어있음
     if (items.length === 0) {
         return (
             <div className={styles.wrap}>
@@ -76,7 +122,10 @@ export default function Subscriptions({
                     className={styles.more}
                     onClick={() => setExpanded((v) => !v)}
                 >
-                    <ExpandMoreIcon className={`${styles.chev} ${expanded ? styles.up : ""}`} fontSize="small" />
+                    <ExpandMoreIcon
+                        className={`${styles.chev} ${expanded ? styles.up : ""}`}
+                        fontSize="small"
+                    />
                     <span>{expanded ? "접기" : "더보기"}</span>
                 </button>
             )}

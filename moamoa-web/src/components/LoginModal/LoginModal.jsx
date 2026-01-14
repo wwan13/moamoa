@@ -4,16 +4,21 @@ import useModalAccessibility from "../../hooks/useModalAccessibility.js"
 import ModalShell from "../ModalShell/ModalShell.jsx"
 import TextInput from "../ui/TextInput.jsx"
 import Button from "../ui/Button.jsx"
-import useAuth from "../../auth/AuthContext.jsx";
+import useAuth from "../../auth/AuthContext.jsx"
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PASSWORD_REGEX = /^(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,32}$/
 
-export default function LoginModal({ open, onClose, onSubmit, onClickSignup }) {
+export default function LoginModal({
+                                       open,
+                                       onClose,
+                                       onClickSignup,
+                                   }) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const panelRef = useRef(null)
-    const { login } = useAuth()
+
+    const { login, isLoginLoading } = useAuth()
 
     const [touched, setTouched] = useState({
         email: false,
@@ -51,6 +56,7 @@ export default function LoginModal({ open, onClose, onSubmit, onClickSignup }) {
     if (!open) return null
 
     const canSubmit =
+        !isLoginLoading &&
         email.trim() &&
         password &&
         EMAIL_REGEX.test(email) &&
@@ -63,17 +69,11 @@ export default function LoginModal({ open, onClose, onSubmit, onClickSignup }) {
         setTouched({ email: true, password: true })
         if (!canSubmit) return
 
-        // const res = await loginApi(email, password, (err) => {
-        //     showGlobalAlert("이메일 또는 메세지가 일치하지 않습니다.")
-        // })
-        //
-        // localStorage.setItem("accessToken", res.accessToken)
-        // localStorage.setItem("refreshToken", res.refreshToken)
-
         try {
             await login({ email, password })
-            onClose?.() // 로그인 성공 시에만 닫힘
+            onClose?.()
         } catch {
+            // 에러 처리는 AuthContext / mutation onError에서 처리
         }
     }
 
@@ -88,6 +88,7 @@ export default function LoginModal({ open, onClose, onSubmit, onClickSignup }) {
                     onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                     autoComplete="email"
                     error={errors.email}
+                    disabled={isLoginLoading}
                 />
 
                 <TextInput
@@ -99,17 +100,27 @@ export default function LoginModal({ open, onClose, onSubmit, onClickSignup }) {
                     onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                     autoComplete="current-password"
                     error={errors.password}
+                    disabled={isLoginLoading}
                 />
 
                 <div className={styles.submitButtonWrap}>
-                    <Button type="submit" disabled={!canSubmit} aria-disabled={!canSubmit}>
-                        로그인
+                    <Button
+                        type="submit"
+                        disabled={!canSubmit}
+                        aria-disabled={!canSubmit}
+                    >
+                        {isLoginLoading ? "로그인 중..." : "로그인"}
                     </Button>
                 </div>
 
                 <div className={styles.footer}>
                     <span>계정이 없나요?</span>
-                    <Button type="button" variant="link" onClick={onClickSignup}>
+                    <Button
+                        type="button"
+                        variant="link"
+                        onClick={onClickSignup}
+                        disabled={isLoginLoading}
+                    >
                         회원가입
                     </Button>
                 </div>

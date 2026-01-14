@@ -35,3 +35,16 @@
     font-weight: 600;
     color: #252525;
 }
+
+/* 공통 스켈레톤 */
+.skeleton {
+    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 6px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}

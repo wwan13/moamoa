@@ -1,50 +1,93 @@
 import { useEffect, useMemo, useState } from "react"
 import styles from "./TechBlogsPage.module.css"
 import { useCountUp } from "../../hooks/useCountUp.js"
-import { techBlogsApi } from "../../api/techblog.api.js"
 import useAuth from "../../auth/AuthContext.jsx"
-import { subscribingBlogsApi, subscriptionToggleApi } from "../../api/subscription.api.js"
-import {showGlobalConfirm, showToast} from "../../api/client.js";
-import {useNavigate} from "react-router-dom";
-import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
+import { showGlobalConfirm, showToast } from "../../api/client.js"
+import { useNavigate } from "react-router-dom"
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
+import { useQueryClient } from "@tanstack/react-query"
+
+import { useTechBlogsQuery } from "../../queries/techBlog.queries.js"
+import { useSubscribingBlogsQuery, useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
+
+const SKELETON_DELAY_MS = 1000
+const SKELETON_COUNT = 12
 
 export default function TechBlogsPage() {
     const navigate = useNavigate()
     const { isLoggedIn, openLogin } = useAuth()
+    const qc = useQueryClient()
 
-    const [blogCount, setBlogCount] = useState(0)
-    const [blogs, setBlogs] = useState([])
     const [search, setSearch] = useState("")
 
-    const animated = useCountUp(blogCount, 900)
+    // ✅ tech blogs list (query)
+    const techBlogsQuery = useTechBlogsQuery()
 
+    // ✅ my subscriptions (query) - 로그인 시에만
+    const subsQuery = useSubscribingBlogsQuery({ enabled: isLoggedIn })
+
+    // ✅ 1초 이상일 때만 스켈레톤
+    const [showSkeleton, setShowSkeleton] = useState(false)
     useEffect(() => {
-        const fetchBlogs = async () => {
-            const res = await techBlogsApi()
-            console.log(res)
-            setBlogs(res.techBlogs)
-            setBlogCount(res.meta.totalCount)
+        let timer = null
+        if (techBlogsQuery.isPending) {
+            timer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS)
+        } else {
+            setShowSkeleton(false)
         }
+        return () => timer && clearTimeout(timer)
+    }, [techBlogsQuery.isPending])
 
-        fetchBlogs()
-    }, [isLoggedIn])
+    const rawBlogs = techBlogsQuery.data?.techBlogs ?? []
+    const totalCount = techBlogsQuery.data?.meta?.totalCount ?? rawBlogs.length
+    const animated = useCountUp(totalCount, 900)
+
+    // ✅ 서버가 list에 subscribed를 주지 않는 경우 대비: 내 구독 목록으로 merge
+    const mergedBlogs = useMemo(() => {
+        const subs = subsQuery.data ?? []
+        const subscribedSet = new Set(
+            Array.isArray(subs)
+                ? subs.map((s) => s.techBlogId ?? s.techBlog?.id ?? s.id).filter(Boolean)
+                : []
+        )
+
+        return rawBlogs.map((b) => ({
+            ...b,
+            subscribed: b.subscribed ?? subscribedSet.has(b.id),
+        }))
+    }, [rawBlogs, subsQuery.data])
 
     const filteredBlogs = useMemo(() => {
         const q = search.trim().toLowerCase()
-        if (!q) return blogs
+        if (!q) return mergedBlogs
 
-        return blogs.filter((b) => {
+        return mergedBlogs.filter((b) => {
             const title = (b.title ?? "").toLowerCase()
             const key = (b.key ?? "").toLowerCase()
             return title.includes(q) || key.includes(q)
         })
-    }, [blogs, search])
+    }, [mergedBlogs, search])
+
+    // ✅ subscribe toggle (mutation)
+    const subToggle = useSubscriptionToggleMutation()
+
+    // ✅ optimistic 업데이트를 위해 techBlogs 캐시 수정
+    const patchTechBlog = (techBlogId, patcher) => {
+        qc.setQueryData(["techBlogs"], (old) => {
+            if (!old?.techBlogs) return old
+            return {
+                ...old,
+                techBlogs: old.techBlogs.map((b) => (b.id === techBlogId ? patcher(b) : b)),
+            }
+        })
+    }
 
     const subscriptionToggle = async (blog) => {
         if (!isLoggedIn) {
-            openLogin()
+            openLogin?.()
             return
         }
+        if (subToggle.isPending) return
 
         const wasSubscribed = !!blog.subscribed
         const techBlogId = blog.id
@@ -59,36 +102,23 @@ export default function TechBlogsPage() {
             if (!ok) return
         }
 
-        // ✅ optimistic update: blog.subscribed + (있다면) 카운트도 같이
-        setBlogs((prev) =>
-            prev.map((b) =>
-                b.id === techBlogId
-                    ? {
-                        ...b,
-                        subscribed: !wasSubscribed,
-                        // 선택: 서버가 subscriptionCount도 의미 있게 준다면 같이 토글
-                        subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
-                    }
-                    : b
-            )
-        )
+        // optimistic
+        patchTechBlog(techBlogId, (b) => ({
+            ...b,
+            subscribed: !wasSubscribed,
+            subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+        }))
 
         try {
-            await subscriptionToggleApi(techBlogId)
+            await subToggle.mutateAsync({ techBlogId })
             showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
-        } catch (e) {
-            // ✅ rollback
-            setBlogs((prev) =>
-                prev.map((b) =>
-                    b.id === techBlogId
-                        ? {
-                            ...b,
-                            subscribed: wasSubscribed,
-                            subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
-                        }
-                        : b
-                )
-            )
+        } catch {
+            // rollback
+            patchTechBlog(techBlogId, (b) => ({
+                ...b,
+                subscribed: wasSubscribed,
+                subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
+            }))
             showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
         }
     }
@@ -127,62 +157,69 @@ export default function TechBlogsPage() {
                             placeholder="검색"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
+                            disabled={showSkeleton}
                         />
                     </div>
                 </div>
 
-                {filteredBlogs.length === 0 ? (
+                {showSkeleton ? (
+                    <div className={styles.grid} aria-busy="true">
+                        {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+                            <article key={`s-${i}`} className={`${styles.card} ${styles.skeletonCard}`}>
+                                <div className={styles.logoWrap}>
+                                    <div className={`${styles.logo} ${styles.skeleton}`} />
+                                </div>
+                                <div className={`${styles.skeletonLine} ${styles.skeleton}`} />
+                                <div className={`${styles.skeletonLineShort} ${styles.skeleton}`} />
+                                <div className={styles.subscription}>
+                                    <div className={`${styles.skeletonBtn} ${styles.skeleton}`} />
+                                    <span>·</span>
+                                    <div className={`${styles.skeletonIcon} ${styles.skeleton}`} />
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                ) : filteredBlogs.length === 0 ? (
                     <div className={styles.empty}>
                         <p>기술 블로그가 존재하지 않습니다.</p>
                     </div>
                 ) : (
                     <div className={styles.grid}>
-                        {filteredBlogs.map((blog) => {
-                            return (
-                                <article
-                                    key={blog.id}
-                                    className={styles.card}
-                                    onClick={() => navigate(`/${blog.key}`)}
-                                >
-                                    <div className={styles.logoWrap}>
-                                        <img src={blog.icon} alt="thumbnail" className={styles.logo} />
-                                    </div>
-                                    <p className={styles.blogName}>{blog.title}</p>
+                        {filteredBlogs.map((blog) => (
+                            <article
+                                key={blog.id}
+                                className={styles.card}
+                                onClick={() => navigate(`/${blog.key}`)}
+                            >
+                                <div className={styles.logoWrap}>
+                                    <img src={blog.icon} alt="thumbnail" className={styles.logo} />
+                                </div>
 
-                                    <div className={styles.subscription}>
-                                        <p className={styles.subscriptionCount}>구독자 {blog.subscriptionCount}명 · 게시글 {blog.postCount}개</p>
+                                <p className={styles.blogName}>{blog.title}</p>
 
-                                        {/*<span>·</span>*/}
-                                        {/*<button*/}
-                                        {/*    className={isSubscribed ? styles.subscribing : styles.subButton}*/}
-                                        {/*    onClick={(e) => {*/}
-                                        {/*        stop(e)*/}
-                                        {/*        subscriptionToggle(blog.id)*/}
-                                        {/*    }}*/}
-                                        {/*>*/}
-                                        {/*    {isSubscribed ? "구독중" : "구독"}*/}
-                                        {/*</button>*/}
+                                <div className={styles.subscription}>
+                                    <p className={styles.subscriptionCount}>
+                                        구독자 {blog.subscriptionCount}명 · 게시글 {blog.postCount}개
+                                    </p>
+                                </div>
 
-                                        {/*<span>·</span>*/}
-                                        {/*<NotificationsNoneOutlinedIcon fontSize="10px"/>*/}
-                                    </div>
-                                    <div className={styles.subscription}>
-                                        <button
-                                            className={blog.subscribed ? styles.subscribing : styles.subButton}
-                                            onClick={(e) => {
-                                                stop(e)
-                                                subscriptionToggle(blog)
-                                            }}
-                                        >
-                                            {blog.subscribed ? "구독중" : "구독"}
-                                        </button>
+                                <div className={styles.subscription}>
+                                    <button
+                                        className={blog.subscribed ? styles.subscribing : styles.subButton}
+                                        onClick={(e) => {
+                                            stop(e)
+                                            subscriptionToggle(blog)
+                                        }}
+                                        disabled={subToggle.isPending}
+                                    >
+                                        {subToggle.isPending ? "처리 중..." : blog.subscribed ? "구독중" : "구독"}
+                                    </button>
 
-                                        <span>·</span>
-                                        <NotificationsNoneOutlinedIcon fontSize="10px"/>
-                                    </div>
-                                </article>
-                            )
-                        })}
+                                    <span>·</span>
+                                    <NotificationsNoneOutlinedIcon fontSize="10px" />
+                                </div>
+                            </article>
+                        ))}
                     </div>
                 )}
             </section>

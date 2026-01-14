@@ -1,19 +1,36 @@
+import { useEffect, useState } from "react"
 import styles from "./LeftSidebar.module.css"
 import Subscriptions from "../Subscriptions/Subscriptions.jsx"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
+const SKELETON_DELAY_MS = 1000
+
 export default function LeftSidebar({
-                                        subscriptions,
-                                        type,        // "all" | "subscribed" | "bookmarked"
-                                        blogKey,     // string | null
+                                        subscriptions = [],
+                                        type, // "all" | "subscribed" | "bookmarked"
+                                        blogKey, // string | null
                                         onSelectType,
                                         onSelectBlog,
+                                        isLoading = false, // 조회 로딩
                                     }) {
     const isAllActive = type === "all"
     const isBookmarkedActive = type === "bookmarked"
-
-    // ✅ 블로그 선택되면 구독 "탭"은 active 아님
     const isSubscribedTabActive = type === "subscribed" && !blogKey
+
+    // ✅ 1초 이상일 때만 로딩 상태 전파
+    const [showSkeleton, setShowSkeleton] = useState(false)
+
+    useEffect(() => {
+        let timer = null
+        if (isLoading) {
+            timer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS)
+        } else {
+            setShowSkeleton(false)
+        }
+        return () => timer && clearTimeout(timer)
+    }, [isLoading])
+
+    const disabled = showSkeleton
 
     return (
         <aside className={styles.wrap}>
@@ -21,6 +38,7 @@ export default function LeftSidebar({
                 type="button"
                 className={`${styles.header} ${isAllActive ? styles.active : ""}`}
                 onClick={() => onSelectType("all")}
+                disabled={disabled}
             >
                 <span className={styles.title}>전체</span>
                 <ArrowForwardIosIcon sx={{ fontSize: 14, color: "#252525" }} />
@@ -32,12 +50,14 @@ export default function LeftSidebar({
                 activeBlogKey={blogKey}
                 onClickHeader={() => onSelectType("subscribed")}
                 onClickItem={(item) => onSelectBlog(item.key)}
+                isLoading={showSkeleton}
             />
 
             <button
                 type="button"
                 className={`${styles.header} ${isBookmarkedActive ? styles.active : ""}`}
                 onClick={() => onSelectType("bookmarked")}
+                disabled={disabled}
             >
                 <span className={styles.title}>북마크</span>
                 <ArrowForwardIosIcon sx={{ fontSize: 14, color: "#252525" }} />

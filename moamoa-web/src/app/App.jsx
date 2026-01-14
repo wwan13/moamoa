@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import styles from "./App.module.css"
 import Header from "../components/Header/Header.jsx"
 import Footer from "../components/Footer/Footer.jsx"
@@ -6,24 +5,21 @@ import AppRoutes from "../routes/AppRoutes.jsx"
 
 import {
     setOnGlobalAlert,
-    setOnLoadingChange,
     setOnServerError,
     setOnToast,
     setOnGlobalConfirm,
 } from "../api/client.js"
 
-import GlobalSpinner from "../components/GlobalSpinner/GlobalSpinner.jsx"
 import GlobalAlertModal from "../components/alert/GlobalAlertModal.jsx"
 import GlobalToast from "../components/toast/GlobalToast.jsx"
 import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal.jsx"
-import useAuth from "../auth/AuthContext.jsx";
-import SignupModal from "../components/SignupModal/SignupModal.jsx";
-import LoginModal from "../components/LoginModal/LoginModal.jsx";
+import useAuth from "../auth/AuthContext.jsx"
+import SignupModal from "../components/SignupModal/SignupModal.jsx"
+import LoginModal from "../components/LoginModal/LoginModal.jsx"
+import { useEffect, useState } from "react"
 
 export default function App() {
-    const [loading, setLoading] = useState(false)
-
-    // ✅ alert 상태 (Promise resolve용 onClose 포함)
+    // ✅ alert 상태
     const [alertOpen, setAlertOpen] = useState(false)
     const [alertTitle, setAlertTitle] = useState("오류")
     const [alertMessage, setAlertMessage] = useState("")
@@ -42,12 +38,18 @@ export default function App() {
         onCancel: () => {},
     })
 
-    const { isLoggedIn, login, logout, authModal, openLogin, openSignup, closeAuthModal } = useAuth()
+    const {
+        authModal,
+        openLogin,
+        openSignup,
+        closeAuthModal,
+        login,
+    } = useAuth()
 
     useEffect(() => {
-        setOnLoadingChange(setLoading)
+        // ❌ setOnLoadingChange 제거
 
-        // 서버 에러(기존 방식 유지: 단순 alert)
+        // 서버 에러 (기존 방식 유지)
         setOnServerError(({ message }) => {
             setAlertTitle("오류")
             setAlertMessage(message)
@@ -55,14 +57,14 @@ export default function App() {
             setAlertOpen(true)
         })
 
-        // ✅ Promise 기반 GlobalAlert 연결
+        // ✅ Promise 기반 GlobalAlert
         setOnGlobalAlert(({ title, message, onClose }) => {
             setAlertTitle(title ?? "오류")
             setAlertMessage(message)
 
             setAlertOnClose(() => () => {
                 setAlertOpen(false)
-                onClose?.() // ✅ showGlobalAlert() resolve
+                onClose?.()
             })
 
             setAlertOpen(true)
@@ -70,7 +72,7 @@ export default function App() {
 
         setOnToast(setToast)
 
-        // ✅ Promise 기반 GlobalConfirm 연결
+        // ✅ Promise 기반 GlobalConfirm
         setOnGlobalConfirm(({ title, message, confirmText, cancelText, onConfirm, onCancel }) => {
             setConfirmState({
                 title,
@@ -86,8 +88,6 @@ export default function App() {
 
     return (
         <div className={styles.page}>
-            {loading && <GlobalSpinner />}
-
             <GlobalAlertModal
                 open={alertOpen}
                 title={alertTitle}
