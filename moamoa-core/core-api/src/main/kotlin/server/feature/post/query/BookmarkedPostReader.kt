@@ -16,6 +16,7 @@ import server.infra.cache.BookmarkedAllPostIdSetCache
 class BookmarkedPostReader(
     private val databaseClient: DatabaseClient,
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache,
+    private val cacheWarmupScope: CoroutineScope
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -35,13 +36,11 @@ class BookmarkedPostReader(
             return postIds.asSequence().filter { cachedAll.contains(it) }.toSet()
         }
 
-        val result = fetchBookmarkedPostIdSetByIn(memberId, postIds)
-
-        scope.launch {
-            runCatching { warmUpAllBookmarkedSet(memberId) }
+        return fetchBookmarkedPostIdSetByIn(memberId, postIds).also {
+            cacheWarmupScope.launch {
+                warmUpAllBookmarkedSet(memberId)
+            }
         }
-
-        return result
     }
 
     private suspend fun warmUpAllBookmarkedSet(memberId: Long) {

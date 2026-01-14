@@ -1,9 +1,11 @@
 package server.feature.post.query
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.r2dbc.core.DatabaseClient
@@ -19,6 +21,7 @@ class SubscribedPostQueryService(
     private val subscribedPostListCache: SubscribedPostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
     private val postStatsReader: PostStatsReader,
+    private val cacheWarmupScope: CoroutineScope,
 ) {
 
     suspend fun findAllByConditions(
@@ -82,7 +85,9 @@ class SubscribedPostQueryService(
         if (cached != null) return cached
 
         return fetchSubscribingBasePosts(paging, memberId).toList().also {
-            subscribedPostListCache.set(memberId, paging.page, it)
+            cacheWarmupScope.launch {
+                subscribedPostListCache.set(memberId, paging.page, it)
+            }
         }
     }
 

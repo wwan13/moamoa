@@ -1,6 +1,8 @@
 package server.feature.techblog.query
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Service
@@ -13,6 +15,7 @@ class SubscribedTechBlogQueryService(
     private val databaseClient: DatabaseClient,
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
     private val techBlogSummaryCache: TechBlogSummaryCache,
+    private val cacheWarmupScope: CoroutineScope,
 ) {
 
     suspend fun findSubscribingTechBlogs(passport: Passport): TechBlogList {
@@ -38,9 +41,11 @@ class SubscribedTechBlogQueryService(
             emptyMap()
         } else {
             val fetched = fetchTechBlogSummaries(missedIds)
-            val map = fetched.associateBy { it.id }
-            techBlogSummaryCache.mSet(map)
-            map
+            fetched.associateBy { it.id }.also {
+                cacheWarmupScope.launch {
+                    techBlogSummaryCache.mSet(it)
+                }
+            }
         }
 
         val baseMap = buildMap {

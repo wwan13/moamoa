@@ -1,6 +1,8 @@
 package server.feature.techblog.query
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Component
@@ -10,6 +12,7 @@ import server.infra.cache.TechBlogSubscriptionCache
 class SubscribedTechBlogReader(
     private val databaseClient: DatabaseClient,
     private val techBlogSubscriptionCache: TechBlogSubscriptionCache,
+    private val cacheWarmupScope: CoroutineScope,
 ) {
 
     suspend fun findSubscribedMap(
@@ -44,7 +47,7 @@ class SubscribedTechBlogReader(
                 WHERE s.member_id = :memberId
             """.trimIndent()
 
-        val list = databaseClient.sql(sql)
+        return databaseClient.sql(sql)
             .bind("memberId", memberId)
             .map { row, _ ->
                 TechBlogSubscriptionInfo(
@@ -56,8 +59,10 @@ class SubscribedTechBlogReader(
             .all()
             .asFlow()
             .toList()
-
-        techBlogSubscriptionCache.set(memberId, list)
-        return list
+            .also {
+                cacheWarmupScope.launch {
+                    techBlogSubscriptionCache.set(memberId, it)
+                }
+            }
     }
 }
