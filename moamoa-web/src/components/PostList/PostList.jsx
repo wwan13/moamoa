@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 const SKELETON_COUNT = 8
-const SKELETON_DELAY_MS = 500
+const SKELETON_DELAY_MS = 300
 
 export default function PostList({
                                      posts = [],

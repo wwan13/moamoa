@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import styles from "./CategoryTabs.module.css"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
-const SKELETON_DELAY_MS = 500
+const SKELETON_DELAY_MS = 300
 
 export default function CategoryTabs({
                                          items = [],

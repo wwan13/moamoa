@@ -3,7 +3,7 @@ import styles from "./Subscriptions.module.css"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
-const SKELETON_DELAY_MS = 500
+const SKELETON_DELAY_MS = 300
 
 export default function Subscriptions({
                                           items = [],
