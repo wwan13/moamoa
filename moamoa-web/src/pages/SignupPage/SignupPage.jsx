@@ -5,6 +5,7 @@ import {useEffect, useState} from "react"
 import {useNavigate} from "react-router-dom";
 import {useSignupMutation} from "../../queries/auth.queries.js";
 import useAuth from "../../auth/AuthContext.jsx";
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner.jsx";
 
 export default function SignupPage() {
     const navigate = useNavigate()
@@ -32,7 +33,7 @@ export default function SignupPage() {
     const [totalError, setTotalError] = useState("")
 
     const signupMutation = useSignupMutation()
-    const { login, openLogin } = useAuth()
+    const { login, openLogin, isLoginLoading } = useAuth()
 
     useEffect(() => {
         setEmailError("")
@@ -132,6 +133,7 @@ export default function SignupPage() {
 
     return (
         <div className={styles.wrapper}>
+            { (signupMutation.isPending || isLoginLoading) && <GlobalSpinner /> }
             <div className={styles.card}>
                 <div className={styles.titleWrap}>
                     <img

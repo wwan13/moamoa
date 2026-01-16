@@ -5,6 +5,7 @@ import ModalShell from "../ModalShell/ModalShell.jsx"
 import Button from "../ui/Button.jsx"
 import useAuth from "../../auth/AuthContext.jsx"
 import InputText from "../ui/InputText.jsx";
+import GlobalSpinner from "../GlobalSpinner/GlobalSpinner.jsx";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PASSWORD_REGEX = /^(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,32}$/
@@ -48,6 +49,8 @@ export default function LoginModal({
 
     return (
         <ModalShell open={open} title="" onClose={onClose}>
+            {isLoginLoading && <GlobalSpinner />}
+
             <form className={styles.form} onSubmit={handleSubmit}>
                 <img
                     src="https://i.imgur.com/nqleqcc.png"
