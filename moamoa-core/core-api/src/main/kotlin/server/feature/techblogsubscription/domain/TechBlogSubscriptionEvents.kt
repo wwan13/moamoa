@@ -9,3 +9,13 @@ data class TechBlogSubscribeRemovedEvent(
     val memberId: Long,
     val techBlogId: Long
 )
+
+data class NotificationEnabledEvent(
+    val memberId: Long,
+    val techBlogId: Long
+)
+
+data class NotificationDisabledEvent(
+    val memberId: Long,
+    val techBlogId: Long
+)
