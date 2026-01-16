@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import server.feature.member.application.CreateMemberCommand
+import server.feature.member.application.CreateInternalMemberCommand
 import server.feature.member.application.EmailExistsCommand
 import server.feature.member.application.EmailExistsResult
 import server.feature.member.application.MemberData
@@ -22,9 +22,9 @@ class MemberController(
 
     @PostMapping
     suspend fun createMember(
-        @RequestBody @Valid command: CreateMemberCommand
+        @RequestBody @Valid command: CreateInternalMemberCommand
     ): ResponseEntity<MemberData> {
-        val response = memberService.createMember(command)
+        val response = memberService.createInternalMember(command)
         val uri = "/api/member/${response.id}".toUri()
 
         return ResponseEntity.created(uri).body(response)

@@ -3,7 +3,7 @@ package server.feature.member.application
 import org.springframework.stereotype.Service
 import server.feature.member.domain.Member
 import server.feature.member.domain.MemberRepository
-import server.feature.member.domain.MemberRole
+import server.feature.member.domain.Provider
 import server.infra.cache.EmailVerificationCache
 import server.infra.db.Transactional
 import server.password.PasswordEncoder
@@ -16,7 +16,7 @@ class MemberService(
     private val passwordEncoder: PasswordEncoder,
 ) {
 
-    suspend fun createMember(command: CreateMemberCommand): MemberData {
+    suspend fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
 //        if (!emailVerificationCache.isVerified(command.email)) {
 //            throw IllegalArgumentException("인증되지 않은 이메일 입니다.")
 //        }
@@ -27,17 +27,42 @@ class MemberService(
         val encodedPassword = passwordEncoder.encode(command.password)
 
         return transactional {
-            if (memberRepository.existsByEmail(command.email)) {
-                throw IllegalArgumentException("이미 가입된 이메일 입니다.")
-            }
-
-            val member = Member(
-                role = MemberRole.USER,
+            val member = Member.fromInternal(
                 email = command.email,
                 password = encodedPassword
             )
-            memberRepository.save(member).let(::MemberData)
+            createMember(member)
         }
+    }
+
+    suspend fun createSocialMember(command: CreateSocialMemberCommand): MemberData = transactional {
+        val member = Member.fromSocial(
+            email = command.email,
+            provider = command.provider,
+            providerKey = command.providerKey,
+        )
+        createMember(member)
+    }
+
+    private suspend fun createMember(member: Member): MemberData {
+        if (memberRepository.existsByEmail(member.email)) {
+            throw IllegalArgumentException("이미 가입된 이메일 입니다.")
+        }
+        return memberRepository.save(member).let(::MemberData)
+    }
+
+    suspend fun findById(memberId: Long): MemberData? {
+        return memberRepository.findById(memberId)?.let(::MemberData)
+            ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
+    }
+
+    suspend fun findSocialMember(provider: Provider, providerKey: String): MemberData {
+        return memberRepository.findByProviderAndProviderKey(
+            provider = provider,
+            providerKey = providerKey,
+        )
+            ?.let(::MemberData)
+            ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
     }
 
     suspend fun emailExists(command: EmailExistsCommand): EmailExistsResult {

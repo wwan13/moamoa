@@ -7,9 +7,38 @@ spring:
   transaction:
     default-timeout: 30
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: [ email ]
+            redirect-uri: "{baseUrl}/auth/oauth2/callback/{registrationId}"
+
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            client-name: GitHub
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            redirect-uri: "{baseUrl}/auth/oauth2/callback/{registrationId}"
+            scope: [ read:user, user:email ]
+
+        provider:
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: id
+
   profiles:
     include:
       - api-docs
       - mail
       - redis
       - security
+
+server:
+  forward-headers-strategy: framework
