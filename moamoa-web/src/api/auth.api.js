@@ -4,16 +4,6 @@ export const authApi = {
     login: ({ email, password }, config) =>
         http.post("/api/auth/login", { email, password }, config),
 
-    emailVerification: ({ email }, config) =>
-        http.post("/api/auth/email-verification", { email }, config),
-
-    emailVerificationConfirm: ({ email, code }, config) =>
-        http.post(
-            "/api/auth/email-verification/confirm",
-            { email, code: String(code) },
-            config
-        ),
-
     signup: ({ email, password, passwordConfirm }, config) =>
         http.post("/api/member", { email, password, passwordConfirm }, config),
 

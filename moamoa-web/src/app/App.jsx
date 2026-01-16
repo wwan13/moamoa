@@ -11,7 +11,6 @@ import GlobalAlertModal from "../components/alert/GlobalAlertModal.jsx"
 import GlobalToast from "../components/toast/GlobalToast.jsx"
 import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal.jsx"
 import useAuth from "../auth/AuthContext.jsx"
-import SignupModal from "../components/SignupModal/SignupModal.jsx"
 import LoginModal from "../components/LoginModal/LoginModal.jsx"
 import { useEffect, useState } from "react"
 
@@ -115,12 +114,6 @@ export default function App() {
                 onClose={closeAuthModal}
                 onSubmit={login}
                 onClickSignup={openSignup}
-            />
-
-            <SignupModal
-                open={authModal === "signup"}
-                onClose={closeAuthModal}
-                onClickLogin={openLogin}
             />
 
             <AppRoutes />
