@@ -104,7 +104,7 @@ class AuthService(
         return tokens
     }
 
-    private fun issueTokens(memberId: Long, role: String): AuthTokens {
+    fun issueTokens(memberId: Long, role: String): AuthTokens {
         val accessTokenPrincipal = AuthPrincipal.accessToken(memberId, role)
         val accessToken = tokenProvider.encodeToken(accessTokenPrincipal, accessTokenExpires)
 

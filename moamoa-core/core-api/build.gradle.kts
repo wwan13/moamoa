@@ -14,6 +14,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
     runtimeOnly("io.asyncer:r2dbc-mysql")
 
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
     implementation(project(":moamoa-infra:infra-mail"))
     implementation(project(":moamoa-infra:infra-redis"))
     implementation(project(":moamoa-infra:infra-security"))
