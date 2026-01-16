@@ -7,9 +7,6 @@ import useAuth from "../../auth/AuthContext.jsx"
 import InputText from "../ui/InputText.jsx";
 import GlobalSpinner from "../GlobalSpinner/GlobalSpinner.jsx";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const PASSWORD_REGEX = /^(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,32}$/
-
 export default function LoginModal({
                                        open,
                                        onClose,
@@ -24,6 +21,8 @@ export default function LoginModal({
     const { login, isLoginLoading } = useAuth()
 
     useModalAccessibility({ open, onClose, panelRef })
+
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
     useEffect(() => {
         if (!open) return
@@ -109,13 +108,23 @@ export default function LoginModal({
             <div className={styles.socialSection}>
                 <span className={styles.else}>또는</span>
                 <div className={styles.socials}>
-                    <button className={styles.social}>
+                    <button
+                        className={styles.social}
+                        onClick={() => {
+                            window.location.href = `${API_BASE}/oauth2/authorization/google`;
+                        }}
+                    >
                         <img
                             className={styles.socialImg}
                             src="https://i.imgur.com/xWcCM6A.png"
                             alt="Google 계정으로 계속하기"/>
                     </button>
-                    <button className={styles.social}>
+                    <button
+                        className={styles.social}
+                        onClick={() => {
+                            window.location.href = `${API_BASE}/oauth2/authorization/github`;
+                        }}
+                    >
                         <img
                             className={styles.socialImg}
                             src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Font_Awesome_5_brands_github.svg/250px-Font_Awesome_5_brands_github.svg.png"

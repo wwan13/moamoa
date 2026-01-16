@@ -80,6 +80,22 @@ export function AuthProvider({ children }) {
         return res
     }
 
+    const socialLogin = async ({ accessToken, refreshToken, isNew = false }) => {
+        await qc.cancelQueries()
+        qc.clear()
+
+        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+
+        const sk = newSessionKey()
+        localStorage.setItem(SESSION_KEY, sk)
+        setSessionKey(sk)
+
+        setIsLoggedIn(true)
+
+        showToast(isNew ? "환영합니다." : "로그인 되었습니다.")
+    }
+
     const logout = async () => {
         const ok = await showGlobalConfirm({
             message: "로그아웃 하시겠습니까?",
@@ -127,6 +143,7 @@ export function AuthProvider({ children }) {
 
             // 액션
             login,
+            socialLogin,
             logout,
 
             // 로딩
