@@ -29,9 +29,18 @@ export default function MainPage() {
     const type = searchParams.get("type") ?? TYPES.ALL
     const blogKey = searchParams.get("techBlog") ?? null
     const page = Number(searchParams.get("page") ?? 1)
+    const isWelcome = searchParams.get("welcome")
 
     // ✅ 로그인 안 했는데 구독/북마크 진입 시 URL 정리
     useEffect(() => {
+        if (isWelcome){
+            console.log("welcome")
+            setSearchParams((prev) => {
+                const p = new URLSearchParams(prev)
+                p.delete("welcome")
+            })
+        }
+
         if (!isLoggedIn && type !== TYPES.ALL) {
             setSearchParams((prev) => {
                 const p = new URLSearchParams(prev)

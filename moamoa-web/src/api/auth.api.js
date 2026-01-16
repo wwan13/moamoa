@@ -14,8 +14,8 @@ export const authApi = {
             config
         ),
 
-    signup: ({ email, password }, config) =>
-        http.post("/api/auth/signup", { email, password }, config),
+    signup: ({ email, password, passwordConfirm }, config) =>
+        http.post("/api/member", { email, password, passwordConfirm }, config),
 
     logout: (config) =>
         http.post("/api/auth/logout", {}, config),

@@ -6,7 +6,7 @@
 }
 
 .primary {
-    height: 42px;
+    height: 44px;
     width: 100%;
     background: #90AB8B;
     border-color: #90AB8B;
@@ -39,7 +39,7 @@
     border: none;
     padding: 0;
     height: auto;
-    color: #111827;
+    color: #898989;
     text-decoration: underline;
     font-weight: 500;
 }

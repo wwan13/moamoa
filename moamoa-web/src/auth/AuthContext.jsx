@@ -37,11 +37,14 @@ export function AuthProvider({ children }) {
     }, [])
 
     const openLogin = () => setAuthModal("login")
-    const openSignup = () => setAuthModal("signup")
+    const openSignup = () => {
+        closeAuthModal()
+        navigate("/signup")
+    }
     const closeAuthModal = () => setAuthModal(null)
 
     // ✅ 기존처럼 await login(...) 가능하게 유지
-    const login = async ({ email, password }) => {
+    const login = async ({ email, password, isNew=false }) => {
         try {
             const res = await loginMutation.mutateAsync({ email, password })
 
@@ -49,11 +52,11 @@ export function AuthProvider({ children }) {
             localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken)
             setIsLoggedIn(true)
 
-            showToast("로그인 되었습니다.")
+            showToast(isNew ? "환영합니다." : "로그인 되었습니다.")
             closeAuthModal()
             return res
         } catch (e) {
-            await showGlobalAlert("이메일 또는 비밀번호가 일치하지 않습니다.")
+            // await showGlobalAlert("이메일 또는 비밀번호가 일치하지 않습니다.")
             throw e
         }
     }

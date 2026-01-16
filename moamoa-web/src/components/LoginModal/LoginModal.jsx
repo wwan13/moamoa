@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import styles from "./LoginModal.module.css"
 import useModalAccessibility from "../../hooks/useModalAccessibility.js"
 import ModalShell from "../ModalShell/ModalShell.jsx"
-import TextInput from "../ui/TextInput.jsx"
 import Button from "../ui/Button.jsx"
 import useAuth from "../../auth/AuthContext.jsx"
+import InputText from "../ui/InputText.jsx";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PASSWORD_REGEX = /^(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,32}$/
@@ -13,118 +13,113 @@ export default function LoginModal({
                                        open,
                                        onClose,
                                        onClickSignup,
+                                        onClickPasswordFind
                                    }) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const panelRef = useRef(null)
+    const [hasError, setHasError] = useState(false)
 
     const { login, isLoginLoading } = useAuth()
-
-    const [touched, setTouched] = useState({
-        email: false,
-        password: false,
-    })
 
     useModalAccessibility({ open, onClose, panelRef })
 
     useEffect(() => {
         if (!open) return
+        setHasError(false)
         setEmail("")
         setPassword("")
-        setTouched({ email: false, password: false })
         setTimeout(() => panelRef.current?.querySelector("input")?.focus(), 0)
     }, [open])
 
-    const errors = useMemo(() => {
-        const e = {}
-
-        if (touched.email) {
-            if (!email.trim()) e.email = "이메일을 입력해 주세요."
-            else if (!EMAIL_REGEX.test(email)) e.email = "이메일 형식이 올바르지 않아요."
-        }
-
-        if (touched.password) {
-            if (!password) e.password = "비밀번호를 입력해 주세요."
-            else if (!PASSWORD_REGEX.test(password)) {
-                e.password = "8~32자리 + 특수문자 1개 이상 포함해야 해요."
-            }
-        }
-
-        return e
-    }, [email, password, touched])
-
     if (!open) return null
-
-    const canSubmit =
-        !isLoginLoading &&
-        email.trim() &&
-        password &&
-        EMAIL_REGEX.test(email) &&
-        !errors.email &&
-        !errors.password
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        setTouched({ email: true, password: true })
-        if (!canSubmit) return
-
         try {
             await login({ email, password })
+            setHasError(true)
             onClose?.()
         } catch {
-            // 에러 처리는 AuthContext / mutation onError에서 처리
+            setHasError(true)
         }
     }
 
     return (
-        <ModalShell open={open} title="로그인" onClose={onClose}>
+        <ModalShell open={open} title="" onClose={onClose}>
             <form className={styles.form} onSubmit={handleSubmit}>
-                <TextInput
-                    label="이메일"
-                    placeholder="you@example.com"
+                <img
+                    src="https://i.imgur.com/nqleqcc.png"
+                    alt="moamoa"
+                    className={styles.moamoaIcon}
+                />
+                <InputText
+                    placeholder="이메일"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                     autoComplete="email"
-                    error={errors.email}
-                    disabled={isLoginLoading}
+                    hasError={false}
                 />
 
-                <TextInput
-                    label="비밀번호"
+                <InputText
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="비밀번호"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                     autoComplete="current-password"
-                    error={errors.password}
-                    disabled={isLoginLoading}
+                    hasError={false}
                 />
 
+                {
+                    hasError ? (
+                        <div className={styles.errorArea}>
+                            이메일 혹은 비밀번호를 확인해 주세요.
+                        </div>
+                    ) : (<></>)
+                }
+
                 <div className={styles.submitButtonWrap}>
-                    <Button
-                        type="submit"
-                        disabled={!canSubmit}
-                        aria-disabled={!canSubmit}
-                    >
-                        {isLoginLoading ? "로그인 중..." : "로그인"}
+                    <Button type="submit">
+                        로그인
                     </Button>
                 </div>
 
                 <div className={styles.footer}>
-                    <span>계정이 없나요?</span>
                     <Button
                         type="button"
                         variant="link"
                         onClick={onClickSignup}
-                        disabled={isLoginLoading}
                     >
                         회원가입
                     </Button>
+
+                    <Button
+                        type="button"
+                        variant="link"
+                        onClick={onClickPasswordFind}
+                    >
+                        비밀번호 찾기
+                    </Button>
                 </div>
             </form>
+            <div className={styles.socialSection}>
+                <span className={styles.else}>또는</span>
+                <div className={styles.socials}>
+                    <button className={styles.social}>
+                        <img
+                            className={styles.socialImg}
+                            src="https://i.imgur.com/xWcCM6A.png"
+                            alt="Google 계정으로 계속하기"/>
+                    </button>
+                    <button className={styles.social}>
+                        <img
+                            className={styles.socialImg}
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Font_Awesome_5_brands_github.svg/250px-Font_Awesome_5_brands_github.svg.png"
+                            alt="Github 계정으로 계속하기"/>
+                    </button>
+                </div>
+            </div>
         </ModalShell>
     )
 }

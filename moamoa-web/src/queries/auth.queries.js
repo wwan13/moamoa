@@ -7,10 +7,6 @@ export function useLoginMutation() {
     return useMutation({
         mutationFn: authApi.login,
         onError: async () => {
-            await showGlobalAlert({
-                title: "로그인 실패",
-                message: "이메일 또는 비밀번호를 확인해 주세요.",
-            })
         },
     })
 }
@@ -55,10 +51,6 @@ export function useSignupMutation() {
             showToast("회원가입이 완료되었습니다.", { type: "success" })
         },
         onError: async () => {
-            await showGlobalAlert({
-                title: "회원가입 실패",
-                message: "입력 정보를 다시 확인해 주세요.",
-            })
         },
     })
 }

@@ -1,6 +1,3 @@
-import styles from "./App.module.css"
-import Header from "../components/Header/Header.jsx"
-import Footer from "../components/Footer/Footer.jsx"
 import AppRoutes from "../routes/AppRoutes.jsx"
 
 import {
@@ -87,7 +84,7 @@ export default function App() {
     }, [])
 
     return (
-        <div className={styles.page}>
+        <div>
             <GlobalAlertModal
                 open={alertOpen}
                 title={alertTitle}
@@ -126,15 +123,7 @@ export default function App() {
                 onClickLogin={openLogin}
             />
 
-            <header>
-                <Header />
-            </header>
-
-            <main className={styles.main}>
-                <AppRoutes />
-            </main>
-
-            <Footer />
+            <AppRoutes />
         </div>
     )
 }

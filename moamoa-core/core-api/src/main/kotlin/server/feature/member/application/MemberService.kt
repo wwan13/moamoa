@@ -17,17 +17,18 @@ class MemberService(
 ) {
 
     suspend fun createMember(command: CreateMemberCommand): MemberData {
-        if (!emailVerificationCache.isVerified(command.email)) {
-            throw IllegalArgumentException("인증되지 않은 이메일 입니다.")
-        }
+//        if (!emailVerificationCache.isVerified(command.email)) {
+//            throw IllegalArgumentException("인증되지 않은 이메일 입니다.")
+//        }
+
         if (command.password != command.passwordConfirm) {
-            throw IllegalArgumentException("비밀번호 확인이 올반르지 않습니다.")
+            throw IllegalArgumentException("비밀번호가 일치하지 않습니다.")
         }
         val encodedPassword = passwordEncoder.encode(command.password)
 
         return transactional {
             if (memberRepository.existsByEmail(command.email)) {
-                throw IllegalArgumentException("이미 존재하는 이메일 입니다.")
+                throw IllegalArgumentException("이미 가입된 이메일 입니다.")
             }
 
             val member = Member(
