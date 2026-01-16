@@ -7,9 +7,8 @@ import PostList from "../../components/PostList/PostList.jsx"
 import { usePagingQuery } from "../../hooks/usePagingQuery.js"
 import { useQueryClient } from "@tanstack/react-query"
 
-import { useTechBlogByKeyQuery } from "../../queries/techBlog.queries.js"
+import {useSubscribingTechBlogsQuery, useTechBlogByKeyQuery} from "../../queries/techBlog.queries.js"
 import { usePostsByTechBlogKeyQuery } from "../../queries/post.queries.js"
-import { useSubscribingBlogsQuery } from "../../queries/techBlogSubscription.queries.js"
 import { useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
 
 const SKELETON_DELAY_MS = 1000
@@ -27,12 +26,11 @@ export default function TechBlogDetailPage() {
 
     // ✅ posts by tech blog (query)
     const postsQuery = usePostsByTechBlogKeyQuery(
-        { page, techBlogKey: key },
-        { enabled: !!key }
+        { page, techBlogKey: key }
     )
 
     // ✅ my subscribing blogs (query, only when logged in)
-    const subsQuery = useSubscribingBlogsQuery({ enabled: isLoggedIn })
+    const subsQuery = useSubscribingTechBlogsQuery()
 
     // ✅ subscription toggle (mutation)
     const subToggle = useSubscriptionToggleMutation()
@@ -50,7 +48,7 @@ export default function TechBlogDetailPage() {
         if (!isLoggedIn) return false
         if (!techBlog) return false
 
-        const subs = subsQuery.data ?? []
+        const subs = subsQuery.data.techBlogs ?? []
         return Array.isArray(subs)
             ? subs.some(
                 (s) =>
@@ -170,7 +168,7 @@ export default function TechBlogDetailPage() {
                         onClick={onSubButtonToggle}
                         disabled={subToggle.isPending || techBlogQuery.isPending}
                     >
-                        {subToggle.isPending ? "처리 중..." : subscribed ? "구독중" : "구독"}
+                        {subscribed ? "구독중" : "구독"}
                     </button>
                 </div>
             </div>

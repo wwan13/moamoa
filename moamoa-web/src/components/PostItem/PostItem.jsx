@@ -14,7 +14,7 @@ export default function PostItem({post, isBlogDetail, isLoading = false}) {
     const navigate = useNavigate()
     const {isLoggedIn, openLogin} = useAuth()
 
-    const bookmarkToggle = useBookmarkToggleMutation()
+    const bookmarkToggle = useBookmarkToggleMutation({ invalidateOnSuccess: false })
     const increaseView = useIncreasePostViewCountMutation()
 
     const [bookmarked, setBookmarked] = useState(post?.isBookmarked ?? false)

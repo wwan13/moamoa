@@ -6,7 +6,6 @@ import PostList from "../../components/PostList/PostList.jsx"
 import useAuth from "../../auth/AuthContext.jsx"
 import { useSearchParams } from "react-router-dom"
 
-import { useSubscribingBlogsQuery } from "../../queries/techBlogSubscription.queries.js"
 import {
     usePostsQuery,
     usePostsByBookmarkQuery,
@@ -53,9 +52,7 @@ export default function MainPage() {
     }, [isLoggedIn, type, setSearchParams])
 
     // ✅ 구독 블로그 목록 (LeftSidebar용)
-    const subsQuery = useSubscribingTechBlogsQuery({
-        enabled: isLoggedIn,
-    })
+    const subsQuery = useSubscribingTechBlogsQuery()
 
     const subs = subsQuery.data?.techBlogs ?? []
 

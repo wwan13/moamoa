@@ -29,6 +29,8 @@ export default function MySubscriptionPage() {
     const techBlogsQuery = useSubscribingTechBlogsQuery()
     const techBlogs = techBlogsQuery.data?.techBlogs ?? []
 
+    console.log(techBlogs)
+
     // ✅ 1초 이상일 때만 스켈레톤
     const [showSkeleton, setShowSkeleton] = useState(false)
     useEffect(() => {
@@ -42,14 +44,16 @@ export default function MySubscriptionPage() {
     }, [techBlogsQuery.isPending])
 
     // ✅ mutations
-    const subToggle = useSubscriptionToggleMutation()
+    const subToggle = useSubscriptionToggleMutation({ invalidateOnSuccess: false })
     const notiToggle = useNotificationToggleMutation()
 
     const isMutating = subToggle.isPending || notiToggle.isPending
 
+    const { authScope } = useAuth()
+
     // ✅ 화면에서 optimistic 반영을 위해 캐시 직접 수정(페이지에서만)
     const patchBlog = (techBlogId, patcher) => {
-        qc.setQueryData(["techBlogs", "subscribed"], (old) => {
+        qc.setQueryData(["techBlogs", "subscribed", authScope], (old) => {
             if (!old?.techBlogs) return old
             return {
                 ...old,
@@ -115,6 +119,8 @@ export default function MySubscriptionPage() {
 
         try {
             await notiToggle.mutateAsync({ techBlogId })
+            console.log("authScope", authScope)
+            console.log("cache", qc.getQueryData(["techBlogs","subscribed",authScope]))
             showToast(wasEnabled ? "알람을 해제했어요." : "알람을 설정했어요.")
         } catch {
             // rollback
@@ -169,7 +175,7 @@ export default function MySubscriptionPage() {
                             onClick={() => subscriptionToggle(techBlog)}
                             disabled={isMutating}
                         >
-                            {subToggle.isPending && techBlog.id ? (techBlog.subscribed ? "처리 중..." : "처리 중...") : techBlog.subscribed ? "구독중" : "구독"}
+                            {techBlog.subscribed ? "구독중" : "구독"}
                         </button>
 
                         <button

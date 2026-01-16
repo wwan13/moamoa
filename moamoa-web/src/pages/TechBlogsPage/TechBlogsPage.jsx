@@ -7,8 +7,8 @@ import { useNavigate } from "react-router-dom"
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
 import { useQueryClient } from "@tanstack/react-query"
 
-import { useTechBlogsQuery } from "../../queries/techBlog.queries.js"
-import { useSubscribingBlogsQuery, useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
+import {useSubscribingTechBlogsQuery, useTechBlogsQuery} from "../../queries/techBlog.queries.js"
+import { useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
 
 const SKELETON_DELAY_MS = 300
 const SKELETON_COUNT = 12
@@ -24,7 +24,7 @@ export default function TechBlogsPage() {
     const techBlogsQuery = useTechBlogsQuery()
 
     // ✅ my subscriptions (query) - 로그인 시에만
-    const subsQuery = useSubscribingBlogsQuery({ enabled: isLoggedIn })
+    const subsQuery = useSubscribingTechBlogsQuery()
 
     // ✅ 1초 이상일 때만 스켈레톤
     const [showSkeleton, setShowSkeleton] = useState(false)
@@ -42,31 +42,16 @@ export default function TechBlogsPage() {
     const totalCount = techBlogsQuery.data?.meta?.totalCount ?? rawBlogs.length
     const animated = useCountUp(totalCount, 900)
 
-    // ✅ 서버가 list에 subscribed를 주지 않는 경우 대비: 내 구독 목록으로 merge
-    const mergedBlogs = useMemo(() => {
-        const subs = subsQuery.data ?? []
-        const subscribedSet = new Set(
-            Array.isArray(subs)
-                ? subs.map((s) => s.techBlogId ?? s.techBlog?.id ?? s.id).filter(Boolean)
-                : []
-        )
-
-        return rawBlogs.map((b) => ({
-            ...b,
-            subscribed: b.subscribed ?? subscribedSet.has(b.id),
-        }))
-    }, [rawBlogs, subsQuery.data])
-
     const filteredBlogs = useMemo(() => {
         const q = search.trim().toLowerCase()
-        if (!q) return mergedBlogs
+        if (!q) return rawBlogs
 
-        return mergedBlogs.filter((b) => {
+        return rawBlogs.filter((b) => {
             const title = (b.title ?? "").toLowerCase()
             const key = (b.key ?? "").toLowerCase()
             return title.includes(q) || key.includes(q)
         })
-    }, [mergedBlogs, search])
+    }, [rawBlogs, search])
 
     // ✅ subscribe toggle (mutation)
     const subToggle = useSubscriptionToggleMutation()
@@ -213,7 +198,7 @@ export default function TechBlogsPage() {
                                         }}
                                         disabled={subToggle.isPending}
                                     >
-                                        {subToggle.isPending ? "처리 중..." : blog.subscribed ? "구독중" : "구독"}
+                                        {blog.subscribed ? "구독중" : "구독"}
                                     </button>
 
                                     <span>·</span>
