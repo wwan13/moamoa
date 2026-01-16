@@ -2,8 +2,8 @@ package server.feature.techblogsubscription.application
 
 import org.springframework.stereotype.Service
 import server.feature.techblog.command.domain.TechBlogRepository
-import server.feature.techblog.command.domain.TechBlogSubscribeCreatedEvent
-import server.feature.techblog.command.domain.TechBlogSubscribeRemovedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeCreatedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeRemovedEvent
 import server.messaging.EventHandler
 import server.messaging.StreamDefinition
 import server.messaging.handleEvent

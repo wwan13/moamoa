@@ -1,4 +1,4 @@
-package server.feature.techblog.command.domain
+package server.feature.techblogsubscription.domain
 
 data class TechBlogSubscribeCreatedEvent(
     val memberId: Long,

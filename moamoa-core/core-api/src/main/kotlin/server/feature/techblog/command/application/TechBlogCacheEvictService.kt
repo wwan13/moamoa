@@ -1,8 +1,8 @@
 package server.feature.techblog.command.application
 
 import org.springframework.stereotype.Service
-import server.feature.techblog.command.domain.TechBlogSubscribeCreatedEvent
-import server.feature.techblog.command.domain.TechBlogSubscribeRemovedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeCreatedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeRemovedEvent
 import server.infra.cache.TechBlogSubscriptionCache
 import server.infra.cache.TechBlogSummaryCache
 import server.messaging.EventHandler

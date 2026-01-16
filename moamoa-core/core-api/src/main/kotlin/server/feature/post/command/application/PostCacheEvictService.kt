@@ -3,8 +3,8 @@ package server.feature.post.command.application
 import org.springframework.stereotype.Service
 import server.feature.postbookmark.domain.PostBookmarkCreatedEvent
 import server.feature.postbookmark.domain.PostBookmarkRemovedEvent
-import server.feature.techblog.command.domain.TechBlogSubscribeCreatedEvent
-import server.feature.techblog.command.domain.TechBlogSubscribeRemovedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeCreatedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeRemovedEvent
 import server.infra.cache.BookmarkedAllPostIdSetCache
 import server.infra.cache.BookmarkedPostListCache
 import server.infra.cache.PostStatsCache
