@@ -24,7 +24,7 @@ export function setOnToast(handler) {
     onToast = typeof handler === "function" ? handler : () => {}
 }
 export function showToast(message, options = {}) {
-    const { type = "default", duration = 2000 } = options
+    const { type = "default", duration = 1500 } = options
     onToast({ message, type, duration })
 }
 
