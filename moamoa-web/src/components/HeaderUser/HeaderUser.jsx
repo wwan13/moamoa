@@ -15,8 +15,10 @@ export default function HeaderUser({ isLoggedIn, onClickLogin, onCLickAllBLog, o
     }
 
     return (
-        <button className={styles.textButton} onClick={onClickLogin}>
-            로그인
-        </button>
+        <div className={styles.userActions}>
+            <button className={styles.textButton} onClick={onCLickAllBLog}>모든 블로그</button>
+            <button className={styles.textButton} onClick={onClickLogin}>로그인</button>
+        </div>
+
     )
 }

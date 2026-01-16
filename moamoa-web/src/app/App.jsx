@@ -1,6 +1,3 @@
-import styles from "./App.module.css"
-import Header from "../components/Header/Header.jsx"
-import Footer from "../components/Footer/Footer.jsx"
 import AppRoutes from "../routes/AppRoutes.jsx"
 
 import {
@@ -14,7 +11,6 @@ import GlobalAlertModal from "../components/alert/GlobalAlertModal.jsx"
 import GlobalToast from "../components/toast/GlobalToast.jsx"
 import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal.jsx"
 import useAuth from "../auth/AuthContext.jsx"
-import SignupModal from "../components/SignupModal/SignupModal.jsx"
 import LoginModal from "../components/LoginModal/LoginModal.jsx"
 import { useEffect, useState } from "react"
 
@@ -87,7 +83,7 @@ export default function App() {
     }, [])
 
     return (
-        <div className={styles.page}>
+        <div>
             <GlobalAlertModal
                 open={alertOpen}
                 title={alertTitle}
@@ -120,21 +116,7 @@ export default function App() {
                 onClickSignup={openSignup}
             />
 
-            <SignupModal
-                open={authModal === "signup"}
-                onClose={closeAuthModal}
-                onClickLogin={openLogin}
-            />
-
-            <header>
-                <Header />
-            </header>
-
-            <main className={styles.main}>
-                <AppRoutes />
-            </main>
-
-            <Footer />
+            <AppRoutes />
         </div>
     )
 }

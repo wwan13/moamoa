@@ -3,9 +3,10 @@ import useAuth from "../../auth/AuthContext.jsx";
 import {useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner.jsx";
 
 export default function MyPage() {
-    const { isLoggedIn, logout } = useAuth()
+    const { isLoggedIn, logout, isLogoutLoading } = useAuth()
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -16,6 +17,7 @@ export default function MyPage() {
 
     return (
         <div className={styles.wrap}>
+            { isLogoutLoading && <GlobalSpinner /> }
             <section className={styles.section}>
                 <p className={styles.sectionTitle}>활동</p>
                 <div className={styles.buttons}>
