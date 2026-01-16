@@ -8,10 +8,7 @@ import org.springframework.stereotype.Service
 import server.feature.member.domain.MemberRepository
 import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.domain.TechBlogRepository
-import server.feature.techblog.command.domain.TechBlogSubscribeCreatedEvent
-import server.feature.techblog.command.domain.TechBlogSubscribeRemovedEvent
-import server.feature.techblogsubscription.domain.TechBlogSubscription
-import server.feature.techblogsubscription.domain.TechBlogSubscriptionRepository
+import server.feature.techblogsubscription.domain.*
 import server.infra.db.Transactional
 import server.messaging.StreamEventPublisher
 import server.messaging.StreamTopic
@@ -70,6 +67,13 @@ class TechBlogSubscriptionService(
             notificationEnabled = !subscription.notificationEnabled
         )
         techBlogSubscriptionRepository.save(updated)
+
+        val event = if (updated.notificationEnabled) {
+            NotificationEnabledEvent(memberId, command.techBlogId)
+        } else {
+            NotificationDisabledEvent(memberId, command.techBlogId)
+        }
+        eventPublisher.publish(defaultTopic, event)
 
         NotificationEnabledToggleResult(updated.notificationEnabled)
     }

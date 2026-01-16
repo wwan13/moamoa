@@ -1,8 +1,10 @@
 package server.feature.techblog.command.application
 
 import org.springframework.stereotype.Service
-import server.feature.techblog.command.domain.TechBlogSubscribeCreatedEvent
-import server.feature.techblog.command.domain.TechBlogSubscribeRemovedEvent
+import server.feature.techblogsubscription.domain.NotificationDisabledEvent
+import server.feature.techblogsubscription.domain.NotificationEnabledEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeCreatedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeRemovedEvent
 import server.infra.cache.TechBlogSubscriptionCache
 import server.infra.cache.TechBlogSummaryCache
 import server.messaging.EventHandler
@@ -26,6 +28,20 @@ class TechBlogCacheEvictService(
     @EventHandler
     fun subscriptionRemovedTechBlogCacheEvict() =
         handleEvent<TechBlogSubscribeRemovedEvent>(techBlogCacheHandlingStream) { event ->
+            techBlogSummaryCache.evict(event.techBlogId)
+            techBlogSubscriptionCache.evictAll(event.memberId)
+        }
+
+    @EventHandler
+    fun notificationEnabledTechBlogCacheEvict() =
+        handleEvent<NotificationEnabledEvent>(techBlogCacheHandlingStream) { event ->
+            techBlogSummaryCache.evict(event.techBlogId)
+            techBlogSubscriptionCache.evictAll(event.memberId)
+        }
+
+    @EventHandler
+    fun notificationDisabledTechBlogCacheEvict() =
+        handleEvent<NotificationDisabledEvent>(techBlogCacheHandlingStream) { event ->
             techBlogSummaryCache.evict(event.techBlogId)
             techBlogSubscriptionCache.evictAll(event.memberId)
         }

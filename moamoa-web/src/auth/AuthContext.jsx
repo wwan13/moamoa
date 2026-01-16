@@ -7,34 +7,51 @@ import {
     showGlobalConfirm,
     showToast,
 } from "../api/client.js"
+import { useQueryClient } from "@tanstack/react-query"
 
 const AuthContext = createContext(null)
 
 const ACCESS_TOKEN_KEY = "accessToken"
 const REFRESH_TOKEN_KEY = "refreshToken"
+const SESSION_KEY = "sessionKey"
+
+function newSessionKey() {
+    return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
+}
 
 export function AuthProvider({ children }) {
     const [isLoggedIn, setIsLoggedIn] = useState(() =>
         Boolean(localStorage.getItem(ACCESS_TOKEN_KEY))
     )
 
+    // 세션 기준 캐시 분리용 키
+    const [sessionKey, setSessionKey] = useState(() =>
+        localStorage.getItem(SESSION_KEY)
+    )
+
     // null | "login" | "signup"
     const [authModal, setAuthModal] = useState(null)
 
     const navigate = useNavigate()
+    const qc = useQueryClient()
 
-    // ✅ React Query mutations
     const loginMutation = useLoginMutation()
     const logoutMutation = useLogoutMutation()
 
     useEffect(() => {
         setOnLogout(async () => {
             await showGlobalAlert("다시 로그인해 주세요.")
+            await qc.cancelQueries()
+            qc.clear()
+
             localStorage.removeItem(ACCESS_TOKEN_KEY)
             localStorage.removeItem(REFRESH_TOKEN_KEY)
+            localStorage.removeItem(SESSION_KEY)
+
             setIsLoggedIn(false)
+            setSessionKey(null)
         })
-    }, [])
+    }, [qc])
 
     const openLogin = () => setAuthModal("login")
     const openSignup = () => {
@@ -43,22 +60,24 @@ export function AuthProvider({ children }) {
     }
     const closeAuthModal = () => setAuthModal(null)
 
-    // ✅ 기존처럼 await login(...) 가능하게 유지
-    const login = async ({ email, password, isNew=false }) => {
-        try {
-            const res = await loginMutation.mutateAsync({ email, password })
+    const login = async ({ email, password, isNew = false }) => {
+        const res = await loginMutation.mutateAsync({ email, password })
 
-            localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken)
-            localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken)
-            setIsLoggedIn(true)
+        await qc.cancelQueries()
+        qc.clear()
 
-            showToast(isNew ? "환영합니다." : "로그인 되었습니다.")
-            closeAuthModal()
-            return res
-        } catch (e) {
-            // await showGlobalAlert("이메일 또는 비밀번호가 일치하지 않습니다.")
-            throw e
-        }
+        localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken)
+        localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken)
+
+        const sk = newSessionKey()
+        localStorage.setItem(SESSION_KEY, sk)
+        setSessionKey(sk)
+
+        setIsLoggedIn(true)
+
+        showToast(isNew ? "환영합니다." : "로그인 되었습니다.")
+        closeAuthModal()
+        return res
     }
 
     const logout = async () => {
@@ -68,49 +87,65 @@ export function AuthProvider({ children }) {
         })
         if (!ok) return
 
-        try {
-            const res = await logoutMutation.mutateAsync()
+        const res = await logoutMutation.mutateAsync()
 
-            if (res?.success) {
-                localStorage.removeItem(ACCESS_TOKEN_KEY)
-                localStorage.removeItem(REFRESH_TOKEN_KEY)
-                setIsLoggedIn(false)
-
-                navigate("/")
-                showToast("로그아웃 되었습니다.")
-            } else {
-                await showGlobalAlert("다시 시도해 주세요")
-            }
-        } catch (e) {
+        if (!res?.success) {
             await showGlobalAlert("다시 시도해 주세요")
-            throw e
+            return
         }
+
+        await qc.cancelQueries()
+        qc.clear()
+
+        localStorage.removeItem(ACCESS_TOKEN_KEY)
+        localStorage.removeItem(REFRESH_TOKEN_KEY)
+        localStorage.removeItem(SESSION_KEY)
+
+        setIsLoggedIn(false)
+        setSessionKey(null)
+
+        navigate("/")
+        showToast("로그아웃 되었습니다.")
     }
 
-    const value = useMemo(
-        () => ({
-            isLoggedIn,
+    const value = useMemo(() => {
+        const authScope =
+            isLoggedIn && sessionKey ? `auth:${sessionKey}` : null
 
-            // 기존 API
+        const publicScope = sessionKey
+            ? `guest:${sessionKey}`
+            : "guest:anonymous"
+
+        return {
+            // 상태
+            isLoggedIn,
+            sessionKey,
+
+            // ✅ 공식 scope
+            authScope,     // 로그인 전용
+            publicScope,   // 항상 사용 가능
+
+            // 액션
             login,
             logout,
 
-            // 로딩 상태도 전역에서 노출 (원하면 컴포넌트가 사용 가능)
+            // 로딩
             isLoginLoading: loginMutation.isPending,
             isLogoutLoading: logoutMutation.isPending,
 
+            // 모달
             authModal,
             openLogin,
             openSignup,
             closeAuthModal,
-        }),
-        [
-            isLoggedIn,
-            authModal,
-            loginMutation.isPending,
-            logoutMutation.isPending,
-        ]
-    )
+        }
+    }, [
+        isLoggedIn,
+        sessionKey,
+        authModal,
+        loginMutation.isPending,
+        logoutMutation.isPending,
+    ])
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
