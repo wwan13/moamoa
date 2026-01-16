@@ -16,7 +16,6 @@ export function useSignupMutation() {
     return useMutation({
         mutationFn: authApi.signup,
         onSuccess: () => {
-            showToast("회원가입이 완료되었습니다.", { type: "success" })
         },
         onError: async () => {
         },
