@@ -35,9 +35,12 @@ export default function SignupPage() {
     const signupMutation = useSignupMutation()
     const { login, openLogin, isLoginLoading } = useAuth()
 
+    const [isLoading, setIsLoading] = useState(false)
+
     const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
     useEffect(() => {
+        setIsLoading(false)
         setEmailError("")
         setPasswordSizeValid("")
         setPasswordCombineValid("")
@@ -135,7 +138,7 @@ export default function SignupPage() {
 
     return (
         <div className={styles.wrapper}>
-            { (signupMutation.isPending || isLoginLoading) && <GlobalSpinner /> }
+            { (signupMutation.isPending || isLoginLoading || isLoading) && <GlobalSpinner /> }
             <div className={styles.card}>
                 <div className={styles.titleWrap}>
                     <img
@@ -267,6 +270,7 @@ export default function SignupPage() {
                                 className={styles.social}
                                 type="button"
                                 onClick={() => {
+                                    setIsLoading(true)
                                     window.location.href = `${API_BASE}/oauth2/authorization/google`;
                                 }}
                             >
@@ -280,6 +284,7 @@ export default function SignupPage() {
                                 className={styles.social}
                                 type="button"
                                 onClick={() => {
+                                    setIsLoading(true)
                                     window.location.href = `${API_BASE}/oauth2/authorization/google`;
                                 }}
                             >

@@ -13,6 +13,8 @@ export default function LoginModal({
                                        onClickSignup,
                                         onClickPasswordFind
                                    }) {
+    const [isLoading, setIsLoading] = useState(false)
+
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const panelRef = useRef(null)
@@ -25,6 +27,7 @@ export default function LoginModal({
     const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
     useEffect(() => {
+        setIsLoading(false)
         if (!open) return
         setHasError(false)
         setEmail("")
@@ -48,7 +51,7 @@ export default function LoginModal({
 
     return (
         <ModalShell open={open} title="" onClose={onClose}>
-            {isLoginLoading && <GlobalSpinner />}
+            {isLoginLoading || isLoading && <GlobalSpinner />}
 
             <form className={styles.form} onSubmit={handleSubmit}>
                 <img
@@ -111,6 +114,7 @@ export default function LoginModal({
                     <button
                         className={styles.social}
                         onClick={() => {
+                            setIsLoading(true)
                             window.location.href = `${API_BASE}/oauth2/authorization/google`;
                         }}
                     >
@@ -122,6 +126,7 @@ export default function LoginModal({
                     <button
                         className={styles.social}
                         onClick={() => {
+                            setIsLoading(true)
                             window.location.href = `${API_BASE}/oauth2/authorization/github`;
                         }}
                     >

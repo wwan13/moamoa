@@ -10,6 +10,7 @@
 .title {
     font-size: 28px;
     font-weight: 600;
+    margin: 28px 0;
 }
 
 .stats {
@@ -112,4 +113,27 @@
     padding: 0;
     width: 80px;
     margin: 0 auto;
+}
+
+
+.skeleton {
+    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 6px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}
+
+.skeletonTitle {
+    width: 300px;
+    height: 33px;
+}
+
+.skeletonStat {
+    width: 40px;
+    height: 29px;
 }
