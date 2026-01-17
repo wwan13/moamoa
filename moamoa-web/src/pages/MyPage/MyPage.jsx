@@ -7,10 +7,14 @@ import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner.jsx";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import NoteIcon from '@mui/icons-material/Note';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import {useMemberSummaryQuery} from "../../queries/member.queries.js";
 
 export default function MyPage() {
     const { isLoggedIn, logout, isLogoutLoading } = useAuth()
     const navigate = useNavigate()
+
+    const memberSummaryQuery = useMemberSummaryQuery()
+    const member = memberSummaryQuery.data
 
     useEffect(() => {
         if (!isLoggedIn) {
@@ -22,7 +26,7 @@ export default function MyPage() {
         <div className={styles.wrap}>
             { isLogoutLoading && <GlobalSpinner /> }
             <div>
-                <p className={styles.title}>ddangddo0511</p>
+                <p className={styles.title}>{member?.email}</p>
                 <div className={styles.stats}>
                     <div className={styles.stat}>
                         <div className={styles.statTitle}>
@@ -32,7 +36,7 @@ export default function MyPage() {
                                 sx={{fontSize: 26, color: "#3B4953", fontWeight: 800}}
                             />
                         </div>
-                        <span className={styles.statValue}>8</span>
+                        <span className={styles.statValue}>{member?.subscribeCount}</span>
                     </div>
                     <div className={styles.stat}>
                         <div className={styles.statTitle}>
@@ -42,7 +46,7 @@ export default function MyPage() {
                                 sx={{fontSize: 26, color: "#90AB8B", fontWeight: 800}}
                             />
                         </div>
-                        <span className={styles.statValue}>8</span>
+                        <span className={styles.statValue}>{member?.bookmarkCount}</span>
                     </div>
                 </div>
             </div>
