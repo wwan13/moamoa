@@ -8,7 +8,7 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import {useMemberSummaryQuery} from "../../queries/member.queries.js";
 
-const SKELETON_DELAY_MS = 300
+const SKELETON_DELAY_MS = 0
 
 export default function MyPage() {
     const { isLoggedIn, logout, isLogoutLoading } = useAuth()
