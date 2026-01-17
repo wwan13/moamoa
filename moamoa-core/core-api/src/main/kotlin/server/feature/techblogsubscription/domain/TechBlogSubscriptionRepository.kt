@@ -7,4 +7,6 @@ interface TechBlogSubscriptionRepository : CoroutineCrudRepository<TechBlogSubsc
     suspend fun findByMemberIdAndTechBlogId(memberId: Long, techBlogId: Long): TechBlogSubscription?
 
     fun findAllByMemberId(memberId: Long): Flow<TechBlogSubscription>
+
+    suspend fun countByMemberId(memberId: Long): Long
 }

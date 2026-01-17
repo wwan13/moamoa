@@ -7,9 +7,9 @@ import org.springframework.security.oauth2.client.userinfo.ReactiveOAuth2UserSer
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import server.feature.member.application.CreateSocialMemberCommand
-import server.feature.member.application.MemberService
-import server.feature.member.domain.Provider
+import server.feature.member.command.application.CreateSocialMemberCommand
+import server.feature.member.command.application.MemberService
+import server.feature.member.command.domain.Provider
 
 @Service
 class Oauth2UserService (

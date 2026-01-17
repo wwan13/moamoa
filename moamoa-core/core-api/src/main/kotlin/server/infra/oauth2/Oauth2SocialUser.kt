@@ -2,8 +2,8 @@ package server.infra.oauth2
 
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.core.user.OAuth2User
-import server.feature.member.domain.MemberRole
-import server.feature.member.domain.Provider
+import server.feature.member.command.domain.MemberRole
+import server.feature.member.command.domain.Provider
 import java.util.UUID
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties

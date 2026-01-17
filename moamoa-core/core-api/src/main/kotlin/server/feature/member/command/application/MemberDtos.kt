@@ -1,12 +1,12 @@
-package server.feature.member.application
+package server.feature.member.command.application
 
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
-import server.feature.member.domain.Member
-import server.feature.member.domain.MemberRole
-import server.feature.member.domain.Provider
+import server.feature.member.command.domain.Member
+import server.feature.member.command.domain.MemberRole
+import server.feature.member.command.domain.Provider
 
 data class EmailExistsCommand(
     @field:NotBlank

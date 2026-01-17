@@ -1,4 +1,4 @@
-package server.feature.member.domain
+package server.feature.member.command.domain
 
 enum class Provider {
     INTERNAL, GOOGLE, GITHUB;

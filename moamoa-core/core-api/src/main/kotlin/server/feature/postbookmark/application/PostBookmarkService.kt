@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.feature.post.command.application.PostData
-import server.feature.member.domain.MemberRepository
+import server.feature.member.command.domain.MemberRepository
 import server.feature.post.command.domain.PostRepository
 import server.feature.postbookmark.domain.PostBookmarkCreatedEvent
 import server.feature.postbookmark.domain.PostBookmarkRemovedEvent
