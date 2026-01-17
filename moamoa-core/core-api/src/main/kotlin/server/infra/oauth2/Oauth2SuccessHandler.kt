@@ -9,6 +9,7 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import server.feature.auth.application.AuthService
+import server.infra.cache.RefreshTokenCache
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -16,8 +17,11 @@ import java.nio.charset.StandardCharsets
 @Component
 class Oauth2SuccessHandler(
     private val authService: AuthService,
+    private val refreshTokenCache: RefreshTokenCache,
     private val environment: Environment
 ) : ServerAuthenticationSuccessHandler {
+
+    private val refreshTokenExpires = 604_800_000L
 
     override fun onAuthenticationSuccess(
         webFilterExchange: WebFilterExchange,
@@ -29,6 +33,7 @@ class Oauth2SuccessHandler(
             when (authenticatedUser) {
                 is Oauth2SocialUser.Authenticated -> {
                     val tokens = authService.issueTokens(authenticatedUser.memberId, authenticatedUser.role.toString())
+                    refreshTokenCache.set(authenticatedUser.memberId, tokens.refreshToken, refreshTokenExpires)
 
                     redirectUrl(
                         "type" to "success",
