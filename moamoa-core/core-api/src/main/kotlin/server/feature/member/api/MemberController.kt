@@ -12,12 +12,17 @@ import server.feature.member.command.application.EmailExistsCommand
 import server.feature.member.command.application.EmailExistsResult
 import server.feature.member.command.application.MemberData
 import server.feature.member.command.application.MemberService
+import server.feature.member.query.MemberQueryService
+import server.feature.member.query.MemberSummary
+import server.security.Passport
+import server.security.RequestPassport
 import support.uri.toUri
 
 @RestController
 @RequestMapping("/api/member")
 class MemberController(
-    private val memberService: MemberService
+    private val memberService: MemberService,
+    private val memberQueryService: MemberQueryService,
 ) {
 
     @PostMapping
@@ -35,6 +40,15 @@ class MemberController(
         @Valid command: EmailExistsCommand
     ): ResponseEntity<EmailExistsResult> {
         val response = memberService.emailExists(command)
+
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping
+    suspend fun findByPassport(
+        @RequestPassport passport: Passport
+    ): ResponseEntity<MemberSummary> {
+        val response = memberQueryService.findById(passport.memberId)
 
         return ResponseEntity.ok(response)
     }
