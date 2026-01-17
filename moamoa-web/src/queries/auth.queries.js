@@ -31,3 +31,11 @@ export function useLogoutMutation() {
         },
     })
 }
+
+export function useLoginSocialSessionMutation() {
+    return useMutation({
+        mutationFn: authApi.loginSocialSession,
+        onError: async () => {
+        },
+    })
+}

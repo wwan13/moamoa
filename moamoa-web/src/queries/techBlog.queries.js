@@ -29,10 +29,7 @@ export function useSubscribingTechBlogsQuery() {
 
     return useQuery({
         queryKey: ["techBlogs", "subscribed", authScope],
-        queryFn: ({ signal }) => {
-            console.log("asd")
-            return techBlogApi.listSubscribed({signal})
-        },
+        queryFn: ({ signal }) => techBlogApi.listSubscribed({signal}),
         enabled: !!authScope,      // ✅ 로그인일 때만
         staleTime: 10 * 1000,
     })

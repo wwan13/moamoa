@@ -1,0 +1,141 @@
+.wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    /*align-items: center;*/
+}
+
+.card {
+    margin-top: 120px;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.moamoaIcon {
+    width: 32px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.titleWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #252525;
+}
+
+.copy {
+    font-size: 16px;
+    color: #858585;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.input {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-size: 16px;
+    font-weight: 400;
+    color: #252525;
+}
+
+.error {
+    font-size: 14px;
+    color: #ef4444;
+    line-height: 1.4;
+    padding-left: 2px;
+}
+
+.success {
+    color: #16a34a !important;
+}
+
+.pwDescription {
+    font-size: 14px;
+    color: #858585;
+    margin: 2px 0;
+    line-height: 1.4;
+    padding-left: 2px;
+}
+
+.agreement {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #858585;
+    gap: 6px;
+    margin-top: 16px;
+    margin-bottom: 32px;
+}
+
+.agreement > input {
+    margin: 0;
+    width: 14px;
+    height: 14px;
+}
+
+.totalError {
+    margin-bottom: 8px;
+}
+
+.socialSection {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 44px;
+    gap: 12px;
+    border-top: 1px solid #DBDEE3;
+}
+
+.simple {
+    font-size: 12px;
+    color: #898989;
+    transform: translate(0%, -50%);
+    background: #ffffff;
+    width: 80px;
+    text-align: center;
+}
+
+.socials {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.social {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.socialImg {
+    width: 100%;
+}

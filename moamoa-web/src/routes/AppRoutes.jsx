@@ -8,6 +8,7 @@ import DefaultLayout from "../layouts/DefaultLayout.jsx";
 import BlankLayout from "../layouts/BlankLayout.jsx";
 import SignupPage from "../pages/SignupPage/SignupPage.jsx";
 import Oauth2Page from "../pages/Oauth2Page/Oauth2Page.jsx";
+import Oauth2EmailInputPage from "../pages/Oauth2EmailInputPage/Oauth2EmailInputPage.jsx";
 
 export default function AppRoutes() {
     return (
@@ -24,6 +25,7 @@ export default function AppRoutes() {
 
             <Route element={<BlankLayout />}>
                 <Route path="/signup" element={<SignupPage />} />
+                <Route path="/oauth2/email" element={<Oauth2EmailInputPage />} />
             </Route>
         </Routes>
     )

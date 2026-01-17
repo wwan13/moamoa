@@ -33,6 +33,8 @@ export default function Oauth2Page() {
         } else if (type === "emailRequired") {
             const provider = searchParams.get("provider")
             const providerKey = searchParams.get("providerKey")
+
+            navigate(`/oauth2/email?from=${provider}&id=${providerKey}`)
         }
 
     }, []);

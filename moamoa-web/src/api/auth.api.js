@@ -9,4 +9,7 @@ export const authApi = {
 
     logout: (config) =>
         http.post("/api/auth/logout", {}, config),
+
+    loginSocialSession: ({ token, memberId }, config) =>
+        http.post("/api/auth/login/social", { token, memberId }, config),
 }
