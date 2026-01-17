@@ -7,7 +7,7 @@ import org.springframework.web.reactive.BindingContext
 import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver
 import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
-import server.feature.member.domain.MemberRole
+import server.feature.member.command.domain.MemberRole
 import server.jwt.TokenProvider
 import server.jwt.TokenType
 import kotlin.reflect.jvm.kotlinFunction

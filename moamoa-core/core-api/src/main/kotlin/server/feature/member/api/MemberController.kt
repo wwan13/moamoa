@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import server.feature.member.application.CreateInternalMemberCommand
-import server.feature.member.application.EmailExistsCommand
-import server.feature.member.application.EmailExistsResult
-import server.feature.member.application.MemberData
-import server.feature.member.application.MemberService
+import server.feature.member.command.application.CreateInternalMemberCommand
+import server.feature.member.command.application.EmailExistsCommand
+import server.feature.member.command.application.EmailExistsResult
+import server.feature.member.command.application.MemberData
+import server.feature.member.command.application.MemberService
 import support.uri.toUri
 
 @RestController

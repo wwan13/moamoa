@@ -1,9 +1,9 @@
-package server.feature.member.application
+package server.feature.member.command.application
 
 import org.springframework.stereotype.Service
-import server.feature.member.domain.Member
-import server.feature.member.domain.MemberRepository
-import server.feature.member.domain.Provider
+import server.feature.member.command.domain.Member
+import server.feature.member.command.domain.MemberRepository
+import server.feature.member.command.domain.Provider
 import server.infra.cache.EmailVerificationCache
 import server.infra.db.Transactional
 import server.password.PasswordEncoder

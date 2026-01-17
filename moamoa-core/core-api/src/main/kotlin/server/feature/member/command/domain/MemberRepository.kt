@@ -1,4 +1,4 @@
-package server.feature.member.domain
+package server.feature.member.command.domain
 
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 

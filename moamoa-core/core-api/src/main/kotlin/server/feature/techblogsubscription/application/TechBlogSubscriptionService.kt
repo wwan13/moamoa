@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
-import server.feature.member.domain.MemberRepository
+import server.feature.member.command.domain.MemberRepository
 import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.domain.TechBlogRepository
 import server.feature.techblogsubscription.domain.*

@@ -5,7 +5,7 @@ import server.MailContent
 import server.MailSender
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.RefreshTokenCache
-import server.feature.member.domain.MemberRepository
+import server.feature.member.command.domain.MemberRepository
 import server.jwt.AuthPrincipal
 import server.jwt.TokenProvider
 import server.jwt.TokenType
