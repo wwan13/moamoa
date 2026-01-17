@@ -35,6 +35,8 @@ export default function SignupPage() {
     const signupMutation = useSignupMutation()
     const { login, openLogin, isLoginLoading } = useAuth()
 
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
     useEffect(() => {
         setEmailError("")
         setPasswordSizeValid("")
@@ -261,14 +263,26 @@ export default function SignupPage() {
                     <div className={styles.socialSection}>
                         <span className={styles.simple}>간편 회원가입</span>
                         <div className={styles.socials}>
-                            <button className={styles.social} type="button">
+                            <button
+                                className={styles.social}
+                                type="button"
+                                onClick={() => {
+                                    window.location.href = `${API_BASE}/oauth2/authorization/google`;
+                                }}
+                            >
                                 <img
                                     className={styles.socialImg}
                                     src="https://i.imgur.com/xWcCM6A.png"
                                     alt="Google 계정으로 계속하기"
                                 />
                             </button>
-                            <button className={styles.social} type="button">
+                            <button
+                                className={styles.social}
+                                type="button"
+                                onClick={() => {
+                                    window.location.href = `${API_BASE}/oauth2/authorization/google`;
+                                }}
+                            >
                                 <img
                                     className={styles.socialImg}
                                     src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Font_Awesome_5_brands_github.svg/250px-Font_Awesome_5_brands_github.svg.png"
