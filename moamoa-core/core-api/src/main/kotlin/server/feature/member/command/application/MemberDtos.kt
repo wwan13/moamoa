@@ -2,6 +2,7 @@ package server.feature.member.command.application
 
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import server.feature.member.command.domain.Member
@@ -35,7 +36,7 @@ data class CreateSocialMemberCommand(
     @field:Email
     val email: String,
 
-    @field:NotBlank
+    @field:NotNull
     val provider: Provider,
 
     @field:NotBlank
@@ -56,4 +57,9 @@ data class MemberData(
 
 data class EmailExistsResult(
     val exists: Boolean
+)
+
+data class CreateSocialMemberResult(
+    val member: MemberData,
+    val token: String
 )

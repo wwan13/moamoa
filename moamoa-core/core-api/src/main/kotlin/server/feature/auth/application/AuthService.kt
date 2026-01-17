@@ -6,10 +6,12 @@ import server.MailSender
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.RefreshTokenCache
 import server.feature.member.command.domain.MemberRepository
+import server.infra.cache.SocialMemberSessionCache
 import server.jwt.AuthPrincipal
 import server.jwt.TokenProvider
 import server.jwt.TokenType
 import server.password.PasswordEncoder
+import server.security.ForbiddenException
 import server.security.UnauthorizedException
 import server.template.mail.MailTemplate
 import server.template.mail.toTemplateArgs
@@ -23,6 +25,7 @@ class AuthService(
     private val tokenProvider: TokenProvider,
     private val passwordEncoder: PasswordEncoder,
     private val refreshTokenCache: RefreshTokenCache,
+    private val socialMemberSessionCache: SocialMemberSessionCache
 ) {
 
     private val accessTokenExpires = 3_600_000L
@@ -118,5 +121,19 @@ class AuthService(
         refreshTokenCache.evict(memberId)
 
         return LogoutResult(true)
+    }
+
+    suspend fun loginSocialSession(command: LoginSocialSessionCommand): AuthTokens {
+        val memberId = socialMemberSessionCache.get(command.token)
+            ?: throw UnauthorizedException()
+
+        if (memberId != command.memberId) {
+            throw UnauthorizedException()
+        }
+
+        val member = memberRepository.findById(memberId)
+            ?: throw UnauthorizedException()
+
+        return issueTokens(member.id, member.role.name)
     }
 }

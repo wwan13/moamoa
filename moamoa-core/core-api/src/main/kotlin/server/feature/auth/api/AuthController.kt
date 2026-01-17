@@ -14,6 +14,7 @@ import server.feature.auth.application.ConfirmEmailResult
 import server.feature.auth.application.EmailVerificationCommand
 import server.feature.auth.application.EmailVerificationResult
 import server.feature.auth.application.LoginCommand
+import server.feature.auth.application.LoginSocialSessionCommand
 import server.feature.auth.application.LogoutResult
 import server.security.Passport
 import server.security.RequestPassport
@@ -45,7 +46,7 @@ class AuthController(
     @PostMapping("/login")
     suspend fun login(
         @RequestBody @Valid command: LoginCommand
-    ): ResponseEntity<AuthTokens?> {
+    ): ResponseEntity<AuthTokens> {
         val tokens = authService.login(command)
 
         return ResponseEntity.ok(tokens)
@@ -54,7 +55,7 @@ class AuthController(
     @PostMapping("/reissue")
     suspend fun reissue(
         @RequestHeader("X-Refresh-Token") refreshToken: String
-    ): ResponseEntity<AuthTokens?> {
+    ): ResponseEntity<AuthTokens> {
         val tokens = authService.reissue(refreshToken)
 
         return ResponseEntity.ok(tokens)
@@ -67,5 +68,14 @@ class AuthController(
         val response = authService.logout(passport.memberId)
 
         return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/login/social")
+    suspend fun loginSocialSession(
+        @RequestBody @Valid command: LoginSocialSessionCommand
+    ): ResponseEntity<AuthTokens> {
+        val tokens = authService.loginSocialSession(command)
+
+        return ResponseEntity.ok(tokens)
     }
 }

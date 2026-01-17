@@ -1,9 +1,6 @@
 package server.feature.auth.application
 
-import jakarta.validation.constraints.Email
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Pattern
-import jakarta.validation.constraints.Size
+import jakarta.validation.constraints.*
 
 data class EmailVerificationCommand(
     @field:NotBlank
@@ -47,4 +44,12 @@ data class AuthTokens(
 
 data class LogoutResult(
     val success: Boolean
+)
+
+data class LoginSocialSessionCommand(
+    @field:NotBlank
+    val token: String,
+
+    @field:NotNull
+    val memberId: Long
 )

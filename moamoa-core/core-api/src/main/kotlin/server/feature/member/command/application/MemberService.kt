@@ -5,8 +5,10 @@ import server.feature.member.command.domain.Member
 import server.feature.member.command.domain.MemberRepository
 import server.feature.member.command.domain.Provider
 import server.infra.cache.EmailVerificationCache
+import server.infra.cache.SocialMemberSessionCache
 import server.infra.db.Transactional
 import server.password.PasswordEncoder
+import java.util.UUID
 
 @Service
 class MemberService(
@@ -14,6 +16,7 @@ class MemberService(
     private val memberRepository: MemberRepository,
     private val emailVerificationCache: EmailVerificationCache,
     private val passwordEncoder: PasswordEncoder,
+    private val socialMemberSessionCache: SocialMemberSessionCache,
 ) {
 
     suspend fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
@@ -42,6 +45,13 @@ class MemberService(
             providerKey = command.providerKey,
         )
         createMember(member)
+    }
+
+    suspend fun createSocialMemberWithSession(command: CreateSocialMemberCommand): CreateSocialMemberResult {
+        val member = createSocialMember(command)
+        val sessionToken = UUID.randomUUID().toString()
+        socialMemberSessionCache.set(sessionToken, member.id)
+        return CreateSocialMemberResult(member, sessionToken)
     }
 
     private suspend fun createMember(member: Member): MemberData {
