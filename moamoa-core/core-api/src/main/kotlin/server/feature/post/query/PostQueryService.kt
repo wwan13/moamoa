@@ -34,8 +34,8 @@ class PostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCountDeferred = async { countAll() }
-        val basePostsDeferred = async { loadPosts(paging) }
+        val totalCountDeferred = async { countAll(conditions.query) }
+        val basePostsDeferred = async { loadPosts(paging, conditions.query) }
 
         val totalCount = totalCountDeferred.await()
         val basePosts = basePostsDeferred.await()
@@ -77,9 +77,12 @@ class PostQueryService(
         PostList(meta, posts)
     }
 
-    private suspend fun loadPosts(paging: Paging): List<PostSummary> {
-        if (paging.page > 5) {
-            return fetchBasePosts(paging).toList()
+    private suspend fun loadPosts(
+        paging: Paging,
+        query: String?
+    ): List<PostSummary> {
+        if (paging.page > 5 || !query.isNullOrBlank()) {
+            return fetchBasePosts(paging, query).toList()
         }
 
         val cached = postListCache.get(paging.page, paging.size)
@@ -92,33 +95,57 @@ class PostQueryService(
         }
     }
 
-    private suspend fun fetchBasePosts(paging: Paging): Flow<PostSummary> {
+    private suspend fun fetchBasePosts(
+        paging: Paging,
+        query: String? = null
+    ): Flow<PostSummary> {
         val offset = (paging.page - 1L) * paging.size
+
+        val whereClause = if (query != null) {
+            "WHERE p.title LIKE :keyword OR p.description LIKE :keyword"
+        } else {
+            ""
+        }
 
         val sql = """
             $POST_QUERY_BASE_SELECT,
                 0 AS is_bookmarked
             FROM post p
             INNER JOIN tech_blog t ON t.id = p.tech_blog_id
+            $whereClause
             ORDER BY p.published_at DESC
             LIMIT :limit OFFSET :offset
         """.trimIndent()
 
-        return databaseClient.sql(sql)
+        var spec = databaseClient.sql(sql)
             .bind("limit", paging.size)
             .bind("offset", offset)
+
+        if (query != null) {
+            spec = spec.bind("keyword", "%$query%")
+        }
+
+        return spec
             .map { row, _ -> mapToPostSummary(row) }
             .all()
             .asFlow()
     }
 
-    private suspend fun countAll(): Long {
-        val sql = """
-            SELECT COUNT(*) AS cnt
-            FROM post
-        """.trimIndent()
+    private suspend fun countAll(query: String?): Long {
+        val whereClause = if (query != null) {
+            "WHERE title LIKE :keyword OR description LIKE :keyword"
+        } else ""
 
-        return databaseClient.sql(sql)
+        val sql = """
+        SELECT COUNT(*) AS cnt
+        FROM post
+        $whereClause
+    """.trimIndent()
+
+        var spec = databaseClient.sql(sql)
+        if (query != null) spec = spec.bind("keyword", "%$query%")
+
+        return spec
             .map { row, _ -> row.get("cnt", Long::class.java) ?: 0L }
             .one()
             .awaitSingle()

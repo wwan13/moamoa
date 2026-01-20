@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 data class PostQueryConditions(
     val page: Long?,
     val size: Long?,
+    val query: String?,
 )
 
 data class PostList(
