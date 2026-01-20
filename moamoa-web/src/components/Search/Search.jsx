@@ -146,7 +146,8 @@ export default function Search({open, onClose}) {
                         </>
                     )}
 
-                    {(isSearching && techBlogs.length === 0 && posts.length === 0) && (
+                    {(isSearching && techBlogs.length === 0 && posts.length === 0
+                        && !searchTechBlogsQuery.isPending && !searchPostsQuery.isPending) && (
                         <div className={styles.empty}>검색 결과가 없습니다.</div>
                     )}
 
