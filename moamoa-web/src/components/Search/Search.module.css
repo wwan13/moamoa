@@ -49,10 +49,15 @@
     outline: none;
     box-sizing: border-box;
     transition: .2s ease;
+    color: #252525;
 }
 
 .searchInput:focus {
     border-color: #252525;
+}
+
+.searchInput::placeholder {
+    color: #ef4444;
 }
 
 .content {
