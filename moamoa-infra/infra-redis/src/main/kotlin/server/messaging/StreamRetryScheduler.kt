@@ -13,7 +13,7 @@ internal class StreamRetryScheduler(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @Scheduled(fixedDelayString = "60_000")
+    @Scheduled(fixedDelayString = "60000")
     fun tick() {
         schedulerScope.launch {
             runCatching {
