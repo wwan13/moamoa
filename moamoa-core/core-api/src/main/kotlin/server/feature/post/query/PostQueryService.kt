@@ -82,12 +82,12 @@ class PostQueryService(
             return fetchBasePosts(paging).toList()
         }
 
-        val cached = postListCache.get(paging.page)
+        val cached = postListCache.get(paging.page, paging.size)
         if (cached != null) return cached
 
         return fetchBasePosts(paging).toList().also {
             cacheWarmupScope.launch {
-                postListCache.set(paging.page, it)
+                postListCache.set(paging.page, paging.size, it)
             }
         }
     }
