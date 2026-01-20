@@ -127,11 +127,11 @@ export default function Search({open, onClose}) {
                                 </div>
                             )}
 
-                            {(techBlogs.length > 1 && posts.length > 1) && (
+                            {(techBlogs.length > 0 && posts.length > 0) && (
                                 <div className={styles.divider}></div>
                             )}
 
-                            {posts.length > 1 && (
+                            {posts.length > 0 && (
                                 <div className={styles.posts}>
                                     {(posts ?? []).map((p) => (
                                         <PostItem
