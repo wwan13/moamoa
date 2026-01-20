@@ -1,0 +1,104 @@
+.wrap {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 200000;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    overflow: auto;
+}
+
+.contentWrap {
+    padding-top: 32px;
+    width: 788px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.titleWrap {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.icon {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.cancelButton {
+    background: none;
+    border: none;
+    outline: none;
+    margin-left: auto;
+}
+
+.searchInput {
+    width: 100%;
+    height: 46px;
+    padding: 0 20px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+    transition: .2s ease;
+}
+
+.searchInput:focus {
+    border-color: #252525;
+}
+
+.content {
+    padding: 12px 0 36px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.posts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    width: 100%;
+}
+
+.posts > article {
+    width: 100%;
+}
+
+.techBlogs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    width: 100%;
+}
+
+.divider {
+    width: 100%;
+    height: 1px;
+    background: #F0F0F0;
+}
+
+.empty {
+    width: 100%;
+    padding-top: 50px;
+    text-align: center;
+    color: #6D6D6D;
+    font-size: 18px;
+}
+
+.loading {
+    width: 100%;
+}
+
+.spinner {
+    width: 450px;
+    margin: auto;
+}

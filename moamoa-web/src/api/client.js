@@ -67,6 +67,26 @@ export function showGlobalConfirm({
     })
 }
 
+let onOpenSearch = () => {}
+let onCloseSearch = () => {}
+
+export function setOnOpenSearch(handler) {
+    onOpenSearch = typeof handler === "function" ? handler : () => {}
+}
+
+export function setOnCloseSearch(handler) {
+    onCloseSearch = typeof handler === "function" ? handler : () => {}
+}
+
+// 어디서든 호출용
+export function openSearch() {
+    onOpenSearch()
+}
+
+export function closeSearch() {
+    onCloseSearch()
+}
+
 function getAccessToken() {
     return localStorage.getItem(ACCESS_TOKEN_KEY)
 }

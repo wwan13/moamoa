@@ -14,9 +14,14 @@ function buildQuery(paramsObj = {}) {
 }
 
 export const postsApi = {
-    list: ({ page } = {}, config) => {
-        const query = buildQuery({ page: page && page > 1 ? page : undefined, size: SIZE })
-        return http.get(`/api/post${query}`, config)
+    list: ({ page, size, query } = {}, config) => {
+        const q = buildQuery({
+            page: page && page > 1 ? page : undefined,
+            size: size ?? SIZE,
+            query: query || undefined,
+        })
+
+        return http.get(`/api/post${q}`, config)
     },
 
     listByTechBlogKey: ({ page, techBlogKey } = {}, config) => {

@@ -5,6 +5,8 @@ import {
     setOnServerError,
     setOnToast,
     setOnGlobalConfirm,
+    setOnOpenSearch,
+    setOnCloseSearch,
 } from "../api/client.js"
 
 import GlobalAlertModal from "../components/alert/GlobalAlertModal.jsx"
@@ -12,6 +14,8 @@ import GlobalToast from "../components/toast/GlobalToast.jsx"
 import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal.jsx"
 import useAuth from "../auth/AuthContext.jsx"
 import LoginModal from "../components/LoginModal/LoginModal.jsx"
+import Search from "../components/Search/Search.jsx" // 경로 맞춰
+
 import { useEffect, useState } from "react"
 
 export default function App() {
@@ -34,18 +38,12 @@ export default function App() {
         onCancel: () => {},
     })
 
-    const {
-        authModal,
-        openLogin,
-        openSignup,
-        closeAuthModal,
-        login,
-    } = useAuth()
+    // ✅ search 상태 (추가)
+    const [searchOpen, setSearchOpen] = useState(false)
+
+    const { authModal, openLogin, openSignup, closeAuthModal, login } = useAuth()
 
     useEffect(() => {
-        // ❌ setOnLoadingChange 제거
-
-        // 서버 에러 (기존 방식 유지)
         setOnServerError(({ message }) => {
             setAlertTitle("오류")
             setAlertMessage(message)
@@ -53,33 +51,26 @@ export default function App() {
             setAlertOpen(true)
         })
 
-        // ✅ Promise 기반 GlobalAlert
         setOnGlobalAlert(({ title, message, onClose }) => {
             setAlertTitle(title ?? "오류")
             setAlertMessage(message)
-
             setAlertOnClose(() => () => {
                 setAlertOpen(false)
                 onClose?.()
             })
-
             setAlertOpen(true)
         })
 
         setOnToast(setToast)
 
-        // ✅ Promise 기반 GlobalConfirm
         setOnGlobalConfirm(({ title, message, confirmText, cancelText, onConfirm, onCancel }) => {
-            setConfirmState({
-                title,
-                message,
-                confirmText,
-                cancelText,
-                onConfirm,
-                onCancel,
-            })
+            setConfirmState({ title, message, confirmText, cancelText, onConfirm, onCancel })
             setConfirmOpen(true)
         })
+
+        // ✅ Search 전역 핸들러 등록 (추가)
+        setOnOpenSearch(() => setSearchOpen(true))
+        setOnCloseSearch(() => setSearchOpen(false))
     }, [])
 
     return (
@@ -115,6 +106,9 @@ export default function App() {
                 onSubmit={login}
                 onClickSignup={openSignup}
             />
+
+            {/* ✅ Search 모달 렌더링 (추가) */}
+            <Search open={searchOpen} onClose={() => setSearchOpen(false)} />
 
             <AppRoutes />
         </div>

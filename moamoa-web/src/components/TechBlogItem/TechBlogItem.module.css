@@ -1,0 +1,173 @@
+.item {
+    width: 100%;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    cursor: pointer;
+}
+
+.iconWrap {
+    width: 100px;
+    height: 100px;
+    border-radius: 999px;
+    box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.icon {
+    width: 100%;
+    transition: 0.2s ease;
+}
+
+.item:hover .icon {
+    transform: scale(1.05);
+}
+
+.infoWrap {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+}
+
+.left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.techBlogTitle {
+    font-size: 20px;
+    font-weight: 600;
+    color: #252525;
+    margin: 0 0 6px 0;
+    transition: 0.2s ease;
+}
+
+.item:hover .techBlogTitle {
+    color: #90ab8b;
+}
+
+.techBlogSub {
+    color: #a8a8a8;
+    font-size: 14px;
+    margin: 0;
+}
+
+.techBlogUrl {
+    font-size: 14px;
+    color: #a8a8a8;
+    text-decoration: underline;
+    outline: none;
+    border: none;
+    background-color: #fff;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    margin: 0;
+}
+
+.right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subButton {
+    outline: none;
+    border: none;
+    background-color: #90ab8b;
+    width: 64px;
+    height: 32px;
+    border-radius: 18px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.subIngButton {
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    background-color: #f3f4f6;
+    width: 84px;
+    height: 32px;
+    border-radius: 18px;
+    color: #a2a2a2;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.alarmIngButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    background-color: #f3f4f6;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.alarmButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    background-color: #90ab8b;
+    color: #ffffff;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 6px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
+
+.skeletonLine {
+    height: 16px;
+    width: 220px;
+}
+
+.skeletonLineShort {
+    height: 12px;
+    width: 160px;
+    margin-top: 8px;
+}
+
+.skeletonBtn {
+    width: 72px;
+    height: 34px;
+    border-radius: 10px;
+}
+
+.skeletonBtnCircle {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+}
+
+.skeletonCircle {
+    border-radius: 999px;
+}

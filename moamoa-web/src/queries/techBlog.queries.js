@@ -2,14 +2,19 @@ import { useQuery } from "@tanstack/react-query"
 import { techBlogApi } from "../api/techBlog.api.js"
 import useAuth from "../auth/AuthContext.jsx";
 
-export function useTechBlogsQuery() {
+export function useTechBlogsQuery({ query } = {}, options = {}) {
     const { authScope, publicScope } = useAuth()
     const scope = authScope ?? publicScope
 
+    const hasQuery = !!query
+
     return useQuery({
-        queryKey: ["techBlogs", scope],
-        queryFn: ({ signal }) => techBlogApi.list({ signal }),
-        staleTime: 60 * 1000,
+        queryKey: ["techBlogs", scope, { query: hasQuery ? query : undefined }],
+        queryFn: ({ signal }) => techBlogApi.list({ query }, { signal }),
+        enabled: options.enabled ?? true,
+
+        staleTime: hasQuery ? 0 : 60 * 1000,
+        gcTime: hasQuery ? 0 : 5 * 60 * 1000,
     })
 }
 

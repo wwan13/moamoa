@@ -2,15 +2,34 @@ import { useQuery, useMutation } from "@tanstack/react-query"
 import { postsApi } from "../api/post.api.js"
 import useAuth from "../auth/AuthContext.jsx"
 
-export function usePostsQuery({ page } = {}, options = {}) {
+export function usePostsQuery(
+    { page, size = 20, query } = {},
+    options = {}
+) {
     const { authScope, publicScope } = useAuth()
     const scope = authScope ?? publicScope
 
+    const resolvedPage = page ?? 1
+    const resolvedSize = size ?? SIZE
+    const hasQuery = !!query
+
     return useQuery({
-        queryKey: ["posts", scope, "list", { page: page ?? 1 }],
-        queryFn: ({ signal }) => postsApi.list({ page }, { signal }),
+        queryKey: ["posts", scope, "list", {
+            page: resolvedPage,
+            size: resolvedSize,
+            query: hasQuery ? query : undefined,
+        }],
+        queryFn: ({ signal }) =>
+            postsApi.list(
+                { page: resolvedPage, size: resolvedSize, query },
+                { signal }
+            ),
         enabled: options.enabled ?? true,
-        keepPreviousData: true,
+
+        staleTime: hasQuery ? 0 : 1000 * 30,
+        gcTime: hasQuery ? 0 : 1000 * 60 * 5,
+
+        keepPreviousData: !hasQuery,
     })
 }
 
