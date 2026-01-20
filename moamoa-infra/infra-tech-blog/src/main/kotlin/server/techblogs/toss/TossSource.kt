@@ -45,7 +45,7 @@ internal class TossSource(
                     title = it.title,
                     description = it.subtitle,
                     tags = listOf(it.category),
-                    thumbnail = it.thumbnailConfig.imageUrl,
+                    thumbnail = it.thumbnailConfig.imageUrl ?: "https://i.imgur.com/DrBOmL0.png",
                     publishedAt = ZonedDateTime.parse(it.publishedTime).toLocalDateTime(),
                     url = postBaseUrl + it.key
                 )
@@ -75,7 +75,7 @@ internal class TossSource(
                 val thumbnailConfig: ThumbnailConfig,
             ) {
                 data class ThumbnailConfig(
-                    val imageUrl: String
+                    val imageUrl: String?
                 )
             }
         }
