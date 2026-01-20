@@ -146,12 +146,13 @@ export default function Search({open, onClose}) {
                         </>
                     )}
 
-                    {(isSearching && techBlogs.length === 0 && posts.length === 0
-                        && !searchTechBlogsQuery.isPending && !searchPostsQuery.isPending) && (
+                    {((isSearching && techBlogs.length === 0 && posts.length === 0
+                        && !searchTechBlogsQuery.isPending && !searchPostsQuery.isPending))&& (
                         <div className={styles.empty}>검색 결과가 없습니다.</div>
                     )}
 
-                    {(isSearching && (searchTechBlogsQuery.isPending || searchPostsQuery.isPending)) && (
+                    {(isSearching && (searchTechBlogsQuery.isPending || searchPostsQuery.isPending) ||
+                        (!isSearching && initialPostsQuery.isPending)) && (
                         <div className={styles.loading}>
                             <DotLottieReact
                                 src="https://lottie.host/9934b555-fee3-4544-b9f2-f31df5748272/lAkteKQ8h5.lottie"
