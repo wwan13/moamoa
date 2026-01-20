@@ -9,6 +9,7 @@ import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.application.TechBlogService
 import server.feature.techblog.query.SubscribedTechBlogQueryService
 import server.feature.techblog.query.TechBlogList
+import server.feature.techblog.query.TechBlogQueryConditions
 import server.feature.techblog.query.TechBlogQueryService
 import server.security.Passport
 import server.security.RequestPassport
@@ -31,9 +32,10 @@ class TechBlogController(
 
     @GetMapping
     suspend fun findAll(
-        @RequestPassport passport: Passport?
+        conditions: TechBlogQueryConditions,
+        @RequestPassport passport: Passport?,
     ): ResponseEntity<TechBlogList> {
-        val response = techBlogQueryService.findAll(passport)
+        val response = techBlogQueryService.findAll(passport, conditions)
         return ResponseEntity.ok(response)
     }
 

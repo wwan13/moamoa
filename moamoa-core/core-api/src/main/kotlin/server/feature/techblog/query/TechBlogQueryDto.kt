@@ -1,5 +1,9 @@
 package server.feature.techblog.query
 
+data class TechBlogQueryConditions(
+    val query: String?,
+)
+
 data class TechBlogList(
     val meta: TechBlogListMeta,
     val techBlogs: List<TechBlogSummary>

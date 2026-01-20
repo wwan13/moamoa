@@ -20,8 +20,11 @@ class TechBlogQueryService(
     private val cacheWarmupScope: CoroutineScope,
 ) {
 
-    suspend fun findAll(passport: Passport?): TechBlogList = coroutineScope {
-        val baseDeferred = async { loadBaseList() }
+    suspend fun findAll(
+        passport: Passport?,
+        conditions: TechBlogQueryConditions
+    ): TechBlogList = coroutineScope {
+        val baseDeferred = async { loadBaseList(conditions.query) }
         val base = baseDeferred.await()
 
         val meta = TechBlogListMeta(totalCount = base.size.toLong())
@@ -54,8 +57,20 @@ class TechBlogQueryService(
         TechBlogList(meta, result)
     }
 
-    private suspend fun loadBaseList(): List<TechBlogSummary> {
-        techBlogListCache.get()?.let { return it }
+    private suspend fun loadBaseList(
+        query: String? = null
+    ): List<TechBlogSummary> {
+        if (query == null) {
+            techBlogListCache.get()?.let { return it }
+        }
+
+        val whereClause = if (query != null) {
+            """
+            WHERE t.title LIKE :keyword
+               OR t.blog_url LIKE :keyword
+               OR t.tech_blog_key LIKE :keyword
+        """.trimIndent()
+        } else ""
 
         val sql = """
             SELECT
@@ -65,10 +80,17 @@ class TechBlogQueryService(
                 t.blog_url      AS tech_blog_url,
                 t.tech_blog_key AS tech_blog_key
             FROM tech_blog t
+            $whereClause
             ORDER BY t.title ASC
         """.trimIndent()
 
-        return databaseClient.sql(sql)
+        var spec = databaseClient.sql(sql)
+
+        if (query != null) {
+            spec = spec.bind("keyword", "%$query%")
+        }
+
+        return spec
             .map { row, _ ->
                 TechBlogSummary(
                     id = row.get("tech_blog_id", Long::class.java) ?: 0L,
@@ -85,9 +107,9 @@ class TechBlogQueryService(
             .all()
             .asFlow()
             .toList()
-            .also {
-                cacheWarmupScope.launch {
-                    techBlogListCache.set(it)
+            .also { list ->
+                if (query == null) {
+                    cacheWarmupScope.launch { techBlogListCache.set(list) }
                 }
             }
     }
