@@ -92,7 +92,15 @@ export default function TechBlogDetailPage() {
 
     const onSubButtonToggle = async () => {
         if (!isLoggedIn) {
-            openLogin?.()
+            const ok = await showGlobalConfirm({
+                title : "로그인",
+                message : "로그인이 필요한 기능입니다. 로그인 하시겠습니까?",
+                confirmText : "로그인"
+            })
+            if (!ok) {
+                return
+            }
+            openLogin()
             return
         }
         if (!techBlog) return

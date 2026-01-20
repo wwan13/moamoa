@@ -11,7 +11,7 @@ import {
 
 export default function TechBlogItem({ techBlog, isSkeleton = false }) {
     const qc = useQueryClient()
-    const { authScope } = useAuth()
+    const { authScope, isLoggedIn, openLogin } = useAuth()
 
     const subToggle = useSubscriptionToggleMutation({ invalidateOnSuccess: false })
     const notiToggle = useNotificationToggleMutation()
@@ -28,6 +28,19 @@ export default function TechBlogItem({ techBlog, isSkeleton = false }) {
     }
 
     const subscriptionToggle = async () => {
+        if (!isLoggedIn) {
+            const ok = await showGlobalConfirm({
+                title : "로그인",
+                message : "로그인이 필요한 기능입니다. 로그인 하시겠습니까?",
+                confirmText : "로그인"
+            })
+            if (!ok) {
+                return
+            }
+            openLogin()
+            return
+        }
+
         const wasSubscribed = !!techBlog.subscribed
         const techBlogId = techBlog.id
 
@@ -61,6 +74,19 @@ export default function TechBlogItem({ techBlog, isSkeleton = false }) {
     }
 
     const notificationToggle = async () => {
+        if (!isLoggedIn) {
+            const ok = await showGlobalConfirm({
+                title : "로그인",
+                message : "로그인이 필요한 기능입니다. 로그인 하시겠습니까?",
+                confirmText : "로그인"
+            })
+            if (!ok) {
+                return
+            }
+            openLogin()
+            return
+        }
+
         const wasEnabled = !!techBlog.notificationEnabled
         const techBlogId = techBlog.id
 

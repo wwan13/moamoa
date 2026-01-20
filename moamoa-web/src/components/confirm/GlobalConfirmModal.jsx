@@ -21,10 +21,10 @@ export default function GlobalConfirmModal({
                 <div className={styles.actions}>
                     <div className={styles.actionsRow}>
                         <Button className={styles.cancelButton} type="button" onClick={onCancel}>
-                            유지
+                            {cancelText}
                         </Button>
                         <Button className={styles.confirmButton} type="button" onClick={onConfirm}>
-                            해제
+                            {confirmText}
                         </Button>
                     </div>
                 </div>
