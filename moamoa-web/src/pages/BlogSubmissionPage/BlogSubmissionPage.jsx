@@ -4,6 +4,9 @@ import useAuth from "../../auth/AuthContext.jsx";
 import {useNavigate} from "react-router-dom";
 import InputText from "../../components/ui/InputText.jsx";
 import Button from "../../components/ui/Button.jsx";
+import {useCreateSubmissionMutation} from "../../queries/submission.queries.js";
+import {showToast} from "../../api/client.js";
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner.jsx";
 
 export default function BlogSubmissionPage() {
     const {isLoggedIn} = useAuth()
@@ -16,11 +19,13 @@ export default function BlogSubmissionPage() {
     const [titleError, setTitleError] = useState("")
     const [urlError, setUrlError] = useState("")
 
+    const createSubmissionsMutation = useCreateSubmissionMutation()
+
     const validateTitle = () => {
         if (title.length === 0) {
             setTitleError("기술블로그 이름을 입력해 주세요")
         }
-        setTitle("")
+        setTitleError("")
     }
 
     const validateUrl = () => {
@@ -39,7 +44,7 @@ export default function BlogSubmissionPage() {
         }
     }
 
-    const onSubmit = (e) => {
+    const onSubmit = async (e) => {
         e.preventDefault()
 
         validateTitle()
@@ -50,6 +55,11 @@ export default function BlogSubmissionPage() {
         if (!titleOk || !urlOk) return
 
         console.log("api call")
+        await createSubmissionsMutation
+            .mutateAsync({ blogTitle : title, blogUrl : url, notificationEnabled : agreementChecked })
+
+        showToast("요청되었습니다.")
+        navigate("/")
     }
 
     useEffect(() => {
@@ -60,6 +70,9 @@ export default function BlogSubmissionPage() {
 
     return (
         <div className={styles.wrap}>
+            {createSubmissionsMutation.isPending && (
+                <GlobalSpinner />
+            )}
             <div className={styles.titleWrap}>
                 <span className={styles.title}>기술블로그 요청</span>
                 <span className={styles.description}>
