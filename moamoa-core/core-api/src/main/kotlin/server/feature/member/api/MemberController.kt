@@ -3,10 +3,13 @@ package server.feature.member.api
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import server.feature.member.command.application.ChangePasswordCommand
+import server.feature.member.command.application.ChangePasswordResult
 import server.feature.member.command.application.CreateInternalMemberCommand
 import server.feature.member.command.application.CreateSocialMemberCommand
 import server.feature.member.command.application.CreateSocialMemberResult
@@ -61,6 +64,16 @@ class MemberController(
         @RequestPassport passport: Passport
     ): ResponseEntity<MemberSummary> {
         val response = memberQueryService.findById(passport.memberId)
+
+        return ResponseEntity.ok(response)
+    }
+
+    @PatchMapping("/password")
+    suspend fun changePassword(
+        @RequestBody @Valid command: ChangePasswordCommand,
+        @RequestPassport passport: Passport
+    ): ResponseEntity<ChangePasswordResult> {
+        val response = memberService.changePassword(command, passport)
 
         return ResponseEntity.ok(response)
     }

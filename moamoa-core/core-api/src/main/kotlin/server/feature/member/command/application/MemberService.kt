@@ -8,6 +8,8 @@ import server.infra.cache.EmailVerificationCache
 import server.infra.cache.SocialMemberSessionCache
 import server.infra.db.Transactional
 import server.password.PasswordEncoder
+import server.security.Passport
+import server.security.UnauthorizedException
 import java.util.UUID
 
 @Service
@@ -78,5 +80,33 @@ class MemberService(
     suspend fun emailExists(command: EmailExistsCommand): EmailExistsResult {
         val exists = memberRepository.existsByEmail(command.email)
         return EmailExistsResult(exists)
+    }
+
+    suspend fun changePassword(
+        command: ChangePasswordCommand,
+        passport: Passport
+    ): ChangePasswordResult {
+        if (command.oldPassword == command.newPassword) {
+            throw IllegalArgumentException("같은 비밀번호는 사용할 수 없습니다.")
+        }
+
+        if (command.newPassword != command.passwordConfirm) {
+            throw IllegalArgumentException("비밀번호가 일치하지 않습니다.")
+        }
+        val member = memberRepository.findById(passport.memberId)
+            ?: throw UnauthorizedException()
+        if (member.provider != Provider.INTERNAL) {
+            throw IllegalArgumentException("이메일로 회원가입한 사용자가 아닙니다.")
+        }
+        if (!passwordEncoder.matches(command.oldPassword, member.password)) {
+            throw IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.")
+        }
+
+        val updated = member.copy(
+            password = passwordEncoder.encode(command.newPassword),
+        )
+        memberRepository.save(updated)
+
+        return ChangePasswordResult(true)
     }
 }

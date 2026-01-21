@@ -63,3 +63,24 @@ data class CreateSocialMemberResult(
     val member: MemberData,
     val token: String
 )
+
+data class ChangePasswordCommand(
+    @field:NotBlank
+    @field:Size(min = 8, max = 24)
+    @field:Pattern(regexp = "^(?=.*[^A-Za-z0-9])[A-Za-z0-9[^A-Za-z0-9]]{8,32}$")
+    val oldPassword: String,
+
+    @field:NotBlank
+    @field:Size(min = 8, max = 24)
+    @field:Pattern(regexp = "^(?=.*[^A-Za-z0-9])[A-Za-z0-9[^A-Za-z0-9]]{8,32}$")
+    val newPassword: String,
+
+    @field:NotBlank
+    @field:Size(min = 8, max = 24)
+    @field:Pattern(regexp = "^(?=.*[^A-Za-z0-9])[A-Za-z0-9[^A-Za-z0-9]]{8,32}$")
+    val passwordConfirm: String
+)
+
+data class ChangePasswordResult(
+    val success: Boolean,
+)

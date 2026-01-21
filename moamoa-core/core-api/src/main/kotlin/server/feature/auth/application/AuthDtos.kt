@@ -32,7 +32,7 @@ data class LoginCommand(
     val email: String,
 
     @field:NotBlank
-    @field:Size(min = 8, max = 24)
+    @field:Size(min = 8, max = 32)
     @field:Pattern(regexp = "^(?=.*[^A-Za-z0-9])[A-Za-z0-9[^A-Za-z0-9]]{8,32}$")
     val password: String
 )
