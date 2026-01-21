@@ -10,6 +10,7 @@ import SignupPage from "../pages/SignupPage/SignupPage.jsx";
 import Oauth2Page from "../pages/Oauth2Page/Oauth2Page.jsx";
 import Oauth2EmailInputPage from "../pages/Oauth2EmailInputPage/Oauth2EmailInputPage.jsx";
 import BlogSubmissionPage from "../pages/BlogSubmissionPage/BlogSubmissionPage.jsx";
+import PasswordChangePage from "../pages/PasswordChangePage/PasswordChangePage.jsx";
 
 export default function AppRoutes() {
     return (
@@ -21,6 +22,7 @@ export default function AppRoutes() {
                 <Route path="/subscription" element={<MySubscriptionPage />} />
                 <Route path="/my" element={<MyPage />} />
                 <Route path="/submission" element={<BlogSubmissionPage />} />
+                <Route path="/password" element={<PasswordChangePage />} />
 
                 <Route path="/oauth2" element={<Oauth2Page />} />
             </Route>

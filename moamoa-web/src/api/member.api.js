@@ -6,4 +6,7 @@ export const memberApi = {
 
     createSocial: ({email, provider, providerKey}, config) =>
         http.post("/api/member/social", {email, provider, providerKey}, config),
+
+    changePassword: ({oldPassword, newPassword, passwordConfirm}, config) =>
+        http.patch("/api/member/password", {oldPassword, newPassword, passwordConfirm}, config),
 }

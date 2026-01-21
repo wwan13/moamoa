@@ -18,13 +18,16 @@ export default function TechBlogItem({ techBlog, isSkeleton = false }) {
     const isMutating = subToggle.isPending || notiToggle.isPending
 
     const patchBlog = (techBlogId, patcher) => {
-        qc.setQueryData(["techBlogs", "subscribed", authScope], (old) => {
-            if (!old?.techBlogs) return old
-            return {
-                ...old,
-                techBlogs: old.techBlogs.map((b) => (b.id === techBlogId ? patcher(b) : b)),
+        qc.setQueriesData(
+            { queryKey: ["techBlogs"], exact: false },
+            (old) => {
+                if (!old?.techBlogs) return old
+                return {
+                    ...old,
+                    techBlogs: old.techBlogs.map((b) => (b.id === techBlogId ? patcher(b) : b)),
+                }
             }
-        })
+        )
     }
 
     const subscriptionToggle = async () => {
@@ -162,17 +165,19 @@ export default function TechBlogItem({ techBlog, isSkeleton = false }) {
                         {techBlog.subscribed ? "구독중" : "구독"}
                     </button>
 
-                    <button
-                        className={techBlog.notificationEnabled ? styles.alarmIngButton : styles.alarmButton}
-                        onClick={notificationToggle}
-                        disabled={isMutating}
-                    >
-                        {techBlog.notificationEnabled ? (
-                            <NotificationsOffOutlinedIcon sx={{ fontSize: 18, color: "#A2A2A2", fontWeight: 800 }} />
-                        ) : (
-                            <NotificationsNoneOutlinedIcon sx={{ fontSize: 18, color: "#ffffff", fontWeight: 800 }} />
-                        )}
-                    </button>
+                    {techBlog.subscribed && (
+                        <button
+                            className={techBlog.notificationEnabled ? styles.alarmIngButton : styles.alarmButton}
+                            onClick={notificationToggle}
+                            disabled={isMutating}
+                        >
+                            {techBlog.notificationEnabled ? (
+                                <NotificationsOffOutlinedIcon sx={{ fontSize: 18, color: "#A2A2A2", fontWeight: 800 }} />
+                            ) : (
+                                <NotificationsNoneOutlinedIcon sx={{ fontSize: 18, color: "#ffffff", fontWeight: 800 }} />
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

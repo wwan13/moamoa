@@ -54,7 +54,6 @@ export default function BlogSubmissionPage() {
 
         if (!titleOk || !urlOk) return
 
-        console.log("api call")
         await createSubmissionsMutation
             .mutateAsync({ blogTitle : title, blogUrl : url, notificationEnabled : agreementChecked })
 

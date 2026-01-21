@@ -109,16 +109,21 @@ export default function MyPage() {
             <section className={styles.section}>
                 <p className={styles.sectionTitle}>설정</p>
                 <div className={styles.buttons}>
-                    <button className={styles.button}>
-                        <p className={styles.buttonText}>알림 설정</p>
-                        <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
-                    </button>
-                    <div className={styles.divider}/>
-                    <button className={styles.button}>
-                        <p className={styles.buttonText}>비밀번호 설정</p>
-                        <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
-                    </button>
-                    <div className={styles.divider}/>
+                    {/*<button className={styles.button}>*/}
+                    {/*    <p className={styles.buttonText}>알림 설정</p>*/}
+                    {/*    <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>*/}
+                    {/*</button>*/}
+                    {/*<div className={styles.divider}/>*/}
+
+                    {member?.provider === "INTERNAL" && (
+                        <>
+                            <button className={styles.button} onClick={() => navigate("/password")}>
+                                <p className={styles.buttonText}>비밀번호 변경</p>
+                                <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
+                            </button>
+                            <div className={styles.divider}/>
+                        </>
+                    )}
                     <button className={styles.button}>
                         <p className={styles.buttonText}>회원 탈퇴</p>
                         <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>

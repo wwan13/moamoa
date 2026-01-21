@@ -19,3 +19,11 @@ export function useCreateSocialMemberMutation() {
         },
     })
 }
+
+export function useChangePasswordMutation() {
+    return useMutation({
+        mutationFn: memberApi.changePassword,
+        onError: async () => {
+        },
+    })
+}
