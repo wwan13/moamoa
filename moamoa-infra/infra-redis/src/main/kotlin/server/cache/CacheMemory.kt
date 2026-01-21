@@ -2,9 +2,11 @@ package server.cache
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.data.redis.core.ReactiveRedisTemplate
+import org.springframework.data.redis.core.ScanOptions
 import org.springframework.stereotype.Component
 import java.time.Duration
 
@@ -49,6 +51,22 @@ class CacheMemory(
 
     suspend fun evict(key: String) {
         reactiveRedisTemplate.delete(key).awaitSingle()
+    }
+
+    suspend fun evictByPrefix(prefix: String) {
+        val pattern = "$prefix*"
+
+        val scanOptions = ScanOptions.scanOptions()
+            .match(pattern)
+            .count(500)
+            .build()
+
+        reactiveRedisTemplate
+            .scan(scanOptions)
+            .asFlow()
+            .collect { key ->
+                reactiveRedisTemplate.delete(key).awaitSingle()
+            }
     }
 
     suspend fun mget(keys: Collection<String>): Map<String, String?> {

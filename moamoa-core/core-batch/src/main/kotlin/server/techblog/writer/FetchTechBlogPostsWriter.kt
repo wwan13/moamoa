@@ -5,6 +5,7 @@ import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import server.cache.CacheMemory
 import server.queue.QueueMemory
 import server.common.time.dbNow
 import server.common.transaction.AfterCommitExecutor
@@ -17,7 +18,8 @@ import java.time.LocalDateTime
 class FetchTechBlogPostsWriter(
     private val jdbc: NamedParameterJdbcTemplate,
     private val afterCommitExecutor: AfterCommitExecutor,
-    private val queueMemory: QueueMemory
+    private val queueMemory: QueueMemory,
+    private val cacheMemory: CacheMemory,
 ) : ItemWriter<List<PostData>> {
 
     override fun write(chunk: Chunk<out List<PostData>>) {
@@ -33,7 +35,11 @@ class FetchTechBlogPostsWriter(
         val windowEnd = jdbc.dbNow()
         val newlyInsertedPostIds = findNewlyInsertedPostIds(posts, startedAt, windowEnd)
 
-        enqueueResultAfterCommit(newlyInsertedPostIds)
+        afterCommitExecutor.execute {
+            queueMemory.delete("NEW_POST_IDS")
+            queueMemory.rPushAll("NEW_POST_IDS", newlyInsertedPostIds)
+            cacheMemory.evictByPrefix("POST:LIST:")
+        }
     }
 
     private fun upsertTags(posts: List<PostData>): Map<String, Long> {
@@ -78,7 +84,7 @@ class FetchTechBlogPostsWriter(
                 "url" to it.url,
                 "publishedAt" to it.publishedAt,
                 "techBlogId" to it.techBlogId,
-                "category" to 999
+                "categoryId" to 999
             )
         }
 
@@ -92,7 +98,7 @@ class FetchTechBlogPostsWriter(
                 url,
                 published_at,
                 tech_blog_id,
-                category,
+                category_id,
                 created_at,
                 last_modified_at
             )
@@ -104,7 +110,7 @@ class FetchTechBlogPostsWriter(
                 :url,
                 :publishedAt,
                 :techBlogId,
-                :category,
+                :categoryId,
                 NOW(),
                 NOW()
             )
@@ -204,14 +210,5 @@ class FetchTechBlogPostsWriter(
             )
         ) { rs, _ -> rs.getLong("id") }
             .toSet()
-    }
-
-    private fun enqueueResultAfterCommit(newPostIds: Set<Long>) {
-        if (newPostIds.isEmpty()) return
-
-        afterCommitExecutor.execute {
-            queueMemory.delete("NEW_POST_IDS")
-            queueMemory.rPushAll("NEW_POST_IDS", newPostIds)
-        }
     }
 }
