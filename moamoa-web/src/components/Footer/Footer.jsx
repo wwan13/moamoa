@@ -1,6 +1,9 @@
 import styles from "./Footer.module.css"
+import {useNavigate} from "react-router-dom";
 
 export default function Footer() {
+    const navigate = useNavigate()
+
     return (
         <footer className={styles.footer}>
             <div className={styles.moamoa}>
@@ -22,14 +25,13 @@ export default function Footer() {
 
             <span>·</span>
 
-            <a
-                href=""
-                target="_blank"
+            <span
                 rel="noopener noreferrer"
                 className={styles.link}
+                onClick={() => navigate("/submission")}
             >
                 블로그 추가 요청
-            </a>
+            </span>
 
             <span>·</span>
 

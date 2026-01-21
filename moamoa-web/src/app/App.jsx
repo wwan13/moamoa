@@ -73,6 +73,13 @@ export default function App() {
         setOnCloseSearch(() => setSearchOpen(false))
     }, [])
 
+    useEffect(() => {
+        document.body.classList.toggle("modal-open", searchOpen)
+        return () => {
+            document.body.classList.remove("modal-open")
+        }
+    }, [searchOpen])
+
     return (
         <div>
             <GlobalAlertModal

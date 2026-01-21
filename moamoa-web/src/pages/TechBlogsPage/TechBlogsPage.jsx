@@ -137,7 +137,10 @@ export default function TechBlogsPage() {
                     <div className={styles.buttonSection}>
                         <p className={styles.ctaText}>찾으시는 기술 블로그가 없다면</p>
                         <div className={styles.ctaRow}>
-                            <button className={styles.primaryButton}>요청하기</button>
+                            <button
+                                className={styles.primaryButton}
+                                onClick={() => navigate("/submission")}
+                            >요청하기</button>
                         </div>
                     </div>
                 </div>
