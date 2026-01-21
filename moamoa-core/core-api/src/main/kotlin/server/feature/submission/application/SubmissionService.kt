@@ -18,6 +18,7 @@ class SubmissionService(
         val submission = Submission(
             blogTitle = command.blogTitle,
             blogUrl = command.blogUrl,
+            notificationEnabled = command.notificationEnabled,
             accepted = false,
             memberId = memberId,
         )

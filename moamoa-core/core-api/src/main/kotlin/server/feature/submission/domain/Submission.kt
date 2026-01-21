@@ -17,6 +17,9 @@ data class Submission(
     @Column("blog_url")
     val blogUrl: String,
 
+    @Column("notification_enabled")
+    val notificationEnabled: Boolean,
+
     @Column("accepted")
     val accepted: Boolean,
 
