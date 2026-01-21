@@ -69,7 +69,7 @@ class Oauth2SuccessHandler(
             "${enc(k)}=${enc(v)}"
         }
         val base = if (environment.activeProfiles.contains("prod")) {
-            "https://moamoa.wowan.me/oauth2"
+            "https://moamoa.dev/oauth2"
         } else {
             "http://localhost:5173/oauth2"
         }
