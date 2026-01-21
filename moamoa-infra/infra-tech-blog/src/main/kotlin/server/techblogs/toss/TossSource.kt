@@ -41,13 +41,13 @@ internal class TossSource(
 
             response.success.results.map {
                 TechBlogPost(
-                    key = it.key,
+                    key = it.id.toString(),
                     title = it.title,
                     description = it.subtitle,
                     tags = listOf(it.category),
                     thumbnail = it.thumbnailConfig.imageUrl ?: "https://i.imgur.com/DrBOmL0.png",
                     publishedAt = ZonedDateTime.parse(it.publishedTime).toLocalDateTime(),
-                    url = postBaseUrl + it.key
+                    url = postBaseUrl + it.id
                 )
             }
         }
