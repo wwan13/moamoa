@@ -13,3 +13,6 @@ spring:
       - redis
       - mail
       - ai
+
+server:
+  port: 8081

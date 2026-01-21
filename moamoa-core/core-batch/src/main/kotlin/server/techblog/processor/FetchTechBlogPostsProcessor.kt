@@ -17,7 +17,7 @@ class FetchTechBlogPostsProcessor(
     override fun process(item: TechBlogKey): List<PostData>? = runBlocking {
         val source = techBlogSources[item.techBlogKey]
 
-        source.getPosts(20)
+        source.getPosts()
             .map {
                 PostData(
                     key = it.key,

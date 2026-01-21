@@ -23,6 +23,7 @@ class FetchTechBlogPostsReader(
                 """.trimIndent()
             )
             setFromClause("FROM tech_blog t")
+            setWhereClause("WHERE t.id=1")
             setSortKeys(mapOf("t.id" to Order.ASCENDING))
         }
 
