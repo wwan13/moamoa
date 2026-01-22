@@ -84,3 +84,7 @@ data class ChangePasswordCommand(
 data class ChangePasswordResult(
     val success: Boolean,
 )
+
+data class MemberUnjoinResult(
+    val success: Boolean,
+)

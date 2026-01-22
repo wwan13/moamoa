@@ -9,4 +9,6 @@ interface PostBookmarkRepository : CoroutineCrudRepository<PostBookmark, Long> {
     suspend fun findAllByMemberId(memberId: Long): Flow<PostBookmark>
 
     suspend fun countByMemberId(memberId: Long): Long
+
+    suspend fun deleteAllByMemberId(memberId: Long): Long
 }

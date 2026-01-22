@@ -2,6 +2,7 @@ package server.feature.member.api
 
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -17,6 +18,8 @@ import server.feature.member.command.application.EmailExistsCommand
 import server.feature.member.command.application.EmailExistsResult
 import server.feature.member.command.application.MemberData
 import server.feature.member.command.application.MemberService
+import server.feature.member.command.application.MemberUnjoinResult
+import server.feature.member.command.application.MemberUnjoinService
 import server.feature.member.query.MemberQueryService
 import server.feature.member.query.MemberSummary
 import server.security.Passport
@@ -27,6 +30,7 @@ import support.uri.toUri
 @RequestMapping("/api/member")
 class MemberController(
     private val memberService: MemberService,
+    private val memberUnjoinService: MemberUnjoinService,
     private val memberQueryService: MemberQueryService,
 ) {
 
@@ -74,6 +78,15 @@ class MemberController(
         @RequestPassport passport: Passport
     ): ResponseEntity<ChangePasswordResult> {
         val response = memberService.changePassword(command, passport)
+
+        return ResponseEntity.ok(response)
+    }
+
+    @DeleteMapping
+    suspend fun unjoin(
+        @RequestPassport passport: Passport
+    ): ResponseEntity<MemberUnjoinResult> {
+        val response = memberUnjoinService.unjoin(passport)
 
         return ResponseEntity.ok(response)
     }
