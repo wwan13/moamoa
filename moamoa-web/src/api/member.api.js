@@ -9,4 +9,7 @@ export const memberApi = {
 
     changePassword: ({oldPassword, newPassword, passwordConfirm}, config) =>
         http.patch("/api/member/password", {oldPassword, newPassword, passwordConfirm}, config),
+
+    unjoin: (config) =>
+        http.del("/api/member", config),
 }

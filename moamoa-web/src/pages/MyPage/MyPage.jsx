@@ -124,7 +124,7 @@ export default function MyPage() {
                             <div className={styles.divider}/>
                         </>
                     )}
-                    <button className={styles.button}>
+                    <button className={styles.button} onClick={() => navigate("/unjoin")}>
                         <p className={styles.buttonText}>회원 탈퇴</p>
                         <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }}/>
                     </button>

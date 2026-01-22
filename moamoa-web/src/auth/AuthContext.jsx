@@ -124,6 +124,25 @@ export function AuthProvider({ children }) {
         showToast("로그아웃 되었습니다.")
     }
 
+    const logoutProcess = async () => {
+        const res = await logoutMutation.mutateAsync()
+
+        if (!res?.success) {
+            await showGlobalAlert("다시 시도해 주세요")
+            return
+        }
+
+        await qc.cancelQueries()
+        qc.clear()
+
+        localStorage.removeItem(ACCESS_TOKEN_KEY)
+        localStorage.removeItem(REFRESH_TOKEN_KEY)
+        localStorage.removeItem(SESSION_KEY)
+
+        setIsLoggedIn(false)
+        setSessionKey(null)
+    }
+
     const value = useMemo(() => {
         const authScope =
             isLoggedIn && sessionKey ? `auth:${sessionKey}` : null
@@ -145,6 +164,7 @@ export function AuthProvider({ children }) {
             login,
             socialLogin,
             logout,
+            logoutProcess,
 
             // 로딩
             isLoginLoading: loginMutation.isPending,

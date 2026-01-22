@@ -27,7 +27,6 @@ export function useLogoutMutation() {
     return useMutation({
         mutationFn: authApi.logout,
         onSuccess: () => {
-            showToast("로그아웃 되었습니다.", { type: "success" })
         },
     })
 }

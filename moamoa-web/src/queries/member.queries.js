@@ -27,3 +27,11 @@ export function useChangePasswordMutation() {
         },
     })
 }
+
+export function useUnjoinMutation() {
+    return useMutation({
+        mutationFn: memberApi.unjoin,
+        onError: async () => {
+        },
+    })
+}
