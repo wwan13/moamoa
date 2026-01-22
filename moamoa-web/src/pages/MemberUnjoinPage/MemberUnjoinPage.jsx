@@ -2,7 +2,7 @@ import styles from "./MemberUnjoinPage.module.css"
 import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner.jsx";
 import {useState} from "react";
 import Button from "../../components/ui/Button.jsx";
-import {useUnjoinMutation} from "../../queries/member.queries.js";
+import {useMemberSummaryQuery, useUnjoinMutation} from "../../queries/member.queries.js";
 import {showGlobalAlert, showGlobalConfirm, showToast} from "../../api/client.js";
 import {useNavigate} from "react-router-dom";
 import useAuth from "../../auth/AuthContext.jsx";
@@ -13,6 +13,9 @@ export function MemberUnjoinPage() {
     const navigate = useNavigate()
 
     const {logoutProcess} = useAuth()
+
+    const memberSummaryQuery = useMemberSummaryQuery()
+    const member = memberSummaryQuery.data
 
     const unjoinMutate = useUnjoinMutation()
 
@@ -57,7 +60,11 @@ export function MemberUnjoinPage() {
             <div className={styles.accountInfo}>
                 <p className={styles.accountTitle}>탈퇴하려는 계정</p>
                 <div className={styles.account}>
-                    wwan13@naver.com
+                    {memberSummaryQuery.isPending ? (
+                        <div className={styles.accountSkeleton}></div>
+                    ) : (
+                        <>{member?.email}</>
+                    )}
                 </div>
             </div>
 
