@@ -48,7 +48,7 @@ class TechBlogSubscriptionService(
                     techBlogId = command.techBlogId
                 )
                 techBlogSubscriptionRepository.save(subscription)
-                val event = TechBlogSubscribeCreatedEvent(memberId, command.techBlogId)
+                val event = TechBlogSubscribeUpdatedEvent(memberId, command.techBlogId)
                 eventPublisher.publish(defaultTopic, event)
                 true
             }

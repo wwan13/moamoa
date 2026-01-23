@@ -2,8 +2,7 @@ package server.feature.postbookmark.application
 
 import org.springframework.stereotype.Service
 import server.feature.post.command.domain.PostRepository
-import server.feature.postbookmark.domain.PostBookmarkCreatedEvent
-import server.feature.postbookmark.domain.PostBookmarkRemovedEvent
+import server.feature.postbookmark.domain.PostBookmarkUpdatedEvent
 import server.messaging.EventHandler
 import server.messaging.StreamDefinition
 import server.messaging.handleEvent
@@ -14,14 +13,9 @@ class PostBookmarkCountService(
     private val postRepository: PostRepository
 ) {
     @EventHandler
-    fun bookmarkCreated() =
-        handleEvent<PostBookmarkCreatedEvent>(countProcessingStream) { event ->
-            postRepository.incrementBookmarkCount(event.postId, +1)
-        }
-
-    @EventHandler
-    fun bookmarkRemoved() =
-        handleEvent<PostBookmarkRemovedEvent>(countProcessingStream) { event ->
-            postRepository.incrementBookmarkCount(event.postId, -1)
+    fun bookmarkUpdatedCountCalculate() =
+        handleEvent<PostBookmarkUpdatedEvent>(countProcessingStream) { event ->
+            val delta = if (event.bookmarked) 1L else -1L
+            postRepository.incrementBookmarkCount(event.postId, delta)
         }
 }

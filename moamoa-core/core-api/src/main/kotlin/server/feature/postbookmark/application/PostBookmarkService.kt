@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 import server.feature.post.command.application.PostData
 import server.feature.member.command.domain.MemberRepository
 import server.feature.post.command.domain.PostRepository
-import server.feature.postbookmark.domain.PostBookmarkCreatedEvent
+import server.feature.postbookmark.domain.PostBookmarkUpdatedEvent
 import server.feature.postbookmark.domain.PostBookmarkRemovedEvent
 import server.feature.postbookmark.domain.PostBookmarkRepository
 import server.feature.postbookmark.domain.PostBookmark
@@ -50,7 +50,7 @@ class PostBookmarkService(
                     postId = command.postId
                 )
                 postBookmarkRepository.save(postBookmark)
-                val event = PostBookmarkCreatedEvent(memberId, command.postId)
+                val event = PostBookmarkUpdatedEvent(memberId, command.postId)
                 eventPublisher.publish(defaultTopic, event)
                 true
             }

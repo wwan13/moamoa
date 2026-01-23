@@ -1,10 +1,8 @@
 package server.feature.post.command.application
 
 import org.springframework.stereotype.Service
-import server.feature.postbookmark.domain.PostBookmarkCreatedEvent
-import server.feature.postbookmark.domain.PostBookmarkRemovedEvent
-import server.feature.techblogsubscription.domain.TechBlogSubscribeCreatedEvent
-import server.feature.techblogsubscription.domain.TechBlogSubscribeRemovedEvent
+import server.feature.postbookmark.domain.PostBookmarkUpdatedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeUpdatedEvent
 import server.infra.cache.BookmarkedAllPostIdSetCache
 import server.infra.cache.BookmarkedPostListCache
 import server.infra.cache.PostStatsCache
@@ -23,28 +21,14 @@ class PostCacheEvictService(
 ) {
 
     @EventHandler
-    fun subscriptionCreatedPostCacheEvict() =
-        handleEvent<TechBlogSubscribeCreatedEvent>(postCacheHandlingStream) { event ->
+    fun subscriptionUpdatedPostCacheEvict() =
+        handleEvent<TechBlogSubscribeUpdatedEvent>(postCacheHandlingStream) { event ->
             subscribedPostListCache.evictAll(event.memberId)
         }
 
     @EventHandler
-    fun subscriptionRemovedPostCacheEvict() =
-        handleEvent<TechBlogSubscribeRemovedEvent>(postCacheHandlingStream) { event ->
-            subscribedPostListCache.evictAll(event.memberId)
-        }
-
-    @EventHandler
-    fun bookmarkCreatedPostCacheEvict() =
-        handleEvent<PostBookmarkCreatedEvent>(postCacheHandlingStream) { event ->
-            bookmarkedPostListCache.evictAll(event.memberId)
-            postStatsCache.evict(event.postId)
-            bookmarkedAllPostIdSetCache.evictAll(event.postId)
-        }
-
-    @EventHandler
-    fun bookmarkRemovedPostCacheEvict() =
-        handleEvent<PostBookmarkRemovedEvent>(postCacheHandlingStream) { event ->
+    fun bookmarkUpdatedPostCacheEvict() =
+        handleEvent<PostBookmarkUpdatedEvent>(postCacheHandlingStream) { event ->
             bookmarkedPostListCache.evictAll(event.memberId)
             postStatsCache.evict(event.postId)
             bookmarkedAllPostIdSetCache.evictAll(event.postId)

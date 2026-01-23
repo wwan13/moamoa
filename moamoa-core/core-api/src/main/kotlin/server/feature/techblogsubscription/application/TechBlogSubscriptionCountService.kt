@@ -2,8 +2,7 @@ package server.feature.techblogsubscription.application
 
 import org.springframework.stereotype.Service
 import server.feature.techblog.command.domain.TechBlogRepository
-import server.feature.techblogsubscription.domain.TechBlogSubscribeCreatedEvent
-import server.feature.techblogsubscription.domain.TechBlogSubscribeRemovedEvent
+import server.feature.techblogsubscription.domain.TechBlogSubscribeUpdatedEvent
 import server.messaging.EventHandler
 import server.messaging.StreamDefinition
 import server.messaging.handleEvent
@@ -14,14 +13,9 @@ class TechBlogSubscriptionCountService(
     private val techBlogRepository: TechBlogRepository
 ) {
     @EventHandler
-    fun subscriptionCreated() =
-        handleEvent<TechBlogSubscribeCreatedEvent>(countProcessingStream) { event ->
-            techBlogRepository.incrementSubscriptionCount(event.techBlogId, +1)
-        }
-
-    @EventHandler
-    fun subscriptionRemoved() =
-        handleEvent<TechBlogSubscribeRemovedEvent>(countProcessingStream) { event ->
-            techBlogRepository.incrementSubscriptionCount(event.techBlogId, -1)
+    fun subscriptionUpdatedCountCalculate() =
+        handleEvent<TechBlogSubscribeUpdatedEvent>(countProcessingStream) { event ->
+            val delta = if (event.subscribed) +1L else -1L
+            techBlogRepository.incrementSubscriptionCount(event.techBlogId, delta)
         }
 }
