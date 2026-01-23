@@ -75,7 +75,10 @@ export default function MyPage() {
                                     sx={{fontSize: 26, color: "#3B4953", fontWeight: 800}}
                                 />
                             </div>
-                            <span className={styles.statValue}>{member?.subscribeCount}</span>
+                            <div
+                                className={styles.statValue}
+                                onClick={() => navigate("/?type=subscribed")}
+                            >{member?.subscribeCount}</div>
                         </div>
                         <div className={styles.stat}>
                             <div className={styles.statTitle}>
@@ -85,7 +88,10 @@ export default function MyPage() {
                                     sx={{fontSize: 26, color: "#90AB8B", fontWeight: 800}}
                                 />
                             </div>
-                            <span className={styles.statValue}>{member?.bookmarkCount}</span>
+                            <div
+                                className={styles.statValue}
+                                onClick={() => navigate("/?type=bookmarked")}
+                            >{member?.bookmarkCount}</div>
                         </div>
                     </div>
                 </div>
