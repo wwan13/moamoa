@@ -37,7 +37,7 @@ class TechBlogSubscriptionService(
         val subscribing = techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
             ?.let { subscription ->
                 techBlogSubscriptionRepository.deleteById(subscription.id)
-                val event = TechBlogSubscribeRemovedEvent(memberId, command.techBlogId)
+                val event = TechBlogSubscribeUpdatedEvent(memberId, command.techBlogId, false)
                 eventPublisher.publish(defaultTopic, event)
                 false
             }
@@ -48,7 +48,7 @@ class TechBlogSubscriptionService(
                     techBlogId = command.techBlogId
                 )
                 techBlogSubscriptionRepository.save(subscription)
-                val event = TechBlogSubscribeUpdatedEvent(memberId, command.techBlogId)
+                val event = TechBlogSubscribeUpdatedEvent(memberId, command.techBlogId, true)
                 eventPublisher.publish(defaultTopic, event)
                 true
             }
@@ -68,11 +68,7 @@ class TechBlogSubscriptionService(
         )
         techBlogSubscriptionRepository.save(updated)
 
-        val event = if (updated.notificationEnabled) {
-            NotificationEnabledEvent(memberId, command.techBlogId)
-        } else {
-            NotificationDisabledEvent(memberId, command.techBlogId)
-        }
+        val event = NotificationUpdatedEvent(memberId, command.techBlogId, updated.notificationEnabled)
         eventPublisher.publish(defaultTopic, event)
 
         NotificationEnabledToggleResult(updated.notificationEnabled)
