@@ -54,6 +54,7 @@ jobs:
           username: ${{ secrets.HOME_REMOTE_USERNAME }}
           key: ${{ secrets.HOME_REMOTE_PRIVATE_KEY }}
           script: |
+            export PATH="/usr/local/bin:$PATH"
             cd ~/dev/infra
-            sudo docker compose -f docker/moamoa/docker-compose.moamoa.yml pull
-            sudo docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d
+            docker compose -f docker/moamoa/docker-compose.moamoa.yml pull
+            docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d
