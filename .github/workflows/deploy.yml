@@ -55,5 +55,5 @@ jobs:
           key: ${{ secrets.HOME_REMOTE_PRIVATE_KEY }}
           script: |
             cd ~/dev/infra
-            docker compose -f docker/moamoa/docker-compose.moamoa.yml pull
-            docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d
+            sudo docker compose -f docker/moamoa/docker-compose.moamoa.yml pull
+            sudo docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d
