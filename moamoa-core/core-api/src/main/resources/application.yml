@@ -39,6 +39,7 @@ spring:
       - mail
       - redis
       - security
+      - batch
 
 server:
   forward-headers-strategy: framework

@@ -1,5 +1,4 @@
 tasks.getByName("bootJar") {
-    dependsOn(":moamoa-admin:build")
     enabled = true
 }
 
@@ -24,4 +23,5 @@ dependencies {
     implementation(project(":moamoa-support:support-templates"))
 
     implementation(project(":moamoa-admin"))
+    implementation(project(":moamoa-core:core-batch"))
 }
