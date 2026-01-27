@@ -1,0 +1,4 @@
+- Prefer Kotlin + Spring Boot best practices
+- Do not expose JPA entities in API responses
+- Transactions in service layer only
+- Tests: JUnit5 + MockK
