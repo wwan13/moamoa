@@ -121,6 +121,23 @@ export default function TechBlogsPage() {
         e.stopPropagation()
     }
 
+    const handleSubmissionButton = async () => {
+        if (!isLoggedIn) {
+            const ok = await showGlobalConfirm({
+                title : "로그인",
+                message : "로그인이 필요한 기능입니다. 로그인 하시겠습니까?",
+                confirmText : "로그인"
+            })
+            if (!ok) {
+                return
+            }
+            openLogin()
+            return
+        }
+
+        navigate("/submission")
+    }
+
     return (
         <div className={styles.wrap}>
             <section className={styles.info}>
@@ -139,7 +156,7 @@ export default function TechBlogsPage() {
                         <div className={styles.ctaRow}>
                             <button
                                 className={styles.primaryButton}
-                                onClick={() => navigate("/submission")}
+                                onClick={handleSubmissionButton}
                             >요청하기</button>
                         </div>
                     </div>
