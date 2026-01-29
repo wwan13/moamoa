@@ -4,7 +4,7 @@
 
 ## 전체 구조
 - **멀티모듈 Gradle (Kotlin DSL)**
-- **Backend**: Spring Boot 3.5.7 + Kotlin 1.9.25 + Java 21, WebFlux 기반
+- **Backend**: Spring Boot 3.5.10 + Kotlin 2.3.0 + Java 24, WebFlux 기반
 - **Frontend**: `moamoa-web` (Vite + React)
 
 ## 모듈 구성 (Backend)

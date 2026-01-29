@@ -19,7 +19,7 @@ internal class AdminPostController(
     @PostMapping("init")
     suspend fun initPosts(
         @RequestBody @Valid command: AdminInitPostsCommand
-    ): ResponseEntity<AdminInitPostsResult?> {
+    ): ResponseEntity<AdminInitPostsResult> {
         val response = postService.initPosts(command)
         return ResponseEntity.ok(response)
     }
