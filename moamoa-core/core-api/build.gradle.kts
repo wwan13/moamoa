@@ -21,6 +21,9 @@ dependencies {
     implementation(project(":moamoa-infra:infra-security"))
     implementation(project(":moamoa-support:support-api-docs"))
     implementation(project(":moamoa-support:support-templates"))
+    implementation(project(":moamoa-support:support-webhook"))
+    implementation(project(":moamoa-support:support-logging"))
+    implementation(project(":moamoa-support:support-monitoring"))
 
     implementation(project(":moamoa-admin"))
     implementation(project(":moamoa-core:core-batch"))

@@ -1,0 +1,4 @@
+webhook:
+  batch: ${DISCORD_BATCH}
+  service: ${DISCORD_SERVICE}
+  error: ${DISCORD_ERROR}

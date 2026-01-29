@@ -15,6 +15,9 @@ include("moamoa-infra:infra-ai")
 include("moamoa-support")
 include("moamoa-support:support-api-docs")
 include("moamoa-support:support-templates")
+include("moamoa-support:support-monitoring")
+include("moamoa-support:support-webhook")
+include("moamoa-support:support-logging")
 
 include("moamoa-admin")
 
