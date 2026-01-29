@@ -30,9 +30,9 @@ class SubmissionService(
         val saved = submissionRepository.save(submission)
 
         val event = SubmissionCreateEvent(
-            submissionId = submission.id,
-            blogTitle = command.blogTitle,
-            blogUrl = command.blogUrl,
+            submissionId = saved.id,
+            blogTitle = saved.blogTitle,
+            blogUrl = saved.blogUrl,
         )
         eventPublisher.publish(defaultTopic, event)
 
