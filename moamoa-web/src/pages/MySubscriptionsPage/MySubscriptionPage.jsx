@@ -27,7 +27,9 @@ export default function MySubscriptionPage() {
         }
 
         return techBlogs.map((techBlog) => (
-            <TechBlogItem key={techBlog.id} techBlog={techBlog} />
+            <TechBlogItem key={techBlog.id} techBlog={techBlog} onItemClickClick={() => {
+                navigate(`/${techBlog.key}`)
+            }} />
         ))
     }, [techBlogsQuery.isPending, techBlogs])
 

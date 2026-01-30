@@ -8,14 +8,17 @@ import {
     useSubscriptionToggleMutation,
     useNotificationToggleMutation,
 } from "../../queries/techBlogSubscription.queries.js"
+import {useNavigate} from "react-router-dom";
 
-export default function TechBlogItem({ techBlog, isSkeleton = false }) {
+export default function TechBlogItem({techBlog, isSkeleton = false, onItemClickClick }) {
     const qc = useQueryClient()
     const { authScope, isLoggedIn, openLogin } = useAuth()
 
     const subToggle = useSubscriptionToggleMutation({ invalidateOnSuccess: false })
     const notiToggle = useNotificationToggleMutation()
     const isMutating = subToggle.isPending || notiToggle.isPending
+
+    const navigate = useNavigate()
 
     const patchBlog = (techBlogId, patcher) => {
         qc.setQueriesData(
@@ -142,7 +145,7 @@ export default function TechBlogItem({ techBlog, isSkeleton = false }) {
     }
 
     return (
-        <div className={styles.item}>
+        <div className={styles.item} onClick={onItemClickClick}>
             <div className={styles.iconWrap}>
                 <img src={techBlog.icon} alt="icon" className={styles.icon} />
             </div>

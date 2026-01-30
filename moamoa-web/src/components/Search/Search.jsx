@@ -7,6 +7,7 @@ import {useTechBlogsQuery} from "../../queries/techBlog.queries.js";
 import useDebouncedValue from "../../hooks/useDebouncedValue.js";
 import TechBlogItem from "../TechBlogItem/TechBlogItem.jsx";
 import {DotLottieReact} from "@lottiefiles/dotlottie-react";
+import {useNavigate} from "react-router-dom";
 
 export default function Search({open, onClose}) {
     if (!open) return null
@@ -15,6 +16,8 @@ export default function Search({open, onClose}) {
     const inputRef = useRef(null)
 
     const restoreRef = useRef(null)
+
+    const navigate = useNavigate()
 
     // ✅ 모달 열릴 때 input focus
     useEffect(() => {
@@ -64,7 +67,7 @@ export default function Search({open, onClose}) {
         <div className={styles.wrap}>
             <div className={styles.contentWrap}>
                 <div className={styles.titleWrap}>
-                    <div className={styles.icon}>
+                    <div className={styles.icon} onClick={onClose}>
                         <img alt="moamoa" src="https://i.imgur.com/nqleqcc.png"/>
                     </div>
 
@@ -101,7 +104,10 @@ export default function Search({open, onClose}) {
                             {techBlogs.length > 0 && (
                                 <div className={styles.techBlogs}>
                                     {(techBlogs ?? []).map((techBlog) => (
-                                        <TechBlogItem key={techBlog.id} techBlog={techBlog} />
+                                        <TechBlogItem key={techBlog.id} techBlog={techBlog} onItemClickClick={() => {
+                                            onClose()
+                                            navigate(`/${techBlog.key}`)
+                                        }} />
                                     ))}
                                 </div>
                             )}
