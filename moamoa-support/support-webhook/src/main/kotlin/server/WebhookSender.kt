@@ -16,7 +16,7 @@ class WebhookSender internal constructor(
     private val webhookScope: CoroutineScope
 ) {
 
-    suspend fun sendAsync(content: WebhookContent) =
+    fun sendAsync(content: WebhookContent) =
         webhookScope.launch {
             send(content)
         }
