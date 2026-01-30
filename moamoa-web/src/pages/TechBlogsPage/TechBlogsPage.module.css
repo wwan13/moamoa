@@ -296,7 +296,7 @@
 }
 
 .skeletonLine {
-    height: 16px;
+    height: 19px;
     width: 70%;
     margin-top: 12px;
 }
@@ -308,13 +308,13 @@
 }
 
 .skeletonLineShort {
-    height: 12px;
+    height: 14px;
     width: 90%;
     margin-top: 8px;
 }
 
 .skeletonBtn {
-    height: 16px;
+    height: 19px;
     width: 72px;
     border-radius: 10px;
 }

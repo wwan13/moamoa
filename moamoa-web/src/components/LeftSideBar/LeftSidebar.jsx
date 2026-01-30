@@ -1,9 +1,6 @@
-import { useEffect, useState } from "react"
 import styles from "./LeftSidebar.module.css"
 import Subscriptions from "../Subscriptions/Subscriptions.jsx"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
-
-const SKELETON_DELAY_MS = 1000
 
 export default function LeftSidebar({
                                         subscriptions = [],
@@ -17,20 +14,7 @@ export default function LeftSidebar({
     const isBookmarkedActive = type === "bookmarked"
     const isSubscribedTabActive = type === "subscribed" && !blogKey
 
-    // ✅ 1초 이상일 때만 로딩 상태 전파
-    const [showSkeleton, setShowSkeleton] = useState(false)
-
-    useEffect(() => {
-        let timer = null
-        if (isLoading) {
-            timer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS)
-        } else {
-            setShowSkeleton(false)
-        }
-        return () => timer && clearTimeout(timer)
-    }, [isLoading])
-
-    const disabled = showSkeleton
+    const disabled = isLoading
 
     return (
         <aside className={styles.wrap}>
@@ -50,7 +34,7 @@ export default function LeftSidebar({
                 activeBlogKey={blogKey}
                 onClickHeader={() => onSelectType("subscribed")}
                 onClickItem={(item) => onSelectBlog(item.key)}
-                isLoading={showSkeleton}
+                isLoading={isLoading}
             />
 
             <button

@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom"
 import { useSubscribingTechBlogsQuery } from "../../queries/techBlog.queries.js"
 import TechBlogItem from "../../components/TechBlogItem/TechBlogItem.jsx"
 
-const SKELETON_DELAY_MS = 300
 const SKELETON_COUNT = 8
 
 export default function MySubscriptionPage() {
@@ -20,19 +19,8 @@ export default function MySubscriptionPage() {
     const techBlogsQuery = useSubscribingTechBlogsQuery()
     const techBlogs = techBlogsQuery.data?.techBlogs ?? []
 
-    const [showSkeleton, setShowSkeleton] = useState(false)
-    useEffect(() => {
-        let timer = null
-        if (techBlogsQuery.isPending) {
-            timer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS)
-        } else {
-            setShowSkeleton(false)
-        }
-        return () => timer && clearTimeout(timer)
-    }, [techBlogsQuery.isPending])
-
     const list = useMemo(() => {
-        if (showSkeleton) {
+        if (techBlogsQuery.isPending) {
             return Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                 <TechBlogItem key={`s-${i}`} isSkeleton />
             ))
@@ -41,7 +29,7 @@ export default function MySubscriptionPage() {
         return techBlogs.map((techBlog) => (
             <TechBlogItem key={techBlog.id} techBlog={techBlog} />
         ))
-    }, [showSkeleton, techBlogs])
+    }, [techBlogsQuery.isPending, techBlogs])
 
     return (
         <div className={styles.wrap}>

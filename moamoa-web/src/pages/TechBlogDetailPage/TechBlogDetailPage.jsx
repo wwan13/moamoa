@@ -11,8 +11,6 @@ import {useSubscribingTechBlogsQuery, useTechBlogByKeyQuery} from "../../queries
 import { usePostsByTechBlogKeyQuery } from "../../queries/post.queries.js"
 import { useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
 
-const SKELETON_DELAY_MS = 1000
-
 export default function TechBlogDetailPage() {
     const { isLoggedIn, openLogin } = useAuth()
     const navigate = useNavigate()
@@ -80,16 +78,6 @@ export default function TechBlogDetailPage() {
         window.scrollTo({ top: 0, behavior: "smooth" })
     }, [key, page])
 
-    // ✅ (조회) 1초 이상만 스켈레톤: PostList 내부가 처리하지만, 상단도 같이 쓰고 싶으면 여기서도 쓸 수 있음
-    const [showHeaderSkeleton, setShowHeaderSkeleton] = useState(false)
-    useEffect(() => {
-        let timer = null
-        const loading = techBlogQuery.isPending
-        if (loading) timer = setTimeout(() => setShowHeaderSkeleton(true), SKELETON_DELAY_MS)
-        else setShowHeaderSkeleton(false)
-        return () => timer && clearTimeout(timer)
-    }, [techBlogQuery.isPending])
-
     const onSubButtonToggle = async () => {
         if (!isLoggedIn) {
             const ok = await showGlobalConfirm({
@@ -139,8 +127,8 @@ export default function TechBlogDetailPage() {
         <>
             <div className={styles.blogInfo}>
                 <div className={styles.iconWrap}>
-                    {showHeaderSkeleton ? (
-                        <div className={`${styles.icon} ${styles.skeleton}`} />
+                    {techBlogQuery.isPending ? (
+                        <div className={`${styles.icon} ${styles.skeleton} ${styles.skeletonIcon}`} />
                     ) : (
                         <img src={techBlog?.icon || ""} alt="icon" className={styles.icon} />
                     )}
@@ -148,7 +136,7 @@ export default function TechBlogDetailPage() {
 
                 <div className={styles.detail}>
                     <div className={styles.blogDetail}>
-                        {showHeaderSkeleton ? (
+                        {techBlogQuery.isPending ? (
                             <>
                                 <div className={`${styles.skeletonLine} ${styles.skeleton}`} />
                                 <div className={`${styles.skeletonLineShort} ${styles.skeleton}`} />

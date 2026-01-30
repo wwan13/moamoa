@@ -23,13 +23,18 @@
 }
 
 .iconWrap {
-    box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.05);
+    width: 140px;
+    height: 140px;
     border-radius: 100%;
+    box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.05);
+    display: block;
+    overflow: hidden;
 }
 
 .icon {
-    width: 140px;
-    border-radius: 100%;
+    width: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .detail {
@@ -109,6 +114,12 @@
 @keyframes shimmer {
     0% { background-position: 100% 0; }
     100% { background-position: 0 0; }
+}
+
+.skeletonIcon {
+    height: 140px;
+    width: 140px;
+    background: #ffffff;
 }
 
 .skeletonLine {

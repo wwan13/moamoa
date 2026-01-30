@@ -2,8 +2,6 @@ import { useEffect, useState } from "react"
 import styles from "./CategoryTabs.module.css"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
-const SKELETON_DELAY_MS = 1000
-
 export default function CategoryTabs({
                                          items = [],
                                          id,
@@ -12,24 +10,12 @@ export default function CategoryTabs({
                                          onClickSubscriptions,
                                          isLoading = false, // query 로딩
                                      }) {
-    // ✅ 1초 이상일 때만 스켈레톤 표시
-    const [showSkeleton, setShowSkeleton] = useState(false)
-
-    useEffect(() => {
-        let timer = null
-        if (isLoading) {
-            timer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS)
-        } else {
-            setShowSkeleton(false)
-        }
-        return () => timer && clearTimeout(timer)
-    }, [isLoading])
 
     return (
         <div className={styles.wrap}>
             <nav className={styles.tab} aria-label="카테고리">
                 <div className={styles.tabList}>
-                    {showSkeleton
+                    {isLoading
                         ? Array.from({ length: 6 }).map((_, i) => (
                             <div key={i} className={`${styles.skeletonTab}`} />
                         ))
