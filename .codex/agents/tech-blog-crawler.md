@@ -118,6 +118,19 @@ description: "moamoa 기술 블로그 크롤러를 추가·수정할 때 사용�
 - 날짜 포맷은 사이트별로 다르므로 `DateTimeFormatter` 다중 시도 패턴을 사용
 - 상세 요청은 과도한 병렬을 피한다 (예: `flatMapMerge(concurrency = 10)` 수준)
 
+### 셀렉터 안정성 규칙 (JSoup)
+- `c-xxxx`, `sc-xxxx`, `css-xxxx`, `jsx-xxxx` 등 **빌드/배포마다 변할 수 있는 해시/자동생성 클래스**에 의존하지 않는다.
+- 해시 클래스가 주로 보이는 사이트는 다음 우선순위로 **구조 기반**으로 파싱한다.
+  1) **href 패턴 기반**: `a[href^=/blog/]`, `a[href*=/posts/]` 등 “게시글 링크”를 먼저 잡는다.
+    - 카테고리/태그/검색 링크는 제외(`href startsWith /category/`, `/tag/`, `/search` 등)
+  2) **카드 범위 추적**: 링크 엘리먼트에서 `closest("article")`, `closest("li")`, `closest("div")` 등으로 카드 컨테이너를 찾는다.
+    - 카드 컨테이너가 없으면 **즉시 실패(IllegalStateException)** 하여 구조 변경을 빠르게 감지한다.
+  3) **시맨틱/표준 속성 활용**: `time[datetime]`, `meta[property=og:image]`, `img[src]`, `h1/h2/h3` 등 표준 태그/속성을 우선 사용한다.
+  4) **텍스트/정규식 보조**: 날짜는 regex로 추출, description은 제목/날짜/카테고리 라벨 제거 후 첫 후보를 선택한다.
+- “해시 클래스 기반 셀렉터”는 **마지막 수단**이며, 사용 시 반드시:
+  - 대체 셀렉터(구조 기반) 1개 이상을 함께 두고
+  - 실패 시 `IllegalStateException(blogKey,url,field)`로 fail-fast 한다.
+
 ### 참고 구현
 - 목록+상세 파싱: `server.techblogs.kakaopay.KakaoPaySource`
 - 반복 페이지 감지: `server.techblogs.buzzvil.BuzzvilSource`
