@@ -201,7 +201,7 @@ class ApiControllerAdvice(
             description = "알 수 없는 오류가 발생했습니다.",
             fields = listOf(
                 "apiPath" to exchange.request.path.value(),
-                "errorMessage" to e.message,
+                "errorMessage" to e.message.orEmpty(),
                 "stackTrace" to e.stackTraceToString(),
             )
         )
