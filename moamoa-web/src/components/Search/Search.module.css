@@ -30,6 +30,7 @@
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    cursor: pointer;
 }
 
 .cancelButton {
@@ -37,6 +38,7 @@
     border: none;
     outline: none;
     margin-left: auto;
+    cursor: pointer;
 }
 
 .searchInput {

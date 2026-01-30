@@ -57,17 +57,16 @@ export default function Search({open, onClose}) {
         ? (searchTechBlogsQuery.data?.techBlogs ?? [])
         : []
 
-    const isLoading = isSearching
-        ? (searchPostsQuery.isPending || searchTechBlogsQuery.isPending)
-        : (initialPostsQuery.isPending)
-
     const onInputChange = (e) => setQuery(e.target.value)
 
     return (
         <div className={styles.wrap}>
             <div className={styles.contentWrap}>
                 <div className={styles.titleWrap}>
-                    <div className={styles.icon} onClick={onClose}>
+                    <div className={styles.icon} onClick={() => {
+                        navigate("/")
+                        onClose()
+                    }}>
                         <img alt="moamoa" src="https://i.imgur.com/nqleqcc.png"/>
                     </div>
 
