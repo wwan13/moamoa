@@ -156,7 +156,10 @@ export default function TechBlogItem({techBlog, isSkeleton = false, onItemClickC
                     <p className={styles.techBlogSub}>
                         구독자 {techBlog.subscriptionCount}명 · 게시글 {techBlog.postCount}개
                     </p>
-                    <p className={styles.techBlogUrl}>{techBlog.blogUrl}</p>
+                    <p
+                        className={styles.techBlogUrl}
+                        onClick={() => techBlog?.blogUrl && window.open(techBlog.blogUrl)}
+                    >{techBlog.blogUrl}</p>
                 </div>
 
                 <div className={styles.right}>
