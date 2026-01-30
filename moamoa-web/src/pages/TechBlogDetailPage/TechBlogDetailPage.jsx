@@ -174,7 +174,7 @@ export default function TechBlogDetailPage() {
                     <PostList
                         posts={posts}
                         totalPages={totalPages}
-                        type="subscribed"
+                        type="blogDetail"
                         isBlogDetail
                         emptyMessage="기술 블로그에 게시글이 존재하지 않습니다."
                         isLoading={postsQuery.isPending}
