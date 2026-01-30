@@ -40,6 +40,9 @@ spring:
       - redis
       - security
       - batch
+      - webhook
+      - logging
+      - monitoring
 
 server:
   forward-headers-strategy: framework

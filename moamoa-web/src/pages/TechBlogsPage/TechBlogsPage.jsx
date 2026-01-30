@@ -10,7 +10,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import {useSubscribingTechBlogsQuery, useTechBlogsQuery} from "../../queries/techBlog.queries.js"
 import { useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
 
-const SKELETON_DELAY_MS = 300
 const SKELETON_COUNT = 12
 
 export default function TechBlogsPage() {
@@ -22,21 +21,6 @@ export default function TechBlogsPage() {
 
     // ✅ tech blogs list (query)
     const techBlogsQuery = useTechBlogsQuery()
-
-    // ✅ my subscriptions (query) - 로그인 시에만
-    const subsQuery = useSubscribingTechBlogsQuery()
-
-    // ✅ 1초 이상일 때만 스켈레톤
-    const [showSkeleton, setShowSkeleton] = useState(false)
-    useEffect(() => {
-        let timer = null
-        if (techBlogsQuery.isPending) {
-            timer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS)
-        } else {
-            setShowSkeleton(false)
-        }
-        return () => timer && clearTimeout(timer)
-    }, [techBlogsQuery.isPending])
 
     const rawBlogs = techBlogsQuery.data?.techBlogs ?? []
     const totalCount = techBlogsQuery.data?.meta?.totalCount ?? rawBlogs.length
@@ -121,6 +105,23 @@ export default function TechBlogsPage() {
         e.stopPropagation()
     }
 
+    const handleSubmissionButton = async () => {
+        if (!isLoggedIn) {
+            const ok = await showGlobalConfirm({
+                title : "로그인",
+                message : "로그인이 필요한 기능입니다. 로그인 하시겠습니까?",
+                confirmText : "로그인"
+            })
+            if (!ok) {
+                return
+            }
+            openLogin()
+            return
+        }
+
+        navigate("/submission")
+    }
+
     return (
         <div className={styles.wrap}>
             <section className={styles.info}>
@@ -139,7 +140,7 @@ export default function TechBlogsPage() {
                         <div className={styles.ctaRow}>
                             <button
                                 className={styles.primaryButton}
-                                onClick={() => navigate("/submission")}
+                                onClick={handleSubmissionButton}
                             >요청하기</button>
                         </div>
                     </div>
@@ -154,12 +155,12 @@ export default function TechBlogsPage() {
                             placeholder="검색"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            disabled={showSkeleton}
+                            disabled={techBlogsQuery.isPending}
                         />
                     </div>
                 </div>
 
-                {showSkeleton ? (
+                {techBlogsQuery.isPending ? (
                     <div className={styles.grid} aria-busy="true">
                         {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                             <article key={`s-${i}`} className={`${styles.card} ${styles.skeletonCard}`}>

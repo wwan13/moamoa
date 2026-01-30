@@ -40,3 +40,10 @@ out/
 .kotlin
 
 .env
+
+.ai/
+.aiassistant/
+
+#.codex/
+
+/log

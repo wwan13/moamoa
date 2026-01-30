@@ -1,13 +1,13 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.api.tasks.compile.JavaCompile
 
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.5.7"
+    kotlin("jvm") version "2.3.0"
+    kotlin("plugin.spring") version "2.3.0"
+    id("org.springframework.boot") version "3.5.10"
     id("io.spring.dependency-management") version "1.1.7"
 }
-
-java.sourceCompatibility = JavaVersion.valueOf("VERSION_21")
 
 allprojects {
     group = ""
@@ -23,9 +23,6 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.plugin.spring")
     apply(plugin = "org.springframework.boot")
     apply(plugin = "io.spring.dependency-management")
-
-    dependencyManagement {
-    }
 
     dependencies {
         // Spring, Kotlin
@@ -43,19 +40,33 @@ subprojects {
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     }
 
-    tasks.getByName("bootJar") {
+    // ✅ JDK는 24를 사용 (로컬/CI/Docker에서 JDK 24로 통일 가능)
+    kotlin {
+        jvmToolchain(24)
+    }
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(24)
+        }
+    }
+
+    // ✅ 산출물(바이트코드) 타겟은 21로 통일
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+            freeCompilerArgs.add("-Xjsr305=strict")
+        }
+    }
+
+    tasks.withType<JavaCompile>().configureEach {
+        options.release.set(21)
+    }
+
+    // 멀티모듈 라이브러리 모듈은 bootJar 끄고 jar 켜기
+    tasks.named("bootJar") {
         enabled = false
     }
-
-    tasks.getByName("jar") {
+    tasks.named("jar") {
         enabled = true
-    }
-
-    java.sourceCompatibility = JavaVersion.valueOf("VERSION_21")
-    tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            freeCompilerArgs = listOf("-Xjsr305=strict")
-            jvmTarget = "21"
-        }
     }
 }

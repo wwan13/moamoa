@@ -6,7 +6,6 @@ import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 const SKELETON_COUNT = 8
-const SKELETON_DELAY_MS = 300
 
 export default function PostList({
                                      posts = [],
@@ -22,25 +21,6 @@ export default function PostList({
     const [categories, setCategories] = useState([])
     const [selected, setSelected] = useState(0)
     const navigate = useNavigate()
-
-    // ✅ 스켈레톤 표시 여부 (딜레이 적용)
-    const [showSkeleton, setShowSkeleton] = useState(false)
-
-    useEffect(() => {
-        let timer = null
-
-        if (isLoading) {
-            timer = setTimeout(() => {
-                setShowSkeleton(true)
-            }, SKELETON_DELAY_MS)
-        } else {
-            setShowSkeleton(false)
-        }
-
-        return () => {
-            if (timer) clearTimeout(timer)
-        }
-    }, [isLoading])
 
     useEffect(() => {
         setCategories([{ id: 0, key: "ALL", title: "전체" }])
@@ -65,11 +45,11 @@ export default function PostList({
                 onChange={(next) => setSelected(next)}
                 isSubscribing={type === "subscribed"}
                 onClickSubscriptions={() => navigate("/subscription")}
-                isLoading={showSkeleton}
+                isLoading={false}
             />
 
             <div className={styles.list}>
-                {showSkeleton ? (
+                {isLoading ? (
                     Array.from({ length: SKELETON_COUNT }).map((_, idx) => (
                         <PostItem key={`s-${idx}`} isLoading isBlogDetail={isBlogDetail} />
                     ))

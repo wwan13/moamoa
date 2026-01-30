@@ -54,4 +54,15 @@ class EventConfig {
         blocking = false,
         batchSize = 10,
     )
+
+    @Bean
+    fun monitoringStream(
+        defaultTopic: StreamTopic,
+    ): StreamDefinition = StreamDefinition(
+        topic = defaultTopic,
+        group = "monitoring-group",
+        ackWhenFail = false,
+        blocking = false,
+        batchSize = 10,
+    )
 }

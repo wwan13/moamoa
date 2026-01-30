@@ -1,12 +1,16 @@
 package server.feature.member.command.application
 
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import server.feature.member.command.domain.Member
+import server.feature.member.command.domain.MemberCreateEvent
 import server.feature.member.command.domain.MemberRepository
 import server.feature.member.command.domain.Provider
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.SocialMemberSessionCache
 import server.infra.db.Transactional
+import server.messaging.StreamEventPublisher
+import server.messaging.StreamTopic
 import server.password.PasswordEncoder
 import server.security.Passport
 import server.security.UnauthorizedException
@@ -19,6 +23,8 @@ class MemberService(
     private val emailVerificationCache: EmailVerificationCache,
     private val passwordEncoder: PasswordEncoder,
     private val socialMemberSessionCache: SocialMemberSessionCache,
+    private val defaultTopic: StreamTopic,
+    private val eventPublisher: StreamEventPublisher
 ) {
 
     suspend fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
@@ -60,7 +66,15 @@ class MemberService(
         if (memberRepository.existsByEmail(member.email)) {
             throw IllegalArgumentException("이미 가입된 이메일 입니다.")
         }
-        return memberRepository.save(member).let(::MemberData)
+        val saved = memberRepository.save(member)
+
+        val event = MemberCreateEvent(
+            memberId = saved.id,
+            email = saved.email,
+        )
+        eventPublisher.publish(defaultTopic, event)
+
+        return MemberData(saved)
     }
 
     suspend fun findById(memberId: Long): MemberData? {

@@ -3,8 +3,6 @@ import styles from "./Subscriptions.module.css"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
-const SKELETON_DELAY_MS = 300
-
 export default function Subscriptions({
                                           items,
                                           maxVisible = 5,
@@ -19,18 +17,6 @@ export default function Subscriptions({
     // ✅ items를 무조건 배열로 보정 (라우팅/캐시 타이밍으로 객체/undefined가 들어와도 안전)
     const safeItems = useMemo(() => (Array.isArray(items) ? items : []), [items])
 
-    // ✅ 300ms 이상 로딩일 때만 스켈레톤 표시
-    const [showSkeleton, setShowSkeleton] = useState(false)
-    useEffect(() => {
-        let timer = null
-        if (isLoading) {
-            timer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS)
-        } else {
-            setShowSkeleton(false)
-        }
-        return () => timer && clearTimeout(timer)
-    }, [isLoading])
-
     // ✅ 더보기 여부/보이는 목록 계산
     const hasMore = safeItems.length > maxVisible
     const visibleItems = useMemo(() => {
@@ -39,7 +25,7 @@ export default function Subscriptions({
     }, [safeItems, expanded, hasMore, maxVisible])
 
     // ✅ 스켈레톤
-    if (showSkeleton) {
+    if (isLoading) {
         return (
             <div className={styles.wrap} aria-busy="true">
                 <button
