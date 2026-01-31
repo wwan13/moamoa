@@ -11,13 +11,13 @@ class TechBlogPostListCache(
     private val prefix = "POST:LIST:TECHBLOG:"
     private val thirtyMinutes: Long = 1_800_000L
 
-    private fun key(techBlogKey: String, page: Long) =
-        "$prefix$techBlogKey:PAGE:$page"
+    private fun key(techBlogId: Long, page: Long) =
+        "$prefix$techBlogId:PAGE:$page"
 
-    suspend fun get(techBlogKey: String, page: Long): List<PostSummary>? =
-        cacheMemory.get(key(techBlogKey, page))
+    suspend fun get(techBlogId: Long, page: Long): List<PostSummary>? =
+        cacheMemory.get(key(techBlogId, page))
 
-    suspend fun set(techBlogKey: String, page: Long, posts: List<PostSummary>) {
-        cacheMemory.set(key(techBlogKey, page), posts, thirtyMinutes)
+    suspend fun set(techBlogId: Long, page: Long, posts: List<PostSummary>) {
+        cacheMemory.set(key(techBlogId, page), posts, thirtyMinutes)
     }
 }

@@ -34,8 +34,8 @@ class TechBlogPostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCountDeferred = async { countByTechBlogKey(conditions.techBlogKey) }
-        val basePostsDeferred = async { loadPosts(paging, conditions.techBlogKey) }
+        val totalCountDeferred = async { countByTechBlogKey(conditions.techBlogId) }
+        val basePostsDeferred = async { loadPosts(paging, conditions.techBlogId) }
 
         val totalCount = totalCountDeferred.await()
         val basePosts = basePostsDeferred.await()
@@ -79,25 +79,25 @@ class TechBlogPostQueryService(
 
     private suspend fun loadPosts(
         paging: Paging,
-        techBlogKey: String,
+        techBlogId: Long,
     ): List<PostSummary> {
         if (paging.page > 5) {
-            return fetchBasePostsByTechBlogKey(paging, techBlogKey).toList()
+            return fetchBasePostsByTechBlogKey(paging, techBlogId).toList()
         }
 
-        val cached = techBlogPostListCache.get(techBlogKey, paging.page)
+        val cached = techBlogPostListCache.get(techBlogId, paging.page)
         if (cached != null) return cached
 
-        return fetchBasePostsByTechBlogKey(paging, techBlogKey).toList().also {
+        return fetchBasePostsByTechBlogKey(paging, techBlogId).toList().also {
             cacheWarmupScope.launch {
-                techBlogPostListCache.set(techBlogKey, paging.page, it)
+                techBlogPostListCache.set(techBlogId, paging.page, it)
             }
         }
     }
 
     private suspend fun fetchBasePostsByTechBlogKey(
         paging: Paging,
-        techBlogKey: String,
+        techBlogId: Long,
     ): Flow<PostSummary> {
         val offset = (paging.page - 1L) * paging.size
 
@@ -106,13 +106,13 @@ class TechBlogPostQueryService(
                 0 AS is_bookmarked
             FROM post p
             INNER JOIN tech_blog t ON t.id = p.tech_blog_id
-            WHERE t.tech_blog_key = :techBlogKey
+            WHERE t.id = :techBlogId
             ORDER BY p.published_at DESC
             LIMIT :limit OFFSET :offset
         """.trimIndent()
 
         return databaseClient.sql(sql)
-            .bind("techBlogKey", techBlogKey)
+            .bind("techBlogId", techBlogId)
             .bind("limit", paging.size)
             .bind("offset", offset)
             .map { row, _ -> mapToPostSummary(row) }
@@ -120,16 +120,16 @@ class TechBlogPostQueryService(
             .asFlow()
     }
 
-    private suspend fun countByTechBlogKey(techBlogKey: String): Long {
+    private suspend fun countByTechBlogKey(techBlogId: Long): Long {
         val sql = """
             SELECT COUNT(*) AS cnt
             FROM post p
             INNER JOIN tech_blog t ON t.id = p.tech_blog_id
-            WHERE t.tech_blog_key = :techBlogKey
+            WHERE t.id = :techBlogId
         """.trimIndent()
 
         return databaseClient.sql(sql)
-            .bind("techBlogKey", techBlogKey)
+            .bind("techBlogId", techBlogId)
             .map { row, _ -> row.get("cnt", Long::class.java) ?: 0L }
             .one()
             .awaitSingle()
