@@ -71,7 +71,7 @@ export default function Search({open, onClose}) {
                     </div>
 
                     <button className={styles.cancelButton} onClick={onClose}>
-                        <ClearIcon sx={{fontSize: 24, color: "#787878", fontWeight: 800}}/>
+                        <ClearIcon sx={{fontSize: 22, color: "#787878", fontWeight: 800}}/>
                     </button>
                 </div>
 
