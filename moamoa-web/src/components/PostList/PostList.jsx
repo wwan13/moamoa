@@ -28,6 +28,7 @@ export default function PostList({
     }, [type])
 
     const onChangePage = (nextPage) => {
+        window.scrollTo({ top: 0, behavior: "smooth" })
         setSearchParams((prev) => {
             const p = new URLSearchParams(prev)
             p.set("page", String(nextPage))

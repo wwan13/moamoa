@@ -108,6 +108,7 @@ export default function MainPage() {
 
     // ✅ 핸들러들: URL 업데이트만 함
     const onSelectType = (nextType) => {
+        window.scrollTo({ top: 0, behavior: "smooth" })
         setSearchParams((prev) => {
             const p = new URLSearchParams(prev)
 
@@ -121,6 +122,7 @@ export default function MainPage() {
     }
 
     const onSelectBlog = (nextBlogKey) => {
+        window.scrollTo({ top: 0, behavior: "smooth" })
         setSearchParams((prev) => {
             const p = new URLSearchParams(prev)
             p.set("type", TYPES.SUBSCRIBED)
