@@ -19,9 +19,9 @@ export default function Search({open, onClose}) {
 
     const navigate = useNavigate()
 
-    // ✅ 모달 열릴 때 input focus
     useEffect(() => {
         if (!open) return
+        inputRef.current?.focus()
     }, [open])
 
     // ✅ 검색어 정리 + 디바운스
