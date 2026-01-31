@@ -101,8 +101,19 @@ class PostQueryService(
     ): Flow<PostSummary> {
         val offset = (paging.page - 1L) * paging.size
 
-        val whereClause = if (query != null) {
-            "WHERE p.title LIKE :keyword OR p.description LIKE :keyword"
+        val whereClause = if (!query.isNullOrBlank()) {
+            """
+            WHERE
+                p.title LIKE :keyword
+                OR p.description LIKE :keyword
+                OR EXISTS (
+                    SELECT 1
+                    FROM post_tag pt
+                    INNER JOIN tag tg ON tg.id = pt.tag_id
+                    WHERE pt.post_id = p.id
+                      AND tg.title LIKE :keyword
+                )
+            """.trimIndent()
         } else {
             ""
         }
