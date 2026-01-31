@@ -68,4 +68,49 @@ class TechBlogStatsReader(
             .toList()
             .associateBy { it.id }
     }
+
+    suspend fun findById(techBlogId: Long): TechBlogStats? {
+        val cached = techBlogSummaryCache.get(techBlogId)
+        if (cached != null) {
+            return TechBlogStats(
+                techBlogId = cached.id,
+                subscriptionCount = cached.subscriptionCount,
+                postCount = cached.postCount,
+            )
+        }
+
+        val summary = fetchTechBlogSummaryById(techBlogId) ?: return null
+
+        cacheWarmupScope.launch {
+            techBlogSummaryCache.set(summary)
+        }
+
+        return TechBlogStats(
+            techBlogId = summary.id,
+            subscriptionCount = summary.subscriptionCount,
+            postCount = summary.postCount,
+        )
+    }
+
+    private suspend fun fetchTechBlogSummaryById(id: Long): TechBlogSummary? {
+        val sql = """
+            $TECH_BLOG_QUERY_BASE_SELECT
+            FROM tech_blog t
+            LEFT JOIN (
+                SELECT tech_blog_id, COUNT(*) AS post_count
+                FROM post
+                GROUP BY tech_blog_id
+            ) pc ON pc.tech_blog_id = t.id
+            WHERE t.id = :id
+            LIMIT 1
+        """.trimIndent()
+
+        return databaseClient.sql(sql)
+            .bind("id", id)
+            .map { row, _ -> mapToTechBlogSummary(row) }
+            .one()
+            .asFlow()
+            .toList()
+            .firstOrNull()
+    }
 }

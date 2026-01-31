@@ -65,4 +65,12 @@ class SubscribedTechBlogReader(
                 }
             }
     }
+
+    suspend fun findById(
+        memberId: Long,
+        techBlogId: Long
+    ): TechBlogSubscriptionInfo? {
+        val all = loadAll(memberId)
+        return all.firstOrNull { it.techBlogId == techBlogId }
+    }
 }

@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.application.TechBlogService
@@ -11,6 +12,7 @@ import server.feature.techblog.query.SubscribedTechBlogQueryService
 import server.feature.techblog.query.TechBlogList
 import server.feature.techblog.query.TechBlogQueryConditions
 import server.feature.techblog.query.TechBlogQueryService
+import server.feature.techblog.query.TechBlogSummary
 import server.security.Passport
 import server.security.RequestPassport
 
@@ -22,11 +24,12 @@ class TechBlogController(
     private val subscribedTechBlogQueryService: SubscribedTechBlogQueryService
 ) {
 
-    @GetMapping("/{techBlogKey}")
+    @GetMapping("/{techBlogId}")
     suspend fun findById(
-        @PathVariable techBlogKey: String
-    ): ResponseEntity<TechBlogData> {
-        val response = techBlogService.findByKey(techBlogKey)
+        @PathVariable techBlogId: Long,
+        @RequestPassport passport: Passport?,
+    ): ResponseEntity<TechBlogSummary> {
+        val response = techBlogQueryService.findById(passport, techBlogId)
         return ResponseEntity.ok(response)
     }
 
