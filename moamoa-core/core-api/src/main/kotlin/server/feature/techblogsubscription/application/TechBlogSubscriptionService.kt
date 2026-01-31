@@ -9,6 +9,7 @@ import server.feature.member.command.domain.MemberRepository
 import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.domain.TechBlogRepository
 import server.feature.techblogsubscription.domain.*
+import server.global.lock.KeyedMutex
 import server.infra.db.Transactional
 import server.messaging.StreamEventPublisher
 import server.messaging.StreamTopic
@@ -20,58 +21,72 @@ class TechBlogSubscriptionService(
     private val techBlogRepository: TechBlogRepository,
     private val memberRepository: MemberRepository,
     private val eventPublisher: StreamEventPublisher,
-    private val defaultTopic: StreamTopic
+    private val defaultTopic: StreamTopic,
+    private val keyedMutex: KeyedMutex
 ) {
 
     suspend fun toggle(
         command: TechBlogSubscriptionToggleCommand,
         memberId: Long
-    ): TechBlogSubscriptionToggleResult = transactional {
-        if (!memberRepository.existsById(memberId)) {
-            throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
-        }
-        if (!techBlogRepository.existsById(command.techBlogId)) {
-            throw IllegalArgumentException("존재하지 않는 기술 블로그 입니다.")
-        }
+    ): TechBlogSubscriptionToggleResult {
+        val mutexKey = "techBlogSubscriptionToggle:$memberId:${command.techBlogId}"
+        return keyedMutex.withLock(mutexKey) {
+            val subscribed = transactional {
+                if (!memberRepository.existsById(memberId)) {
+                    throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
+                }
+                if (!techBlogRepository.existsById(command.techBlogId)) {
+                    throw IllegalArgumentException("존재하지 않는 기술 블로그 입니다.")
+                }
 
-        val subscribing = techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
-            ?.let { subscription ->
-                techBlogSubscriptionRepository.deleteById(subscription.id)
-                val event = TechBlogSubscribeUpdatedEvent(memberId, command.techBlogId, false)
-                eventPublisher.publish(defaultTopic, event)
-                false
-            }
-            ?: let {
-                val subscription = TechBlogSubscription(
-                    notificationEnabled = true,
-                    memberId = memberId,
-                    techBlogId = command.techBlogId
-                )
-                techBlogSubscriptionRepository.save(subscription)
-                val event = TechBlogSubscribeUpdatedEvent(memberId, command.techBlogId, true)
-                eventPublisher.publish(defaultTopic, event)
-                true
+                techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
+                    ?.let { subscription ->
+                        techBlogSubscriptionRepository.deleteById(subscription.id)
+                        false
+                    }
+                    ?: let {
+                        val subscription = TechBlogSubscription(
+                            notificationEnabled = true,
+                            memberId = memberId,
+                            techBlogId = command.techBlogId
+                        )
+                        techBlogSubscriptionRepository.save(subscription)
+                        true
+                    }
+
             }
 
-        TechBlogSubscriptionToggleResult(subscribing)
+            val event = TechBlogSubscribeUpdatedEvent(memberId, command.techBlogId, subscribed)
+            eventPublisher.publish(defaultTopic, event)
+
+            TechBlogSubscriptionToggleResult(subscribed)
+        }
     }
 
     suspend fun notificationEnabledToggle(
         command: NotificationEnabledToggleCommand,
         memberId: Long
-    ): NotificationEnabledToggleResult = transactional {
-        val subscription = techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
-            ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
+    ): NotificationEnabledToggleResult {
+        val mutexKey = "notificationEnabledToggle:$memberId:${command.techBlogId}"
+        return keyedMutex.withLock(mutexKey) {
+            val enabled = transactional {
+                val subscription = techBlogSubscriptionRepository
+                    .findByMemberIdAndTechBlogId(memberId, command.techBlogId)
+                    ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
 
-        val updated = subscription.copy(
-            notificationEnabled = !subscription.notificationEnabled
-        )
-        techBlogSubscriptionRepository.save(updated)
+                val updated = subscription.copy(
+                    notificationEnabled = !subscription.notificationEnabled
+                )
+                techBlogSubscriptionRepository.save(updated)
 
-        val event = NotificationUpdatedEvent(memberId, command.techBlogId, updated.notificationEnabled)
-        eventPublisher.publish(defaultTopic, event)
+                updated.notificationEnabled
+            }
 
-        NotificationEnabledToggleResult(updated.notificationEnabled)
+            val event = NotificationUpdatedEvent(memberId, command.techBlogId, enabled)
+            eventPublisher.publish(defaultTopic, event)
+
+            NotificationEnabledToggleResult(enabled)
+        }
     }
 
     suspend fun subscribingTechBlogs(memberId: Long): Flow<TechBlogData> {
