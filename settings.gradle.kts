@@ -21,5 +21,6 @@ include("moamoa-support:support-logging")
 
 include("moamoa-admin")
 include("moamoa-admin:admin-api")
+include("moamoa-admin:admin-web")
 
 include("moamoa-web")
