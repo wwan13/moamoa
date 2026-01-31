@@ -19,7 +19,7 @@ export default function AppRoutes() {
             <Route element={<DefaultLayout />}>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/blogs" element={<TechBlogsPage />} />
-                <Route path="/:key" element={<TechBlogDetailPage />} />
+                <Route path="/:techBlogId" element={<TechBlogDetailPage />} />
                 <Route path="/subscription" element={<MySubscriptionPage />} />
                 <Route path="/my" element={<MyPage />} />
                 <Route path="/submission" element={<BlogSubmissionPage />} />

@@ -10,15 +10,13 @@ import {
 } from "../../queries/techBlogSubscription.queries.js"
 import {useNavigate} from "react-router-dom";
 
-export default function TechBlogItem({techBlog, isSkeleton = false, onItemClickClick }) {
+export default function TechBlogItem({techBlog, isSkeleton = false, onItemClick }) {
     const qc = useQueryClient()
     const { authScope, isLoggedIn, openLogin } = useAuth()
 
     const subToggle = useSubscriptionToggleMutation({ invalidateOnSuccess: false })
     const notiToggle = useNotificationToggleMutation()
     const isMutating = subToggle.isPending || notiToggle.isPending
-
-    const navigate = useNavigate()
 
     const patchBlog = (techBlogId, patcher) => {
         qc.setQueriesData(
@@ -64,6 +62,7 @@ export default function TechBlogItem({techBlog, isSkeleton = false, onItemClickC
             ...b,
             subscribed: !wasSubscribed,
             subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+            notificationEnabled: true,
         }))
 
         try {
@@ -145,7 +144,7 @@ export default function TechBlogItem({techBlog, isSkeleton = false, onItemClickC
     }
 
     return (
-        <div className={styles.item} onClick={onItemClickClick}>
+        <div className={styles.item} onClick={onItemClick}>
             <div className={styles.iconWrap}>
                 <img src={techBlog.icon} alt="icon" className={styles.icon} />
             </div>
@@ -165,7 +164,10 @@ export default function TechBlogItem({techBlog, isSkeleton = false, onItemClickC
                 <div className={styles.right}>
                     <button
                         className={techBlog.subscribed ? styles.subIngButton : styles.subButton}
-                        onClick={subscriptionToggle}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            subscriptionToggle()
+                        }}
                         disabled={isMutating}
                     >
                         {techBlog.subscribed ? "구독중" : "구독"}
@@ -174,7 +176,10 @@ export default function TechBlogItem({techBlog, isSkeleton = false, onItemClickC
                     {techBlog.subscribed && (
                         <button
                             className={techBlog.notificationEnabled ? styles.alarmIngButton : styles.alarmButton}
-                            onClick={notificationToggle}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                notificationToggle()
+                            }}
                             disabled={isMutating}
                         >
                             {techBlog.notificationEnabled ? (

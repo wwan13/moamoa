@@ -7,33 +7,33 @@ import PostList from "../../components/PostList/PostList.jsx"
 import { usePagingQuery } from "../../hooks/usePagingQuery.js"
 import { useQueryClient } from "@tanstack/react-query"
 
-import {useSubscribingTechBlogsQuery, useTechBlogByKeyQuery} from "../../queries/techBlog.queries.js"
-import { usePostsByTechBlogKeyQuery } from "../../queries/post.queries.js"
-import { useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries.js"
+import { useTechBlogByIdQuery } from "../../queries/techBlog.queries.js"
+import { usePostsByTechBlogIdQuery } from "../../queries/post.queries.js"
+import {
+    useNotificationToggleMutation,
+    useSubscriptionToggleMutation,
+} from "../../queries/techBlogSubscription.queries.js"
+import NotificationsOffOutlinedIcon from "@mui/icons-material/NotificationsOffOutlined"
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
 
 export default function TechBlogDetailPage() {
-    const { isLoggedIn, openLogin } = useAuth()
+    const { isLoggedIn, openLogin, authScope, publicScope } = useAuth()
+    const scope = authScope ?? publicScope
+
     const navigate = useNavigate()
-    const { key } = useParams()
+    const { techBlogId } = useParams()
     const qc = useQueryClient()
+    const { page } = usePagingQuery()
 
-    const { page, setPage } = usePagingQuery()
+    // ✅ queries
+    const techBlogQuery = useTechBlogByIdQuery({ techBlogId })
+    const postsQuery = usePostsByTechBlogIdQuery({ page, techBlogId })
 
-    // ✅ tech blog detail (query)
-    const techBlogQuery = useTechBlogByKeyQuery({ key })
-
-    // ✅ posts by tech blog (query)
-    const postsQuery = usePostsByTechBlogKeyQuery(
-        { page, techBlogKey: key }
-    )
-
-    // ✅ my subscribing blogs (query, only when logged in)
-    const subsQuery = useSubscribingTechBlogsQuery()
-
-    // ✅ subscription toggle (mutation)
+    // ✅ mutations
     const subToggle = useSubscriptionToggleMutation()
+    const notiToggle = useNotificationToggleMutation()
 
-    // ✅ techBlog data
+    // ✅ data
     const techBlog = techBlogQuery.data
     const postsRes = postsQuery.data
 
@@ -41,60 +41,62 @@ export default function TechBlogDetailPage() {
     const totalPages = postsRes?.meta?.totalPages ?? 0
     const totalPostCount = postsRes?.meta?.totalCount ?? 0
 
-    // ✅ 구독 여부: techBlog가 로드된 다음에 subsQuery에서 판별
-    const subscribed = useMemo(() => {
-        if (!isLoggedIn) return false
-        if (!techBlog) return false
+    // ✅ 단일 소스: techBlogQuery가 내려주는 상태 사용
+    const subscribed = !!techBlog?.subscribed
+    const notificationEnabled = !!techBlog?.notificationEnabled
 
-        const subs = subsQuery.data.techBlogs ?? []
-        return Array.isArray(subs)
-            ? subs.some(
-                (s) =>
-                    s.techBlogId === techBlog.id ||
-                    s.techBlog?.id === techBlog.id ||
-                    s.id === techBlog.id
-            )
-            : false
-    }, [isLoggedIn, subsQuery.data, techBlog])
-
-    // ✅ 구독자 수는 detail에서 보이니까 optimistic을 위해 로컬로만 들고감
+    // ✅ 구독자 수는 optimistic용 로컬 상태
     const [subCount, setSubCount] = useState(0)
     useEffect(() => {
         if (techBlog?.subscriptionCount != null) setSubCount(techBlog.subscriptionCount)
-    }, [techBlog?.id])
+    }, [techBlog?.id, techBlog?.subscriptionCount])
 
-    // ✅ 에러 처리 (쿼리 실패 시)
+    // ✅ techBlog queryKey: 훅과 100% 동일
+    const techBlogQk = useMemo(() => ["techBlog", scope, techBlogId], [scope, techBlogId])
+
+    const patchTechBlogDetail = (patcher) => {
+        qc.setQueryData(techBlogQk, (old) => {
+            if (!old) return old
+            return patcher(old)
+        })
+    }
+
+    // ✅ 에러 처리
     useEffect(() => {
-        if (techBlogQuery.isError) {
+        if (!techBlogQuery.isError) return
             ;(async () => {
-                await showGlobalAlert("기술 블로그 정보를 불러오지 못했어요.")
-                navigate(-1)
-            })()
-        }
-    }, [techBlogQuery.isError])
+            await showGlobalAlert("기술 블로그 정보를 불러오지 못했어요.")
+            navigate(-1)
+        })()
+    }, [techBlogQuery.isError, navigate])
 
-    // ✅ top scroll (데이터 바뀔 때)
+    // ✅ top scroll
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" })
-    }, [key, page])
+    }, [techBlogId, page])
+
+    const askLogin = async () => {
+        if (isLoggedIn) return true
+        const ok = await showGlobalConfirm({
+            title: "로그인",
+            message: "로그인이 필요한 기능입니다. 로그인 하시겠습니까?",
+            confirmText: "로그인",
+        })
+        if (!ok) return false
+        openLogin()
+        return false
+    }
 
     const onSubButtonToggle = async () => {
-        if (!isLoggedIn) {
-            const ok = await showGlobalConfirm({
-                title : "로그인",
-                message : "로그인이 필요한 기능입니다. 로그인 하시겠습니까?",
-                confirmText : "로그인"
-            })
-            if (!ok) {
-                return
-            }
-            openLogin()
-            return
-        }
+        const okLogin = await askLogin()
+        if (!okLogin) return
+
         if (!techBlog) return
         if (subToggle.isPending) return
 
-        if (subscribed) {
+        const wasSubscribed = subscribed
+
+        if (wasSubscribed) {
             const ok = await showGlobalConfirm({
                 title: "구독 해제",
                 message: "이 기술 블로그 구독을 해제할까요?",
@@ -104,21 +106,78 @@ export default function TechBlogDetailPage() {
             if (!ok) return
         }
 
-        const wasSubscribed = subscribed
-
-        // optimistic: 구독자 수만 즉시 반영
+        // ✅ optimistic
         setSubCount((c) => c + (wasSubscribed ? -1 : 1))
+        patchTechBlogDetail((b) => ({
+            ...b,
+            subscribed: !wasSubscribed,
+            subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+            // 구독 해지하면 알림은 off 처리
+            notificationEnabled: true,
+        }))
 
         try {
             await subToggle.mutateAsync({ techBlogId: techBlog.id })
 
-            // 구독 목록/구독 기반 posts 등에 영향 → invalidate는 mutation 훅에 이미 들어있어도 OK
-            qc.invalidateQueries({ queryKey: ["techBlogs", "subscribed"] })
+            // ✅ 목록/상세 동기화 (키를 정확히 몰라도 broad invalidate는 안전)
+            qc.invalidateQueries({ queryKey: ["techBlogs"] })
+            qc.invalidateQueries({ queryKey: ["techBlog"] })
 
             showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
         } catch {
-            // rollback
+            // ✅ rollback
             setSubCount((c) => c + (wasSubscribed ? 1 : -1))
+            patchTechBlogDetail((b) => ({
+                ...b,
+                subscribed: wasSubscribed,
+                subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
+                // 알림은 서버값으로 다시 맞추는 게 안전 → invalidate에 맡김
+            }))
+            qc.invalidateQueries({ queryKey: techBlogQk })
+            showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
+        }
+    }
+
+    const onNotificationButtonToggle = async () => {
+        const okLogin = await askLogin()
+        if (!okLogin) return
+
+        if (!techBlog) return
+        if (notiToggle.isPending) return
+        if (!subscribed) return
+
+        const wasEnabled = notificationEnabled
+
+        if (wasEnabled) {
+            const ok = await showGlobalConfirm({
+                title: "알림 해제",
+                message: "이 기술 블로그 알림을 해제할까요?",
+                confirmText: "해제",
+                cancelText: "유지",
+            })
+            if (!ok) return
+        }
+
+        // ✅ optimistic
+        patchTechBlogDetail((b) => ({
+            ...b,
+            notificationEnabled: !wasEnabled,
+        }))
+
+        try {
+            await notiToggle.mutateAsync({ techBlogId: techBlog.id })
+
+            qc.invalidateQueries({ queryKey: ["techBlogs"] })
+            qc.invalidateQueries({ queryKey: ["techBlog"] })
+
+            showToast(wasEnabled ? "알림을 해제했어요." : "알림을 설정했어요.")
+        } catch {
+            // ✅ rollback
+            patchTechBlogDetail((b) => ({
+                ...b,
+                notificationEnabled: wasEnabled,
+            }))
+            qc.invalidateQueries({ queryKey: techBlogQk })
             showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
         }
     }
@@ -158,14 +217,29 @@ export default function TechBlogDetailPage() {
                         )}
                     </div>
 
-                    {/* mutation이므로 스켈레톤 X, 버튼 상태만 */}
-                    <button
-                        className={subscribed ? styles.subIngButton : styles.subButton}
-                        onClick={onSubButtonToggle}
-                        disabled={subToggle.isPending || techBlogQuery.isPending}
-                    >
-                        {subscribed ? "구독중" : "구독"}
-                    </button>
+                    <div className={styles.buttonWrap}>
+                        <button
+                            className={subscribed ? styles.subIngButton : styles.subButton}
+                            onClick={onSubButtonToggle}
+                            disabled={subToggle.isPending || techBlogQuery.isPending}
+                        >
+                            {subscribed ? "구독중" : "구독"}
+                        </button>
+
+                        {subscribed && techBlog && !subToggle.isPending && (
+                            <button
+                                className={notificationEnabled ? styles.alarmIngButton : styles.alarmButton}
+                                onClick={onNotificationButtonToggle}
+                                disabled={notiToggle.isPending || techBlogQuery.isPending}
+                            >
+                                {notificationEnabled ? (
+                                    <NotificationsOffOutlinedIcon sx={{ fontSize: 18, color: "#A2A2A2", fontWeight: 800 }} />
+                                ) : (
+                                    <NotificationsNoneOutlinedIcon sx={{ fontSize: 18, color: "#ffffff", fontWeight: 800 }} />
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 

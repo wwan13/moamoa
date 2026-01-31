@@ -18,14 +18,14 @@ export function useTechBlogsQuery({ query } = {}, options = {}) {
     })
 }
 
-export function useTechBlogByKeyQuery({ key }) {
+export function useTechBlogByIdQuery({ techBlogId }) {
     const { authScope, publicScope } = useAuth()
     const scope = authScope ?? publicScope
 
     return useQuery({
-        queryKey: ["techBlog", scope, key],
-        queryFn: ({ signal }) => techBlogApi.findByKey({ key }, { signal }),
-        enabled: !!key,
+        queryKey: ["techBlog", scope, String(techBlogId)],
+        queryFn: ({ signal }) => techBlogApi.findById({ techBlogId }, { signal }),
+        enabled: !!techBlogId,
     })
 }
 

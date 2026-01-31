@@ -24,11 +24,11 @@ export const postsApi = {
         return http.get(`/api/post${q}`, config)
     },
 
-    listByTechBlogKey: ({ page, techBlogKey } = {}, config) => {
+    listByTechBlogId: ({ page, techBlogId } = {}, config) => {
         const query = buildQuery({
             page: page && page > 1 ? page : undefined,
             size: SIZE,
-            techBlogKey,
+            techBlogId: techBlogId,
         })
         return http.get(`/api/post/tech-blog${query}`, config)
     },

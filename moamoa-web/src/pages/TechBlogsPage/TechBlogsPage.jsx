@@ -187,7 +187,7 @@ export default function TechBlogsPage() {
                             <article
                                 key={blog.id}
                                 className={styles.card}
-                                onClick={() => navigate(`/${blog.key}`)}
+                                onClick={() => navigate(`/${blog.id}`)}
                             >
                                 <div className={styles.logoWrap}>
                                     <img src={blog.icon} alt="thumbnail" className={styles.logo} />

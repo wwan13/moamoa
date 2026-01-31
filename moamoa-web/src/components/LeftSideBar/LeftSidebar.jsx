@@ -33,7 +33,7 @@ export default function LeftSidebar({
                 headerActive={isSubscribedTabActive}
                 activeBlogKey={blogKey}
                 onClickHeader={() => onSelectType("subscribed")}
-                onClickItem={(item) => onSelectBlog(item.key)}
+                onClickItem={(item) => onSelectBlog(item.id)}
                 isLoading={isLoading}
             />
 

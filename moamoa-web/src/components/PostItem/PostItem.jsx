@@ -155,7 +155,7 @@ export default function PostItem({post, isBlogDetail, isLoading = false}) {
                                     className={styles.sourceLink}
                                     onClick={(e) => {
                                         stop(e)
-                                        navigate(`/${post.techBlog.key}`)
+                                        navigate(`/${post.techBlog.id}`)
                                     }}
                                 >
                                     <img

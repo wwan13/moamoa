@@ -103,9 +103,9 @@ export default function Search({open, onClose}) {
                             {techBlogs.length > 0 && (
                                 <div className={styles.techBlogs}>
                                     {(techBlogs ?? []).map((techBlog) => (
-                                        <TechBlogItem key={techBlog.id} techBlog={techBlog} onItemClickClick={() => {
+                                        <TechBlogItem key={techBlog.id} techBlog={techBlog} onItemClick={() => {
                                             onClose()
-                                            navigate(`/${techBlog.key}`)
+                                            navigate(`/${techBlog.id}`)
                                         }} />
                                     ))}
                                 </div>

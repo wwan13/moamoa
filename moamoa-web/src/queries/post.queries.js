@@ -33,15 +33,15 @@ export function usePostsQuery(
     })
 }
 
-export function usePostsByTechBlogKeyQuery({ page, techBlogKey } = {}, options = {}) {
+export function usePostsByTechBlogIdQuery({ page, techBlogId } = {}, options = {}) {
     const { authScope, publicScope } = useAuth()
     const scope = authScope ?? publicScope
 
     return useQuery({
-        queryKey: ["posts", scope, "techBlog", { techBlogKey, page: page ?? 1 }],
+        queryKey: ["posts", scope, "techBlog", { techBlogId, page: page ?? 1 }],
         queryFn: ({ signal }) =>
-            postsApi.listByTechBlogKey({ page, techBlogKey }, { signal }),
-        enabled: (options.enabled ?? true) && !!techBlogKey,
+            postsApi.listByTechBlogId({ page, techBlogId }, { signal }),
+        enabled: (options.enabled ?? true) && !!techBlogId,
         keepPreviousData: true,
     })
 }

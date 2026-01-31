@@ -19,8 +19,8 @@ export const techBlogApi = {
         return http.get(`/api/tech-blog${q}`, config)
     },
 
-    findByKey: ({ key }, config) =>
-        http.get(`/api/tech-blog/${key}`, config),
+    findById: ({ techBlogId }, config) =>
+        http.get(`/api/tech-blog/${techBlogId}`, config),
 
     listSubscribed: (config) =>
         http.get("/api/tech-blog/subscription", config),

@@ -10,7 +10,7 @@ import {
     usePostsQuery,
     usePostsByBookmarkQuery,
     usePostsBySubscriptionQuery,
-    usePostsByTechBlogKeyQuery,
+    usePostsByTechBlogIdQuery,
 } from "../../queries/post.queries.js"
 import {useSubscribingTechBlogsQuery} from "../../queries/techBlog.queries.js";
 
@@ -26,7 +26,7 @@ export default function MainPage() {
 
     // ✅ URL이 단일 상태
     const type = searchParams.get("type") ?? TYPES.ALL
-    const blogKey = searchParams.get("techBlog") ?? null
+    const techBlogId = searchParams.get("techBlogId") ?? null
     const page = Number(searchParams.get("page") ?? 1)
     const isWelcome = searchParams.get("welcome")
 
@@ -44,7 +44,7 @@ export default function MainPage() {
             setSearchParams((prev) => {
                 const p = new URLSearchParams(prev)
                 p.delete("type")
-                p.delete("techBlog")
+                p.delete("techBlogId")
                 p.delete("page")
                 return p
             })
@@ -64,12 +64,12 @@ export default function MainPage() {
 
     const subscribingPostsQuery = usePostsBySubscriptionQuery(
         { page },
-        { enabled: type === TYPES.SUBSCRIBED && !blogKey && isLoggedIn }
+        { enabled: type === TYPES.SUBSCRIBED && !techBlogId && isLoggedIn }
     )
 
-    const techBlogPostsQuery = usePostsByTechBlogKeyQuery(
-        { page, techBlogKey: blogKey },
-        { enabled: type === TYPES.SUBSCRIBED && !!blogKey }
+    const techBlogPostsQuery = usePostsByTechBlogIdQuery(
+        { page, techBlogId },
+        { enabled: type === TYPES.SUBSCRIBED && !!techBlogId }
     )
 
     const bookmarkedPostsQuery = usePostsByBookmarkQuery(
@@ -79,10 +79,10 @@ export default function MainPage() {
 
     const activeQuery = useMemo(() => {
         if (type === TYPES.ALL) return allPostsQuery
-        if (type === TYPES.SUBSCRIBED) return blogKey ? techBlogPostsQuery : subscribingPostsQuery
+        if (type === TYPES.SUBSCRIBED) return techBlogId ? techBlogPostsQuery : subscribingPostsQuery
         if (type === TYPES.BOOKMARKED) return bookmarkedPostsQuery
         return allPostsQuery
-    }, [type, blogKey, allPostsQuery, subscribingPostsQuery, techBlogPostsQuery, bookmarkedPostsQuery])
+    }, [type, techBlogId, allPostsQuery, subscribingPostsQuery, techBlogPostsQuery, bookmarkedPostsQuery])
 
     const postsRes = activeQuery.data
     const posts = postsRes?.posts ?? []
@@ -98,13 +98,13 @@ export default function MainPage() {
         if (type === TYPES.BOOKMARKED) return "북마크한 게시글이 없습니다."
 
         // subscribed
-        if (!blogKey) {
+        if (!techBlogId) {
             if (!isLoggedIn) return "게시글이 존재하지 않습니다."
             if (subs.length === 0) return "구독중인 블로그가 없습니다."
             return "구독중인 블로그에 게시글이 존재하지 않습니다."
         }
         return "기술 블로그에 게시글이 존재하지 않습니다."
-    }, [type, blogKey, isLoggedIn, subs.length])
+    }, [type, techBlogId, isLoggedIn, subs.length])
 
     // ✅ 핸들러들: URL 업데이트만 함
     const onSelectType = (nextType) => {
@@ -115,18 +115,18 @@ export default function MainPage() {
             if (nextType === TYPES.ALL) p.delete("type")
             else p.set("type", nextType)
 
-            p.delete("techBlog")
+            p.delete("techBlogId")
             p.delete("page")
             return p
         })
     }
 
-    const onSelectBlog = (nextBlogKey) => {
+    const onSelectBlog = (nextBlogId) => {
         window.scrollTo({ top: 0, behavior: "smooth" })
         setSearchParams((prev) => {
             const p = new URLSearchParams(prev)
             p.set("type", TYPES.SUBSCRIBED)
-            p.set("techBlog", nextBlogKey)
+            p.set("techBlogId", nextBlogId)
             p.delete("page")
             return p
         })
@@ -148,7 +148,7 @@ export default function MainPage() {
                         <LeftSidebar
                             subscriptions={subs}
                             type={type}
-                            blogKey={blogKey}
+                            blogKey={techBlogId}
                             onSelectType={onSelectType}
                             onSelectBlog={onSelectBlog}
                             isLoading={isSubsLoading}
