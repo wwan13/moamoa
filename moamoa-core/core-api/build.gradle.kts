@@ -25,6 +25,6 @@ dependencies {
     implementation(project(":moamoa-support:support-logging"))
     implementation(project(":moamoa-support:support-monitoring"))
 
-    implementation(project(":moamoa-admin"))
+    implementation(project(":moamoa-admin:admin-api"))
     implementation(project(":moamoa-core:core-batch"))
 }
