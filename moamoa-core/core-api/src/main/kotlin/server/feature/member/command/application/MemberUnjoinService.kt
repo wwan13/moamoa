@@ -5,7 +5,7 @@ import server.feature.member.command.domain.MemberRepository
 import server.feature.postbookmark.domain.PostBookmarkRepository
 import server.feature.submission.domain.SubmissionRepository
 import server.feature.techblogsubscription.domain.TechBlogSubscriptionRepository
-import server.infra.db.Transactional
+import server.infra.db.transaction.Transactional
 import server.security.Passport
 
 @Service

@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service
 import server.feature.submission.domain.Submission
 import server.feature.submission.domain.SubmissionCreateEvent
 import server.feature.submission.domain.SubmissionRepository
-import server.infra.db.Transactional
+import server.infra.db.transaction.Transactional
 import server.messaging.StreamEventPublisher
 import server.messaging.StreamTopic
 

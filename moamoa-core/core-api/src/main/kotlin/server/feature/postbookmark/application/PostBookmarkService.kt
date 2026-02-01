@@ -12,7 +12,7 @@ import server.feature.postbookmark.domain.PostBookmarkUpdatedEvent
 import server.feature.postbookmark.domain.PostBookmarkRepository
 import server.feature.postbookmark.domain.PostBookmark
 import server.global.lock.KeyedMutex
-import server.infra.db.Transactional
+import server.infra.db.transaction.Transactional
 import server.messaging.StreamEventPublisher
 import server.messaging.StreamTopic
 

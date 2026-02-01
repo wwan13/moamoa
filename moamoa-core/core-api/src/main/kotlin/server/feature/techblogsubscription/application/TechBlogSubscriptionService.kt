@@ -10,7 +10,7 @@ import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.domain.TechBlogRepository
 import server.feature.techblogsubscription.domain.*
 import server.global.lock.KeyedMutex
-import server.infra.db.Transactional
+import server.infra.db.transaction.Transactional
 import server.messaging.StreamEventPublisher
 import server.messaging.StreamTopic
 

@@ -8,7 +8,7 @@ import server.feature.member.command.domain.MemberRepository
 import server.feature.member.command.domain.Provider
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.SocialMemberSessionCache
-import server.infra.db.Transactional
+import server.infra.db.transaction.Transactional
 import server.messaging.StreamEventPublisher
 import server.messaging.StreamTopic
 import server.password.PasswordEncoder
