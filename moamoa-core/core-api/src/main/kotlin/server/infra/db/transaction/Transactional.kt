@@ -12,7 +12,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class Transactional(
-    connectionFactory: ConnectionFactory
+    connectionFactory: ConnectionFactory,
+    private val transactionScope: TransactionScope,
 ) {
 
     private val manager = R2dbcTransactionManager(connectionFactory)
@@ -20,7 +21,7 @@ class Transactional(
 
     suspend operator fun <T> invoke(
         propagation: Propagation = Propagation.REQUIRED,
-        block: suspend () -> T
+        block: suspend TransactionScope.() -> T
     ): T {
         val operator = operators.computeIfAbsent(propagation) { p ->
             val def = DefaultTransactionDefinition().apply {
@@ -28,7 +29,10 @@ class Transactional(
             }
             TransactionalOperator.create(manager, def)
         }
-        return operator.executeAndAwait { block() }
+
+        return operator.executeAndAwait {
+            transactionScope.block()
+        }
     }
 
     private fun Propagation.toTxPropagationBehavior(): Int = when (this) {
