@@ -123,7 +123,7 @@ class SubmissionIntegrationTest(
 - 호출 형태는 `createXxx(...)`로 통일한다.
 - 디렉토리: `server.fixture`
 - 파일: `XxxFixture.kt` (동일 도메인의 fixture를 한 파일에 모은다)
-- 테스트 코드에서는 가능한 한 **도메인 생성은 fixture를 우선 사용**한다. (중복 생성을 줄이고 기본값을 재사용)
+- 테스트 코드에서는 **도메인 생성은 반드시 fixture로만** 한다. (직접 생성 금지, 중복 생성 방지 및 기본값 재사용)
 
 ### 5.2 Fixture 예시
 
@@ -154,10 +154,11 @@ val submission = createSubmission(
 )
 ```
 
-### 5.3 Fixture 적용 기준
+### 5.3 Fixture 적용 기준 (필수)
 
 - 테스트에 필요한 값만 override한다. (id, 검증 대상 필드 등)
 - 나머지 필드는 fixture 기본값을 그대로 사용한다.
+- **직접 생성(생성자 호출/팩토리 직접 구현)을 금지**하고, fixture가 없으면 **먼저 fixture를 추가**한 뒤 테스트를 작성한다.
 
 ---
 
