@@ -18,6 +18,7 @@ include("moamoa-support:support-templates")
 include("moamoa-support:support-monitoring")
 include("moamoa-support:support-webhook")
 include("moamoa-support:support-logging")
+include("moamoa-support:support-test")
 
 include("moamoa-admin")
 include("moamoa-admin:admin-api")

@@ -27,4 +27,6 @@ dependencies {
 
     implementation(project(":moamoa-admin:admin-api"))
     implementation(project(":moamoa-core:core-batch"))
+
+    testImplementation(project(":moamoa-support:support-test"))
 }

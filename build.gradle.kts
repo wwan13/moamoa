@@ -32,25 +32,22 @@ subprojects {
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-
-        // test
-        testImplementation("org.springframework.boot:spring-boot-starter-test")
-        testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-        testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     }
 
-    // ✅ JDK는 24를 사용 (로컬/CI/Docker에서 JDK 24로 통일 가능)
+    tasks.test {
+        useJUnitPlatform()
+    }
+
     kotlin {
         jvmToolchain(24)
     }
+
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(24)
         }
     }
 
-    // ✅ 산출물(바이트코드) 타겟은 21로 통일
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
@@ -62,10 +59,10 @@ subprojects {
         options.release.set(21)
     }
 
-    // 멀티모듈 라이브러리 모듈은 bootJar 끄고 jar 켜기
     tasks.named("bootJar") {
         enabled = false
     }
+
     tasks.named("jar") {
         enabled = true
     }
