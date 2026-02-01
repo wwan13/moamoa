@@ -1,4 +1,4 @@
-package server.infra.db
+package server.infra.db.databaseclient
 
 import io.r2dbc.spi.Row
 

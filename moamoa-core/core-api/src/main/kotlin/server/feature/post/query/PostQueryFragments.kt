@@ -2,8 +2,8 @@ package server.feature.post.query
 
 import io.r2dbc.spi.Row
 import server.feature.techblog.command.application.TechBlogData
-import server.infra.db.getInt01
-import server.infra.db.getOrDefault
+import server.infra.db.databaseclient.getInt01
+import server.infra.db.databaseclient.getOrDefault
 import java.time.LocalDateTime
 
 const val POST_QUERY_BASE_SELECT = """

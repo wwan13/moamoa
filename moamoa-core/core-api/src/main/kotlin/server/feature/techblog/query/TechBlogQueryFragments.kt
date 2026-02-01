@@ -1,8 +1,8 @@
 package server.feature.techblog.query
 
 import io.r2dbc.spi.Row
-import server.infra.db.getInt01
-import server.infra.db.getOrDefault
+import server.infra.db.databaseclient.getInt01
+import server.infra.db.databaseclient.getOrDefault
 
 const val TECH_BLOG_QUERY_BASE_SELECT = """
     SELECT
