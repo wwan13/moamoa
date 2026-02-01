@@ -19,18 +19,29 @@ class StreamEventPublisher(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun publish(topic: StreamTopic, payload: Any) {
-        publishMono(topic.key, payload)
+        publishMono(topic.key, payload::class.simpleName!!, objectMapper.writeValueAsString(payload))
             .doOnError { e -> log.warn("Redis XADD failed: streamKey={}", topic.key, e) }
             .onErrorResume { Mono.empty() }
             .subscribe()
     }
 
-    private fun publishMono(streamKey: String, payload: Any): Mono<RecordId> {
+    fun publish(topic: String, type: String, payloadJson: String) {
+        publishMono(topic, type, payloadJson)
+            .doOnError { e -> log.warn("Redis XADD failed: streamKey={}", topic, e) }
+            .onErrorResume { Mono.empty() }
+            .subscribe()
+    }
+
+    private fun publishMono(
+        streamKey: String,
+        type: String,
+        payloadJson: String,
+    ): Mono<RecordId> {
         val fields: Map<String, String> = mapOf(
-            "type" to (payload::class.simpleName ?: payload::class.qualifiedName ?: "UnknownEvent"),
+            "type" to type,
             "eventId" to UUID.randomUUID().toString(),
             "occurredAt" to Instant.now().toString(),
-            "payload" to objectMapper.writeValueAsString(payload),
+            "payload" to payloadJson,
         )
 
         val record = StreamRecords

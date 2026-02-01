@@ -29,4 +29,7 @@ class CoroutineConfig {
     fun shutdown() {
         cacheWarmupScope.cancel()
     }
+
+    @Bean
+    fun outboxScope(): CoroutineScope = CoroutineScope(SupervisorJob())
 }
