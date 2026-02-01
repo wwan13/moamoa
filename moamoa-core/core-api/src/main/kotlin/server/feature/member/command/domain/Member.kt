@@ -27,6 +27,11 @@ data class Member(
     val providerKey: String,
 ) : BaseEntity() {
 
+    fun created() = MemberCreateEvent(
+        memberId = id,
+        email = email,
+    )
+
     companion object {
         fun fromInternal(
             email: String,

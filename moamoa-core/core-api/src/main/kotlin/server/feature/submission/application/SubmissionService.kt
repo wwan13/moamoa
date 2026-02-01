@@ -2,18 +2,13 @@ package server.feature.submission.application
 
 import org.springframework.stereotype.Service
 import server.feature.submission.domain.Submission
-import server.feature.submission.domain.SubmissionCreateEvent
 import server.feature.submission.domain.SubmissionRepository
 import server.infra.db.transaction.Transactional
-import server.messaging.StreamEventPublisher
-import server.messaging.StreamTopic
 
 @Service
 class SubmissionService(
     private val transactional: Transactional,
-    private val submissionRepository: SubmissionRepository,
-    private val defaultTopic: StreamTopic,
-    private val eventPublisher: StreamEventPublisher
+    private val submissionRepository: SubmissionRepository
 ) {
 
     suspend fun create(
@@ -29,12 +24,8 @@ class SubmissionService(
         )
         val saved = submissionRepository.save(submission)
 
-        val event = SubmissionCreateEvent(
-            submissionId = saved.id,
-            blogTitle = saved.blogTitle,
-            blogUrl = saved.blogUrl,
-        )
-        eventPublisher.publish(defaultTopic, event)
+        val event = saved.created()
+        registerEvent(event)
 
         SubmissionCreateResult(saved.id)
     }

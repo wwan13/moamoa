@@ -8,11 +8,10 @@ import org.springframework.stereotype.Service
 import server.feature.member.command.domain.MemberRepository
 import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.domain.TechBlogRepository
-import server.feature.techblogsubscription.domain.*
+import server.feature.techblogsubscription.domain.TechBlogSubscription
+import server.feature.techblogsubscription.domain.TechBlogSubscriptionRepository
 import server.global.lock.KeyedMutex
 import server.infra.db.transaction.Transactional
-import server.messaging.StreamEventPublisher
-import server.messaging.StreamTopic
 
 @Service
 class TechBlogSubscriptionService(
@@ -20,8 +19,6 @@ class TechBlogSubscriptionService(
     private val techBlogSubscriptionRepository: TechBlogSubscriptionRepository,
     private val techBlogRepository: TechBlogRepository,
     private val memberRepository: MemberRepository,
-    private val eventPublisher: StreamEventPublisher,
-    private val defaultTopic: StreamTopic,
     private val keyedMutex: KeyedMutex
 ) {
 
@@ -31,7 +28,7 @@ class TechBlogSubscriptionService(
     ): TechBlogSubscriptionToggleResult {
         val mutexKey = "techBlogSubscriptionToggle:$memberId:${command.techBlogId}"
         return keyedMutex.withLock(mutexKey) {
-            val subscribed = transactional {
+            transactional {
                 if (!memberRepository.existsById(memberId)) {
                     throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
                 }
@@ -42,7 +39,11 @@ class TechBlogSubscriptionService(
                 techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
                     ?.let { subscription ->
                         techBlogSubscriptionRepository.deleteById(subscription.id)
-                        false
+
+                        val event = subscription.unsubscribe()
+                        registerEvent(event)
+
+                        TechBlogSubscriptionToggleResult(false)
                     }
                     ?: let {
                         val subscription = TechBlogSubscription(
@@ -50,16 +51,15 @@ class TechBlogSubscriptionService(
                             memberId = memberId,
                             techBlogId = command.techBlogId
                         )
-                        techBlogSubscriptionRepository.save(subscription)
-                        true
+                        val saved = techBlogSubscriptionRepository.save(subscription)
+
+                        val event = saved.subscribe()
+                        registerEvent(event)
+
+                        TechBlogSubscriptionToggleResult(true)
                     }
 
             }
-
-            val event = TechBlogSubscribeUpdatedEvent(memberId, command.techBlogId, subscribed)
-            eventPublisher.publish(defaultTopic, event)
-
-            TechBlogSubscriptionToggleResult(subscribed)
         }
     }
 
@@ -69,23 +69,17 @@ class TechBlogSubscriptionService(
     ): NotificationEnabledToggleResult {
         val mutexKey = "notificationEnabledToggle:$memberId:${command.techBlogId}"
         return keyedMutex.withLock(mutexKey) {
-            val enabled = transactional {
+            transactional {
                 val subscription = techBlogSubscriptionRepository
                     .findByMemberIdAndTechBlogId(memberId, command.techBlogId)
                     ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
 
-                val updated = subscription.copy(
-                    notificationEnabled = !subscription.notificationEnabled
-                )
-                techBlogSubscriptionRepository.save(updated)
+                val updated = subscription.toggleNotification()
+                techBlogSubscriptionRepository.save(updated.entity)
+                registerEvent(updated.event)
 
-                updated.notificationEnabled
+                NotificationEnabledToggleResult(updated.entity.notificationEnabled)
             }
-
-            val event = NotificationUpdatedEvent(memberId, command.techBlogId, enabled)
-            eventPublisher.publish(defaultTopic, event)
-
-            NotificationEnabledToggleResult(enabled)
         }
     }
 

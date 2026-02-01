@@ -1,20 +1,16 @@
 package server.feature.member.command.application
 
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import server.feature.member.command.domain.Member
-import server.feature.member.command.domain.MemberCreateEvent
 import server.feature.member.command.domain.MemberRepository
 import server.feature.member.command.domain.Provider
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.SocialMemberSessionCache
 import server.infra.db.transaction.Transactional
-import server.messaging.StreamEventPublisher
-import server.messaging.StreamTopic
 import server.password.PasswordEncoder
 import server.security.Passport
 import server.security.UnauthorizedException
-import java.util.UUID
+import java.util.*
 
 @Service
 class MemberService(
@@ -22,9 +18,7 @@ class MemberService(
     private val memberRepository: MemberRepository,
     private val emailVerificationCache: EmailVerificationCache,
     private val passwordEncoder: PasswordEncoder,
-    private val socialMemberSessionCache: SocialMemberSessionCache,
-    private val defaultTopic: StreamTopic,
-    private val eventPublisher: StreamEventPublisher
+    private val socialMemberSessionCache: SocialMemberSessionCache
 ) {
 
     suspend fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
@@ -62,19 +56,16 @@ class MemberService(
         return CreateSocialMemberResult(member, sessionToken)
     }
 
-    private suspend fun createMember(member: Member): MemberData {
+    private suspend fun createMember(member: Member): MemberData = transactional {
         if (memberRepository.existsByEmail(member.email)) {
             throw IllegalArgumentException("이미 가입된 이메일 입니다.")
         }
         val saved = memberRepository.save(member)
 
-        val event = MemberCreateEvent(
-            memberId = saved.id,
-            email = saved.email,
-        )
-        eventPublisher.publish(defaultTopic, event)
+        val event = saved.created()
+        registerEvent(event)
 
-        return MemberData(saved)
+        MemberData(saved)
     }
 
     suspend fun findById(memberId: Long): MemberData? {

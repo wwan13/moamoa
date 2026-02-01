@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import support.domain.BaseEntity
+import support.domain.DomainModified
 
 @Table("tech_blog_subscription")
 data class TechBlogSubscription(
@@ -19,4 +20,30 @@ data class TechBlogSubscription(
 
     @Column("tech_blog_id")
     val techBlogId: Long
-) : BaseEntity()
+) : BaseEntity() {
+
+    fun subscribe() = TechBlogSubscribeUpdatedEvent(
+        memberId = memberId,
+        techBlogId = techBlogId,
+        subscribed = true
+    )
+
+    fun unsubscribe() = TechBlogSubscribeUpdatedEvent(
+        memberId = memberId,
+        techBlogId = techBlogId,
+        subscribed = false
+    )
+
+    fun toggleNotification(): DomainModified<TechBlogSubscription> {
+        val toggled = copy(
+            notificationEnabled = !notificationEnabled,
+        )
+        val event = NotificationUpdatedEvent(
+            memberId = memberId,
+            techBlogId = techBlogId,
+            enabled = toggled.notificationEnabled
+        )
+
+        return DomainModified(toggled, event)
+    }
+}

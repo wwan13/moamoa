@@ -16,4 +16,17 @@ data class PostBookmark(
 
     @Column("post_id")
     val postId: Long
-) : BaseEntity()
+) : BaseEntity() {
+
+    fun bookmark() = PostBookmarkUpdatedEvent(
+        memberId = memberId,
+        postId = postId,
+        bookmarked = true
+    )
+
+    fun unbookmark() = PostBookmarkUpdatedEvent(
+        memberId = memberId,
+        postId = postId,
+        bookmarked = false
+    )
+}

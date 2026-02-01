@@ -25,4 +25,11 @@ data class Submission(
 
     @Column("member_id")
     val memberId: Long
-) : BaseEntity()
+) : BaseEntity() {
+
+    fun created() = SubmissionCreateEvent(
+        submissionId = id,
+        blogTitle = blogTitle,
+        blogUrl = blogUrl
+    )
+}
