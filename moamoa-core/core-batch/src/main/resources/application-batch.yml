@@ -8,3 +8,6 @@ spring:
       enabled: false
     jdbc:
       initialize-schema: never
+
+batch:
+  run-key: ${BATCH_RUN_KEY}
