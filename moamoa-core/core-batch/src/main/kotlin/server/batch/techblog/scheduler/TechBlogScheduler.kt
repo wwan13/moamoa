@@ -28,6 +28,7 @@ internal class TechBlogScheduler(
     fun launchFetchTechBlogPostsJob() = batchScope.launch {
         val params = JobParametersBuilder()
             .addLong("run.id", System.currentTimeMillis())
+            .addLong("postLimit", 10L)
             .toJobParameters()
         batchQueue.enqueue(fetchTechBlogPostsJob, params)
     }
