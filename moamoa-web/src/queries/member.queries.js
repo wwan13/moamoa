@@ -6,9 +6,10 @@ export function useMemberSummaryQuery() {
     const { authScope } = useAuth()
 
     return useQuery({
-        queryKey: ["member", authScope],
+        queryKey: ["member", "summary", authScope?.id ?? authScope ?? "none"],
         queryFn: ({ signal }) => memberApi.summary({ signal }),
-        // enabled: !!authScope
+        enabled: !!authScope,
+        staleTime: 0,
     })
 }
 

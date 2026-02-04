@@ -16,6 +16,7 @@ export function useBookmarkToggleMutation(options = {}) {
 
             qc.invalidateQueries({ queryKey: ["posts", scope] })
             qc.invalidateQueries({ queryKey: ["post", scope, variables.postId] })
+            qc.invalidateQueries({ queryKey: ["member", authScope] })
         },
     })
 }

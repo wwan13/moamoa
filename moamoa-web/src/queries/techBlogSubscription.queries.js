@@ -15,6 +15,7 @@ export function useSubscriptionToggleMutation(options = {}) {
             qc.invalidateQueries({ queryKey: ["techBlogs", "subscribed", authScope] })
             qc.invalidateQueries({ queryKey: ["posts", authScope, "subscribed"] })
             qc.invalidateQueries({ queryKey: ["techBlogs", authScope] })
+            qc.invalidateQueries({ queryKey: ["member", authScope] })
         },
     })
 }
