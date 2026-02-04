@@ -1,0 +1,48 @@
+.wrap {
+    width: 100vw;
+    height: 100vh;
+    background: #F4F5F9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.content {
+    width: 500px;
+    /*height: 360px;*/
+    border-radius: 12px;
+    box-shadow: 2px 4px 24px rgba(1, 1, 1, 0.02);
+    background: #FFFFFF;
+    padding: 40px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.logoWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.miniLogo {
+    height: 26px;
+    width: 26px;
+}
+
+.fullLogo {
+    width: 240px;
+}
+
+.inputWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
