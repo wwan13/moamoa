@@ -31,6 +31,6 @@ class PostCacheEvictService(
         handleEvent<PostBookmarkUpdatedEvent>(postCacheHandlingStream) { event ->
             bookmarkedPostListCache.evictAll(event.memberId)
             postStatsCache.evict(event.postId)
-            bookmarkedAllPostIdSetCache.evictAll(event.postId)
+            bookmarkedAllPostIdSetCache.evictAll(event.memberId)
         }
 }
