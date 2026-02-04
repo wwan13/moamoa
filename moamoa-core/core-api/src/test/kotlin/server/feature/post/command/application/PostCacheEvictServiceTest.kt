@@ -57,6 +57,6 @@ class PostCacheEvictServiceTest : UnitTest() {
 
         coVerify(exactly = 1) { bookmarkedPostListCache.evictAll(event.memberId) }
         coVerify(exactly = 1) { postStatsCache.evict(event.postId) }
-        coVerify(exactly = 1) { bookmarkedAllPostIdSetCache.evictAll(event.postId) }
+        coVerify(exactly = 1) { bookmarkedAllPostIdSetCache.evictAll(event.memberId) }
     }
 }
