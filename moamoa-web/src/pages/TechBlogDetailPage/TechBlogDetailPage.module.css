@@ -85,7 +85,7 @@
 .subButton {
     outline: none;
     border: none;
-    background-color: #90AB8B;
+    background-color: #0E4BBC;
     width: 64px;
     height: 32px;
     border-radius: 18px;
@@ -133,7 +133,7 @@
     box-sizing: border-box;
     outline: none;
     border: none;
-    background-color: #90ab8b;
+    background-color: #0E4BBC;
     color: #ffffff;
     border-radius: 999px;
     cursor: pointer;

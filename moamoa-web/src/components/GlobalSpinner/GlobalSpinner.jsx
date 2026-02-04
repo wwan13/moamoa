@@ -7,7 +7,7 @@ export default function GlobalSpinner() {
         <div className={styles.overlay}>
             {/*<ClipLoader size={40} color="#111827" />*/}
             <DotLottieReact
-                src="https://lottie.host/9934b555-fee3-4544-b9f2-f31df5748272/lAkteKQ8h5.lottie"
+                src="/spinner.lottie"
                 loop
                 autoplay
                 className={styles.spinner}

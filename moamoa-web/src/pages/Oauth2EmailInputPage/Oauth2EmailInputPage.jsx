@@ -103,7 +103,7 @@ export default function Oauth2EmailInputPage() {
                 <div className={styles.titleWrap}>
                     <img
                         onClick={() => navigate("/")}
-                        src="https://i.imgur.com/sYjlI5P.png"
+                        src="https://i.imgur.com/l8hsGOD.png"
                         alt="moamoa"
                         className={styles.moamoaIcon}
                     />

@@ -55,7 +55,7 @@ export default function LoginModal({
 
             <form className={styles.form} onSubmit={handleSubmit}>
                 <img
-                    src="https://i.imgur.com/nqleqcc.png"
+                    src="https://i.imgur.com/CHYokw0.png"
                     alt="moamoa"
                     className={styles.moamoaIcon}
                 />

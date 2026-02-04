@@ -27,11 +27,11 @@ export default function Footer() {
     return (
         <footer className={styles.footer}>
             <div className={styles.moamoa}>
-                <img
-                    src="https://i.imgur.com/Z47Aa41.png"
-                    alt="moamoa-grey"
-                    className={styles.moamoaIcon}
-                />
+                {/*<img*/}
+                {/*    src="https://i.imgur.com/Sjc8OID.png"*/}
+                {/*    alt="moamoa-grey"*/}
+                {/*    className={styles.moamoaIcon}*/}
+                {/*/>*/}
                 <p className={styles.copy}>© 2026 moamoa, All Rights Reserved.</p>
             </div>
             <a

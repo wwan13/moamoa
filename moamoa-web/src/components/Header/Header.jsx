@@ -16,7 +16,7 @@ export default function Header() {
                 aria-label="홈으로 이동"
             >
                 <img
-                    src="https://i.imgur.com/zbgOugR.png"
+                    src="https://i.imgur.com/CHYokw0.png"
                     alt="moamoa"
                     className={styles.logoImage}
                 />

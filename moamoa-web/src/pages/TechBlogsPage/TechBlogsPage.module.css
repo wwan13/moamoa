@@ -36,7 +36,7 @@
 
 .count {
     font-weight: 700;
-    color: #EBF4DD;
+    color: #DCE8FD;
     font-size: 52px;
 }
 
@@ -65,7 +65,7 @@
     cursor: pointer;
     font-weight: 700;
     color: #ffffff;
-    background: #90AB8B;
+    background: #0E4BBC;
     margin-top: 3px;
 }
 
@@ -176,7 +176,7 @@
 }
 
 .card:hover .blogName {
-    color: #90AB8B;;
+    color: #0E4BBC;;
 }
 
 .blogName {
@@ -210,7 +210,7 @@
     padding: 0;
     cursor: pointer;
     font-weight: 700;
-    color: #90AB8B;
+    color: #0E4BBC;
     font-size: 13px;
     height: 17px;
     line-height: 17px;

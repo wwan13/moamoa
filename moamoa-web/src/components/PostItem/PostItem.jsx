@@ -134,9 +134,9 @@ export default function PostItem({post, isBlogDetail, isLoading = false}) {
                     aria-label={bookmarked ? "북마크 해제" : "북마크"}
                 >
                     {bookmarked ? (
-                        <BookmarkIcon sx={{fontSize: 16, color: "#90AB8B", fontWeight: 800}}/>
+                        <BookmarkIcon sx={{fontSize: 16, color: "#0E4BBC", fontWeight: 800}}/>
                     ) : (
-                        <BookmarkBorderIcon sx={{fontSize: 16, color: "#90AB8B", fontWeight: 800}}/>
+                        <BookmarkBorderIcon sx={{fontSize: 16, color: "#0E4BBC", fontWeight: 800}}/>
                     )}
                 </button>
             </div>

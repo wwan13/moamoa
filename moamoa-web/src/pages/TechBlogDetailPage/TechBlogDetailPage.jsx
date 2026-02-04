@@ -1,6 +1,6 @@
 import styles from "./TechBlogDetailPage.module.css"
 import useAuth from "../../auth/AuthContext.jsx"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { showGlobalAlert, showGlobalConfirm, showToast } from "../../api/client.js"
 import PostList from "../../components/PostList/PostList.jsx"
@@ -41,17 +41,12 @@ export default function TechBlogDetailPage() {
     const totalPages = postsRes?.meta?.totalPages ?? 0
     const totalPostCount = postsRes?.meta?.totalCount ?? 0
 
-    // ✅ 단일 소스: techBlogQuery가 내려주는 상태 사용
+    // ✅ 단일 소스: query 데이터만 사용
     const subscribed = !!techBlog?.subscribed
     const notificationEnabled = !!techBlog?.notificationEnabled
+    const subCount = techBlog?.subscriptionCount ?? 0
 
-    // ✅ 구독자 수는 optimistic용 로컬 상태
-    const [subCount, setSubCount] = useState(0)
-    useEffect(() => {
-        if (techBlog?.subscriptionCount != null) setSubCount(techBlog.subscriptionCount)
-    }, [techBlog?.id, techBlog?.subscriptionCount])
-
-    // ✅ techBlog queryKey: 훅과 100% 동일
+    // ✅ techBlog queryKey: 훅과 동일하게 유지(현재 코드 기준)
     const techBlogQk = useMemo(() => ["techBlog", scope, techBlogId], [scope, techBlogId])
 
     const patchTechBlogDetail = (patcher) => {
@@ -59,6 +54,21 @@ export default function TechBlogDetailPage() {
             if (!old) return old
             return patcher(old)
         })
+    }
+
+    const patchBlogList = (targetId, patcher) => {
+        qc.setQueriesData({ queryKey: ["techBlogs"], exact: false }, (old) => {
+            if (!old?.techBlogs) return old
+            return {
+                ...old,
+                techBlogs: old.techBlogs.map((b) => (b.id === targetId ? patcher(b) : b)),
+            }
+        })
+    }
+
+    const patchBoth = (targetId, patcher) => {
+        patchTechBlogDetail(patcher)
+        patchBlogList(targetId, patcher)
     }
 
     // ✅ 에러 처리
@@ -94,7 +104,8 @@ export default function TechBlogDetailPage() {
         if (!techBlog) return
         if (subToggle.isPending) return
 
-        const wasSubscribed = subscribed
+        const techBlogIdNum = techBlog.id
+        const wasSubscribed = !!techBlog.subscribed
 
         if (wasSubscribed) {
             const ok = await showGlobalConfirm({
@@ -106,33 +117,32 @@ export default function TechBlogDetailPage() {
             if (!ok) return
         }
 
-        // ✅ optimistic
-        setSubCount((c) => c + (wasSubscribed ? -1 : 1))
-        patchTechBlogDetail((b) => ({
+        // ✅ optimistic: 상세/목록 동시 반영
+        patchBoth(techBlogIdNum, (b) => ({
             ...b,
             subscribed: !wasSubscribed,
             subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
-            // 구독 해지하면 알림은 off 처리
-            notificationEnabled: true,
+            // ✅ 구독 해제면 알림 off / 구독이면 알림 on
+            notificationEnabled: wasSubscribed ? false : true,
         }))
 
         try {
-            await subToggle.mutateAsync({ techBlogId: techBlog.id })
+            await subToggle.mutateAsync({ techBlogId: techBlogIdNum })
 
-            // ✅ 목록/상세 동기화 (키를 정확히 몰라도 broad invalidate는 안전)
-            qc.invalidateQueries({ queryKey: ["techBlogs"] })
-            qc.invalidateQueries({ queryKey: ["techBlog"] })
+            // 서버가 count/상태를 다시 계산하는 구조면 최소 refetch로 정합성 확보
+            qc.invalidateQueries({ queryKey: techBlogQk, refetchType: "inactive" })
+            qc.invalidateQueries({ queryKey: ["techBlogs"], refetchType: "inactive" })
 
             showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
         } catch {
-            // ✅ rollback
-            setSubCount((c) => c + (wasSubscribed ? 1 : -1))
-            patchTechBlogDetail((b) => ({
+            // ✅ rollback: 상세/목록 동시 복원
+            patchBoth(techBlogIdNum, (b) => ({
                 ...b,
                 subscribed: wasSubscribed,
                 subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
-                // 알림은 서버값으로 다시 맞추는 게 안전 → invalidate에 맡김
+                // notificationEnabled는 원래 값이 뭔지 모를 수 있어 안전하게 refetch에 맡김
             }))
+
             qc.invalidateQueries({ queryKey: techBlogQk })
             showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
         }
@@ -144,9 +154,10 @@ export default function TechBlogDetailPage() {
 
         if (!techBlog) return
         if (notiToggle.isPending) return
-        if (!subscribed) return
+        if (!techBlog.subscribed) return
 
-        const wasEnabled = notificationEnabled
+        const techBlogIdNum = techBlog.id
+        const wasEnabled = !!techBlog.notificationEnabled
 
         if (wasEnabled) {
             const ok = await showGlobalConfirm({
@@ -158,25 +169,26 @@ export default function TechBlogDetailPage() {
             if (!ok) return
         }
 
-        // ✅ optimistic
-        patchTechBlogDetail((b) => ({
+        // ✅ optimistic: 상세/목록 동시 반영
+        patchBoth(techBlogIdNum, (b) => ({
             ...b,
             notificationEnabled: !wasEnabled,
         }))
 
         try {
-            await notiToggle.mutateAsync({ techBlogId: techBlog.id })
+            await notiToggle.mutateAsync({ techBlogId: techBlogIdNum })
 
-            qc.invalidateQueries({ queryKey: ["techBlogs"] })
-            qc.invalidateQueries({ queryKey: ["techBlog"] })
+            qc.invalidateQueries({ queryKey: techBlogQk, refetchType: "inactive" })
+            qc.invalidateQueries({ queryKey: ["techBlogs"], refetchType: "inactive" })
 
             showToast(wasEnabled ? "알림을 해제했어요." : "알림을 설정했어요.")
         } catch {
             // ✅ rollback
-            patchTechBlogDetail((b) => ({
+            patchBoth(techBlogIdNum, (b) => ({
                 ...b,
                 notificationEnabled: wasEnabled,
             }))
+
             qc.invalidateQueries({ queryKey: techBlogQk })
             showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
         }

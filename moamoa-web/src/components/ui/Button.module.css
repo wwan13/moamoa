@@ -8,10 +8,10 @@
 .primary {
     height: 44px;
     width: 100%;
-    background: #90AB8B;
-    border-color: #90AB8B;
+    background: #0E4BBC;
+    border-color: #0E4BBC;
     color: #fff;
-    font-weight: 600;
+    font-weight: 400;
 }
 
 .primary:hover {
