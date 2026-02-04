@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import server.batch.post.dto.PostCategory
 
 @Component
-internal class CategorizingPostWriter(
+internal class AICategorizingPostWriter(
     private val jdbc: NamedParameterJdbcTemplate
 ) : ItemWriter<List<PostCategory>> {
 

@@ -9,34 +9,34 @@ import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
-import server.batch.post.dto.PostCategory
 import server.batch.post.dto.PostSummary
-import server.batch.post.processor.CategorizingPostProcessor
-import server.batch.post.reader.CategorizingPostReader
-import server.batch.post.writer.CategorizingPostWriter
+import server.batch.post.dto.PreCategorizingPostResult
+import server.batch.post.processor.PreCategorizingPostProcessor
+import server.batch.post.reader.PreCategorizingPostReader
+import server.batch.post.writer.PreCategorizingPostWriter
 
 @Configuration
-internal class CategorizingPostConfig(
-    private val reader: CategorizingPostReader,
-    private val processor: CategorizingPostProcessor,
-    private val writer: CategorizingPostWriter,
+internal class PreCategorizingPostConfig(
+    private val reader: PreCategorizingPostReader,
+    private val processor: PreCategorizingPostProcessor,
+    private val writer: PreCategorizingPostWriter,
 ) {
     @Bean
-    fun categorizingPostJob(
+    fun preCategorizingPostJob(
         jobRepository: JobRepository,
-        categorizingPostStep: Step,
-    ): Job = JobBuilder("categorizingPostJob", jobRepository)
+        preCategorizingPostStep: Step,
+    ): Job = JobBuilder("preCategorizingPostJob", jobRepository)
         .incrementer(RunIdIncrementer())
-        .start(categorizingPostStep)
+        .start(preCategorizingPostStep)
         .build()
 
     @Bean
-    fun categorizingPostStep(
+    fun preCategorizingPostStep(
         jobRepository: JobRepository,
         txManager: PlatformTransactionManager,
-    ): Step = StepBuilder("categorizingPostStep", jobRepository)
+    ): Step = StepBuilder("preCategorizingPostStep", jobRepository)
         .allowStartIfComplete(true)
-        .chunk<List<PostSummary>, List<PostCategory>>(10, txManager)
+        .chunk<List<PostSummary>, PreCategorizingPostResult>(100, txManager)
         .reader(reader)
         .processor(processor)
         .writer(writer)

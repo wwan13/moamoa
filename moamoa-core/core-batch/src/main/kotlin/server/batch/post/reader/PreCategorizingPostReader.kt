@@ -7,17 +7,14 @@ import server.batch.post.dto.PostSummary
 import javax.sql.DataSource
 
 @Component
-internal class CategorizingPostReader(
+internal class PreCategorizingPostReader(
     dataSource: DataSource,
 ) : ItemReader<List<PostSummary>> {
 
     private val jdbc = NamedParameterJdbcTemplate(dataSource)
-    private var alreadyRead = false
+    private var lastId: Long? = null
 
     override fun read(): List<PostSummary>? {
-        if (alreadyRead) return null
-        alreadyRead = true
-
         val sql = """
             SELECT
                 p.id AS post_id,
@@ -29,12 +26,16 @@ internal class CategorizingPostReader(
             LEFT JOIN post_tag pt ON pt.post_id = p.id
             LEFT JOIN tag t ON t.id = pt.tag_id
             WHERE p.category_id = 999
+              AND p.id > :lastId
             GROUP BY p.id
             ORDER BY p.id ASC
-            LIMIT 10
+            LIMIT 100
         """.trimIndent()
 
-        return jdbc.query(sql, emptyMap<String, Any>()) { rs, _ ->
+        val items = jdbc.query(
+            sql,
+            mapOf("lastId" to (lastId ?: 0L))
+        ) { rs, _ ->
             PostSummary(
                 postId = rs.getLong("post_id"),
                 title = rs.getString("title"),
@@ -46,5 +47,9 @@ internal class CategorizingPostReader(
                     ?: emptyList()
             )
         }
+
+        if (items.isEmpty()) return null
+        lastId = items.last().postId
+        return items
     }
 }

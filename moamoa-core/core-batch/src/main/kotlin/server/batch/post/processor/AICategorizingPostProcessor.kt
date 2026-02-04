@@ -11,7 +11,7 @@ import server.chat.ChatCompletion
 import server.chat.Prompt
 
 @Component
-internal class CategorizingPostProcessor(
+internal class AICategorizingPostProcessor(
     private val chatCompletion: ChatCompletion,
     private val objectMapper: ObjectMapper
 ) : ItemProcessor<List<PostSummary>, List<PostCategory>> {
@@ -54,9 +54,8 @@ internal class CategorizingPostProcessor(
                 카테고리 ID:
                 - 1: BACKEND
                 - 2: FRONTEND
-                - 3: INFRA
-                - 4: DATA_ML_AI
-                - 5: DESIGN_PRODUCT
+                - 3: PRODUCT
+                - 4: DESIGN
                 - 6: ETC
             
                 분류 전략(매우 중요):
