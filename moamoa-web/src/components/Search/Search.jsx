@@ -67,7 +67,7 @@ export default function Search({open, onClose}) {
                         navigate("/")
                         onClose()
                     }}>
-                        <img alt="moamoa" src="https://i.imgur.com/nqleqcc.png"/>
+                        <img alt="moamoa" src="https://i.imgur.com/CHYokw0.png"/>
                     </div>
 
                     <button className={styles.cancelButton} onClick={onClose}>
@@ -139,7 +139,7 @@ export default function Search({open, onClose}) {
                         (!isSearching && initialPostsQuery.isPending)) && (
                         <div className={styles.loading}>
                             <DotLottieReact
-                                src="https://lottie.host/9934b555-fee3-4544-b9f2-f31df5748272/lAkteKQ8h5.lottie"
+                                src="/spinner.lottie"
                                 loop
                                 autoplay
                                 className={styles.spinner}

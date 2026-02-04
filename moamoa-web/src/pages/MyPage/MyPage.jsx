@@ -56,7 +56,7 @@ export default function MyPage() {
                                 <span className={styles.statLabel}>북마크</span>
                                 <BookmarkIcon
                                     className={styles.statIcon}
-                                    sx={{fontSize: 26, color: "#90AB8B", fontWeight: 800}}
+                                    sx={{fontSize: 26, color: "#0E4BBC", fontWeight: 800}}
                                 />
                             </div>
                             <div className={`${styles.statValue} ${styles.skeleton} ${styles.skeletonStat}`}></div>
@@ -85,7 +85,7 @@ export default function MyPage() {
                                 <span className={styles.statLabel}>북마크</span>
                                 <BookmarkIcon
                                     className={styles.statIcon}
-                                    sx={{fontSize: 26, color: "#90AB8B", fontWeight: 800}}
+                                    sx={{fontSize: 26, color: "#0E4BBC", fontWeight: 800}}
                                 />
                             </div>
                             <div

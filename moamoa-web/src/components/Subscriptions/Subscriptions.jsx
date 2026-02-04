@@ -87,7 +87,7 @@ export default function Subscriptions({
 
             <ul className={styles.list}>
                 {visibleItems.map((it) => {
-                    const isActiveItem = !!activeBlogKey && activeBlogKey === it.key
+                    const isActiveItem = !!activeBlogKey && activeBlogKey.toString() === it.id.toString()
                     return (
                         <li key={it.id ?? it.key}>
                             <button
