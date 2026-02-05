@@ -1,4 +1,4 @@
-package server.admin.infra.transaction
+package server.admin.infra.db.transaction
 
 import io.r2dbc.spi.ConnectionFactory
 import org.springframework.r2dbc.connection.R2dbcTransactionManager

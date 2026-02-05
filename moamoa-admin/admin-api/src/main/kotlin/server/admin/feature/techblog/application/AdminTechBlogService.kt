@@ -11,7 +11,7 @@ import server.admin.feature.tag.domain.AdminTag
 import server.admin.feature.tag.domain.AdminTagRepository
 import server.admin.feature.techblog.domain.AdminTechBlog
 import server.admin.feature.techblog.domain.AdminTechBlogRepository
-import server.admin.infra.transaction.AdminTransactional
+import server.admin.infra.db.transaction.AdminTransactional
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSources
 
