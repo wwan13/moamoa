@@ -23,7 +23,7 @@ type ConfirmState = {
 function App() {
     const [alertOpen, setAlertOpen] = useState(false)
     const [alertTitle, setAlertTitle] = useState("오류")
-    const [alertMessage, setAlertMessage] = useState("")
+    const [alertMessage, setAlertMessage] = useState<string>("")
     const [alertOnClose, setAlertOnClose] = useState<() => void>(() => () => setAlertOpen(false))
 
     const [toast, setToast] = useState<Toast | null>(null)
@@ -48,7 +48,7 @@ function App() {
 
         setOnGlobalAlert(({ title, message, onClose }) => {
             setAlertTitle(title ?? "오류")
-            setAlertMessage(message)
+            setAlertMessage(message ?? "")
             setAlertOnClose(() => () => {
                 setAlertOpen(false)
                 onClose?.()

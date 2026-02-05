@@ -1,6 +1,8 @@
 import styles from './Sidebar.module.css'
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
+import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
+import LibraryAddOutlinedIcon from '@mui/icons-material/LibraryAddOutlined';
 import {useLocation, useNavigate} from "react-router-dom"
 import * as React from "react"
 
@@ -18,7 +20,27 @@ const menus: Menu[] = [
         navigateTo: "/dashboard",
         icon: (active) => (
             <DashboardOutlinedIcon
-                sx={{ fontSize: 20, color: active ? "#000000" : "#808080" }}
+                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+            />
+        ),
+    },
+    {
+        title: "블로그 요청",
+        key: "/submission",
+        navigateTo: "/submission",
+        icon: (active) => (
+            <LibraryAddOutlinedIcon
+                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+            />
+        ),
+    },
+    {
+        title: "피드백",
+        key: "/feedback",
+        navigateTo: "/feedback",
+        icon: (active) => (
+            <ChatOutlinedIcon
+                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
             />
         ),
     },
@@ -28,7 +50,7 @@ const menus: Menu[] = [
         navigateTo: "/uncategorized",
         icon: (active) => (
             <CategoryOutlinedIcon
-                sx={{ fontSize: 20, color: active ? "#000000" : "#808080" }}
+                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
             />
         ),
     },
