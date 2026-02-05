@@ -25,4 +25,8 @@ internal data class AdminMember(
 
     @Column("provider_key")
     val providerKey: String,
-) : AdminBaseEntity()
+) : AdminBaseEntity() {
+
+    val isAdmin: Boolean
+        get() = role == AdminMemberRole.ADMIN
+}

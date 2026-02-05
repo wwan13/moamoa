@@ -9,6 +9,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.*
+import server.admin.security.AdminForbiddenException
+import server.admin.security.AdminUnauthorizedException
+import server.jwt.ExpiredTokenException
+import server.jwt.InvalidTokenException
 
 @RestControllerAdvice
 internal class AdminApiControllerAdvice {
@@ -98,6 +102,46 @@ internal class AdminApiControllerAdvice {
     ): ResponseEntity<ErrorResponse> {
         log.warn("[{}] 지원하지 않는 Accept 입니다", exchange.request.path.value(), e)
         return error(HttpStatus.NOT_ACCEPTABLE, "지원하지 않는 응답 형식입니다")
+    }
+
+    // 401
+    @ExceptionHandler(AdminUnauthorizedException::class)
+    fun handleUnauthorized(
+        exchange: ServerWebExchange,
+        e: AdminUnauthorizedException
+    ): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
+    }
+
+    // 403
+    @ExceptionHandler(AdminForbiddenException::class)
+    fun handleForbidden(
+        exchange: ServerWebExchange,
+        e: AdminForbiddenException
+    ): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        return error(HttpStatus.FORBIDDEN, e.message ?: "접근 권한이 없습니다")
+    }
+
+    // 401
+    @ExceptionHandler(InvalidTokenException::class)
+    fun handleInvalidToken(
+        exchange: ServerWebExchange,
+        e: InvalidTokenException
+    ): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
+    }
+
+    // 401
+    @ExceptionHandler(ExpiredTokenException::class)
+    fun handleExpiredToken(
+        exchange: ServerWebExchange,
+        e: ExpiredTokenException
+    ): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        return error(HttpStatus.UNAUTHORIZED, e.message ?: "TOKEN_EXPIRED")
     }
 
     // 400 - 도메인 예외

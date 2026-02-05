@@ -17,6 +17,8 @@ dependencies {
 
     implementation(project(":moamoa-core:core-tech-blog"))
     implementation(project(":moamoa-infra:infra-tech-blog"))
+    implementation(project(":moamoa-infra:infra-security"))
+    implementation(project(":moamoa-infra:infra-redis"))
 
     testImplementation(project(":moamoa-support:support-test"))
 }
