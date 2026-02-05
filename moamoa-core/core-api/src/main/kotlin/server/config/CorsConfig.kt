@@ -14,8 +14,10 @@ class CorsConfig {
         val config = CorsConfiguration().apply {
             allowedOrigins = listOf(
                 "http://localhost:5173",
+                "http://localhost:5174",
                 "https://moamoa.wowan.me",
                 "https://moamoa.dev",
+                "https://admin.moamoa.dev",
             )
             allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
