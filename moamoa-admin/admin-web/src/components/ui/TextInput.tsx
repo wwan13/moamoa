@@ -1,27 +1,28 @@
 import styles from './TextInput.module.css'
-import {useState} from "react";
+import { useState, type HTMLInputTypeAttribute } from "react"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined"
 
 type TextInputProps = {
     label: string
-    type: string
+    type: HTMLInputTypeAttribute
     value: string
-    onClick: () => void
-    isValid: boolean,
+    onChange: (value: string) => void
+    isValid: boolean
     errMessage: string
 }
 
 const TextInput = ({
-                       label,
-                       type,
-                       value,
-                       onClick,
-                       isValid,
-                       errMessage,
+    label,
+    type,
+    value,
+    onChange,
+    isValid,
+    errMessage,
 }: TextInputProps) => {
     const isPassword = type === "password"
     const [show, setShow] = useState(false)
+    const inputType = isPassword && show ? "text" : type
 
     return (
         <div className={styles.wrap}>
@@ -29,8 +30,8 @@ const TextInput = ({
             <div className={styles.inputWrap}>
                 <input
                     className={styles.input}
-                    type={type}
-                    onClick={onClick}
+                    type={inputType}
+                    onChange={(e) => onChange(e.target.value)}
                     value={value}
                 />
                 {isPassword && (

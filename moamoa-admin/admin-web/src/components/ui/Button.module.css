@@ -1,0 +1,26 @@
+.base {
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 8px;
+    border: none;
+    background: #000000;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.base:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.primary {
+    background: #000000;
+}
+
+.outline {
+    background: #fff;
+    color: #000000;
+    border: 1px solid #000000;
+}

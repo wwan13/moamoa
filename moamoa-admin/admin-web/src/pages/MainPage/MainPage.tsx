@@ -1,5 +1,9 @@
+import PageTitle from "../../components/pagetitle/PageTItle.tsx";
+
 const MainPage = () => {
-    return <>관리자 페이지 입니다.</>
+    return <div>
+        <PageTitle value={"모아모아 관리자"} />
+    </div>
 }
 
 export default MainPage

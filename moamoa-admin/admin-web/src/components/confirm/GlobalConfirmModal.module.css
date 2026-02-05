@@ -1,0 +1,78 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 300000;
+}
+
+.panel {
+    width: 360px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+    padding: 20px;
+}
+
+.title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.message {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #374151;
+}
+
+.actions {
+    margin-top: 20px;
+}
+
+/* ⭐ 여기서만 정렬/레이아웃 */
+.actionsRow {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+
+    width: 100%;
+    max-width: 100%;
+}
+
+/* ⭐ 공용 Button 스타일이 이상해도 모달 안에서는 고정 */
+.actionsRow > * {
+    position: static !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: 100%;
+
+    white-space: nowrap;
+}
+
+/* 버튼은 내용 기반 */
+.cancelButton {
+    height: 36px;
+    padding: 0 14px;
+    background-color: #f3f4f6;
+    border: none;
+    color: #3B4953;
+    font-weight: 400;
+    font-size: 14px;
+}
+
+.confirmButton {
+    height: 36px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 400;
+}

@@ -1,0 +1,30 @@
+.wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.historyBack {
+    outline: none;
+    border: none;
+    border-radius: 6px;
+    background: #ffffff;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.historyBack:hover {
+    background: #f3f4f6;
+}
+
+.title {
+    color: #252525;
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+}
