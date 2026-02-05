@@ -3,6 +3,7 @@ package server.admin.feature.techblog.application
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.hibernate.validator.constraints.URL
+import server.admin.feature.techblog.domain.AdminTechBlog
 
 internal data class AdminCreateTechBlogCommand(
     @field:NotBlank
@@ -44,7 +45,7 @@ internal data class AdminTechBlogData(
     val key: String
 ) {
     constructor(
-        techBlog: server.admin.feature.techblog.domain.AdminTechBlog
+        techBlog: AdminTechBlog
     ) : this(
         id = techBlog.id,
         title = techBlog.title,
@@ -53,3 +54,12 @@ internal data class AdminTechBlogData(
         blogUrl = techBlog.blogUrl
     )
 }
+
+internal data class AdminInitTechBlogCommand(
+    val techBlogId: Long
+)
+
+internal data class AdminInitTechBlogResult(
+    val techBlog: AdminTechBlogData,
+    val newPostCount: Int
+)

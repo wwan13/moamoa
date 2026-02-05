@@ -1,4 +1,4 @@
-package server.admin.feature.post.domain
+package server.admin.feature.post.command.domain
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column

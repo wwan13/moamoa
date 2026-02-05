@@ -14,13 +14,10 @@ internal enum class AdminCategory(
     UNDEFINED(999L, "");
 
     companion object {
-        val validCategories: List<AdminCategory>
-            get() = AdminCategory.entries.filter { it != UNDEFINED }
-
-        fun fromId(id: Long) = validCategories.firstOrNull { it.id == id }
+        fun fromId(id: Long) = entries.firstOrNull { it.id == id }
             ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
 
-        fun fromName(name: String) = validCategories.firstOrNull { it.name == name }
+        fun fromName(name: String) = entries.firstOrNull { it.name == name }
             ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
     }
 }
