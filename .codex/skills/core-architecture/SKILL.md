@@ -12,6 +12,11 @@ moamoa의 멀티모듈 경계와 레이어 구조를 기존 방식대로 유지�
 - 도메인 로직은 `moamoa-core`에, 외부 연동은 `moamoa-infra`에 둔다.
 - 공통 유틸은 `moamoa-support`에만 둔다.
 
+## 패키지 루트 규칙
+- `moamoa-admin/admin-api`: `server.admin`
+- `moamoa-core/core-batch`: `server.batch`
+- `moamoa-core/core-api`: `server`
+
 ## 현재 모듈 맵
 - `moamoa-core:core-api`: 메인 API 서버 (WebFlux + R2DBC + Security)
 - `moamoa-core:core-batch`: 배치 처리 (Spring Batch)
