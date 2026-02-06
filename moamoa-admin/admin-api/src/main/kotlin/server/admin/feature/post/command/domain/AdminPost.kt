@@ -35,4 +35,8 @@ internal data class AdminPost(
 
     @Column("category_id")
     val categoryId: Long,
-) : AdminBaseEntity()
+) : AdminBaseEntity() {
+
+    fun updateCategory(categoryId: Long): AdminPost =
+        copy(categoryId = categoryId)
+}
