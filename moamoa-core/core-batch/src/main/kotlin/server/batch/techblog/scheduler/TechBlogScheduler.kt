@@ -13,7 +13,7 @@ internal class TechBlogScheduler(
     private val batchScope: CoroutineScope,
     private val batchQueue: BatchQueue,
     private val syncTechBlogSubscriptionCountJob: Job,
-    private val fetchTechBlogPostsJob: Job,
+    private val collectTechBlogPostJob: Job,
 ) {
 
     @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Seoul")
@@ -25,11 +25,11 @@ internal class TechBlogScheduler(
     }
 
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
-    fun launchFetchTechBlogPostsJob() = batchScope.launch {
+    fun launchCollectTechBlogPostJob() = batchScope.launch {
         val params = JobParametersBuilder()
             .addLong("run.id", System.currentTimeMillis())
             .addLong("postLimit", 10L)
             .toJobParameters()
-        batchQueue.enqueue(fetchTechBlogPostsJob, params)
+        batchQueue.enqueue(collectTechBlogPostJob, params)
     }
 }
