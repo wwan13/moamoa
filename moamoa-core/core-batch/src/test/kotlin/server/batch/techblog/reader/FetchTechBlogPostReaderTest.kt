@@ -23,6 +23,8 @@ class FetchTechBlogPostReaderTest : UnitTest() {
 
         val queryProvider = ReflectionTestUtils.getField(reader, "queryProvider") as MySqlPagingQueryProvider
         val sortKeys = ReflectionTestUtils.getField(queryProvider, "sortKeys") as Map<*, *>
+        val selectClause = ReflectionTestUtils.getField(queryProvider, "selectClause") as String
         sortKeys["t.id"] shouldBe Order.ASCENDING
+        selectClause.contains("t.title") shouldBe true
     }
 }

@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":moamoa-infra:infra-tech-blog"))
     implementation(project(":moamoa-infra:infra-redis"))
     implementation(project(":moamoa-infra:infra-ai"))
+    implementation(project(":moamoa-support:support-webhook"))
 
     testImplementation(project(":moamoa-support:support-test"))
 }

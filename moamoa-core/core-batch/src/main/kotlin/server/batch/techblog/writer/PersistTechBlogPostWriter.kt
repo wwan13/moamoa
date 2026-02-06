@@ -3,11 +3,14 @@ package server.batch.techblog.writer
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
+import org.springframework.beans.factory.annotation.Value
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.batch.common.time.dbNow
 import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.techblog.dto.PostData
+import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
 import server.cache.CacheMemory
 import server.queue.QueueMemory
 import java.sql.Timestamp
@@ -20,6 +23,8 @@ internal class PersistTechBlogPostWriter(
     private val afterCommitExecutor: AfterCommitExecutor,
     private val queueMemory: QueueMemory,
     private val cacheMemory: CacheMemory,
+    private val monitorStore: TechBlogCollectMonitorStore,
+    @field:Value("#{jobParameters['run.id']}") private val runId: Long?,
 ) : ItemWriter<List<PostData>> {
 
     override fun write(chunk: Chunk<out List<PostData>>) {
@@ -33,12 +38,24 @@ internal class PersistTechBlogPostWriter(
         upsertPostTags(posts, postIdMap, tagIdByTitle)
 
         val windowEnd = jdbc.dbNow()
+        val actualRunId = runId ?: System.currentTimeMillis()
         val newlyInsertedPostIds = findNewlyInsertedPostIds(posts, startedAt, windowEnd)
+        val newlyInsertedCountsByTechBlogId = findNewlyInsertedCountsByTechBlogId(posts, startedAt, windowEnd)
 
         afterCommitExecutor.execute {
             queueMemory.delete("NEW_POST_IDS")
             queueMemory.rPushAll("NEW_POST_IDS", newlyInsertedPostIds)
             cacheMemory.evictByPrefix("POST:LIST:")
+            runCatching {
+                monitorStore.accumulateAddedCount(actualRunId, newlyInsertedCountsByTechBlogId)
+            }.onFailure {
+                log.warn(
+                    "Failed to accumulate added counts. runId={}, techBlogCount={}",
+                    actualRunId,
+                    newlyInsertedCountsByTechBlogId.size,
+                    it
+                )
+            }
         }
     }
 
@@ -210,5 +227,38 @@ internal class PersistTechBlogPostWriter(
             )
         ) { rs, _ -> rs.getLong("id") }
             .toSet()
+    }
+
+    private fun findNewlyInsertedCountsByTechBlogId(
+        posts: List<PostData>,
+        startedAt: LocalDateTime,
+        windowEnd: LocalDateTime
+    ): Map<Long, Int> {
+        val techBlogIds = posts.map { it.techBlogId }.distinct()
+        val postKeys = posts.map { it.key }.distinct()
+
+        return jdbc.query(
+            """
+            SELECT tech_blog_id, COUNT(*) AS cnt
+            FROM post
+            WHERE tech_blog_id IN (:techBlogIds)
+              AND post_key IN (:postKeys)
+              AND created_at >= :startedAt
+              AND created_at <=  :windowEnd
+            GROUP BY tech_blog_id
+            """.trimIndent(),
+            mapOf(
+                "techBlogIds" to techBlogIds,
+                "postKeys" to postKeys,
+                "startedAt" to Timestamp.valueOf(startedAt),
+                "windowEnd" to Timestamp.valueOf(windowEnd),
+            )
+        ) { rs, _ ->
+            rs.getLong("tech_blog_id") to rs.getInt("cnt")
+        }.toMap()
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(PersistTechBlogPostWriter::class.java)
     }
 }

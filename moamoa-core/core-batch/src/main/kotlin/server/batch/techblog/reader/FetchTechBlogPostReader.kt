@@ -19,7 +19,8 @@ internal class FetchTechBlogPostReader(
                 """
                 SELECT
                   t.id,
-                  t.tech_blog_key
+                  t.tech_blog_key,
+                  t.title
                 """.trimIndent()
             )
             setFromClause("FROM tech_blog t")
