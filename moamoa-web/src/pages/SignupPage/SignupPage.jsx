@@ -149,7 +149,7 @@ export default function SignupPage() {
                     />
                     <span className={styles.title}>회원가입</span>
                     <span className={styles.copy}>
-            관심 있는 기술블로그를 구독하고, <br />
+            관심 있는 기술 블로그를 구독하고, <br />
             이메일로 새 게시글 소식을 받아보세요.
           </span>
                 </div>

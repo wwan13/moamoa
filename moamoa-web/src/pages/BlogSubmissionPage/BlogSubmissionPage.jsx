@@ -23,14 +23,14 @@ export default function BlogSubmissionPage() {
 
     const validateTitle = () => {
         if (title.length === 0) {
-            setTitleError("기술블로그 이름을 입력해 주세요")
+            setTitleError("기술 블로그 이름을 입력해 주세요")
         }
         setTitleError("")
     }
 
     const validateUrl = () => {
         if (url.length === 0) {
-            setUrlError("기술블로그 URL을 입력해 주세요.")
+            setUrlError("기술 블로그 URL을 입력해 주세요.")
         }
 
         try {
@@ -73,9 +73,9 @@ export default function BlogSubmissionPage() {
                 <GlobalSpinner />
             )}
             <div className={styles.titleWrap}>
-                <span className={styles.title}>기술블로그 요청</span>
+                <span className={styles.title}>기술 블로그 요청</span>
                 <span className={styles.description}>
-                    찾으시는 기술블로그가 없다면 개발자에게 요청해 주세요. <br/>
+                    찾으시는 기술 블로그가 없다면 개발자에게 요청해 주세요. <br/>
                     최대한 빨리 추가해 드릴게요!
                 </span>
             </div>
@@ -83,9 +83,9 @@ export default function BlogSubmissionPage() {
             <form className={styles.form} onSubmit={onSubmit}>
                 <div className={styles.inputWrap}>
                     <div className={styles.input}>
-                        <label className={styles.label}>기술블로그 이름</label>
+                        <label className={styles.label}>기술 블로그 이름</label>
                         <InputText
-                            placeholder="모아모아 기술블로그"
+                            placeholder="모아모아 기술 블로그"
                             value={title}
                             onChange={(e) => {
                                 setTitle(e.target.value)
@@ -100,7 +100,7 @@ export default function BlogSubmissionPage() {
                     </div>
 
                     <div className={styles.input}>
-                        <label className={styles.label}>기술블로그 URL</label>
+                        <label className={styles.label}>기술 블로그 URL</label>
                         <InputText
                             placeholder="https://moamoa.dev"
                             value={url}
