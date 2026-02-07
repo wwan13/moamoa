@@ -122,7 +122,7 @@ internal class ElevenstSource : TechBlogSource {
     private companion object {
         private const val BASE_URL = "https://11st-tech.github.io"
         private const val TIMEOUT_MS = 10_000
-        private const val DEFAULT_THUMBNAIL = ""
+        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/CZ9EMKu.png"
     }
 
     private data class BasicPost(
