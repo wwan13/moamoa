@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query"
 import { postsApi } from "../api/post.api.js"
 import useAuth from "../auth/AuthContext.jsx"
 
@@ -65,6 +65,39 @@ export function usePostsByBookmarkQuery({ page } = {}, options = {}) {
         queryFn: ({ signal }) => postsApi.listByBookmark({ page }, { signal }),
         enabled: (options.enabled ?? true) && !!authScope,
         keepPreviousData: true,
+    })
+}
+
+export function useInfinitePostsQuery(
+    { size = 10, query } = {},
+    options = {}
+) {
+    const { authScope, publicScope } = useAuth()
+    const scope = authScope ?? publicScope
+
+    const resolvedSize = size ?? 10
+    const hasQuery = !!query
+
+    return useInfiniteQuery({
+        queryKey: ["posts", scope, "infinite", {
+            size: resolvedSize,
+            query: hasQuery ? query : undefined,
+        }],
+        queryFn: ({ pageParam = 1, signal }) =>
+            postsApi.list(
+                { page: pageParam, size: resolvedSize, query },
+                { signal }
+            ),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const page = Number(lastPage?.meta?.page ?? 1)
+            const totalPages = Number(lastPage?.meta?.totalPages ?? 0)
+            if (page < totalPages) return page + 1
+            return undefined
+        },
+        enabled: (options.enabled ?? true) && hasQuery,
+        staleTime: 0,
+        gcTime: 0,
     })
 }
 

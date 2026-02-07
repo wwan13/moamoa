@@ -1,6 +1,6 @@
 import styles from "./Search.module.css"
 import ClearIcon from '@mui/icons-material/Clear';
-import {usePostsQuery} from "../../queries/post.queries.js";
+import {useInfinitePostsQuery, usePostsQuery} from "../../queries/post.queries.js";
 import {useEffect, useMemo, useRef, useState} from "react";
 import PostItem from "../PostItem/PostItem.jsx";
 import {useTechBlogsQuery} from "../../queries/techBlog.queries.js";
@@ -14,8 +14,8 @@ export default function Search({open, onClose}) {
 
     const [query, setQuery] = useState("")
     const inputRef = useRef(null)
-
-    const restoreRef = useRef(null)
+    const scrollRootRef = useRef(null)
+    const sentinelRef = useRef(null)
 
     const navigate = useNavigate()
 
@@ -39,8 +39,8 @@ export default function Search({open, onClose}) {
     )
     const initialPosts = initialPostsQuery.data?.posts
 
-    const searchPostsQuery = usePostsQuery(
-        {page: 1, size: 10, query: searchQuery},
+    const searchPostsQuery = useInfinitePostsQuery(
+        {size: 10, query: searchQuery},
         {enabled: isSearching}
     )
 
@@ -50,7 +50,7 @@ export default function Search({open, onClose}) {
     )
 
     const posts = isSearching
-        ? (searchPostsQuery.data?.posts ?? [])
+        ? (searchPostsQuery.data?.pages?.flatMap((page) => page?.posts ?? []) ?? [])
         : []
 
     const techBlogs = isSearching
@@ -58,9 +58,40 @@ export default function Search({open, onClose}) {
         : []
 
     const onInputChange = (e) => setQuery(e.target.value)
+    const isInitialSearchLoading = isSearching
+        && (searchTechBlogsQuery.isPending || searchPostsQuery.isPending)
+
+    useEffect(() => {
+        if (!isSearching) return
+        if (!scrollRootRef.current || !sentinelRef.current) return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0]
+                if (!entry?.isIntersecting) return
+                if (!searchPostsQuery.hasNextPage) return
+                if (searchPostsQuery.isFetchingNextPage) return
+                searchPostsQuery.fetchNextPage()
+            },
+            {
+                root: scrollRootRef.current,
+                rootMargin: "0px 0px 240px 0px",
+                threshold: 0.1,
+            }
+        )
+
+        observer.observe(sentinelRef.current)
+        return () => observer.disconnect()
+    }, [
+        isSearching,
+        searchQuery,
+        searchPostsQuery.hasNextPage,
+        searchPostsQuery.isFetchingNextPage,
+        searchPostsQuery.fetchNextPage,
+    ])
 
     return (
-        <div className={styles.wrap}>
+        <div className={styles.wrap} ref={scrollRootRef}>
             <div className={styles.contentWrap}>
                 <div className={styles.titleWrap}>
                     <div className={styles.icon} onClick={() => {
@@ -127,17 +158,30 @@ export default function Search({open, onClose}) {
                                     ))}
                                 </div>
                             )}
+
+                            <div ref={sentinelRef} className={styles.sentinel} />
                         </>
                     )}
 
                     {((isSearching && techBlogs.length === 0 && posts.length === 0
-                        && !searchTechBlogsQuery.isPending && !searchPostsQuery.isPending))&& (
+                        && !isInitialSearchLoading))&& (
                         <div className={styles.empty}>검색 결과가 없습니다.</div>
                     )}
 
-                    {(isSearching && (searchTechBlogsQuery.isPending || searchPostsQuery.isPending) ||
+                    {(isSearching && isInitialSearchLoading ||
                         (!isSearching && initialPostsQuery.isPending)) && (
                         <div className={styles.loading}>
+                            <DotLottieReact
+                                src="/spinner.lottie"
+                                loop
+                                autoplay
+                                className={styles.spinner}
+                            />
+                        </div>
+                    )}
+
+                    {(isSearching && searchPostsQuery.isFetchingNextPage) && (
+                        <div className={styles.nextPageLoading}>
                             <DotLottieReact
                                 src="/spinner.lottie"
                                 loop

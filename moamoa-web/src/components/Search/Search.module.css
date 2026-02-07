@@ -122,6 +122,17 @@
     width: 100%;
 }
 
+.nextPageLoading {
+    width: 100%;
+    padding: 8px 0 4px;
+}
+
+.sentinel {
+    width: 100%;
+    height: 1px;
+    margin-top: -1px;
+}
+
 .spinner {
     width: 200px;
     margin: auto;
