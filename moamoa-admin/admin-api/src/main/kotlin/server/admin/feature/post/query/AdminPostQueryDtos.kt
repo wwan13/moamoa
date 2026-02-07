@@ -12,6 +12,11 @@ internal data class AdminPostQueryConditions(
     val techBlogIds: Set<Long>?,
 )
 
+internal data class AdminPostList(
+    val meta: AdminPostListMeta,
+    val posts: List<AdminPostSummary>
+)
+
 internal data class AdminPostSummary(
     val postId: Long,
     val key: String,
@@ -20,6 +25,14 @@ internal data class AdminPostSummary(
     val thumbnail: String,
     val url: String,
     val publishedAt: LocalDateTime,
+    val categoryId: Long,
     val techBlog: AdminTechBlogData,
     val tags: List<AdminTag>
+)
+
+internal data class AdminPostListMeta(
+    val page: Long,
+    val size: Long,
+    val totalCount: Long,
+    val totalPages: Long
 )

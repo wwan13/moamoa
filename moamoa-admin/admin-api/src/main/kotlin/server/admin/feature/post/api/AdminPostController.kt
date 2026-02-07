@@ -1,7 +1,6 @@
 package server.admin.feature.post.api
 
 import jakarta.validation.Valid
-import kotlinx.coroutines.flow.toList
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -12,9 +11,9 @@ import org.springframework.web.bind.annotation.RestController
 import server.admin.feature.post.command.application.AdminPostService
 import server.admin.feature.post.command.application.AdminUpdateCategoryCommand
 import server.admin.feature.post.command.application.AdminUpdateCategoryResult
+import server.admin.feature.post.query.AdminPostList
 import server.admin.feature.post.query.AdminPostQueryConditions
 import server.admin.feature.post.query.AdminPostQueryService
-import server.admin.feature.post.query.AdminPostSummary
 import server.admin.security.AdminPassport
 import server.admin.security.RequestAdminPassport
 import server.admin.security.ensureAdmin
@@ -30,9 +29,9 @@ internal class AdminPostController(
     suspend fun findByConditions(
         conditions: AdminPostQueryConditions,
         @RequestAdminPassport passport: AdminPassport
-    ): ResponseEntity<List<AdminPostSummary>> {
+    ): ResponseEntity<AdminPostList> {
         passport.ensureAdmin()
-        val response = postQueryService.findByConditions(conditions).toList()
+        val response = postQueryService.findByConditions(conditions)
         return ResponseEntity.ok(response)
     }
 
