@@ -17,6 +17,10 @@ html, body {
     padding: 0;
 }
 
+html, body, button {
+    letter-spacing: -0.02em;
+}
+
 html {
     scrollbar-gutter: stable;
 }

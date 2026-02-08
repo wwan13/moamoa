@@ -3,7 +3,7 @@ import Button from "../ui/Button.jsx"
 
 export default function GlobalConfirmModal({
                                                open,
-                                               title = "확인",
+                                               title,
                                                message,
                                                confirmText = "확인",
                                                cancelText = "취소",
@@ -15,15 +15,15 @@ export default function GlobalConfirmModal({
     return (
         <div className={styles.backdrop}>
             <div className={styles.panel} role="alertdialog" aria-modal="true">
-                <h3 className={styles.title}>{title}</h3>
+                {title && <h3 className={styles.title}>{title}</h3>}
                 <p className={styles.message}>{message}</p>
 
                 <div className={styles.actions}>
                     <div className={styles.actionsRow}>
-                        <Button className={styles.cancelButton} type="button" onClick={onCancel}>
+                        <Button variant="border" fullWidth={false} type="button" onClick={onCancel}>
                             {cancelText}
                         </Button>
-                        <Button className={styles.confirmButton} type="button" onClick={onConfirm}>
+                        <Button variant="primary" fullWidth={false} type="button" onClick={onConfirm}>
                             {confirmText}
                         </Button>
                     </div>

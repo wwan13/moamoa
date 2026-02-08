@@ -1,5 +1,21 @@
-import styles from "./Button.module.css"
+import styles from './Button.module.css';
 
-export default function Button({ variant = "primary", className = "", ...props }) {
-    return <button className={`${styles.base} ${styles[variant]} ${className}`} {...props} />
+export default function Button({
+    variant = 'primary',
+    fullWidth = true,
+    className = '',
+    ...props
+}) {
+    const isWidthControlledVariant = variant === 'primary' || variant === 'border';
+    const widthClassName = isWidthControlledVariant
+        ? fullWidth
+            ? styles.widthFull
+            : styles.widthAutoPad16
+        : '';
+
+    const buttonClassName = [styles.base, styles[variant], widthClassName, className]
+        .filter(Boolean)
+        .join(' ');
+
+    return <button className={buttonClassName} {...props} />
 }
