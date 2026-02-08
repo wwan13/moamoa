@@ -6,15 +6,15 @@ import { Dropdown } from "../../components/ui/Dropdown.tsx"
 import { Search } from "../../components/ui/Search.tsx"
 import { ListHeader } from "../../components/ui/ListHeader.tsx"
 import PostItem, {type Post } from "../../components/postitem/PostItem"
-import { usePostsQuery } from "../../queries/post.queries"
+import { showGlobalAlert } from "../../api/client"
+import { usePostsQuery, useUpdatePostCategoryMutation } from "../../queries/post.queries"
 
 const categoryDropdownOptions = [
     { value: "0", label: "전체" },
-    { value: "1", label: "백엔드" },
-    { value: "2", label: "프론트엔드" },
-    { value: "3", label: "프로덕트" },
-    { value: "4", label: "디자인" },
-    { value: "5", label: "기타" },
+    { value: "10", label: "엔지니어링" },
+    { value: "20", label: "프로덕트" },
+    { value: "30", label: "디자인" },
+    { value: "40", label: "기타" },
     { value: "999", label: "미분류" },
 ]
 
@@ -32,6 +32,7 @@ const PostsPage = () => {
         query: query || undefined,
         categoryId,
     })
+    const updatePostCategoryMutation = useUpdatePostCategoryMutation()
 
     const posts: Post[] = useMemo(
         () =>
@@ -49,6 +50,29 @@ const PostsPage = () => {
         [data]
     )
     const totalPages = Math.max(data?.meta.totalPages ?? 0, 1)
+
+    const handleCategoryChange = async (
+        postId: number,
+        nextCategoryId: number,
+        prevCategoryId: number
+    ): Promise<boolean> => {
+        if (nextCategoryId === prevCategoryId) return true
+
+        try {
+            const result = await updatePostCategoryMutation.mutateAsync({
+                postId,
+                categoryId: nextCategoryId,
+            })
+            if (!result.success) {
+                await showGlobalAlert("카테고리 변경에 실패했습니다.")
+                return false
+            }
+            return true
+        } catch {
+            await showGlobalAlert("카테고리 변경에 실패했습니다.")
+            return false
+        }
+    }
 
     return (
         <div className={styles.wrap}>
@@ -101,6 +125,7 @@ const PostsPage = () => {
                             key={post.id}
                             post={post}
                             templateColumns="360px 200px 100px 180px"
+                            onCategoryChange={handleCategoryChange}
                         />
                     ))}
             </section>

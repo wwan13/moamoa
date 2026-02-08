@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import styles from "./PostItem.module.css"
 import { Dropdown } from "../ui/Dropdown.tsx"
 import { ListItem } from "../ui/ListItem.tsx"
@@ -22,15 +22,18 @@ type PostItemProps = {
     open?: boolean
     defaultOpen?: boolean
     onOpenChange?: (open: boolean) => void
+    onCategoryChange?: (
+        postId: number,
+        nextCategoryId: number,
+        prevCategoryId: number
+    ) => Promise<boolean>
 }
 
 const categoryOptions = [
-    { value: "0", label: "전체" },
-    { value: "1", label: "백엔드" },
-    { value: "2", label: "프론트엔드" },
-    { value: "3", label: "프로덕트" },
-    { value: "4", label: "디자인" },
-    { value: "5", label: "기타" },
+    { value: "10", label: "엔지니어링" },
+    { value: "20", label: "프로덕트" },
+    { value: "30", label: "디자인" },
+    { value: "40", label: "기타" },
     { value: "999", label: "미분류" },
 ]
 
@@ -40,6 +43,7 @@ const PostItem = ({
     open,
     defaultOpen,
     onOpenChange,
+    onCategoryChange,
 }: PostItemProps) => {
     const postUrlHost = (() => {
         try {
@@ -48,7 +52,30 @@ const PostItem = ({
             return post.url
         }
     })()
-    const [selectedCategory, setSelectedCategory] = useState("0")
+    const [selectedCategory, setSelectedCategory] = useState(String(post.categoryId))
+    const [isUpdating, setIsUpdating] = useState(false)
+
+    useEffect(() => {
+        setSelectedCategory(String(post.categoryId))
+    }, [post.categoryId, post.id])
+
+    const handleCategoryChange = async (value: string) => {
+        if (isUpdating || value === selectedCategory) return
+
+        const prevCategoryId = Number(selectedCategory)
+        const nextCategoryId = Number(value)
+
+        setSelectedCategory(value)
+
+        if (!onCategoryChange) return
+
+        setIsUpdating(true)
+        const isSuccess = await onCategoryChange(post.id, nextCategoryId, prevCategoryId)
+        if (!isSuccess) {
+            setSelectedCategory(String(prevCategoryId))
+        }
+        setIsUpdating(false)
+    }
 
     return (
         <ListItem
@@ -76,7 +103,10 @@ const PostItem = ({
                     <Dropdown
                         options={categoryOptions}
                         value={selectedCategory}
-                        onChange={(value) => setSelectedCategory(value)}
+                        disabled={isUpdating}
+                        onChange={(value) => {
+                            void handleCategoryChange(value)
+                        }}
                         placeholder="카테고리"
                     />
                 </div>,

@@ -46,6 +46,14 @@ export type AdminPostList = {
     posts: AdminPostSummary[]
 }
 
+export type AdminUpdateCategoryCommand = {
+    categoryId: number
+}
+
+export type AdminUpdateCategoryResult = {
+    success: boolean
+}
+
 function buildPostQueryString(conditions: AdminPostQueryConditions): string {
     const params = new URLSearchParams()
 
@@ -83,5 +91,14 @@ export const postApi = {
             posts: [],
         }
     },
+    updateCategory: async (
+        postId: number,
+        command: AdminUpdateCategoryCommand
+    ): Promise<AdminUpdateCategoryResult> => {
+        const res = await http.patch<AdminUpdateCategoryResult>(
+            `/api/admin/post/${postId}`,
+            command
+        )
+        return res ?? { success: false }
+    },
 }
-
