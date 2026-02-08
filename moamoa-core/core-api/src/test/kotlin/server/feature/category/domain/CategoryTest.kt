@@ -15,9 +15,9 @@ class CategoryTest : UnitTest() {
 
     @Test
     fun `id로 카테고리를 조회한다`() {
-        val result = Category.fromId(Category.BACKEND.id)
+        val result = Category.fromId(Category.ENGINEERING.id)
 
-        result shouldBe Category.BACKEND
+        result shouldBe Category.ENGINEERING
     }
 
     @Test
@@ -29,9 +29,9 @@ class CategoryTest : UnitTest() {
 
     @Test
     fun `name으로 카테고리를 조회한다`() {
-        val result = Category.fromName(Category.FRONTEND.name)
+        val result = Category.fromName(Category.PRODUCT.name)
 
-        result shouldBe Category.FRONTEND
+        result shouldBe Category.PRODUCT
     }
 
     @Test

@@ -14,11 +14,11 @@ internal class PreCategorizingPostProcessor(
 ) : ItemProcessor<List<PostSummary>, PreCategorizingPostResult> {
 
     private val categoryIdByTitle = linkedMapOf(
-        "BACKEND" to 1L,
-        "FRONTEND" to 2L,
-        "PRODUCT" to 3L,
-        "DESIGN" to 4L
+        "ENGINEERING" to 10L,
+        "PRODUCT" to 20L,
+        "DESIGN" to 30L
     )
+    private val requiredCategoryTitles = setOf("ENGINEERING", "PRODUCT", "DESIGN")
 
     private val categoryTagsByTitle: Map<String, Set<String>> = loadCategoryTags()
 
@@ -86,9 +86,16 @@ internal class PreCategorizingPostProcessor(
 
         val raw: Map<String, List<String>> = resource.use { objectMapper.readValue(it) }
 
-        return raw.mapNotNull { (title, tags) ->
+        val loaded = raw.mapNotNull { (title, tags) ->
             if (!categoryIdByTitle.containsKey(title)) return@mapNotNull null
             title to tags.map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
         }.toMap()
+
+        val missing = requiredCategoryTitles - loaded.keys
+        check(missing.isEmpty()) {
+            "required categories are missing in categories.json: ${missing.sorted().joinToString(", ")}"
+        }
+
+        return loaded
     }
 }

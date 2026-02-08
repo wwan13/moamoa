@@ -4,12 +4,10 @@ enum class Category(
     val id: Long,
     val title: String
 ) {
-    BACKEND(1L, "백앤드"),
-    FRONTEND(2L, "프론트앤드"),
-    INFRA(3L, "인프라"),
-    DATA_ML_AI(4L, "데이터·ML·AI"),
-    DESIGN_PRODUCT(5L, "디자인·프로덕트"),
-    ETC(6L, "기타"),
+    ENGINEERING(10L, "백앤드"),
+    PRODUCT(20L, "프로덕트"),
+    DESIGN(30L, "디자인"),
+    ETC(40L, "기타"),
 
     UNDEFINED(999L, "");
 

@@ -52,15 +52,14 @@ internal class AICategorizingPostProcessor(
                   }
             
                 카테고리 ID:
-                - 1: BACKEND
-                - 2: FRONTEND
-                - 3: PRODUCT
-                - 4: DESIGN
-                - 6: ETC
-            
+                - 10: ENGINEERING
+                - 20: PRODUCT
+                - 30: DESIGN
+                - 40: ETC
+
                 분류 전략(매우 중요):
                 - 너가 보기에 가장 유사한 카테고리로 선정 해줘
-                - 저기에 포함되지 않는 경우 ETC(6)으로 보내줘
+                - 저기에 포함되지 않는 경우 ETC(40)으로 보내줘
             
                 금지 사항:
                 - 설명, 주석, 코드블록, 마크다운을 출력하지 않는다.
@@ -68,8 +67,8 @@ internal class AICategorizingPostProcessor(
             
                 출력 예시:
                 [
-                  {"postId": 101, "categoryId": 1},
-                  {"postId": 102, "categoryId": 3}
+                  {"postId": 101, "categoryId": 10},
+                  {"postId": 102, "categoryId": 20}
                 ]
                 """.trimIndent()
         ),
