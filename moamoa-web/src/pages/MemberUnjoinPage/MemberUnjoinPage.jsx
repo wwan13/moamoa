@@ -62,6 +62,7 @@ export function MemberUnjoinPage() {
                     ) : (
                         <>
                             <span className={styles.accountBold}>{member?.email} </span>
+                            {member?.provider === "INTERNAL" && "(이메일 계정)"}
                             {member?.provider === "GOOGLE" && "(구글 계정 연동)"}
                             {member?.provider === "GITHUB" && "(깃허브 계정 연동)"}
                         </>
