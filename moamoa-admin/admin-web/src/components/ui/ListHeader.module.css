@@ -1,0 +1,33 @@
+.root {
+    display: grid;
+    align-items: center;
+    gap: 16px;
+    min-height: 44px;
+    padding: 0 16px;
+    /*border: 1px solid #E6E6E6;*/
+    border-radius: 8px;
+    background: #F0F0F0;
+    /*margin-bottom: 12px;*/
+}
+
+.cell {
+    min-width: 0;
+    color: #6B7280;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.left {
+    text-align: left;
+}
+
+.center {
+    text-align: center;
+}
+
+.right {
+    text-align: right;
+}
+

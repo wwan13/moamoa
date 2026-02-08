@@ -1,0 +1,55 @@
+.root {
+    border-bottom: 1px solid #E6E6E6;
+}
+
+.summaryButton {
+    width: 100%;
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    color: inherit;
+}
+
+.summaryButton:focus-visible {
+    outline: 2px solid #98A2B3;
+    outline-offset: -2px;
+}
+
+.summaryStatic {
+    width: 100%;
+}
+
+.summaryGrid {
+    display: grid;
+    align-items: center;
+    gap: 16px;
+    min-height: 56px;
+    padding: 0 40px 0 16px;
+    position: relative;
+}
+
+.cell {
+    min-width: 0;
+    color: #252525;
+    font-size: 14px;
+}
+
+.toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform .2s ease;
+    color: #667085;
+    display: inline-flex;
+    align-items: center;
+}
+
+.toggleOpen {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.details {
+    padding: 14px 16px 16px;
+    border-top: 1px solid #F2F4F7;
+}

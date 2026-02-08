@@ -1,0 +1,82 @@
+.titleCell {
+    min-width: 0;
+}
+
+.title {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #252525;
+    line-height: 1.4;
+}
+
+.blogCell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.blogIcon {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.blogTitle {
+    font-size: 13px;
+    color: #475467;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.url {
+    font-size: 12px;
+    color: #667085;
+}
+
+.categoryCell {
+    width: 160px;
+}
+
+.detail {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.thumbnail {
+    width: 120px;
+    height: 80px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.description {
+    margin: 0;
+    font-size: 14px;
+    color: #475467;
+    line-height: 1.5;
+}
+
+.link {
+    width: fit-content;
+    font-size: 13px;
+    color: #1D4ED8;
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}

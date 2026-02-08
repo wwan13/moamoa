@@ -1,0 +1,40 @@
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+}
+
+.filters {
+    display: flex;
+    justify-content: space-between;
+}
+
+.filterLeft,
+.filterRight {
+    display: flex;
+    align-items: center;
+}
+
+.searchWrap {
+    background: #ffffff;
+    width: 360px;
+    height: 100%;
+}
+
+.listWrap {
+    border-radius: 8px;
+    overflow: visible;
+}
+
+.paginationWrap {
+    display: flex;
+    justify-content: center;
+}
+
+.empty {
+    border: 1px solid #E6E6E6;
+    border-top: none;
+    padding: 20px 16px;
+    color: #667085;
+    font-size: 14px;
+}
