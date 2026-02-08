@@ -71,6 +71,23 @@ class PreCategorizingPostProcessorTest : UnitTest() {
     }
 
     @Test
+    fun `ETC 키워드가 있으면 40으로 분류한다`() {
+        val item = summary(
+            postId = 6L,
+            title = "채용 인터뷰 프로세스 개선",
+            description = "recruiting guide",
+            tags = listOf("채용")
+        )
+
+        val result = sut.process(listOf(item))
+
+        result.categorized.shouldContainExactly(
+            server.batch.post.dto.PostCategory(postId = 6L, categoryId = 40L)
+        )
+        result.uncategorized shouldBe emptyList()
+    }
+
+    @Test
     fun `동점이면 uncategorized로 분류한다`() {
         val item = summary(
             postId = 4L,
@@ -107,7 +124,8 @@ class PreCategorizingPostProcessorTest : UnitTest() {
             mapper.readValue(any<InputStream>(), any<TypeReference<Map<String, List<String>>>>())
         } returns mapOf(
             "ENGINEERING" to listOf("backend"),
-            "PRODUCT" to listOf("product")
+            "PRODUCT" to listOf("product"),
+            "DESIGN" to listOf("design")
         )
 
         shouldThrow<IllegalStateException> {

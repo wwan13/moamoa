@@ -16,9 +16,10 @@ internal class PreCategorizingPostProcessor(
     private val categoryIdByTitle = linkedMapOf(
         "ENGINEERING" to 10L,
         "PRODUCT" to 20L,
-        "DESIGN" to 30L
+        "DESIGN" to 30L,
+        "ETC" to 40L
     )
-    private val requiredCategoryTitles = setOf("ENGINEERING", "PRODUCT", "DESIGN")
+    private val requiredCategoryTitles = setOf("ENGINEERING", "PRODUCT", "DESIGN", "ETC")
 
     private val categoryTagsByTitle: Map<String, Set<String>> = loadCategoryTags()
 
