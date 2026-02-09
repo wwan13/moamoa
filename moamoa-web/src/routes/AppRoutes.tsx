@@ -1,17 +1,17 @@
 import {Route, Routes} from "react-router-dom"
-import MainPage from "../pages/MainPage/MainPage"
-import TechBlogsPage from "../pages/TechBlogsPage/TechBlogsPage";
-import TechBlogDetailPage from "../pages/TechBlogDetailPage/TechBlogDetailPage";
-import MyPage from "../pages/MyPage/MyPage";
-import MySubscriptionPage from "../pages/MySubscriptionsPage/MySubscriptionPage";
+import MainPage from "../pages/mainpage/MainPage"
+import TechBlogsPage from "../pages/techblogspage/TechBlogsPage";
+import TechBlogDetailPage from "../pages/techblogdetailpage/TechBlogDetailPage";
+import MyPage from "../pages/mypage/MyPage";
+import MySubscriptionPage from "../pages/mysubscriptionspage/MySubscriptionPage";
 import DefaultLayout from "../layouts/DefaultLayout";
 import BlankLayout from "../layouts/BlankLayout";
-import SignupPage from "../pages/SignupPage/SignupPage";
-import Oauth2Page from "../pages/Oauth2Page/Oauth2Page";
-import Oauth2EmailInputPage from "../pages/Oauth2EmailInputPage/Oauth2EmailInputPage";
-import BlogSubmissionPage from "../pages/BlogSubmissionPage/BlogSubmissionPage";
-import PasswordChangePage from "../pages/PasswordChangePage/PasswordChangePage";
-import {MemberUnjoinPage} from "../pages/MemberUnjoinPage/MemberUnjoinPage";
+import SignupPage from "../pages/signuppage/SignupPage";
+import Oauth2Page from "../pages/oauth2page/Oauth2Page";
+import Oauth2EmailInputPage from "../pages/oauth2emailinputpage/Oauth2EmailInputPage";
+import BlogSubmissionPage from "../pages/blogsubmissionpage/BlogSubmissionPage";
+import PasswordChangePage from "../pages/passwordchangepage/PasswordChangePage";
+import {MemberUnjoinPage} from "../pages/memberunjoinpage/MemberUnjoinPage";
 
 const AppRoutes = () => {
     return (
