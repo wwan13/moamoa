@@ -1,4 +1,4 @@
-import PageTitle from "../../components/pagetitle/PageTItle.tsx";
+import PageTitle from "../../components/pagetitle/PageTitle.tsx";
 
 const TechBlogPage = () => {
     return (

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import Pagination from "@mui/material/Pagination"
 import styles from './PostPage.module.css'
-import PageTitle from "../../components/pagetitle/PageTItle.tsx"
+import PageTitle from "../../components/pagetitle/PageTitle.tsx"
 import { Dropdown } from "../../components/ui/Dropdown.tsx"
 import { Search } from "../../components/ui/Search.tsx"
 import { ListHeader } from "../../components/ui/ListHeader.tsx"

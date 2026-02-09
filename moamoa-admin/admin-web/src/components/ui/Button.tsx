@@ -6,10 +6,12 @@ type ButtonProps = {
     className?: string
 } & ButtonHTMLAttributes<HTMLButtonElement>
 
-export default function Button({
+const Button = ({
     variant = "primary",
     className = "",
     ...props
-}: ButtonProps) {
+}: ButtonProps) => {
     return <button className={`${styles.base} ${styles[variant]} ${className}`} {...props} />
 }
+
+export default Button

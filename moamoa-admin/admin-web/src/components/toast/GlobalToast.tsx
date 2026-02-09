@@ -7,10 +7,10 @@ type GlobalToastProps = {
     onClose: () => void
 }
 
-export default function GlobalToast({
+const GlobalToast = ({
     toast,
     onClose,
-}: GlobalToastProps) {
+}: GlobalToastProps) => {
     const [visible, setVisible] = useState(false)
 
     useEffect(() => {
@@ -44,3 +44,5 @@ export default function GlobalToast({
         </div>
     )
 }
+
+export default GlobalToast
