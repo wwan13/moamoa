@@ -1,5 +1,5 @@
 import styles from "./Header.module.css"
-import HeaderUser from "../headeruser/HeaderUser"
+import HeaderUser from "../HeaderUser/HeaderUser"
 import useAuth from "../../auth/useAuth"
 import {useNavigate} from "react-router-dom";
 

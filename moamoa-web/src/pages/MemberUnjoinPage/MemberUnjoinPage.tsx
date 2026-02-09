@@ -1,5 +1,5 @@
 import styles from "./MemberUnjoinPage.module.css"
-import GlobalSpinner from "../../components/globalspinner/GlobalSpinner"
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner"
 import { useEffect, useState } from "react"
 import Button from "../../components/ui/Button"
 import { useMemberSummaryQuery, useUnjoinMutation } from "../../queries/member.queries"

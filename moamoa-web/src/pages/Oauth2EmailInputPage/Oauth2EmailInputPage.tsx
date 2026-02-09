@@ -1,5 +1,5 @@
 import styles from "./Oauth2EmailInputPage.module.css"
-import GlobalSpinner from "../../components/globalspinner/GlobalSpinner"
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner"
 import InputText from "../../components/ui/InputText"
 import Button from "../../components/ui/Button"
 import { useMemo, useState, type FormEvent } from "react"

@@ -6,7 +6,7 @@ import InputText from "../../components/ui/InputText";
 import Button from "../../components/ui/Button";
 import {useCreateSubmissionMutation} from "../../queries/submission.queries";
 import {showToast} from "../../api/client";
-import GlobalSpinner from "../../components/globalspinner/GlobalSpinner";
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner";
 
 const BlogSubmissionPage = () => {
     const {isLoggedIn} = useAuth()

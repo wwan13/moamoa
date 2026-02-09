@@ -4,7 +4,7 @@ import useAuth from "../../auth/useAuth"
 import { useNavigate } from "react-router-dom"
 
 import { useSubscribingTechBlogsQuery } from "../../queries/techBlog.queries"
-import TechBlogItem from "../../components/techblogitem/TechBlogItem"
+import TechBlogItem from "../../components/TechBlogItem/TechBlogItem"
 
 const SKELETON_COUNT = 8
 

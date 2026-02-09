@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react"
 import {useNavigate} from "react-router-dom";
 import {useSignupMutation} from "../../queries/auth.queries";
 import useAuth from "../../auth/useAuth";
-import GlobalSpinner from "../../components/globalspinner/GlobalSpinner";
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner";
 
 const SignupPage = () => {
     const navigate = useNavigate()

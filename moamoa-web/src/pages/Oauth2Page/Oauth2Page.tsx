@@ -1,4 +1,4 @@
-import GlobalSpinner from "../../components/globalspinner/GlobalSpinner";
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner";
 import {useEffect} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {showGlobalAlert} from "../../api/client";

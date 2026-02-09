@@ -3,7 +3,7 @@ import useAuth from "../../auth/useAuth"
 import { useEffect, useMemo } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { showGlobalAlert, showGlobalConfirm, showToast } from "../../api/client"
-import PostList from "../../components/postlist/PostList"
+import PostList from "../../components/PostList/PostList"
 import { usePagingQuery } from "../../hooks/usePagingQuery"
 import { useQueryClient } from "@tanstack/react-query"
 

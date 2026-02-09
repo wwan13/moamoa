@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import styles from "./LoginModal.module.css"
 import useModalAccessibility from "../../hooks/useModalAccessibility"
-import ModalShell from "../modalshell/ModalShell"
+import ModalShell from "../ModalShell/ModalShell"
 import Button from "../ui/Button"
 import useAuth from "../../auth/useAuth"
 import InputText from "../ui/InputText"
-import GlobalSpinner from "../globalspinner/GlobalSpinner"
+import GlobalSpinner from "../GlobalSpinner/GlobalSpinner"
 import type { FormEvent } from "react"
 
 type LoginModalProps = {

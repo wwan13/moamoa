@@ -4,7 +4,7 @@ import useAuth from "../../auth/useAuth";
 import {useNavigate} from "react-router-dom";
 import InputText from "../../components/ui/InputText";
 import Button from "../../components/ui/Button";
-import GlobalSpinner from "../../components/globalspinner/GlobalSpinner";
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner";
 import {useChangePasswordMutation} from "../../queries/member.queries";
 import {showGlobalAlert, showGlobalConfirm, showToast} from "../../api/client";
 

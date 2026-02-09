@@ -1,4 +1,4 @@
-import PageTitle from "../../components/pagetitle/PageTitle.tsx";
+import PageTitle from "../../components/pagetitle/PageTItle.tsx";
 import {useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 

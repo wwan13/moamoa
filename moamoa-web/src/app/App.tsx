@@ -13,8 +13,8 @@ import GlobalAlertModal from "../components/alert/GlobalAlertModal"
 import GlobalToast from "../components/toast/GlobalToast"
 import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal"
 import useAuth from "../auth/useAuth"
-import LoginModal from "../components/loginmodal/LoginModal"
-import Search from "../components/search/Search" // 경로 맞춰
+import LoginModal from "../components/LoginModal/LoginModal"
+import Search from "../components/Search/Search" // 경로 맞춰
 
 import { useEffect, useState } from "react"
 import type { GlobalConfirmParams, Toast } from "../api/client"

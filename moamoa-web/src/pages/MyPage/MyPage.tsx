@@ -3,7 +3,7 @@ import useAuth from "../../auth/useAuth";
 import {useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import GlobalSpinner from "../../components/globalspinner/GlobalSpinner";
+import GlobalSpinner from "../../components/GlobalSpinner/GlobalSpinner";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import {useMemberSummaryQuery} from "../../queries/member.queries";

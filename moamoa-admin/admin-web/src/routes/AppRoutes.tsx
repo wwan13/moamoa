@@ -1,12 +1,12 @@
 import { Route, Routes } from "react-router-dom"
-import MainPage from "../pages/mainpage/MainPage.tsx"
-import LoginPage from "../pages/loginpage/LoginPage.tsx"
+import MainPage from "../pages/MainPage/MainPage.tsx"
+import LoginPage from "../pages/LoginPage/LoginPage.tsx"
 import AppLayout from "../components/layout/AppLayout"
-import DashboardPage from "../pages/dashboardpage/DashboardPage.tsx";
-import PostsPage from "../pages/postspage/PostsPage.tsx";
-import FeedbackPage from "../pages/feedbackpage/FeedbackPage.tsx";
-import SubmissionPage from "../pages/submissionpage/SubmissionPage.tsx";
-import TechBlogPage from "../pages/techblogpage/TechBlogPage.tsx";
+import DashboardPage from "../pages/DashboardPage/DashboardPage.tsx";
+import PostsPage from "../pages/PostsPage/PostsPage.tsx";
+import FeedbackPage from "../pages/FeedbackPage/FeedbackPage.tsx";
+import SubmissionPage from "../pages/SubmissionPage/SubmissionPage.tsx";
+import TechBlogPage from "../pages/TechBlogPage/TechBlogPage.tsx";
 
 const AppRoutes = () => {
     return (

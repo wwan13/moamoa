@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from "react"
 import styles from "./MainPage.module.css"
 
-import LeftSidebar from "../../components/leftsidebar/LeftSidebar"
-import PostList from "../../components/postlist/PostList"
+import LeftSidebar from "../../components/LeftSideBar/LeftSidebar"
+import PostList from "../../components/PostList/PostList"
 import useAuth from "../../auth/useAuth"
 import { useSearchParams } from "react-router-dom"
 

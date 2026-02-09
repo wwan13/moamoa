@@ -1,4 +1,4 @@
-import PageTitle from "../../components/pagetitle/PageTitle.tsx";
+import PageTitle from "../../components/pagetitle/PageTItle.tsx";
 
 const FeedbackPage = () => {
     return (

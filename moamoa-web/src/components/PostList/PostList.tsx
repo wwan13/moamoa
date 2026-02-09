@@ -1,7 +1,7 @@
 import Pagination from "@mui/material/Pagination"
 import styles from "./PostList.module.css"
-import PostItem from "../postitem/PostItem"
-import CategoryTabs from "../categorytab/CategoryTabs"
+import PostItem from "../PostItem/PostItem"
+import CategoryTabs from "../CategoryTab/CategoryTabs"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import type { PostSummary } from "../../api/post.api"
 

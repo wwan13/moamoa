@@ -1,5 +1,5 @@
 import styles from "./LeftSidebar.module.css"
-import Subscriptions from "../subscriptions/Subscriptions"
+import Subscriptions from "../Subscriptions/Subscriptions"
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 import type { TechBlogSummary } from "../../api/techBlog.api"
 
