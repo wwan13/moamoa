@@ -11,7 +11,7 @@
 
 .content {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     margin: auto;
     width: 500px;
     padding: 24px 40px;
@@ -48,6 +48,73 @@
     z-index: 0;
 }
 
+.ornaments {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.ornament {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    font-weight: 700;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(20, 36, 72, 0.12);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.ornamentBlue {
+    top: 14%;
+    left: 22%;
+    width: 40px;
+    height: 40px;
+    background: #0e4bbc;
+}
+
+.ornamentBlue > img {
+    width: 100%;
+}
+
+.ornamentRed {
+    top: 20%;
+    right: 40%;
+    height: 32px;
+    padding: 0 18px;
+    font-size: 14px;
+    background: #ff5959;
+}
+
+.ornamentTeal {
+    top: 38%;
+    right: 20%;
+    height: 32px;
+    padding: 0 20px;
+    font-size: 14px;
+    background: #00accf;
+}
+
+.ornamentYellow {
+    bottom: 24%;
+    left: 15%;
+    width: 36px;
+    height: 36px;
+    background: #f2bc3f;
+}
+
+.ornamentGreen {
+    bottom: 13%;
+    right: 33%;
+    height: 32px;
+    padding: 0 18px;
+    font-size: 14px;
+    background: #16c47f;
+}
+
 .bgRow {
     width: 110%;
     display: flex;
@@ -58,16 +125,30 @@
 .bgKeyword {
     font-size: 30px;
     font-weight: 700;
-    color: #F2F7FF;
+    color: #F8F8F8;
     margin: 0;
-}
-
-.sub::after {
-    content: "|";
-    margin-left: 2px;
-    animation: blink 1s infinite;
 }
 
 @keyframes blink {
     50% { opacity: 0; }
+}
+
+@media (max-width: 900px) {
+    .ornamentBlue {
+        width: 42px;
+        height: 42px;
+    }
+
+    .ornamentRed,
+    .ornamentTeal,
+    .ornamentGreen {
+        height: 28px;
+        font-size: 12px;
+        padding: 0 14px;
+    }
+
+    .ornamentYellow {
+        width: 38px;
+        height: 38px;
+    }
 }

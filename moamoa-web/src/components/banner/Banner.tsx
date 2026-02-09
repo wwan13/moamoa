@@ -1,9 +1,9 @@
 import styles from './Banner.module.css'
 import {useEffect, useState} from 'react';
+import DrawIcon from '@mui/icons-material/Draw';
 
 const texts = [
     "구독한 블로그의 최신 글을 이메일로 받아보세요!",
-    "관심 있는 기술 블로그만 골라서 받아보세요!",
 ]
 
 const Banner = () => {
@@ -49,7 +49,29 @@ const Banner = () => {
 
             <div className={styles.content}>
                 <p className={styles.main}>moamoa</p>
-                <p className={styles.sub}>{text}</p>
+                <p className={styles.sub}>구독한 블로그의 최신 글을 이메일로 받아보세요!</p>
+            </div>
+
+            <div className={styles.ornaments} aria-hidden="true">
+                <div className={`${styles.ornament} ${styles.ornamentBlue}`}>
+                    <img alt={"banner_blue"} src={"/banner_blue.png"}/>
+                </div>
+
+                <div className={`${styles.ornament} ${styles.ornamentRed}`}>
+                    user
+                </div>
+
+                <div className={`${styles.ornament} ${styles.ornamentTeal}`}>
+                    blog
+                </div>
+
+                <div className={`${styles.ornament} ${styles.ornamentYellow}`}>
+                    <DrawIcon sx={{fontSize: 18}} />
+                </div>
+
+                <div className={`${styles.ornament} ${styles.ornamentGreen}`}>
+                    &lt;/&gt;
+                </div>
             </div>
 
             <div className={styles.backgroud}>
