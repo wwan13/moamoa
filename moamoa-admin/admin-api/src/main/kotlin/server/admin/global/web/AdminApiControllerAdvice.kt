@@ -30,7 +30,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: BindException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] 요청 값이 올바르지 않습니다", exchange.request.path.value(), e)
+        log.warn("[{}] 요청 값이 올바르지 않습니다", exchange.request.path.value())
         return badRequest("요청 값이 올바르지 않습니다")
     }
 
@@ -40,7 +40,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: MethodArgumentNotValidException,
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] 요청 값이 올바르지 않습니다", exchange.request.path.value(), e)
+        log.warn("[{}] 요청 값이 올바르지 않습니다", exchange.request.path.value())
         return badRequest("요청 값이 올바르지 않습니다")
     }
 
@@ -50,7 +50,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: ServerWebInputException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] 요청 본문/값이 올바르지 않습니다", exchange.request.path.value(), e)
+        log.warn("[{}] 요청 본문/값이 올바르지 않습니다", exchange.request.path.value())
         return badRequest("요청 본문/값이 올바르지 않습니다")
     }
 
@@ -60,7 +60,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: HttpMessageNotReadableException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] 요청 본문(JSON)이 올바르지 않습니다", exchange.request.path.value(), e)
+        log.warn("[{}] 요청 본문(JSON)이 올바르지 않습니다", exchange.request.path.value())
         return badRequest("요청 본문(JSON)이 올바르지 않습니다")
     }
 
@@ -70,7 +70,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: MissingRequestValueException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] 필수 값이 누락되었습니다: {}", exchange.request.path.value(), e.reason, e)
+        log.warn("[{}] 필수 값이 누락되었습니다: {}", exchange.request.path.value(), e.reason)
         return badRequest("필수 값이 누락되었습니다")
     }
 
@@ -80,7 +80,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: MethodNotAllowedException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] 지원하지 않는 HTTP 메서드입니다", exchange.request.path.value(), e)
+        log.warn("[{}] 지원하지 않는 HTTP 메서드입니다", exchange.request.path.value())
         return error(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다")
     }
 
@@ -90,7 +90,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: UnsupportedMediaTypeStatusException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] 지원하지 않는 Content-Type 입니다", exchange.request.path.value(), e)
+        log.warn("[{}] 지원하지 않는 Content-Type 입니다", exchange.request.path.value())
         return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 Content-Type 입니다")
     }
 
@@ -100,7 +100,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: NotAcceptableStatusException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] 지원하지 않는 Accept 입니다", exchange.request.path.value(), e)
+        log.warn("[{}] 지원하지 않는 Accept 입니다", exchange.request.path.value())
         return error(HttpStatus.NOT_ACCEPTABLE, "지원하지 않는 응답 형식입니다")
     }
 
@@ -110,7 +110,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: AdminUnauthorizedException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        log.warn("[{}] {}", exchange.request.path.value(), e.message)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
     }
 
@@ -120,7 +120,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: AdminForbiddenException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        log.warn("[{}] {}", exchange.request.path.value(), e.message)
         return error(HttpStatus.FORBIDDEN, e.message ?: "접근 권한이 없습니다")
     }
 
@@ -130,7 +130,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: InvalidTokenException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        log.warn("[{}] {}", exchange.request.path.value(), e.message)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
     }
 
@@ -140,7 +140,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: ExpiredTokenException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        log.warn("[{}] {}", exchange.request.path.value(), e.message)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "TOKEN_EXPIRED")
     }
 
@@ -150,7 +150,7 @@ internal class AdminApiControllerAdvice {
         exchange: ServerWebExchange,
         e: IllegalArgumentException
     ): ResponseEntity<ErrorResponse> {
-        log.warn("[{}] {}", exchange.request.path.value(), e.message, e)
+        log.warn("[{}] {}", exchange.request.path.value(), e.message)
         return badRequest(e.message ?: "잘못된 요청입니다")
     }
 
