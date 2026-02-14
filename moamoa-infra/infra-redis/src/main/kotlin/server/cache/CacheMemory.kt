@@ -7,6 +7,7 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.core.ScanOptions
+import org.springframework.data.redis.core.script.RedisScript
 import org.springframework.stereotype.Component
 import java.time.Duration
 
@@ -49,6 +50,9 @@ class CacheMemory(
     suspend fun incr(key: String): Long =
         valueOps.increment(key).awaitSingle()
 
+    suspend fun decrBy(key: String, delta: Long): Long =
+        valueOps.increment(key, -delta).awaitSingle()
+
     suspend fun evict(key: String) {
         reactiveRedisTemplate.delete(key).awaitSingle()
     }
@@ -72,7 +76,15 @@ class CacheMemory(
     suspend fun mget(keys: Collection<String>): Map<String, String?> {
         if (keys.isEmpty()) return emptyMap()
         val keyList = keys.toList()
-        val values = valueOps.multiGet(keyList).awaitSingle() ?: emptyList()
+        val values = runCatching {
+            reactiveRedisTemplate
+                .execute(MGET_SCRIPT, keyList, emptyList<String>())
+                .awaitFirstOrNull()
+                ?.map { it as String? }
+                ?: emptyList()
+        }.getOrElse {
+            valueOps.multiGet(keyList).awaitSingle() ?: emptyList()
+        }
         return keyList.mapIndexed { idx, key -> key to values.getOrNull(idx) }.toMap()
     }
 
@@ -93,13 +105,49 @@ class CacheMemory(
         if (valuesByKey.isEmpty()) return
 
         val jsonByKey = valuesByKey.mapValues { (_, v) -> objectMapper.writeValueAsString(v) }
-        valueOps.multiSet(jsonByKey).awaitSingle()
+        val keyList = jsonByKey.keys.toList()
+        val args = buildList {
+            add((ttlMillis ?: -1L).toString())
+            keyList.forEach { key -> add(jsonByKey.getValue(key)) }
+        }
 
-        if (ttlMillis != null) {
-            val duration = Duration.ofMillis(ttlMillis)
-            jsonByKey.keys.forEach { key ->
-                reactiveRedisTemplate.expire(key, duration).awaitSingle()
+        val scriptSucceeded = runCatching {
+            reactiveRedisTemplate
+                .execute(MSET_WITH_TTL_SCRIPT, keyList, args)
+                .awaitFirstOrNull()
+            true
+        }.getOrElse { false }
+
+        if (!scriptSucceeded) {
+            valueOps.multiSet(jsonByKey).awaitSingle()
+
+            if (ttlMillis != null) {
+                val duration = Duration.ofMillis(ttlMillis)
+                keyList.forEach { key ->
+                    reactiveRedisTemplate.expire(key, duration).awaitSingle()
+                }
             }
         }
+    }
+
+    companion object {
+        private val MGET_SCRIPT: RedisScript<List<*>> = RedisScript.of(
+            "return redis.call('MGET', unpack(KEYS))",
+            List::class.java
+        )
+
+        private val MSET_WITH_TTL_SCRIPT: RedisScript<Long> = RedisScript.of(
+            """
+            local ttl = tonumber(ARGV[1])
+            for i = 1, #KEYS do
+              redis.call('SET', KEYS[i], ARGV[i + 1])
+              if ttl ~= -1 then
+                redis.call('PEXPIRE', KEYS[i], ttl)
+              end
+            end
+            return #KEYS
+            """.trimIndent(),
+            Long::class.java
+        )
     }
 }
