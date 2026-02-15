@@ -9,14 +9,12 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 import server.batch.post.dto.PostViewCount
-import server.batch.post.processor.UpdatePostViewCountProcessor
 import server.batch.post.reader.UpdatePostViewCountReader
 import server.batch.post.writer.UpdatePostViewCountWriter
 
 @Configuration
 internal class UpdatePostViewCountConfig(
     private val reader: UpdatePostViewCountReader,
-    private val processor: UpdatePostViewCountProcessor,
     private val writer: UpdatePostViewCountWriter
 ) {
     @Bean
@@ -36,7 +34,6 @@ internal class UpdatePostViewCountConfig(
         .allowStartIfComplete(true)
         .chunk<PostViewCount, PostViewCount>(100, txManager)
         .reader(reader.build())
-        .processor(processor)
-        .writer(writer.build())
+        .writer(writer)
         .build()
 }

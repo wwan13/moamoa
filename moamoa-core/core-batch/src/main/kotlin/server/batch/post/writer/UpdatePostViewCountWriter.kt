@@ -1,25 +1,64 @@
 package server.batch.post.writer
 
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider
-import org.springframework.batch.item.database.JdbcBatchItemWriter
+import org.slf4j.LoggerFactory
+import org.springframework.batch.item.Chunk
+import org.springframework.batch.item.ItemWriter
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.post.dto.PostViewCount
-import javax.sql.DataSource
+import server.cache.CacheMemory
+import server.set.SetMemory
 
 @Component
 internal class UpdatePostViewCountWriter(
-    private val dataSource: DataSource,
-) {
-    fun build() = JdbcBatchItemWriter<PostViewCount>().apply {
-        setDataSource(dataSource)
-        setSql(
+    private val jdbc: NamedParameterJdbcTemplate,
+    private val afterCommitExecutor: AfterCommitExecutor,
+    private val cacheMemory: CacheMemory,
+    private val setMemory: SetMemory,
+) : ItemWriter<PostViewCount> {
+
+    private val dirtySetKey = "POST:VIEW_COUNT:DIRTY_SET"
+
+    override fun write(chunk: Chunk<out PostViewCount>) {
+        val items = chunk.toList()
+        if (items.isEmpty()) return
+
+        jdbc.batchUpdate(
             """
             UPDATE post
-            SET view_count = :viewCount
+            SET view_count = view_count + :delta
             WHERE id = :postId
-            """.trimIndent()
+            """.trimIndent(),
+            items.map { item ->
+                mapOf(
+                    "postId" to item.postId,
+                    "delta" to item.delta
+                )
+            }.toTypedArray()
         )
-        setItemSqlParameterSourceProvider(BeanPropertyItemSqlParameterSourceProvider())
-        afterPropertiesSet()
+
+        afterCommitExecutor.execute {
+            items.forEach { item ->
+                runCatching {
+                    val remaining = cacheMemory.decrBy(item.cacheKey, item.delta)
+                    if (remaining <= 0L) {
+                        cacheMemory.evict(item.cacheKey)
+                        setMemory.remove(dirtySetKey, item.postId.toString())
+                    }
+                }.onFailure {
+                    log.warn(
+                        "Failed to compensate post view count cache. cacheKey={}, delta={}",
+                        item.cacheKey,
+                        item.delta,
+                        it
+                    )
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(UpdatePostViewCountWriter::class.java)
     }
 }
