@@ -1,16 +1,15 @@
 package server.feature.post.query
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Service
 import server.infra.cache.BookmarkedPostListCache
+import server.infra.cache.WarmupCoordinator
 import server.security.Passport
 import support.paging.Paging
 import support.paging.calculateTotalPage
@@ -20,7 +19,7 @@ class BookmarkedPostQueryService(
     private val databaseClient: DatabaseClient,
     private val bookmarkedPostListCache: BookmarkedPostListCache,
     private val postStatsReader: PostStatsReader,
-    private val cacheWarmupScope: CoroutineScope,
+    private val warmupCoordinator: WarmupCoordinator,
 ) {
 
     suspend fun findAllByConditions(
@@ -75,9 +74,10 @@ class BookmarkedPostQueryService(
         val cached = bookmarkedPostListCache.get(memberId, paging.page)
         if (cached != null) return cached
 
-        return fetchBookmarkedBasePosts(paging, memberId).toList().also {
-            cacheWarmupScope.launch {
-                bookmarkedPostListCache.set(memberId, paging.page, it)
+        return fetchBookmarkedBasePosts(paging, memberId).toList().also { posts ->
+            val warmupKey = "${bookmarkedPostListCache.versionKey(memberId)}:PAGE:${paging.page}"
+            warmupCoordinator.launchIfAbsent(warmupKey) {
+                bookmarkedPostListCache.set(memberId, paging.page, posts)
             }
         }
     }

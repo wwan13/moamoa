@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -16,11 +17,19 @@ import org.springframework.r2dbc.core.RowsFetchSpec
 import reactor.core.publisher.Flux
 import server.feature.member.command.domain.MemberRole
 import server.infra.cache.TechBlogSummaryCache
+import server.infra.cache.WarmupCoordinator
 import server.security.Passport
 import test.UnitTest
 import java.util.function.BiFunction
 
 class SubscribedTechBlogQueryServiceTest : UnitTest() {
+    private val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
+
+    init {
+        every { warmupCoordinator.launchIfAbsent(any(), any()) } answers {
+            runBlocking { secondArg<suspend () -> Unit>().invoke() }
+        }
+    }
     @Test
     fun `구독중인 기술 블로그가 없으면 빈 결과를 반환한다`() = runTest {
         val databaseClient = mockk<DatabaseClient>()
@@ -35,7 +44,7 @@ class SubscribedTechBlogQueryServiceTest : UnitTest() {
             databaseClient = databaseClient,
             subscribedTechBlogReader = subscribedTechBlogReader,
             techBlogSummaryCache = techBlogSummaryCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findSubscribingTechBlogs(passport)
@@ -68,7 +77,7 @@ class SubscribedTechBlogQueryServiceTest : UnitTest() {
             databaseClient = databaseClient,
             subscribedTechBlogReader = subscribedTechBlogReader,
             techBlogSummaryCache = techBlogSummaryCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findSubscribingTechBlogs(passport)
@@ -102,6 +111,7 @@ class SubscribedTechBlogQueryServiceTest : UnitTest() {
 
         coEvery { subscribedTechBlogReader.findAllSubscribedList(1L) } returns subscriptions
         coEvery { techBlogSummaryCache.mGet(listOf(2L, 1L)) } returns cachedMap
+        every { techBlogSummaryCache.key(2L) } returns "TECHBLOG:SUMMARY:2"
         coEvery { techBlogSummaryCache.mSet(dbMap) } returns Unit
 
         mockSummaryList(databaseClient = databaseClient, summaries = dbSummaries)
@@ -110,7 +120,7 @@ class SubscribedTechBlogQueryServiceTest : UnitTest() {
             databaseClient = databaseClient,
             subscribedTechBlogReader = subscribedTechBlogReader,
             techBlogSummaryCache = techBlogSummaryCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findSubscribingTechBlogs(passport)

@@ -11,9 +11,9 @@ class BookmarkedPostListCache(
     private val prefix = "POST:LIST:BOOKMARKED:"
     private val ttlMillis: Long = 60_000L
 
-    private fun versionKey(memberId: Long) = "$prefix$memberId:VER"
+    fun versionKey(memberId: Long) = "$prefix$memberId:VER"
 
-    private fun key(memberId: Long, version: Long, page: Long) =
+    fun key(memberId: Long, version: Long, page: Long) =
         "$prefix$memberId:V:${version}:PAGE:$page:"
 
     suspend fun get(memberId: Long, page: Long): List<PostSummary>? {

@@ -11,7 +11,7 @@ class TechBlogSummaryCache(
     private val prefix = "TECHBLOG:SUMMARY:"
     private val ttlMillis: Long = 60_000L
 
-    private fun key(id: Long) = "$prefix$id"
+    fun key(id: Long) = "$prefix$id"
 
     suspend fun get(id: Long): TechBlogSummary? =
         cacheMemory.get(key(id))

@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -15,10 +16,18 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.RowsFetchSpec
 import reactor.core.publisher.Flux
 import server.infra.cache.PostStatsCache
+import server.infra.cache.WarmupCoordinator
 import test.UnitTest
 import java.util.function.BiFunction
 
 class PostStatsReaderTest : UnitTest() {
+    private val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
+
+    init {
+        every { warmupCoordinator.launchIfAbsent(any(), any()) } answers {
+            runBlocking { secondArg<suspend () -> Unit>().invoke() }
+        }
+    }
     @Test
     fun `캐시된 통계가 있으면 캐시에서 조회한다`() = runTest {
         val databaseClient = mockk<DatabaseClient>()
@@ -35,7 +44,7 @@ class PostStatsReaderTest : UnitTest() {
         val reader = PostStatsReader(
             databaseClient = databaseClient,
             postStatsCache = postStatsCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findPostStatsMap(postIds)
@@ -66,6 +75,8 @@ class PostStatsReaderTest : UnitTest() {
             20L to null,
             30L to null
         )
+        every { postStatsCache.key(10L) } returns "POST:STATS:10"
+        every { postStatsCache.key(30L) } returns "POST:STATS:30"
         coEvery { postStatsCache.mSet(dbStatsMap) } returns Unit
 
         every { databaseClient.sql(any<String>()) } returns fetchSpec
@@ -79,7 +90,7 @@ class PostStatsReaderTest : UnitTest() {
         val reader = PostStatsReader(
             databaseClient = databaseClient,
             postStatsCache = postStatsCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findPostStatsMap(postIds)

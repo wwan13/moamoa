@@ -11,7 +11,7 @@ class TechBlogPostListCache(
     private val prefix = "POST:LIST:TECHBLOG:"
     private val thirtyMinutes: Long = 1_800_000L
 
-    private fun key(techBlogId: Long, page: Long) =
+    fun key(techBlogId: Long, page: Long) =
         "$prefix$techBlogId:PAGE:$page"
 
     suspend fun get(techBlogId: Long, page: Long): List<PostSummary>? =

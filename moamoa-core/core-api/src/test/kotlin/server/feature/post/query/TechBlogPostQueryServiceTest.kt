@@ -7,6 +7,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -17,12 +18,20 @@ import reactor.core.publisher.Mono
 import server.feature.member.command.domain.MemberRole
 import server.feature.techblog.command.application.TechBlogData
 import server.infra.cache.TechBlogPostListCache
+import server.infra.cache.WarmupCoordinator
 import server.security.Passport
 import test.UnitTest
 import java.time.LocalDateTime
 import java.util.function.BiFunction
 
 class TechBlogPostQueryServiceTest : UnitTest() {
+    private val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
+
+    init {
+        every { warmupCoordinator.launchIfAbsent(any(), any()) } answers {
+            runBlocking { secondArg<suspend () -> Unit>().invoke() }
+        }
+    }
     @Test
     fun `캐시된 게시글이 있으면 캐시 메모리에서 결과를 가져와 결과를 병합한다`() = runTest {
         val databaseClient = mockk<DatabaseClient>()
@@ -59,7 +68,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
             techBlogPostListCache = techBlogPostListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findAllByConditions(conditions, passport)
@@ -107,6 +116,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
             basePosts = basePosts
         )
         coEvery { techBlogPostListCache.get(techBlogId, 1L) } returns null
+        every { techBlogPostListCache.key(techBlogId, 1L) } returns "POST:LIST:TECHBLOG:$techBlogId:PAGE:1"
         coEvery { techBlogPostListCache.set(techBlogId, 1L, basePosts) } returns Unit
         coEvery { postStatsReader.findPostStatsMap(listOf(1L, 2L)) } returns statsMap
         coEvery {
@@ -121,7 +131,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
             techBlogPostListCache = techBlogPostListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findAllByConditions(conditions, passport)
@@ -170,7 +180,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
             techBlogPostListCache = techBlogPostListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findAllByConditions(conditions, passport = null)
@@ -211,7 +221,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
             techBlogPostListCache = techBlogPostListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         service.findAllByConditions(conditions, passport)

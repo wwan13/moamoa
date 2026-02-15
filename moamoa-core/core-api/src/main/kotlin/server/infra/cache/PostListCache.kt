@@ -12,7 +12,7 @@ class PostListCache(
     private val prefix = "POST:LIST"
     private val ttlMillis: Long = 1_800_000L // 30분
 
-    private fun key(page: Long, size: Long) =
+    fun key(page: Long, size: Long) =
         "$prefix:PAGE:$page:SIZE:$size"
 
     suspend fun get(page: Long, size: Long): List<PostSummary>? {

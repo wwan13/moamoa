@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -16,10 +17,18 @@ import org.springframework.r2dbc.core.RowsFetchSpec
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import server.infra.cache.TechBlogSummaryCache
+import server.infra.cache.WarmupCoordinator
 import test.UnitTest
 import java.util.function.BiFunction
 
 class TechBlogStatsReaderTest : UnitTest() {
+    private val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
+
+    init {
+        every { warmupCoordinator.launchIfAbsent(any(), any()) } answers {
+            runBlocking { secondArg<suspend () -> Unit>().invoke() }
+        }
+    }
     @Test
     fun `캐시된 통계가 있으면 캐시에서 조회한다`() = runTest {
         val databaseClient = mockk<DatabaseClient>()
@@ -36,7 +45,7 @@ class TechBlogStatsReaderTest : UnitTest() {
         val reader = TechBlogStatsReader(
             databaseClient = databaseClient,
             techBlogSummaryCache = techBlogSummaryCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findTechBlogStatsMap(techBlogIds)
@@ -66,6 +75,8 @@ class TechBlogStatsReaderTest : UnitTest() {
             2L to null,
             3L to null
         )
+        every { techBlogSummaryCache.key(1L) } returns "TECHBLOG:SUMMARY:1"
+        every { techBlogSummaryCache.key(3L) } returns "TECHBLOG:SUMMARY:3"
         coEvery { techBlogSummaryCache.mSet(dbMap) } returns Unit
 
         mockSummaryList(databaseClient = databaseClient, bindIds = techBlogIds, summaries = dbSummaries)
@@ -73,7 +84,7 @@ class TechBlogStatsReaderTest : UnitTest() {
         val reader = TechBlogStatsReader(
             databaseClient = databaseClient,
             techBlogSummaryCache = techBlogSummaryCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findTechBlogStatsMap(techBlogIds)
@@ -97,7 +108,7 @@ class TechBlogStatsReaderTest : UnitTest() {
         val reader = TechBlogStatsReader(
             databaseClient = databaseClient,
             techBlogSummaryCache = techBlogSummaryCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findById(1L)
@@ -114,6 +125,7 @@ class TechBlogStatsReaderTest : UnitTest() {
         val summary = techBlogSummary(id = 1L, subscriptionCount = 10L, postCount = 3L)
 
         coEvery { techBlogSummaryCache.get(1L) } returns null
+        every { techBlogSummaryCache.key(1L) } returns "TECHBLOG:SUMMARY:1"
         coEvery { techBlogSummaryCache.set(summary) } returns Unit
 
         mockSummaryOne(databaseClient = databaseClient, summary = summary)
@@ -121,7 +133,7 @@ class TechBlogStatsReaderTest : UnitTest() {
         val reader = TechBlogStatsReader(
             databaseClient = databaseClient,
             techBlogSummaryCache = techBlogSummaryCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findById(1L)

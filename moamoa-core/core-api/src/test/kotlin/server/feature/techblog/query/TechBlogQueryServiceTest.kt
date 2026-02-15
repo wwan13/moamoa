@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -18,11 +19,19 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import server.feature.member.command.domain.MemberRole
 import server.infra.cache.TechBlogListCache
+import server.infra.cache.WarmupCoordinator
 import server.security.Passport
 import test.UnitTest
 import java.util.function.BiFunction
 
 class TechBlogQueryServiceTest : UnitTest() {
+    private val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
+
+    init {
+        every { warmupCoordinator.launchIfAbsent(any(), any()) } answers {
+            runBlocking { secondArg<suspend () -> Unit>().invoke() }
+        }
+    }
     @Test
     fun `캐시된 기술 블로그 목록이 있으면 캐시에서 조회하고 결과를 병합한다`() = runTest {
         val databaseClient = mockk<DatabaseClient>()
@@ -57,7 +66,7 @@ class TechBlogQueryServiceTest : UnitTest() {
             techBlogListCache = techBlogListCache,
             techBlogStatsReader = techBlogStatsReader,
             subscribedTechBlogReader = subscribedTechBlogReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findAll(passport, conditions)
@@ -90,6 +99,7 @@ class TechBlogQueryServiceTest : UnitTest() {
         )
 
         coEvery { techBlogListCache.get() } returns null
+        every { techBlogListCache.key } returns "TECHBLOG:BASE:LIST"
         coEvery { techBlogListCache.set(baseList) } returns Unit
         coEvery { techBlogStatsReader.findTechBlogStatsMap(listOf(1L, 2L)) } returns emptyMap()
         coEvery { subscribedTechBlogReader.findSubscribedMap(1L, listOf(1L, 2L)) } returns emptyMap()
@@ -101,7 +111,7 @@ class TechBlogQueryServiceTest : UnitTest() {
             techBlogListCache = techBlogListCache,
             techBlogStatsReader = techBlogStatsReader,
             subscribedTechBlogReader = subscribedTechBlogReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findAll(passport, conditions)
@@ -136,7 +146,7 @@ class TechBlogQueryServiceTest : UnitTest() {
             techBlogListCache = techBlogListCache,
             techBlogStatsReader = techBlogStatsReader,
             subscribedTechBlogReader = subscribedTechBlogReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         service.findAll(passport, conditions)
@@ -166,7 +176,7 @@ class TechBlogQueryServiceTest : UnitTest() {
             techBlogListCache = techBlogListCache,
             techBlogStatsReader = techBlogStatsReader,
             subscribedTechBlogReader = subscribedTechBlogReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findAll(passport = null, conditions = conditions)
@@ -189,7 +199,7 @@ class TechBlogQueryServiceTest : UnitTest() {
             techBlogListCache = techBlogListCache,
             techBlogStatsReader = techBlogStatsReader,
             subscribedTechBlogReader = subscribedTechBlogReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         shouldThrow<IllegalStateException> {
@@ -217,7 +227,7 @@ class TechBlogQueryServiceTest : UnitTest() {
             techBlogListCache = techBlogListCache,
             techBlogStatsReader = techBlogStatsReader,
             subscribedTechBlogReader = subscribedTechBlogReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findById(passport = null, techBlogId = 1L)
@@ -253,7 +263,7 @@ class TechBlogQueryServiceTest : UnitTest() {
             techBlogListCache = techBlogListCache,
             techBlogStatsReader = techBlogStatsReader,
             subscribedTechBlogReader = subscribedTechBlogReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findById(

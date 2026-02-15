@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -18,12 +19,20 @@ import reactor.core.publisher.Mono
 import server.feature.member.command.domain.MemberRole
 import server.feature.techblog.command.application.TechBlogData
 import server.infra.cache.PostListCache
+import server.infra.cache.WarmupCoordinator
 import server.security.Passport
 import test.UnitTest
 import java.time.LocalDateTime
 import java.util.function.BiFunction
 
 class PostQueryServiceTest : UnitTest() {
+    private val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
+
+    init {
+        every { warmupCoordinator.launchIfAbsent(any(), any()) } answers {
+            runBlocking { secondArg<suspend () -> Unit>().invoke() }
+        }
+    }
     @Test
     fun `캐시된 게시글이 있으면 캐시 메모리에서 결과를 가져와 결과를 병합한다`() = runTest {
         val databaseClient = mockk<DatabaseClient>()
@@ -59,7 +68,7 @@ class PostQueryServiceTest : UnitTest() {
             postListCache = postListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findByConditions(conditions, passport)
@@ -105,6 +114,7 @@ class PostQueryServiceTest : UnitTest() {
             basePosts = basePosts
         )
         coEvery { postListCache.get(1L, 20L) } returns null
+        every { postListCache.key(1L, 20L) } returns "POST:LIST:PAGE:1:SIZE:20"
         coEvery { postListCache.set(1L, 20L, basePosts) } returns Unit
         coEvery { postStatsReader.findPostStatsMap(listOf(1L, 2L)) } returns statsMap
         coEvery {
@@ -119,7 +129,7 @@ class PostQueryServiceTest : UnitTest() {
             postListCache = postListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findByConditions(conditions, passport)
@@ -167,7 +177,7 @@ class PostQueryServiceTest : UnitTest() {
             postListCache = postListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = service.findByConditions(conditions, passport = null)
@@ -207,7 +217,7 @@ class PostQueryServiceTest : UnitTest() {
             postListCache = postListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         service.findByConditions(conditions, passport)
@@ -267,7 +277,7 @@ class PostQueryServiceTest : UnitTest() {
             postListCache = postListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         service.findByConditions(conditions, passport)
@@ -315,7 +325,7 @@ class PostQueryServiceTest : UnitTest() {
             postListCache = postListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         service.findByConditions(conditions, passport)

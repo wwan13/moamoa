@@ -14,20 +14,20 @@ class CoroutineConfig {
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    private val cacheWarmupExceptionHandler =
+    private val singleFlightWarmupExceptionHandler =
         CoroutineExceptionHandler { _, e ->
-            log.warn("cache warmup coroutine failed", e)
+            log.warn("single-flight warmup coroutine failed", e)
         }
 
-    private val cacheWarmupScope =
-        CoroutineScope(SupervisorJob() + cacheWarmupExceptionHandler)
+    private val singleFlightWarmupScope =
+        CoroutineScope(SupervisorJob() + singleFlightWarmupExceptionHandler)
 
     @Bean
-    fun cacheWarmupScope(): CoroutineScope = cacheWarmupScope
+    fun singleFlightWarmupScope(): CoroutineScope = singleFlightWarmupScope
 
     @PreDestroy
     fun shutdown() {
-        cacheWarmupScope.cancel()
+        singleFlightWarmupScope.cancel()
     }
 
     @Bean

@@ -10,8 +10,8 @@ class BookmarkedAllPostIdSetCache(
     private val prefix = "POST:BOOKMARKED:ALL:"
     private val ttlMillis: Long = 60_000L
 
-    private fun versionKey(memberId: Long) = "$prefix$memberId:VER"
-    private fun key(memberId: Long, version: Long) = "$prefix$memberId:V:$version"
+    fun versionKey(memberId: Long) = "$prefix$memberId:VER"
+    fun key(memberId: Long, version: Long) = "$prefix$memberId:V:$version"
 
     suspend fun get(memberId: Long): Set<Long>? {
         val ver = cacheMemory.get<Long>(versionKey(memberId)) ?: 1L

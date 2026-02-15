@@ -1,18 +1,17 @@
 package server.feature.post.query
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Component
 import server.infra.cache.PostStatsCache
+import server.infra.cache.WarmupCoordinator
 
 @Component
 class PostStatsReader(
     private val databaseClient: DatabaseClient,
     private val postStatsCache: PostStatsCache,
-    private val cacheWarmupScope: CoroutineScope,
+    private val warmupCoordinator: WarmupCoordinator,
 ) {
 
     suspend fun findPostStatsMap(postIds: List<Long>): Map<Long, PostStats> {
@@ -28,7 +27,9 @@ class PostStatsReader(
         }
 
         if (dbMap.isNotEmpty()) {
-            cacheWarmupScope.launch {
+            val cacheKeys = dbMap.keys.map(postStatsCache::key)
+            val warmupKey = WarmupCoordinator.msetKey("PostStatsCache", cacheKeys)
+            warmupCoordinator.launchIfAbsent(warmupKey) {
                 postStatsCache.mSet(dbMap)
             }
         }

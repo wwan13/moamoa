@@ -1,18 +1,17 @@
 package server.feature.techblog.query
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Component
 import server.infra.cache.TechBlogSummaryCache
+import server.infra.cache.WarmupCoordinator
 
 @Component
 class TechBlogStatsReader(
     private val databaseClient: DatabaseClient,
     private val techBlogSummaryCache: TechBlogSummaryCache,
-    private val cacheWarmupScope: CoroutineScope,
+    private val warmupCoordinator: WarmupCoordinator,
 ) {
 
     suspend fun findTechBlogStatsMap(techBlogIds: List<Long>): Map<Long, TechBlogStats> {
@@ -23,7 +22,9 @@ class TechBlogStatsReader(
 
         val dbMap = if (missedIds.isNotEmpty()) fetchTechBlogSummaryMap(missedIds) else emptyMap()
         if (dbMap.isNotEmpty()) {
-            cacheWarmupScope.launch {
+            val cacheKeys = dbMap.keys.map(techBlogSummaryCache::key)
+            val warmupKey = WarmupCoordinator.msetKey("TechBlogSummaryCache", cacheKeys)
+            warmupCoordinator.launchIfAbsent(warmupKey) {
                 techBlogSummaryCache.mSet(dbMap)
             }
         }
@@ -81,7 +82,8 @@ class TechBlogStatsReader(
 
         val summary = fetchTechBlogSummaryById(techBlogId) ?: return null
 
-        cacheWarmupScope.launch {
+        val warmupKey = techBlogSummaryCache.key(summary.id)
+        warmupCoordinator.launchIfAbsent(warmupKey) {
             techBlogSummaryCache.set(summary)
         }
 

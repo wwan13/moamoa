@@ -8,7 +8,7 @@ import server.feature.techblog.query.TechBlogSummary
 class TechBlogListCache(
     private val cacheMemory: CacheMemory,
 ) {
-    private val key = "TECHBLOG:BASE:LIST"
+    val key = "TECHBLOG:BASE:LIST"
     private val ttlMillis = 1_800_000L
 
     suspend fun get(): List<TechBlogSummary>? = cacheMemory.get(key)

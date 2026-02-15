@@ -11,7 +11,7 @@ class PostStatsCache(
     private val prefix = "POST:STATS:"
     private val ttlMillis: Long = 60_000L
 
-    private fun key(postId: Long) = "$prefix$postId"
+    fun key(postId: Long) = "$prefix$postId"
 
     suspend fun get(postId: Long): PostStats? {
         return cacheMemory.get(key(postId))

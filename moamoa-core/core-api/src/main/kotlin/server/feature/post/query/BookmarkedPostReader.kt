@@ -1,29 +1,18 @@
 package server.feature.post.query
 
-import jakarta.annotation.PreDestroy
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Component
 import server.infra.cache.BookmarkedAllPostIdSetCache
+import server.infra.cache.WarmupCoordinator
 
 @Component
 class BookmarkedPostReader(
     private val databaseClient: DatabaseClient,
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache,
-    private val cacheWarmupScope: CoroutineScope
+    private val warmupCoordinator: WarmupCoordinator,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    @PreDestroy
-    fun shutdown() {
-        scope.cancel()
-    }
 
     suspend fun findBookmarkedPostIdSet(
         memberId: Long,
@@ -37,7 +26,8 @@ class BookmarkedPostReader(
         }
 
         return fetchBookmarkedPostIdSetByIn(memberId, postIds).also {
-            cacheWarmupScope.launch {
+            val warmupKey = bookmarkedAllPostIdSetCache.versionKey(memberId)
+            warmupCoordinator.launchIfAbsent(warmupKey) {
                 warmUpAllBookmarkedSet(memberId)
             }
         }

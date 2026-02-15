@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -15,10 +16,18 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.RowsFetchSpec
 import reactor.core.publisher.Flux
 import server.infra.cache.TechBlogSubscriptionCache
+import server.infra.cache.WarmupCoordinator
 import test.UnitTest
 import java.util.function.BiFunction
 
 class SubscribedTechBlogReaderTest : UnitTest() {
+    private val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
+
+    init {
+        every { warmupCoordinator.launchIfAbsent(any(), any()) } answers {
+            runBlocking { secondArg<suspend () -> Unit>().invoke() }
+        }
+    }
     @Test
     fun `캐시된 구독 목록이 있으면 캐시에서 필터링한다`() = runTest {
         val databaseClient = mockk<DatabaseClient>()
@@ -36,7 +45,7 @@ class SubscribedTechBlogReaderTest : UnitTest() {
         val reader = SubscribedTechBlogReader(
             databaseClient = databaseClient,
             techBlogSubscriptionCache = techBlogSubscriptionCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findSubscribedMap(memberId, techBlogIds)
@@ -59,6 +68,7 @@ class SubscribedTechBlogReaderTest : UnitTest() {
         )
 
         coEvery { techBlogSubscriptionCache.get(memberId) } returns null
+        every { techBlogSubscriptionCache.versionKey(memberId) } returns "TECHBLOG:SUBSCRIPTION:ALL:$memberId:VER"
         coEvery { techBlogSubscriptionCache.set(memberId, dbList) } returns Unit
 
         mockSubscriptionList(databaseClient = databaseClient, memberId = memberId, list = dbList)
@@ -66,7 +76,7 @@ class SubscribedTechBlogReaderTest : UnitTest() {
         val reader = SubscribedTechBlogReader(
             databaseClient = databaseClient,
             techBlogSubscriptionCache = techBlogSubscriptionCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findSubscribedMap(memberId, techBlogIds)

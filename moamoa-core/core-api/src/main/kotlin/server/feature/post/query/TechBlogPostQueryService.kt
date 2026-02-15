@@ -1,16 +1,15 @@
 package server.feature.post.query
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Service
 import server.infra.cache.TechBlogPostListCache
+import server.infra.cache.WarmupCoordinator
 import server.security.Passport
 import support.paging.Paging
 import support.paging.calculateTotalPage
@@ -21,7 +20,7 @@ class TechBlogPostQueryService(
     private val techBlogPostListCache: TechBlogPostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
     private val postStatsReader: PostStatsReader,
-    private val cacheWarmupScope: CoroutineScope,
+    private val warmupCoordinator: WarmupCoordinator,
 ) {
 
     suspend fun findAllByConditions(
@@ -88,9 +87,10 @@ class TechBlogPostQueryService(
         val cached = techBlogPostListCache.get(techBlogId, paging.page)
         if (cached != null) return cached
 
-        return fetchBasePostsByTechBlogKey(paging, techBlogId).toList().also {
-            cacheWarmupScope.launch {
-                techBlogPostListCache.set(techBlogId, paging.page, it)
+        return fetchBasePostsByTechBlogKey(paging, techBlogId).toList().also { posts ->
+            val warmupKey = techBlogPostListCache.key(techBlogId, paging.page)
+            warmupCoordinator.launchIfAbsent(warmupKey) {
+                techBlogPostListCache.set(techBlogId, paging.page, posts)
             }
         }
     }

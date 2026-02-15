@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -15,10 +16,18 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.RowsFetchSpec
 import reactor.core.publisher.Flux
 import server.infra.cache.BookmarkedAllPostIdSetCache
+import server.infra.cache.WarmupCoordinator
 import test.UnitTest
 import java.util.function.BiFunction
 
 class BookmarkedPostReaderTest : UnitTest() {
+    private val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
+
+    init {
+        every { warmupCoordinator.launchIfAbsent(any(), any()) } answers {
+            runBlocking { secondArg<suspend () -> Unit>().invoke() }
+        }
+    }
     @Test
     fun `캐시된 북마크가 있으면 캐시에서 필터링한다`() = runTest {
         val databaseClient = mockk<DatabaseClient>()
@@ -32,7 +41,7 @@ class BookmarkedPostReaderTest : UnitTest() {
         val reader = BookmarkedPostReader(
             databaseClient = databaseClient,
             bookmarkedAllPostIdSetCache = bookmarkedAllPostIdSetCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findBookmarkedPostIdSet(memberId, postIds)
@@ -56,6 +65,7 @@ class BookmarkedPostReaderTest : UnitTest() {
         val warmupRowsFetchSpec = mockk<RowsFetchSpec<Long>>()
 
         coEvery { bookmarkedAllPostIdSetCache.get(memberId) } returnsMany listOf(null, null)
+        every { bookmarkedAllPostIdSetCache.versionKey(memberId) } returns "POST:BOOKMARKED:ALL:$memberId:VER"
         coEvery { bookmarkedAllPostIdSetCache.set(memberId, any()) } returns Unit
 
         every { databaseClient.sql(any<String>()) } answers {
@@ -77,7 +87,7 @@ class BookmarkedPostReaderTest : UnitTest() {
         val reader = BookmarkedPostReader(
             databaseClient = databaseClient,
             bookmarkedAllPostIdSetCache = bookmarkedAllPostIdSetCache,
-            cacheWarmupScope = this
+            warmupCoordinator = warmupCoordinator
         )
 
         val result = reader.findBookmarkedPostIdSet(memberId, postIds)

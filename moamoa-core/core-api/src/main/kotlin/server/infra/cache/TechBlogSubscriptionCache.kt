@@ -11,8 +11,8 @@ class TechBlogSubscriptionCache(
     private val prefix = "TECHBLOG:SUBSCRIPTION:ALL:"
     private val ttlMillis: Long = 60_000L
 
-    private fun versionKey(memberId: Long) = "$prefix$memberId:VER"
-    private fun key(memberId: Long, version: Long) = "$prefix$memberId:V:$version"
+    fun versionKey(memberId: Long) = "$prefix$memberId:VER"
+    fun key(memberId: Long, version: Long) = "$prefix$memberId:V:$version"
 
     suspend fun get(memberId: Long): List<TechBlogSubscriptionInfo>? {
         val ver = cacheMemory.get<Long>(versionKey(memberId)) ?: 1L
