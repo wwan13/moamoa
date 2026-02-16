@@ -5,6 +5,7 @@ import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.RedisSystemException
 import org.springframework.data.redis.connection.stream.*
 import org.springframework.data.redis.core.StreamOperations
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Component
 internal class StreamReader(
+    @param:Qualifier("streamStringRedisTemplate")
     private val redis: StringRedisTemplate,
     private val handlers: StreamEventHandlers,
     private val objectMapper: ObjectMapper,

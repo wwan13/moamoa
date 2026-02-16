@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.Range
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Component
@@ -12,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @Component
 internal class StreamRetrier(
+    @param:Qualifier("streamReactiveRedisTemplate")
     private val redisTemplate: ReactiveRedisTemplate<String, String>,
     private val objectMapper: ObjectMapper,
     private val eventHandlers: StreamEventHandlers,

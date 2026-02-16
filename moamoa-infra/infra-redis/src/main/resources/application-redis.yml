@@ -1,8 +1,7 @@
-spring:
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      timeout: 3s
-      database: ${REDIS_DATABASE}
-      password: ${REDIS_PASSWORD}
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+  timeout: 3s
+  database: ${REDIS_DATABASE}
+  username: ${REDIS_USERNAME:default}
+  password: ${REDIS_PASSWORD:}

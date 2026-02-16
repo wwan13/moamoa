@@ -2,6 +2,7 @@ package server.messaging
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.connection.stream.RecordId
 import org.springframework.data.redis.connection.stream.StreamRecords
 import org.springframework.data.redis.core.ReactiveRedisTemplate
@@ -13,6 +14,7 @@ import java.util.UUID
 
 @Component
 class StreamEventPublisher(
+    @param:Qualifier("streamReactiveRedisTemplate")
     private val redis: ReactiveRedisTemplate<String, String>,
     private val objectMapper: ObjectMapper,
 ) {
