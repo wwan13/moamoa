@@ -9,6 +9,7 @@ import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import server.global.logging.ExternalCallLogger
 import server.infra.db.outbox.EventOutbox
 import server.infra.db.outbox.EventOutboxRepository
 import server.messaging.StreamEventPublisher
@@ -20,7 +21,7 @@ class OutboxPublishWorkerTest : UnitTest() {
         val eventPublisher = mockk<StreamEventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
         coEvery { eventOutboxRepository.findUnpublished(10) } returns emptyList()
-        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository)
+        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository, ExternalCallLogger())
 
         worker.runOnce(10)
 
@@ -39,7 +40,7 @@ class OutboxPublishWorkerTest : UnitTest() {
         coEvery { eventOutboxRepository.findUnpublished(5) } returns rows
         every { eventPublisher.publish(any<String>(), any<String>(), any<String>()) } just runs
         coEvery { eventOutboxRepository.markPublished(any()) } returns 1
-        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository)
+        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository, ExternalCallLogger())
 
         worker.runOnce(5)
 
@@ -61,7 +62,7 @@ class OutboxPublishWorkerTest : UnitTest() {
         every { eventPublisher.publish("topic-1", "type-1", "payload-1") } throws RuntimeException("fail")
         every { eventPublisher.publish("topic-2", "type-2", "payload-2") } just runs
         coEvery { eventOutboxRepository.markPublished(2L) } returns 1
-        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository)
+        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository, ExternalCallLogger())
 
         worker.runOnce(2)
 

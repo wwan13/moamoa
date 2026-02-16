@@ -1,22 +1,25 @@
 package server.config
 
 import jakarta.annotation.PreDestroy
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import server.global.logging.warnWithTraceId
 
 @Configuration
 class CoroutineConfig {
 
-    private val log = LoggerFactory.getLogger(this::class.java)
+    private val logger = KotlinLogging.logger {}
 
     private val singleFlightWarmupExceptionHandler =
         CoroutineExceptionHandler { _, e ->
-            log.warn("single-flight warmup coroutine failed", e)
+            logger.warnWithTraceId(traceId = null, throwable = e) {
+                "[WORKER] result=FAIL call=singleFlightWarmup target=CoroutineScope errorCode=${e::class.simpleName ?: "UnknownException"}"
+            }
         }
 
     private val singleFlightWarmupScope =

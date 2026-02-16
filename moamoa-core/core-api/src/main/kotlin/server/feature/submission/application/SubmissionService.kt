@@ -1,6 +1,8 @@
 package server.feature.submission.application
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
+import server.global.logging.infoWithTrace
 import server.feature.submission.domain.Submission
 import server.feature.submission.domain.SubmissionRepository
 import server.infra.db.transaction.Transactional
@@ -10,6 +12,7 @@ class SubmissionService(
     private val transactional: Transactional,
     private val submissionRepository: SubmissionRepository
 ) {
+    private val logger = KotlinLogging.logger {}
 
     suspend fun create(
         command: SubmissionCreateCommand,
@@ -26,6 +29,9 @@ class SubmissionService(
 
         val event = saved.created()
         registerEvent(event)
+        logger.infoWithTrace {
+            "[BIZ] what=submissionCreate result=SUCCESS targetId=${saved.id} reason=사용자 제출 userId=$memberId"
+        }
 
         SubmissionCreateResult(saved.id)
     }

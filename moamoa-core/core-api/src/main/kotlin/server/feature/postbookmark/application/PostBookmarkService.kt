@@ -1,5 +1,6 @@
 package server.feature.postbookmark.application
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
@@ -11,6 +12,7 @@ import server.feature.post.command.domain.PostRepository
 import server.feature.postbookmark.domain.PostBookmark
 import server.feature.postbookmark.domain.PostBookmarkRepository
 import server.global.lock.KeyedMutex
+import server.global.logging.infoWithTrace
 import server.infra.db.transaction.Transactional
 
 @Service
@@ -21,6 +23,7 @@ class PostBookmarkService(
     private val memberRepository: MemberRepository,
     private val keyedMutex: KeyedMutex
 ) {
+    private val logger = KotlinLogging.logger {}
 
     suspend fun toggle(
         command: PostBookmarkToggleCommand,
@@ -43,6 +46,9 @@ class PostBookmarkService(
 
                         val event = postBookmark.unbookmark()
                         registerEvent(event)
+                        logger.infoWithTrace {
+                            "[BIZ] what=postBookmark result=SUCCESS targetId=${command.postId} reason=북마크 해제 userId=$memberId"
+                        }
 
                         PostBookmarkToggleResult(false)
                     }
@@ -56,6 +62,9 @@ class PostBookmarkService(
 
                         val event = saved.bookmark()
                         registerEvent(event)
+                        logger.infoWithTrace {
+                            "[BIZ] what=postBookmark result=SUCCESS targetId=${command.postId} reason=북마크 등록 userId=$memberId"
+                        }
 
                         PostBookmarkToggleResult(true)
                     }

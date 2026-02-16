@@ -3,7 +3,7 @@
     <property name="LOG_PATH" value="log"/>
     <property name="LOG_FILE_NAME" value="server"/>
     <property name="LOG_PATTERN"
-              value="%(%d{yyyy-MM-dd HH:mm:ss.SSS}) %highlight(%5level) %magenta([%thread]) %cyan(%logger) - %msg%n"/>
+              value="%(%d{yyyy-MM-dd HH:mm:ss.SSS}) %highlight(%5level) %magenta([%thread]) %cyan(%logger) - [%X{traceId:-NONE}] %msg%n"/>
     <property name="LOG_LEVEL" value="info"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -23,8 +23,16 @@
         </rollingPolicy>
     </appender>
 
-    <root level="INFO">
+    <appender name="ASYNC_ROOT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>8192</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <maxFlushTime>1000</maxFlushTime>
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="ASYNC_ROOT"/>
     </root>
 </configuration>

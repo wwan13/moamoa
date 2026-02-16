@@ -7,7 +7,15 @@ spring:
     job:
       enabled: false
     jdbc:
-      initialize-schema: never
+      platform: mysql
+      initialize-schema: always
 
 batch:
   run-key: ${BATCH_RUN_KEY}
+
+logging:
+  level:
+    org.springframework.batch: ERROR
+    org.springframework.boot.autoconfigure.batch: ERROR
+    io.micrometer.prometheus.PrometheusMeterRegistry: ERROR
+    io.micrometer.prometheusmetrics.PrometheusMeterRegistry: ERROR

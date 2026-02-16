@@ -1,9 +1,11 @@
 package server.feature.member.command.application
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import server.feature.member.command.domain.Member
 import server.feature.member.command.domain.MemberRepository
 import server.feature.member.command.domain.Provider
+import server.global.logging.infoWithTrace
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.SocialMemberSessionCache
 import server.infra.db.transaction.Transactional
@@ -20,6 +22,7 @@ class MemberService(
     private val passwordEncoder: PasswordEncoder,
     private val socialMemberSessionCache: SocialMemberSessionCache
 ) {
+    private val logger = KotlinLogging.logger {}
 
     suspend fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
 //        if (!emailVerificationCache.isVerified(command.email)) {
@@ -64,6 +67,9 @@ class MemberService(
 
         val event = saved.created()
         registerEvent(event)
+        logger.infoWithTrace {
+            "[BIZ] what=memberCreate result=SUCCESS targetId=${saved.id} reason=신규 가입 userId=${saved.id}"
+        }
 
         MemberData(saved)
     }

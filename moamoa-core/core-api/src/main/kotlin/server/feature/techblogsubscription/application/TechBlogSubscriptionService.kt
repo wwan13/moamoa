@@ -1,5 +1,6 @@
 package server.feature.techblogsubscription.application
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
@@ -11,6 +12,7 @@ import server.feature.techblog.command.domain.TechBlogRepository
 import server.feature.techblogsubscription.domain.TechBlogSubscription
 import server.feature.techblogsubscription.domain.TechBlogSubscriptionRepository
 import server.global.lock.KeyedMutex
+import server.global.logging.infoWithTrace
 import server.infra.db.transaction.Transactional
 
 @Service
@@ -21,6 +23,7 @@ class TechBlogSubscriptionService(
     private val memberRepository: MemberRepository,
     private val keyedMutex: KeyedMutex
 ) {
+    private val logger = KotlinLogging.logger {}
 
     suspend fun toggle(
         command: TechBlogSubscriptionToggleCommand,
@@ -42,6 +45,9 @@ class TechBlogSubscriptionService(
 
                         val event = subscription.unsubscribe()
                         registerEvent(event)
+                        logger.infoWithTrace {
+                            "[BIZ] what=techBlogSubscribe result=SUCCESS targetId=${command.techBlogId} reason=구독 해제 userId=$memberId"
+                        }
 
                         TechBlogSubscriptionToggleResult(false)
                     }
@@ -55,6 +61,9 @@ class TechBlogSubscriptionService(
 
                         val event = saved.subscribe()
                         registerEvent(event)
+                        logger.infoWithTrace {
+                            "[BIZ] what=techBlogSubscribe result=SUCCESS targetId=${command.techBlogId} reason=구독 등록 userId=$memberId"
+                        }
 
                         TechBlogSubscriptionToggleResult(true)
                     }
@@ -77,6 +86,9 @@ class TechBlogSubscriptionService(
                 val updated = subscription.toggleNotification()
                 techBlogSubscriptionRepository.save(updated.entity)
                 registerEvent(updated.event)
+                logger.infoWithTrace {
+                    "[BIZ] what=techBlogNotification result=SUCCESS targetId=${command.techBlogId} reason=알림 토글 userId=$memberId"
+                }
 
                 NotificationEnabledToggleResult(updated.entity.notificationEnabled)
             }

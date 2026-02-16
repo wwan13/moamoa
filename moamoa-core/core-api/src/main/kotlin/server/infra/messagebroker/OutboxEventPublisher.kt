@@ -2,7 +2,6 @@ package server.infra.messagebroker
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
