@@ -5,10 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import org.springframework.data.redis.connection.ReactiveStringCommands.SetCommand
+import org.springframework.data.redis.connection.RedisStringCommands.SetOption
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.core.ScanOptions
-import org.springframework.data.redis.core.script.RedisScript
+import org.springframework.data.redis.core.types.Expiration
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 
 @Component
@@ -76,15 +81,12 @@ class CacheMemory(
     suspend fun mget(keys: Collection<String>): Map<String, String?> {
         if (keys.isEmpty()) return emptyMap()
         val keyList = keys.toList()
-        val values = runCatching {
-            reactiveRedisTemplate
-                .execute(MGET_SCRIPT, keyList, emptyList<String>())
-                .awaitFirstOrNull()
-                ?.map { it as String? }
-                ?: emptyList()
-        }.getOrElse {
-            valueOps.multiGet(keyList).awaitSingle() ?: emptyList()
-        }
+        val values = reactiveRedisTemplate.execute { connection ->
+            connection.stringCommands()
+                .mGet(keyList.map(::encode))
+                .map { buffers -> buffers.map { buffer -> buffer?.let(::decode) } }
+        }.awaitFirstOrNull() ?: emptyList()
+
         return keyList.mapIndexed { idx, key -> key to values.getOrNull(idx) }.toMap()
     }
 
@@ -105,49 +107,40 @@ class CacheMemory(
         if (valuesByKey.isEmpty()) return
 
         val jsonByKey = valuesByKey.mapValues { (_, v) -> objectMapper.writeValueAsString(v) }
-        val keyList = jsonByKey.keys.toList()
-        val args = buildList {
-            add((ttlMillis ?: -1L).toString())
-            keyList.forEach { key -> add(jsonByKey.getValue(key)) }
+        val encoded = LinkedHashMap<ByteBuffer, ByteBuffer>(jsonByKey.size)
+        jsonByKey.forEach { (key, value) ->
+            encoded[encode(key)] = encode(value)
         }
 
-        val scriptSucceeded = runCatching {
+        if (ttlMillis == null) {
             reactiveRedisTemplate
-                .execute(MSET_WITH_TTL_SCRIPT, keyList, args)
+                .execute { connection -> connection.stringCommands().mSet(encoded) }
                 .awaitFirstOrNull()
-            true
-        }.getOrElse { false }
-
-        if (!scriptSucceeded) {
-            valueOps.multiSet(jsonByKey).awaitSingle()
-
-            if (ttlMillis != null) {
-                val duration = Duration.ofMillis(ttlMillis)
-                keyList.forEach { key ->
-                    reactiveRedisTemplate.expire(key, duration).awaitSingle()
-                }
-            }
+            return
         }
+
+        val ttl = Expiration.milliseconds(ttlMillis)
+        val commands = Flux.fromIterable(jsonByKey.entries)
+            .map { (key, value) ->
+                SetCommand.set(encode(key))
+                    .value(encode(value))
+                    .expiring(ttl)
+                    .withSetOption(SetOption.UPSERT)
+            }
+
+        reactiveRedisTemplate
+            .execute { connection ->
+                connection.stringCommands()
+                    .set(commands)
+                    .all { response -> response.isPresent && response.output == true }
+            }
+            .awaitFirstOrNull()
     }
 
-    companion object {
-        private val MGET_SCRIPT: RedisScript<List<*>> = RedisScript.of(
-            "return redis.call('MGET', unpack(KEYS))",
-            List::class.java
-        )
+    private fun encode(value: String): ByteBuffer =
+        StandardCharsets.UTF_8.encode(value)
 
-        private val MSET_WITH_TTL_SCRIPT: RedisScript<Long> = RedisScript.of(
-            """
-            local ttl = tonumber(ARGV[1])
-            for i = 1, #KEYS do
-              redis.call('SET', KEYS[i], ARGV[i + 1])
-              if ttl ~= -1 then
-                redis.call('PEXPIRE', KEYS[i], ttl)
-              end
-            end
-            return #KEYS
-            """.trimIndent(),
-            Long::class.java
-        )
-    }
+    private fun decode(value: ByteBuffer): String =
+        StandardCharsets.UTF_8.decode(value.asReadOnlyBuffer()).toString()
+
 }
