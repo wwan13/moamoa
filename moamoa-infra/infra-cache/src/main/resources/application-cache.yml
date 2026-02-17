@@ -1,0 +1,3 @@
+cache:
+  resilience:
+    recovery-probe-interval-ms: ${CACHE_RECOVERY_PROBE_INTERVAL_MS:30000}
