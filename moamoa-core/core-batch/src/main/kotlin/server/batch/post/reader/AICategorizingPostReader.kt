@@ -4,7 +4,8 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.batch.item.ItemReader
 import org.springframework.stereotype.Component
 import server.batch.post.dto.PostSummary
-import server.queue.QueueMemory
+import server.shared.queue.QueueMemory
+import server.shared.queue.drain
 
 @Component
 internal class AICategorizingPostReader(

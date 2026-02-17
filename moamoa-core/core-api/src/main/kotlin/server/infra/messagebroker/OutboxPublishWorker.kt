@@ -5,11 +5,11 @@ import org.springframework.stereotype.Component
 import server.global.logging.ExternalCallLogger
 import server.global.logging.warnWithTraceId
 import server.infra.db.outbox.EventOutboxRepository
-import server.messaging.StreamEventPublisher
+import server.shared.messaging.EventPublisher
 
 @Component
 class OutboxPublishWorker(
-    private val eventPublisher: StreamEventPublisher,
+    private val eventPublisher: EventPublisher,
     private val eventOutboxRepository: EventOutboxRepository,
     private val externalCallLogger: ExternalCallLogger,
 ) {
@@ -22,7 +22,7 @@ class OutboxPublishWorker(
         for (row in rows) {
             try {
                 externalCallLogger.execute(
-                    call = "StreamEventPublisher.publish",
+                    call = "EventPublisher.publish",
                     target = "MQ",
                     retry = 0,
                     timeout = false
@@ -32,7 +32,7 @@ class OutboxPublishWorker(
                 eventOutboxRepository.markPublished(row.id)
             } catch (e: Exception) {
                 logger.warnWithTraceId(traceId = null, throwable = e) {
-                    "[WORKER] result=FAIL call=StreamEventPublisher.publish target=MQ outboxId=${row.id} topic=${row.topic} errorCode=${e::class.simpleName ?: "UnknownException"}"
+                    "[WORKER] result=FAIL call=EventPublisher.publish target=MQ outboxId=${row.id} topic=${row.topic} errorCode=${e::class.simpleName ?: "UnknownException"}"
                 }
             }
         }

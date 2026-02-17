@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.flow
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
-import server.utill.PagingFinishedException
 
 internal fun <T> fetchWithPaging(
     pageSize: Int,

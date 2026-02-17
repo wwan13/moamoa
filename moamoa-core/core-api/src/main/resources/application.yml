@@ -38,6 +38,7 @@ spring:
       - api-docs
       - mail
       - redis
+      - cache
       - security
       - batch
       - webhook

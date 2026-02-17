@@ -1,4 +1,0 @@
-mail:
-  api-key: ${MAIL_API_KEY}
-  domain: ${MAIL_DOMAIN}
-  from: ${MAIL_FROM}

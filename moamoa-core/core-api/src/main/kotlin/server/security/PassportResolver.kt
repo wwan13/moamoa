@@ -8,8 +8,8 @@ import org.springframework.web.reactive.result.method.HandlerMethodArgumentResol
 import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import server.feature.member.command.domain.MemberRole
-import server.jwt.TokenProvider
-import server.jwt.TokenType
+import server.shared.security.jwt.TokenProvider
+import server.shared.security.jwt.TokenType
 import kotlin.reflect.jvm.kotlinFunction
 
 @Component

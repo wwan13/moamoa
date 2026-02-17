@@ -11,13 +11,13 @@ import org.springframework.core.env.Environment
 import server.WebhookSender
 import server.content.WebhookContent
 import server.feature.member.command.domain.MemberCreateEvent
-import server.messaging.StreamDefinition
+import server.shared.messaging.SubscriptionDefinition
 import test.UnitTest
 
 class WebhookNotifierTest : UnitTest() {
     @Test
     fun `운영 환경에서 웹훅을 전송한다`() = runTest {
-        val monitoringStream = mockk<StreamDefinition>()
+        val monitoringStream = mockk<SubscriptionDefinition>()
         val webhookSender = mockk<WebhookSender>(relaxed = true)
         val environment = mockk<Environment>()
         every { environment.activeProfiles } returns arrayOf("prod")
@@ -48,7 +48,7 @@ class WebhookNotifierTest : UnitTest() {
 
     @Test
     fun `운영 환경이 아니면 웹훅을 전송하지 않는다`() = runTest {
-        val monitoringStream = mockk<StreamDefinition>()
+        val monitoringStream = mockk<SubscriptionDefinition>()
         val webhookSender = mockk<WebhookSender>(relaxed = true)
         val environment = mockk<Environment>()
         every { environment.activeProfiles } returns arrayOf("local")

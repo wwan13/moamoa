@@ -29,7 +29,7 @@ class CacheMemoryTest {
     private val connection = mockk<ReactiveRedisConnection>()
     private val stringCommands = mockk<ReactiveStringCommands>()
     private val objectMapper = jacksonObjectMapper()
-    private val cacheMemory = CacheMemory(redisTemplate, objectMapper)
+    private val cacheMemory = RedisCacheMemory(redisTemplate, objectMapper)
 
     init {
         every { connection.stringCommands() } returns stringCommands

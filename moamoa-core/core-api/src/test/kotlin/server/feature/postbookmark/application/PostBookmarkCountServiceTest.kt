@@ -7,27 +7,27 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.feature.post.command.domain.PostRepository
 import server.feature.postbookmark.domain.PostBookmarkUpdatedEvent
-import server.messaging.StreamDefinition
-import server.messaging.StreamTopic
+import server.shared.messaging.MessageChannel
+import server.shared.messaging.SubscriptionDefinition
 import test.UnitTest
 
 class PostBookmarkCountServiceTest : UnitTest() {
     @Test
     fun `이벤트 핸들러는 스트림과 타입 정보를 포함한다`() {
-        val stream = StreamDefinition(StreamTopic("post-bookmark"), "post-bookmark-group")
+        val stream = SubscriptionDefinition(MessageChannel("post-bookmark"), "post-bookmark-group")
         val postRepository = mockk<PostRepository>(relaxed = true)
         val service = PostBookmarkCountService(stream, postRepository)
 
         val handler = service.bookmarkUpdatedCountCalculate()
 
-        handler.stream shouldBe stream
+        handler.subscription shouldBe stream
         handler.type shouldBe PostBookmarkUpdatedEvent::class.java.simpleName
         handler.payloadClass shouldBe PostBookmarkUpdatedEvent::class.java
     }
 
     @Test
     fun `북마크가 추가되면 카운트를 증가시킨다`() = runTest {
-        val stream = StreamDefinition(StreamTopic("post-bookmark"), "post-bookmark-group")
+        val stream = SubscriptionDefinition(MessageChannel("post-bookmark"), "post-bookmark-group")
         val postRepository = mockk<PostRepository>(relaxed = true)
         val service = PostBookmarkCountService(stream, postRepository)
 
@@ -41,7 +41,7 @@ class PostBookmarkCountServiceTest : UnitTest() {
 
     @Test
     fun `북마크가 해제되면 카운트를 감소시킨다`() = runTest {
-        val stream = StreamDefinition(StreamTopic("post-bookmark"), "post-bookmark-group")
+        val stream = SubscriptionDefinition(MessageChannel("post-bookmark"), "post-bookmark-group")
         val postRepository = mockk<PostRepository>(relaxed = true)
         val service = PostBookmarkCountService(stream, postRepository)
 

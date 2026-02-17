@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 
 @Configuration
 @EnableScheduling
-class MessagingConfig {
+internal class MessagingConfig {
 
     @Bean
     fun schedulerScope(): CoroutineScope =

@@ -17,7 +17,7 @@ import server.infra.cache.EmailVerificationCache
 import server.infra.cache.SocialMemberSessionCache
 import server.infra.db.transaction.TransactionScope
 import server.infra.db.transaction.Transactional
-import server.password.PasswordEncoder
+import server.shared.security.password.PasswordEncoder
 import server.security.Passport
 import server.security.UnauthorizedException
 import test.UnitTest

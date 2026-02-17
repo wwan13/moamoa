@@ -7,7 +7,7 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import server.batch.techblog.dto.PostData
-import server.queue.QueueMemory
+import server.shared.queue.QueueMemory
 
 @StepScope
 @Component

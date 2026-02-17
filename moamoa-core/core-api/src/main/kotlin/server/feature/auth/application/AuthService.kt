@@ -1,17 +1,16 @@
 package server.feature.auth.application
 
 import org.springframework.stereotype.Service
-import server.MailContent
-import server.MailSender
+import server.shared.mail.MailContent
+import server.shared.mail.MailSender
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.RefreshTokenCache
 import server.feature.member.command.domain.MemberRepository
 import server.infra.cache.SocialMemberSessionCache
-import server.jwt.AuthPrincipal
-import server.jwt.TokenProvider
-import server.jwt.TokenType
-import server.password.PasswordEncoder
-import server.security.ForbiddenException
+import server.shared.security.jwt.AuthPrincipal
+import server.shared.security.jwt.TokenProvider
+import server.shared.security.jwt.TokenType
+import server.shared.security.password.PasswordEncoder
 import server.security.UnauthorizedException
 import server.template.mail.MailTemplate
 import server.template.mail.toTemplateArgs

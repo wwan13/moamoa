@@ -10,16 +10,16 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.MailSender
+import server.shared.mail.MailSender
 import server.feature.member.command.domain.MemberRepository
 import server.fixture.createMember
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.RefreshTokenCache
 import server.infra.cache.SocialMemberSessionCache
-import server.jwt.AuthPrincipal
-import server.jwt.TokenProvider
-import server.jwt.TokenType
-import server.password.PasswordEncoder
+import server.shared.security.jwt.AuthPrincipal
+import server.shared.security.jwt.TokenProvider
+import server.shared.security.jwt.TokenType
+import server.shared.security.password.PasswordEncoder
 import server.security.UnauthorizedException
 import test.UnitTest
 

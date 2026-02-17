@@ -17,7 +17,7 @@ class SetMemoryTest {
         val redis = mockk<ReactiveRedisTemplate<String, String>>()
         val ops = mockk<ReactiveSetOperations<String, String>>()
         every { redis.opsForSet() } returns ops
-        val sut = SetMemory(redis)
+        val sut = RedisSetMemory(redis)
         every { ops.add("dirty", "10") } returns Mono.just(1L)
 
         val result = sut.add("dirty", "10")
@@ -30,7 +30,7 @@ class SetMemoryTest {
         val redis = mockk<ReactiveRedisTemplate<String, String>>()
         val ops = mockk<ReactiveSetOperations<String, String>>()
         every { redis.opsForSet() } returns ops
-        val sut = SetMemory(redis)
+        val sut = RedisSetMemory(redis)
         every { ops.members("dirty") } returns Flux.just("10", "20")
 
         val result = sut.members("dirty")
@@ -43,7 +43,7 @@ class SetMemoryTest {
         val redis = mockk<ReactiveRedisTemplate<String, String>>()
         val ops = mockk<ReactiveSetOperations<String, String>>()
         every { redis.opsForSet() } returns ops
-        val sut = SetMemory(redis)
+        val sut = RedisSetMemory(redis)
         every { ops.remove("dirty", "10") } returns Mono.just(1L)
 
         val result = sut.remove("dirty", "10")

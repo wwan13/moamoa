@@ -5,7 +5,8 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.batch.member.dto.PostData
-import server.queue.QueueMemory
+import server.shared.queue.QueueMemory
+import server.shared.queue.drain
 
 @Component
 @StepScope

@@ -5,7 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.cache.CacheMemory
+import server.shared.cache.CacheMemory
+import server.shared.cache.get
 import server.fixture.createPostSummary
 import test.UnitTest
 

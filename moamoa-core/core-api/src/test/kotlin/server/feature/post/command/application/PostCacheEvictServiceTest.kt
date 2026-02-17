@@ -10,13 +10,13 @@ import server.infra.cache.BookmarkedAllPostIdSetCache
 import server.infra.cache.BookmarkedPostListCache
 import server.infra.cache.PostStatsCache
 import server.infra.cache.SubscribedPostListCache
-import server.messaging.StreamDefinition
+import server.shared.messaging.SubscriptionDefinition
 import test.UnitTest
 
 class PostCacheEvictServiceTest : UnitTest() {
     @Test
     fun `구독 정보가 변경되면 구독 목록 캐시를 무효화한다`() = runTest {
-        val postCacheHandlingStream = mockk<StreamDefinition>()
+        val postCacheHandlingStream = mockk<SubscriptionDefinition>()
         val subscribedPostListCache = mockk<SubscribedPostListCache>(relaxed = true)
         val bookmarkedPostListCache = mockk<BookmarkedPostListCache>(relaxed = true)
         val postStatsCache = mockk<PostStatsCache>(relaxed = true)
@@ -38,7 +38,7 @@ class PostCacheEvictServiceTest : UnitTest() {
 
     @Test
     fun `북마크 정보가 변경되면 관련 캐시를 무효화한다`() = runTest {
-        val postCacheHandlingStream = mockk<StreamDefinition>()
+        val postCacheHandlingStream = mockk<SubscriptionDefinition>()
         val subscribedPostListCache = mockk<SubscribedPostListCache>(relaxed = true)
         val bookmarkedPostListCache = mockk<BookmarkedPostListCache>(relaxed = true)
         val postStatsCache = mockk<PostStatsCache>(relaxed = true)

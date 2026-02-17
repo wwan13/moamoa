@@ -12,13 +12,13 @@ import org.junit.jupiter.api.Test
 import server.global.logging.ExternalCallLogger
 import server.infra.db.outbox.EventOutbox
 import server.infra.db.outbox.EventOutboxRepository
-import server.messaging.StreamEventPublisher
+import server.shared.messaging.EventPublisher
 import test.UnitTest
 
 class OutboxPublishWorkerTest : UnitTest() {
     @Test
     fun `미발행 이벤트가 없으면 아무 작업도 하지 않는다`() = runTest {
-        val eventPublisher = mockk<StreamEventPublisher>()
+        val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
         coEvery { eventOutboxRepository.findUnpublished(10) } returns emptyList()
         val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository, ExternalCallLogger())
@@ -31,7 +31,7 @@ class OutboxPublishWorkerTest : UnitTest() {
 
     @Test
     fun `미발행 이벤트가 있으면 발행 후 published로 마킹한다`() = runTest {
-        val eventPublisher = mockk<StreamEventPublisher>()
+        val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
         val rows = listOf(
             EventOutbox(id = 1L, topic = "topic-1", type = "type-1", payload = "payload-1"),
@@ -52,7 +52,7 @@ class OutboxPublishWorkerTest : UnitTest() {
 
     @Test
     fun `발행 실패한 이벤트는 마킹하지 않고 다음 이벤트를 처리한다`() = runTest {
-        val eventPublisher = mockk<StreamEventPublisher>()
+        val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
         val rows = listOf(
             EventOutbox(id = 1L, topic = "topic-1", type = "type-1", payload = "payload-1"),

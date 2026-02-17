@@ -16,7 +16,6 @@ import server.batch.techblog.monitoring.TechBlogCollectSourceResult
 import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
 import server.content.WebhookContent
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 

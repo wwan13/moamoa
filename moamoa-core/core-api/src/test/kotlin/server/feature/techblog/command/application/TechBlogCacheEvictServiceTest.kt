@@ -8,13 +8,13 @@ import server.feature.techblogsubscription.domain.NotificationUpdatedEvent
 import server.feature.techblogsubscription.domain.TechBlogSubscribeUpdatedEvent
 import server.infra.cache.TechBlogSubscriptionCache
 import server.infra.cache.TechBlogSummaryCache
-import server.messaging.StreamDefinition
+import server.shared.messaging.SubscriptionDefinition
 import test.UnitTest
 
 class TechBlogCacheEvictServiceTest : UnitTest() {
     @Test
     fun `구독 정보가 변경되면 기술 블로그 캐시를 무효화한다`() = runTest {
-        val techBlogCacheHandlingStream = mockk<StreamDefinition>()
+        val techBlogCacheHandlingStream = mockk<SubscriptionDefinition>()
         val techBlogSummaryCache = mockk<TechBlogSummaryCache>(relaxed = true)
         val techBlogSubscriptionCache = mockk<TechBlogSubscriptionCache>(relaxed = true)
         val service = TechBlogCacheEvictService(
@@ -33,7 +33,7 @@ class TechBlogCacheEvictServiceTest : UnitTest() {
 
     @Test
     fun `구독 알림 정보가 변경되면 기술 블로그 캐시를 무효화한다`() = runTest {
-        val techBlogCacheHandlingStream = mockk<StreamDefinition>()
+        val techBlogCacheHandlingStream = mockk<SubscriptionDefinition>()
         val techBlogSummaryCache = mockk<TechBlogSummaryCache>(relaxed = true)
         val techBlogSubscriptionCache = mockk<TechBlogSubscriptionCache>(relaxed = true)
         val service = TechBlogCacheEvictService(

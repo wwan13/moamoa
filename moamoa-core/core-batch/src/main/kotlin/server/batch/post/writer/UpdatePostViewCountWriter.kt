@@ -7,8 +7,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.post.dto.PostViewCount
-import server.cache.CacheMemory
-import server.set.SetMemory
+import server.shared.cache.CacheMemory
+import server.shared.set.SetMemory
 
 @Component
 internal class UpdatePostViewCountWriter(

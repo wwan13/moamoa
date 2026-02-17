@@ -7,8 +7,8 @@ import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import server.batch.post.dto.PostCategory
 import server.batch.post.dto.PostSummary
-import server.chat.ChatCompletion
-import server.chat.Prompt
+import server.shared.ai.ChatCompletion
+import server.shared.ai.Prompt
 
 @Component
 internal class AICategorizingPostProcessor(

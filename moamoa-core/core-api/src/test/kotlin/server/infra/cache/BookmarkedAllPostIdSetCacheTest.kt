@@ -9,7 +9,8 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.cache.CacheMemory
+import server.shared.cache.CacheMemory
+import server.shared.cache.get
 import test.UnitTest
 
 class BookmarkedAllPostIdSetCacheTest : UnitTest() {

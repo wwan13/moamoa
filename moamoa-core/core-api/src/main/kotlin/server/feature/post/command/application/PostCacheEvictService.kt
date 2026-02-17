@@ -7,13 +7,13 @@ import server.infra.cache.BookmarkedAllPostIdSetCache
 import server.infra.cache.BookmarkedPostListCache
 import server.infra.cache.PostStatsCache
 import server.infra.cache.SubscribedPostListCache
-import server.messaging.EventHandler
-import server.messaging.StreamDefinition
-import server.messaging.handleEvent
+import server.shared.messaging.EventHandler
+import server.shared.messaging.SubscriptionDefinition
+import server.shared.messaging.handleMessage
 
 @Service
 class PostCacheEvictService(
-    private val postCacheHandlingStream: StreamDefinition,
+    private val postCacheHandlingStream: SubscriptionDefinition,
     private val subscribedPostListCache: SubscribedPostListCache,
     private val bookmarkedPostListCache: BookmarkedPostListCache,
     private val postStatsCache: PostStatsCache,
@@ -22,13 +22,13 @@ class PostCacheEvictService(
 
     @EventHandler
     fun subscriptionUpdatedPostCacheEvict() =
-        handleEvent<TechBlogSubscribeUpdatedEvent>(postCacheHandlingStream) { event ->
+        handleMessage<TechBlogSubscribeUpdatedEvent>(postCacheHandlingStream) { event ->
             subscribedPostListCache.evictAll(event.memberId)
         }
 
     @EventHandler
     fun bookmarkUpdatedPostCacheEvict() =
-        handleEvent<PostBookmarkUpdatedEvent>(postCacheHandlingStream) { event ->
+        handleMessage<PostBookmarkUpdatedEvent>(postCacheHandlingStream) { event ->
             bookmarkedPostListCache.evictAll(event.memberId)
             postStatsCache.evict(event.postId)
             bookmarkedAllPostIdSetCache.evictAll(event.memberId)

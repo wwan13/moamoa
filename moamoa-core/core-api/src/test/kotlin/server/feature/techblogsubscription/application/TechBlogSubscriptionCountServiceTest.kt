@@ -7,27 +7,27 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.feature.techblog.command.domain.TechBlogRepository
 import server.feature.techblogsubscription.domain.TechBlogSubscribeUpdatedEvent
-import server.messaging.StreamDefinition
-import server.messaging.StreamTopic
+import server.shared.messaging.MessageChannel
+import server.shared.messaging.SubscriptionDefinition
 import test.UnitTest
 
 class TechBlogSubscriptionCountServiceTest : UnitTest() {
     @Test
     fun `이벤트 핸들러는 스트림과 타입 정보를 포함한다`() {
-        val stream = StreamDefinition(StreamTopic("tech-blog-subscription"), "tech-blog-subscription-group")
+        val stream = SubscriptionDefinition(MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group")
         val techBlogRepository = mockk<TechBlogRepository>(relaxed = true)
         val service = TechBlogSubscriptionCountService(stream, techBlogRepository)
 
         val handler = service.subscriptionUpdatedCountCalculate()
 
-        handler.stream shouldBe stream
+        handler.subscription shouldBe stream
         handler.type shouldBe TechBlogSubscribeUpdatedEvent::class.java.simpleName
         handler.payloadClass shouldBe TechBlogSubscribeUpdatedEvent::class.java
     }
 
     @Test
     fun `구독이 켜지면 카운트를 증가시킨다`() = runTest {
-        val stream = StreamDefinition(StreamTopic("tech-blog-subscription"), "tech-blog-subscription-group")
+        val stream = SubscriptionDefinition(MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group")
         val techBlogRepository = mockk<TechBlogRepository>(relaxed = true)
         val service = TechBlogSubscriptionCountService(stream, techBlogRepository)
 
@@ -41,7 +41,7 @@ class TechBlogSubscriptionCountServiceTest : UnitTest() {
 
     @Test
     fun `구독이 해제되면 카운트를 감소시킨다`() = runTest {
-        val stream = StreamDefinition(StreamTopic("tech-blog-subscription"), "tech-blog-subscription-group")
+        val stream = SubscriptionDefinition(MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group")
         val techBlogRepository = mockk<TechBlogRepository>(relaxed = true)
         val service = TechBlogSubscriptionCountService(stream, techBlogRepository)
 

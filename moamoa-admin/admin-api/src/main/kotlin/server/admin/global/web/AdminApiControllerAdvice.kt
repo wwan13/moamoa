@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.*
 import server.admin.security.AdminForbiddenException
 import server.admin.security.AdminUnauthorizedException
-import server.jwt.ExpiredTokenException
-import server.jwt.InvalidTokenException
+import server.shared.security.jwt.ExpiredTokenException
+import server.shared.security.jwt.InvalidTokenException
 
 @RestControllerAdvice
 internal class AdminApiControllerAdvice {

@@ -5,8 +5,9 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.cache.CacheMemory
-import server.set.SetMemory
+import server.shared.cache.CacheMemory
+import server.shared.cache.get
+import server.shared.set.SetMemory
 import test.UnitTest
 
 class PostViewCountCacheTest : UnitTest() {

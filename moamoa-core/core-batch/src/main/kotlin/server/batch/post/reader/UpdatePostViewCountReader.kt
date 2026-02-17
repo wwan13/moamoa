@@ -5,8 +5,8 @@ import org.springframework.batch.item.ExecutionContext
 import org.springframework.batch.item.ItemStreamReader
 import org.springframework.stereotype.Component
 import server.batch.post.dto.PostViewCount
-import server.cache.CacheMemory
-import server.set.SetMemory
+import server.shared.cache.CacheMemory
+import server.shared.set.SetMemory
 
 @Component
 internal class UpdatePostViewCountReader(

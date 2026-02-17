@@ -6,7 +6,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.batch.item.Chunk
 import server.batch.techblog.dto.PostData
-import server.queue.QueueMemory
+import server.shared.queue.QueueMemory
 import test.UnitTest
 import java.time.LocalDateTime
 

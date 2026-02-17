@@ -1,7 +1,8 @@
 package server.admin.infra.cache
 
 import org.springframework.stereotype.Component
-import server.cache.CacheMemory
+import server.shared.cache.CacheMemory
+import server.shared.cache.get
 
 @Component
 class AdminRefreshTokenCache(

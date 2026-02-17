@@ -17,8 +17,9 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.techblog.dto.PostData
 import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
-import server.cache.CacheMemory
-import server.queue.QueueMemory
+import server.shared.cache.CacheMemory
+import server.shared.cache.get
+import server.shared.queue.QueueMemory
 import test.UnitTest
 import java.time.LocalDateTime
 

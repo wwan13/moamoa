@@ -6,8 +6,8 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.batch.item.ExecutionContext
 import server.batch.post.dto.PostViewCount
-import server.cache.CacheMemory
-import server.set.SetMemory
+import server.shared.cache.CacheMemory
+import server.shared.set.SetMemory
 import test.UnitTest
 
 class UpdatePostViewCountReaderTest : UnitTest() {

@@ -4,7 +4,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.springframework.stereotype.Component
 import server.batch.techblog.dto.TechBlogKey
-import server.cache.CacheMemory
+import server.shared.cache.CacheMemory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId

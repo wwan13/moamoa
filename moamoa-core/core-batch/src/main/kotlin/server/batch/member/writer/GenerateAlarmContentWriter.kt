@@ -5,7 +5,7 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component
 import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.member.dto.AlarmContent
-import server.queue.QueueMemory
+import server.shared.queue.QueueMemory
 
 @Component
 internal class GenerateAlarmContentWriter(

@@ -5,10 +5,10 @@ import server.admin.feature.member.domain.AdminMemberRepository
 import server.admin.infra.cache.AdminRefreshTokenCache
 import server.admin.security.AdminForbiddenException
 import server.admin.security.AdminUnauthorizedException
-import server.jwt.AuthPrincipal
-import server.jwt.TokenProvider
-import server.jwt.TokenType
-import server.password.PasswordEncoder
+import server.shared.security.jwt.AuthPrincipal
+import server.shared.security.jwt.TokenProvider
+import server.shared.security.jwt.TokenType
+import server.shared.security.password.PasswordEncoder
 
 @Service
 internal class AdminAuthService(

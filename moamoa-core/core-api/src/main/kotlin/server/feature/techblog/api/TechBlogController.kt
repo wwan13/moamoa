@@ -4,9 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.application.TechBlogService
 import server.feature.techblog.query.SubscribedTechBlogQueryService
 import server.feature.techblog.query.TechBlogList

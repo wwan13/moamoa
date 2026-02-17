@@ -8,7 +8,7 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
-import server.jwt.TokenProvider
+import server.shared.security.jwt.TokenProvider
 
 @Component
 class RequestBoundaryLogFilter(

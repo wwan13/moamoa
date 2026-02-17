@@ -15,8 +15,8 @@ import server.content.WebhookContent
 import server.global.logging.RequestLogContextHolder
 import server.global.logging.errorWithTraceId
 import server.global.logging.warnWithTraceId
-import server.jwt.ExpiredTokenException
-import server.jwt.InvalidTokenException
+import server.shared.security.jwt.ExpiredTokenException
+import server.shared.security.jwt.InvalidTokenException
 import server.security.ForbiddenException
 import server.security.UnauthorizedException
 import support.profile.isProd

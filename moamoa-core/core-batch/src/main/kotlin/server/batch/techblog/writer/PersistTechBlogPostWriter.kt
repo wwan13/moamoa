@@ -1,18 +1,18 @@
 package server.batch.techblog.writer
 
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
-import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.batch.common.time.dbNow
 import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.techblog.dto.PostData
 import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
-import server.cache.CacheMemory
-import server.queue.QueueMemory
+import server.shared.cache.CacheMemory
+import server.shared.queue.QueueMemory
 import java.sql.Timestamp
 import java.time.LocalDateTime
 

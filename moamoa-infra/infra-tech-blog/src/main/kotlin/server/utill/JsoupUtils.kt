@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import server.utill.PagingFinishedException
 
 internal fun <T> fetchWithPaging(
     targetCount: Int?,

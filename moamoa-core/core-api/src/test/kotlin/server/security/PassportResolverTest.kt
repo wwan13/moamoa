@@ -12,9 +12,9 @@ import org.springframework.mock.http.server.reactive.MockServerHttpRequest
 import org.springframework.mock.web.server.MockServerWebExchange
 import org.springframework.web.reactive.BindingContext
 import server.feature.member.command.domain.MemberRole
-import server.jwt.AuthPrincipal
-import server.jwt.TokenProvider
-import server.jwt.TokenType
+import server.shared.security.jwt.AuthPrincipal
+import server.shared.security.jwt.TokenProvider
+import server.shared.security.jwt.TokenType
 import test.UnitTest
 
 class PassportResolverTest : UnitTest() {

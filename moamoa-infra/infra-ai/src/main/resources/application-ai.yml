@@ -1,4 +1,0 @@
-ai:
-  secret-key: ${AI_SECRET_KEY}
-  model: ${AI_MODEL}
-  base-url: ${AI_BASE_URL}

@@ -9,7 +9,7 @@ import server.global.logging.infoWithTrace
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.SocialMemberSessionCache
 import server.infra.db.transaction.Transactional
-import server.password.PasswordEncoder
+import server.shared.security.password.PasswordEncoder
 import server.security.Passport
 import server.security.UnauthorizedException
 import java.util.*

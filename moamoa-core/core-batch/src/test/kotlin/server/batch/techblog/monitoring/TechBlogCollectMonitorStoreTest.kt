@@ -6,7 +6,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.batch.techblog.dto.TechBlogKey
-import server.cache.CacheMemory
+import server.shared.cache.CacheMemory
 import test.UnitTest
 
 class TechBlogCollectMonitorStoreTest : UnitTest() {
