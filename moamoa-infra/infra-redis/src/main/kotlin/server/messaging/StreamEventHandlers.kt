@@ -5,7 +5,7 @@ import server.shared.messaging.MessageHandlerBinding
 import server.shared.messaging.SubscriptionDefinition
 
 @Component
-internal class SubscriptionEventHandlers(
+internal class StreamEventHandlers(
     private val handlers: List<MessageHandlerBinding<*>>
 ) {
     private data class Key(val channelKey: String, val consumerGroup: String, val type: String)

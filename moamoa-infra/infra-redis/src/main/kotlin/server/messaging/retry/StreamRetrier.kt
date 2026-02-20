@@ -1,4 +1,4 @@
-package server.messaging
+package server.messaging.retry
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -8,16 +8,17 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.Range
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Component
+import server.messaging.StreamEventHandlers
 import server.shared.messaging.SubscriptionDefinition
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Component
-internal class SubscriptionRetrier(
+internal class StreamRetrier(
     @param:Qualifier("streamReactiveRedisTemplate")
     private val redisTemplate: ReactiveRedisTemplate<String, String>,
     private val objectMapper: ObjectMapper,
-    private val eventHandlers: SubscriptionEventHandlers,
+    private val eventHandlers: StreamEventHandlers,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val running = AtomicBoolean(false)

@@ -1,4 +1,4 @@
-package server.messaging
+package server.messaging.retry
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -7,9 +7,9 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-internal class SubscriptionRetryScheduler(
+internal class StreamRetryScheduler(
     private val schedulerScope: CoroutineScope,
-    private val retrier: SubscriptionRetrier,
+    private val retrier: StreamRetrier,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 

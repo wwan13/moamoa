@@ -14,7 +14,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Component
-internal class RedisEventPublisher(
+internal class StreamEventPublisher(
     @param:Qualifier("streamReactiveRedisTemplate")
     private val redis: ReactiveRedisTemplate<String, String>,
     private val objectMapper: ObjectMapper,
