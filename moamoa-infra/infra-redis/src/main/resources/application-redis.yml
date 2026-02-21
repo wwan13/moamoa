@@ -13,6 +13,8 @@ redis:
   password: ${REDIS_PASSWORD:}
 
 messaging:
-  subscription-reader:
-    read-pause-on-failure-ms: ${SUBSCRIPTION_READER_PAUSE_ON_FAILURE_MS:30000}
-    recovery-probe-interval-ms: ${SUBSCRIPTION_READER_RECOVERY_PROBE_INTERVAL_MS:5000}
+  redis-health:
+    pause-on-failure-ms: ${REDIS_HEALTH_PAUSE_ON_FAILURE_MS:30000}
+    recovery-probe-interval-ms: ${REDIS_HEALTH_RECOVERY_PROBE_INTERVAL_MS:30000}
+  stream-retry:
+    interval-ms: ${STREAM_RETRY_INTERVAL_MS:60000}

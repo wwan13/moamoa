@@ -1,4 +1,4 @@
-package server.messaging
+package server.messaging.read
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -10,6 +10,7 @@ import org.springframework.data.redis.connection.stream.MapRecord
 import org.springframework.data.redis.connection.stream.RecordId
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.stereotype.Component
+import server.messaging.StreamEventHandlers
 import server.shared.messaging.SubscriptionDefinition
 
 @Component

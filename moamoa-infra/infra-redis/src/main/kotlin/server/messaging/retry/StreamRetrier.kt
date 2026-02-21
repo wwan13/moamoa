@@ -1,116 +1,57 @@
 package server.messaging.retry
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactor.awaitSingle
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.data.domain.Range
-import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Component
-import server.messaging.StreamEventHandlers
-import server.shared.messaging.SubscriptionDefinition
-import java.time.Duration
+import server.config.StreamRetryProperties
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Component
 internal class StreamRetrier(
-    @param:Qualifier("streamReactiveRedisTemplate")
-    private val redisTemplate: ReactiveRedisTemplate<String, String>,
-    private val objectMapper: ObjectMapper,
-    private val eventHandlers: StreamEventHandlers,
+    @param:Qualifier("schedulerScope")
+    private val schedulerScope: CoroutineScope,
+    private val retryProcessor: StreamRetryProcessor,
+    private val properties: StreamRetryProperties,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val running = AtomicBoolean(false)
+    private var retryJob: Job? = null
 
-    private val streamOps = redisTemplate.opsForStream<String, String>()
+    @PostConstruct
+    fun start() {
+        if (retryJob?.isActive == true) return
+        retryJob = schedulerScope.launch {
+            while (isActive) {
+                runCatching {
+                    runOnce()
+                }.onFailure { e ->
+                    log.warn("Subscription retry batch failed", e)
+                }
+                delay(properties.intervalMs.coerceAtLeast(1L))
+            }
+        }
+    }
 
-    private val consumerName = "subscription-retrier"
-    private val minIdle = Duration.ofMinutes(5)
-    private val fetchCountPerSubscription = 100L
+    @PreDestroy
+    fun stop() {
+        retryJob?.cancel()
+        retryJob = null
+    }
 
     suspend fun runOnce() {
         if (!running.compareAndSet(false, true)) return
 
         try {
-            for (subscription in eventHandlers.subscriptions()) {
-                reclaimSubscription(subscription)
-            }
+            retryProcessor.processOnce()
         } finally {
             running.set(false)
-        }
-    }
-
-    private suspend fun reclaimSubscription(subscription: SubscriptionDefinition) {
-        val channelKey = subscription.channel.key
-        val consumerGroup = subscription.consumerGroup
-
-        val pending = streamOps
-            .pending(channelKey, consumerGroup, Range.unbounded<String>(), fetchCountPerSubscription)
-            .awaitSingle()
-
-        val pendingMessages = pending.toList()
-
-        if (pendingMessages.isEmpty()) return
-
-        val targetIds = pendingMessages
-            .asSequence()
-            .filter { it.elapsedTimeSinceLastDelivery >= minIdle }
-            .map { it.id }
-            .take(fetchCountPerSubscription.toInt())
-            .toList()
-
-        if (targetIds.isEmpty()) return
-
-        val claimed = streamOps
-            .claim(channelKey, consumerGroup, consumerName, minIdle, *targetIds.toTypedArray())
-            .collectList()
-            .awaitSingle()
-
-        for (record in claimed) {
-            val id = record.id.value
-            val type = record.value["type"]
-            val payloadJson = record.value["payload"]
-
-            if (type.isNullOrBlank() || payloadJson.isNullOrBlank()) {
-                log.warn(
-                    "잘못된 메시지 포맷. channelKey={}, consumerGroup={}, id={}, value={}",
-                    channelKey,
-                    consumerGroup,
-                    id,
-                    record.value
-                )
-                streamOps.acknowledge(channelKey, consumerGroup, record.id).awaitFirstOrNull()
-                continue
-            }
-
-            val messageHandler = eventHandlers.find<Any>(subscription, type)
-            if (messageHandler == null) {
-                log.warn(
-                    "핸들러 없음. channelKey={}, consumerGroup={}, type={}, id={}",
-                    channelKey,
-                    consumerGroup,
-                    type,
-                    id
-                )
-                streamOps.acknowledge(channelKey, consumerGroup, record.id).awaitFirstOrNull()
-                continue
-            }
-
-            try {
-                val payload = objectMapper.readValue(payloadJson, messageHandler.payloadClass)
-                messageHandler.handler(payload)
-                streamOps.acknowledge(channelKey, consumerGroup, record.id).awaitFirstOrNull()
-            } catch (e: Exception) {
-                log.warn(
-                    "재처리 실패. channelKey={}, consumerGroup={}, type={}, id={}",
-                    channelKey,
-                    consumerGroup,
-                    type,
-                    id,
-                    e
-                )
-            }
         }
     }
 }

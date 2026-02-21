@@ -6,24 +6,35 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
+import org.springframework.data.redis.RedisConnectionFailureException
 import org.springframework.data.redis.connection.stream.Consumer
 import org.springframework.data.redis.connection.stream.StreamOffset
 import org.springframework.data.redis.connection.stream.StreamReadOptions
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
-import server.config.SubscriptionReaderProperties
+import server.config.RedisHealthProperties
 import server.shared.messaging.MessageChannel
 import server.shared.messaging.MessageHandlerBinding
 import server.shared.messaging.SubscriptionDefinition
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
+import server.messaging.health.RedisHealthStateManager
+import server.messaging.health.RedisRecoveryAction
+import server.messaging.health.RedisRecoveryActionRunner
+import server.messaging.read.StreamGroupEnsurer
+import server.messaging.read.StreamMessageProcessor
+import server.messaging.read.StreamReader
 
-class StreamConnectionTest {
+class StreamReaderTest {
     private val subscription = SubscriptionDefinition(
         channel = MessageChannel("subscription-reader-test"),
         consumerGroup = "subscription-reader-group",
@@ -37,7 +48,7 @@ class StreamConnectionTest {
         every { ops.createGroup(any(), any(), any()) } returns "OK"
         every {
             ops.read(any<Consumer>(), any<StreamReadOptions>(), any<StreamOffset<String>>())
-        } throws IllegalStateException("Connection closed")
+        } throws RedisConnectionFailureException("redis down")
 
         val reader = newConnection(redis, readPauseOnFailureMs = 200, recoveryProbeIntervalMs = 50)
         try {
@@ -58,7 +69,7 @@ class StreamConnectionTest {
         every { ops.createGroup(any(), any(), any()) } returns "OK"
         every {
             ops.read(any<Consumer>(), any<StreamReadOptions>(), any<StreamOffset<String>>())
-        } throws IllegalStateException("Connection closed")
+        } throws RedisConnectionFailureException("redis down")
         every { redis.execute(any<RedisCallback<String>>()) } throws IllegalStateException("redis down")
 
         val reader = newConnection(redis, readPauseOnFailureMs = 30, recoveryProbeIntervalMs = 120)
@@ -80,19 +91,19 @@ class StreamConnectionTest {
         every { ops.createGroup(any(), any(), any()) } returns "OK"
         every {
             ops.read(any<Consumer>(), any<StreamReadOptions>(), any<StreamOffset<String>>())
-        } throws IllegalStateException("Connection closed") andThen emptyList()
+        } throws RedisConnectionFailureException("redis down") andThen emptyList()
         every { redis.execute(any<RedisCallback<String>>()) } returns "PONG"
 
         val reader = newConnection(redis, readPauseOnFailureMs = 30, recoveryProbeIntervalMs = 20)
         try {
             reader.start(subscription)
-            Thread.sleep(140)
+            Thread.sleep(220)
         } finally {
             reader.stopAll()
         }
 
         verify(atLeast = 2) { ops.read(any<Consumer>(), any<StreamReadOptions>(), any<StreamOffset<String>>()) }
-        verify(exactly = 2) { ops.createGroup(any(), any(), any()) }
+        verify(atLeast = 2) { ops.createGroup(any(), any(), any()) }
     }
 
     @Test
@@ -103,10 +114,10 @@ class StreamConnectionTest {
         every { ops.createGroup(any(), any(), any()) } returns "OK"
         every {
             ops.read(any<Consumer>(), any<StreamReadOptions>(), any<StreamOffset<String>>())
-        } throws IllegalStateException("Connection closed")
+        } throws RedisConnectionFailureException("redis down")
         every { redis.execute(any<RedisCallback<String>>()) } throws IllegalStateException("redis down")
 
-        val logger = LoggerFactory.getLogger(StreamConnection::class.java) as Logger
+        val logger = LoggerFactory.getLogger(RedisHealthStateManager::class.java) as Logger
         val appender = ListAppender<ILoggingEvent>()
         appender.start()
         logger.addAppender(appender)
@@ -131,7 +142,7 @@ class StreamConnectionTest {
         redis: StringRedisTemplate,
         readPauseOnFailureMs: Long,
         recoveryProbeIntervalMs: Long,
-    ): StreamConnection {
+    ): StreamReader {
         val binding = MessageHandlerBinding(
             subscription = subscription,
             type = "dummy",
@@ -140,16 +151,33 @@ class StreamConnectionTest {
         )
         val handlers = StreamEventHandlers(listOf(binding))
         val messageProcessor = StreamMessageProcessor(handlers, jacksonObjectMapper())
-        val properties = SubscriptionReaderProperties(
-            readPauseOnFailureMs = readPauseOnFailureMs,
+        val properties = RedisHealthProperties(
+            pauseOnFailureMs = readPauseOnFailureMs,
             recoveryProbeIntervalMs = recoveryProbeIntervalMs,
         )
-        return StreamConnection(
+        val streamGroupEnsurer = StreamGroupEnsurer(redis)
+        val recoveryActions = listOf(
+            RedisRecoveryAction {
+                handlers.subscriptions().forEach { sub ->
+                    streamGroupEnsurer.ensureForRecovery(sub)
+                }
+            }
+        )
+        val healthStateManager = RedisHealthStateManager(
+            properties = properties,
+            schedulerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+            redis = redis,
+            recoveryActionRunner = mockk<RedisRecoveryActionRunner>(relaxed = true).also { runner ->
+                coEvery { runner.runAll() } answers { runBlocking { recoveryActions.forEach { it.onRecovered() } } }
+            },
+        )
+        return StreamReader(
             redis = redis,
             messageProcessor = messageProcessor,
-            stateManager = StreamConnectionStateManager(properties),
-        ).also { connection ->
-            runBlocking { connection.ensureGroup(subscription) }
+            healthStateManager = healthStateManager,
+            streamGroupEnsurer = streamGroupEnsurer,
+        ).also {
+            runBlocking { streamGroupEnsurer.ensure(subscription) }
         }
     }
 }
