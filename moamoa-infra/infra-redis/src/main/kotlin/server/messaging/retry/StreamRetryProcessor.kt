@@ -30,6 +30,11 @@ internal class StreamRetryProcessor(
     private val fetchCountPerSubscription = 100L
 
     suspend fun processOnce(): Boolean {
+        if (healthStateManager.isDegraded()) {
+            val recovered = healthStateManager.tryRecover()
+            if (!recovered) return false
+        }
+
         for (subscription in eventHandlers.subscriptions()) {
             val executed = reclaimSubscription(subscription)
             if (!executed) return false

@@ -19,13 +19,9 @@ import org.springframework.data.redis.connection.stream.StreamReadOptions
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
-import server.config.RedisHealthProperties
 import server.shared.messaging.MessageChannel
 import server.shared.messaging.MessageHandlerBinding
 import server.shared.messaging.SubscriptionDefinition
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
 import server.messaging.health.RedisHealthStateManager
 import server.messaging.health.RedisRecoveryAction
@@ -50,7 +46,8 @@ class StreamReaderTest {
             ops.read(any<Consumer>(), any<StreamReadOptions>(), any<StreamOffset<String>>())
         } throws RedisConnectionFailureException("redis down")
 
-        val reader = newConnection(redis, readPauseOnFailureMs = 200, recoveryProbeIntervalMs = 50)
+        every { redis.execute(any<RedisCallback<String>>()) } throws IllegalStateException("redis down")
+        val reader = newConnection(redis)
         try {
             reader.start(subscription)
             Thread.sleep(120)
@@ -62,7 +59,7 @@ class StreamReaderTest {
     }
 
     @Test
-    fun `cooldown 이후 probe 실패 시 probe 간격 전에는 재시도하지 않는다`() {
+    fun `degraded 직후 10초 대기 전에는 복구 ping을 시도하지 않는다`() {
         val redis = mockk<StringRedisTemplate>()
         val ops = mockk<StreamOperations<String, String, String>>()
         every { redis.opsForStream<String, String>() } returns ops
@@ -72,7 +69,7 @@ class StreamReaderTest {
         } throws RedisConnectionFailureException("redis down")
         every { redis.execute(any<RedisCallback<String>>()) } throws IllegalStateException("redis down")
 
-        val reader = newConnection(redis, readPauseOnFailureMs = 30, recoveryProbeIntervalMs = 120)
+        val reader = newConnection(redis)
         try {
             reader.start(subscription)
             Thread.sleep(100)
@@ -80,7 +77,7 @@ class StreamReaderTest {
             reader.stopAll()
         }
 
-        verify(exactly = 1) { redis.execute(any<RedisCallback<String>>()) }
+        verify(exactly = 0) { redis.execute(any<RedisCallback<String>>()) }
     }
 
     @Test
@@ -94,10 +91,10 @@ class StreamReaderTest {
         } throws RedisConnectionFailureException("redis down") andThen emptyList()
         every { redis.execute(any<RedisCallback<String>>()) } returns "PONG"
 
-        val reader = newConnection(redis, readPauseOnFailureMs = 30, recoveryProbeIntervalMs = 20)
+        val reader = newConnection(redis)
         try {
             reader.start(subscription)
-            Thread.sleep(220)
+            Thread.sleep(10_500)
         } finally {
             reader.stopAll()
         }
@@ -122,7 +119,7 @@ class StreamReaderTest {
         appender.start()
         logger.addAppender(appender)
 
-        val reader = newConnection(redis, readPauseOnFailureMs = 30, recoveryProbeIntervalMs = 20)
+        val reader = newConnection(redis)
         try {
             reader.start(subscription)
             Thread.sleep(120)
@@ -138,11 +135,7 @@ class StreamReaderTest {
         probeWarnLogs.size shouldBe 0
     }
 
-    private fun newConnection(
-        redis: StringRedisTemplate,
-        readPauseOnFailureMs: Long,
-        recoveryProbeIntervalMs: Long,
-    ): StreamReader {
+    private fun newConnection(redis: StringRedisTemplate): StreamReader {
         val binding = MessageHandlerBinding(
             subscription = subscription,
             type = "dummy",
@@ -151,10 +144,6 @@ class StreamReaderTest {
         )
         val handlers = StreamEventHandlers(listOf(binding))
         val messageProcessor = StreamMessageProcessor(handlers, jacksonObjectMapper())
-        val properties = RedisHealthProperties(
-            pauseOnFailureMs = readPauseOnFailureMs,
-            recoveryProbeIntervalMs = recoveryProbeIntervalMs,
-        )
         val streamGroupEnsurer = StreamGroupEnsurer(redis)
         val recoveryActions = listOf(
             RedisRecoveryAction {
@@ -164,8 +153,6 @@ class StreamReaderTest {
             }
         )
         val healthStateManager = RedisHealthStateManager(
-            properties = properties,
-            schedulerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
             redis = redis,
             recoveryActionRunner = mockk<RedisRecoveryActionRunner>(relaxed = true).also { runner ->
                 coEvery { runner.runAll() } answers { runBlocking { recoveryActions.forEach { it.onRecovered() } } }

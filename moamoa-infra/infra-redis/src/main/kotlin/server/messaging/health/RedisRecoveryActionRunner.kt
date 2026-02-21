@@ -4,7 +4,7 @@ import org.springframework.beans.factory.ListableBeanFactory
 import org.springframework.stereotype.Component
 
 @Component
-internal class RedisRecoveryActionRunner(
+class RedisRecoveryActionRunner(
     private val beanFactory: ListableBeanFactory,
 ) {
     suspend fun runAll() {

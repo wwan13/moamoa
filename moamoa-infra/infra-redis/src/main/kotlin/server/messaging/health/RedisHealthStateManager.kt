@@ -1,10 +1,7 @@
 package server.messaging.health
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.RedisConnectionFailureException
@@ -12,15 +9,10 @@ import org.springframework.data.redis.RedisSystemException
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.config.RedisHealthProperties
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 @Component
-internal class RedisHealthStateManager(
-    private val properties: RedisHealthProperties,
-    @param:Qualifier("schedulerScope")
-    private val schedulerScope: CoroutineScope,
+class RedisHealthStateManager(
     @param:Qualifier("streamStringRedisTemplate")
     private val redis: StringRedisTemplate,
     private val recoveryActionRunner: RedisRecoveryActionRunner,
@@ -33,7 +25,6 @@ internal class RedisHealthStateManager(
     }
 
     private val state = AtomicReference(State.ACTIVE)
-    private val recoveryLoopRunning = AtomicBoolean(false)
 
     suspend fun <T> runSafe(block: suspend () -> T): Result<T> {
         if (isDegraded()) return Result.failure(IllegalStateException("redis is degraded"))
@@ -51,6 +42,8 @@ internal class RedisHealthStateManager(
     }
 
     fun isDegraded(): Boolean = state.get() == State.DEGRADED
+
+    fun isFailure(exception: Throwable): Boolean = isRedisFailure(exception)
 
     suspend fun tryRecover(): Boolean {
         if (!isDegraded()) return true
@@ -81,27 +74,6 @@ internal class RedisHealthStateManager(
         if (!changed) return
 
         logger.warn(cause) { "redis degraded" }
-        startRecoveryLoopIfNeeded()
-    }
-
-    private fun startRecoveryLoopIfNeeded() {
-        if (!recoveryLoopRunning.compareAndSet(false, true)) return
-
-        schedulerScope.launch {
-            try {
-                delay(properties.pauseOnFailureMs.coerceAtLeast(1L))
-
-                while (isDegraded()) {
-                    if (tryRecover()) break
-                    delay(properties.recoveryProbeIntervalMs.coerceAtLeast(1L))
-                }
-            } finally {
-                recoveryLoopRunning.set(false)
-                if (isDegraded()) {
-                    startRecoveryLoopIfNeeded()
-                }
-            }
-        }
     }
 
     private suspend fun ping(): String = withContext(Dispatchers.IO) {

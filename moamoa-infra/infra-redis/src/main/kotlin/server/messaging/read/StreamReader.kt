@@ -84,6 +84,15 @@ internal class StreamReader(
         var skippedByHealth = false
 
         while (currentCoroutineContext().isActive) {
+            if (healthStateManager.isDegraded()) {
+                val result = healthStateManager.tryRecover()
+
+                if (!result) {
+                    delay(10_000)
+                    continue
+                }
+            }
+
             val records = try {
                 healthStateManager.runSafe {
                     read(context)
@@ -91,7 +100,7 @@ internal class StreamReader(
             } catch (e: Exception) {
                 if (isNoGroupException(e)) {
                     streamGroupEnsurer.ensureForRecovery(context.subscription)
-                    delay(200)
+                    delay(10_000)
                     continue
                 }
 
@@ -104,19 +113,16 @@ internal class StreamReader(
 
             if (records.isFailure) {
                 skippedByHealth = true
-                delay(200)
+                delay(10_000)
                 continue
             }
-            val safeRecords = records.getOrThrow()
 
             if (skippedByHealth) {
                 streamGroupEnsurer.ensureForRecovery(context.subscription)
                 skippedByHealth = false
             }
 
-            messageProcessor.handleRecords(subscription, context.ops, safeRecords, scope)
-
-            if (safeRecords.isEmpty()) delay(50)
+            messageProcessor.handleRecords(subscription, context.ops, records.getOrThrow(), scope)
         }
     }
 
