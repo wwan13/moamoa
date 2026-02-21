@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import server.global.logging.ExternalCallLogger
 import server.infra.db.outbox.EventOutbox
 import server.infra.db.outbox.EventOutboxRepository
+import server.messaging.health.RedisHealthStateManager
 import server.shared.messaging.EventPublisher
 import test.UnitTest
 
@@ -21,7 +22,13 @@ class OutboxPublishWorkerTest : UnitTest() {
         val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
         coEvery { eventOutboxRepository.findUnpublished(10) } returns emptyList()
-        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository, ExternalCallLogger())
+        val healthStateManager = newHealthStateManager()
+        val worker = OutboxPublishWorker(
+            eventPublisher = eventPublisher,
+            eventOutboxRepository = eventOutboxRepository,
+            externalCallLogger = ExternalCallLogger(),
+            healthStateManager = healthStateManager,
+        )
 
         worker.runOnce(10)
 
@@ -40,7 +47,13 @@ class OutboxPublishWorkerTest : UnitTest() {
         coEvery { eventOutboxRepository.findUnpublished(5) } returns rows
         every { eventPublisher.publish(any<String>(), any<String>(), any<String>()) } just runs
         coEvery { eventOutboxRepository.markPublished(any()) } returns 1
-        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository, ExternalCallLogger())
+        val healthStateManager = newHealthStateManager()
+        val worker = OutboxPublishWorker(
+            eventPublisher = eventPublisher,
+            eventOutboxRepository = eventOutboxRepository,
+            externalCallLogger = ExternalCallLogger(),
+            healthStateManager = healthStateManager,
+        )
 
         worker.runOnce(5)
 
@@ -62,7 +75,13 @@ class OutboxPublishWorkerTest : UnitTest() {
         every { eventPublisher.publish("topic-1", "type-1", "payload-1") } throws RuntimeException("fail")
         every { eventPublisher.publish("topic-2", "type-2", "payload-2") } just runs
         coEvery { eventOutboxRepository.markPublished(2L) } returns 1
-        val worker = OutboxPublishWorker(eventPublisher, eventOutboxRepository, ExternalCallLogger())
+        val healthStateManager = newHealthStateManager()
+        val worker = OutboxPublishWorker(
+            eventPublisher = eventPublisher,
+            eventOutboxRepository = eventOutboxRepository,
+            externalCallLogger = ExternalCallLogger(),
+            healthStateManager = healthStateManager,
+        )
 
         worker.runOnce(2)
 
@@ -70,5 +89,17 @@ class OutboxPublishWorkerTest : UnitTest() {
         verify(exactly = 1) { eventPublisher.publish("topic-2", "type-2", "payload-2") }
         coVerify(exactly = 0) { eventOutboxRepository.markPublished(1L) }
         coVerify(exactly = 1) { eventOutboxRepository.markPublished(2L) }
+    }
+
+    private fun newHealthStateManager(): RedisHealthStateManager {
+        return mockk<RedisHealthStateManager>(relaxed = true).also { manager ->
+            every { manager.isDegraded() } returns false
+            coEvery { manager.tryRecover() } returns true
+            coEvery { manager.runSafe<Unit>(any()) } coAnswers {
+                firstArg<suspend () -> Unit>().invoke()
+                Result.success(Unit)
+            }
+            every { manager.isFailure(any()) } returns false
+        }
     }
 }
