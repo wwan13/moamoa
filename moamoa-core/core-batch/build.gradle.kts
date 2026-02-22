@@ -20,6 +20,7 @@ dependencies {
     implementation(project(":moamoa-infra:infra-cache"))
     implementation(project(":moamoa-infra:infra-lmstudio"))
     implementation(project(":moamoa-support:support-webhook"))
+    implementation(project(":moamoa-support:support-logging"))
 
     testImplementation(project(":moamoa-support:support-test"))
 }

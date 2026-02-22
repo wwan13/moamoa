@@ -1,6 +1,6 @@
 package server.batch.post.writer
 
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -59,6 +59,6 @@ internal class UpdatePostViewCountWriter(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(UpdatePostViewCountWriter::class.java)
+        private val log = kLogger {}
     }
 }

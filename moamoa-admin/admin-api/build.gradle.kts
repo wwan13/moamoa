@@ -15,6 +15,7 @@ dependencies {
 
     implementation(project(":moamoa-core:core-shared"))
     implementation(project(":moamoa-support:support-api-docs"))
+    implementation(project(":moamoa-support:support-logging"))
 
     implementation(project(":moamoa-core:core-tech-blog"))
     implementation(project(":moamoa-infra:infra-tech-blog"))

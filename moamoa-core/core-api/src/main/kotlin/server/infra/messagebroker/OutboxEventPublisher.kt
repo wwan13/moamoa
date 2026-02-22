@@ -7,7 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.stereotype.Component
 
 @Component
@@ -15,7 +15,7 @@ class OutboxEventPublisher(
     private val eventOutboxPublishWorker: OutboxPublishWorker,
     private val outboxScope: CoroutineScope,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = kLogger {}
     private var loopJob: Job? = null
 
     @PostConstruct

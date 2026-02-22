@@ -1,6 +1,6 @@
 package server.batch.techblog.writer
 
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
@@ -259,6 +259,6 @@ internal class PersistTechBlogPostWriter(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(PersistTechBlogPostWriter::class.java)
+        private val log = kLogger {}
     }
 }

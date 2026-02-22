@@ -1,7 +1,7 @@
 package server.messaging
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.connection.stream.RecordId
 import org.springframework.data.redis.connection.stream.StreamRecords
@@ -19,7 +19,7 @@ internal class StreamEventPublisher(
     private val redis: ReactiveRedisTemplate<String, String>,
     private val objectMapper: ObjectMapper,
 ) : EventPublisher {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = kLogger {}
 
     override fun publish(channel: MessageChannel, payload: Any) {
         publishMono(channel.key, payload::class.simpleName!!, objectMapper.writeValueAsString(payload))

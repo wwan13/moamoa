@@ -3,7 +3,7 @@ package server.messaging.retry
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.Range
 import org.springframework.data.redis.core.ReactiveRedisTemplate
@@ -21,7 +21,7 @@ internal class StreamRetryProcessor(
     private val eventHandlers: StreamEventHandlers,
     private val healthStateManager: RedisHealthStateManager,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = kLogger {}
 
     private val streamOps = redisTemplate.opsForStream<String, String>()
 

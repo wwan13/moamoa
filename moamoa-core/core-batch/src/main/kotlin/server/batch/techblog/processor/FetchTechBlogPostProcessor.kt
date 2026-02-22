@@ -3,7 +3,7 @@ package server.batch.techblog.processor
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.beans.factory.annotation.Value
@@ -80,6 +80,6 @@ internal class FetchTechBlogPostProcessor(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(FetchTechBlogPostProcessor::class.java)
+        private val log = kLogger {}
     }
 }

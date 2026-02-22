@@ -1,6 +1,6 @@
 package server
 
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
@@ -16,7 +16,7 @@ internal class MailgunMailSender internal constructor(
     private val templateRenderer: TemplateRenderer,
     private val props: MailProperties
 ) : MailSender {
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = kLogger {}
 
     override suspend fun send(mailContent: MailContent) {
         try {

@@ -10,8 +10,8 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
+import org.junit.jupiter.api.Test
 import org.springframework.data.redis.RedisConnectionFailureException
 import org.springframework.data.redis.connection.stream.Consumer
 import org.springframework.data.redis.connection.stream.StreamOffset

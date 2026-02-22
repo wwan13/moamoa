@@ -7,7 +7,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import server.config.StreamRetryProperties
@@ -20,7 +20,7 @@ internal class StreamRetrier(
     private val retryProcessor: StreamRetryProcessor,
     private val properties: StreamRetryProperties,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = kLogger {}
     private val running = AtomicBoolean(false)
     private var retryJob: Job? = null
 

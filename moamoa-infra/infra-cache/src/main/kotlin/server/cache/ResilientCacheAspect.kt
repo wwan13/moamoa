@@ -1,10 +1,10 @@
 package server.cache
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -12,10 +12,9 @@ import server.config.ResilientCacheProperties
 import server.shared.cache.CacheMemory
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
-import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.Function
 import kotlin.concurrent.withLock
 
 @Aspect
@@ -28,7 +27,7 @@ internal class ResilientCacheAspect(
     private val caffeineCacheMemory: CacheMemory,
     private val properties: ResilientCacheProperties,
 ) {
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = KotlinLogging.logger {}
     private val activeCacheMemory = AtomicReference<CacheMemory>(redisCacheMemory)
     private val switchLock = ReentrantLock()
     private val methodCache = ConcurrentHashMap<MethodCacheKey, Method>()
