@@ -32,7 +32,7 @@ internal class StreamRetrier(
                 runCatching {
                     runOnce()
                 }.onFailure { e ->
-                    log.warn("Subscription retry batch failed", e)
+                    log.warn(e) { "Subscription retry batch failed" }
                 }
                 delay(properties.intervalMs.coerceAtLeast(1L))
             }

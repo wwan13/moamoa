@@ -54,6 +54,7 @@ class StreamRetrierTest {
             schedulerScope = retryScope,
             retryProcessor = StreamRetryProcessor(
                 redisTemplate = redisTemplate,
+                defaultDlqTopic = MessageChannel("moamoa-default-dlq"),
                 objectMapper = jacksonObjectMapper(),
                 eventHandlers = eventHandlers,
                 healthStateManager = healthStateManager,
@@ -105,6 +106,7 @@ class StreamRetrierTest {
             schedulerScope = retryScope,
             retryProcessor = StreamRetryProcessor(
                 redisTemplate = redisTemplate,
+                defaultDlqTopic = MessageChannel("moamoa-default-dlq"),
                 objectMapper = jacksonObjectMapper(),
                 eventHandlers = eventHandlers,
                 healthStateManager = healthStateManager,
