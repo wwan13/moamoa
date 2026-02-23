@@ -19,7 +19,7 @@ import server.feature.postbookmark.domain.PostBookmark
 import server.feature.postbookmark.domain.PostBookmarkRepository
 import server.feature.postbookmark.domain.PostBookmarkUpdatedEvent
 import server.fixture.createPost
-import server.global.lock.KeyedMutex
+import server.shared.lock.KeyedLock
 import server.infra.db.transaction.TransactionScope
 import server.infra.db.transaction.Transactional
 import test.UnitTest
@@ -32,13 +32,13 @@ class PostBookmarkServiceTest : UnitTest() {
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = PostBookmarkService(
             transactional,
             postBookmarkRepository,
             postRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -70,13 +70,13 @@ class PostBookmarkServiceTest : UnitTest() {
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = PostBookmarkService(
             transactional,
             postBookmarkRepository,
             postRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -114,13 +114,13 @@ class PostBookmarkServiceTest : UnitTest() {
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = PostBookmarkService(
             transactional,
             postBookmarkRepository,
             postRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -149,13 +149,13 @@ class PostBookmarkServiceTest : UnitTest() {
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = PostBookmarkService(
             transactional,
             postBookmarkRepository,
             postRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -192,13 +192,13 @@ class PostBookmarkServiceTest : UnitTest() {
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = PostBookmarkService(
             transactional,
             postBookmarkRepository,
             postRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -226,13 +226,13 @@ class PostBookmarkServiceTest : UnitTest() {
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = PostBookmarkService(
             transactional,
             postBookmarkRepository,
             postRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -259,13 +259,13 @@ class PostBookmarkServiceTest : UnitTest() {
         val postBookmarkRepository = mockk<PostBookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = PostBookmarkService(
             transactional,
             postBookmarkRepository,
             postRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -284,13 +284,13 @@ class PostBookmarkServiceTest : UnitTest() {
         val postBookmarkRepository = mockk<PostBookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = PostBookmarkService(
             transactional,
             postBookmarkRepository,
             postRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -316,5 +316,9 @@ class PostBookmarkServiceTest : UnitTest() {
 
         result.map { it.id } shouldBe listOf(10L, 20L)
         result.map { it.key } shouldBe listOf("key-10", "key-20")
+    }
+
+    private fun passThroughKeyedLock(): KeyedLock = object : KeyedLock {
+        override suspend fun <T> withLock(key: String, block: suspend () -> T): T = block()
     }
 }

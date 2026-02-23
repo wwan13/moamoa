@@ -11,9 +11,9 @@ import server.feature.post.command.application.PostData
 import server.feature.post.command.domain.PostRepository
 import server.feature.postbookmark.domain.PostBookmark
 import server.feature.postbookmark.domain.PostBookmarkRepository
-import server.global.lock.KeyedMutex
 import server.global.logging.infoWithTrace
 import server.infra.db.transaction.Transactional
+import server.shared.lock.KeyedLock
 
 @Service
 class PostBookmarkService(
@@ -21,7 +21,7 @@ class PostBookmarkService(
     private val postBookmarkRepository: PostBookmarkRepository,
     private val postRepository: PostRepository,
     private val memberRepository: MemberRepository,
-    private val keyedMutex: KeyedMutex
+    private val keyedLock: KeyedLock
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -31,7 +31,7 @@ class PostBookmarkService(
     ): PostBookmarkToggleResult {
         val mutexKey = "postBookmarkToggle:$memberId:${command.postId}"
 
-        return keyedMutex.withLock(mutexKey) {
+        return keyedLock.withLock(mutexKey) {
             transactional {
                 if (!memberRepository.existsById(memberId)) {
                     throw IllegalArgumentException("존재하지 않는 사용자 입니다.")

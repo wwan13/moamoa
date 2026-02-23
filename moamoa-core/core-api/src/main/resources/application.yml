@@ -39,6 +39,7 @@ spring:
       - mail
       - redis
       - cache
+      - lock
       - security
       - batch
       - webhook

@@ -11,9 +11,9 @@ import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.domain.TechBlogRepository
 import server.feature.techblogsubscription.domain.TechBlogSubscription
 import server.feature.techblogsubscription.domain.TechBlogSubscriptionRepository
-import server.global.lock.KeyedMutex
 import server.global.logging.infoWithTrace
 import server.infra.db.transaction.Transactional
+import server.shared.lock.KeyedLock
 
 @Service
 class TechBlogSubscriptionService(
@@ -21,7 +21,7 @@ class TechBlogSubscriptionService(
     private val techBlogSubscriptionRepository: TechBlogSubscriptionRepository,
     private val techBlogRepository: TechBlogRepository,
     private val memberRepository: MemberRepository,
-    private val keyedMutex: KeyedMutex
+    private val keyedLock: KeyedLock
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -30,7 +30,7 @@ class TechBlogSubscriptionService(
         memberId: Long
     ): TechBlogSubscriptionToggleResult {
         val mutexKey = "techBlogSubscriptionToggle:$memberId:${command.techBlogId}"
-        return keyedMutex.withLock(mutexKey) {
+        return keyedLock.withLock(mutexKey) {
             transactional {
                 if (!memberRepository.existsById(memberId)) {
                     throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
@@ -77,7 +77,7 @@ class TechBlogSubscriptionService(
         memberId: Long
     ): NotificationEnabledToggleResult {
         val mutexKey = "notificationEnabledToggle:$memberId:${command.techBlogId}"
-        return keyedMutex.withLock(mutexKey) {
+        return keyedLock.withLock(mutexKey) {
             transactional {
                 val subscription = techBlogSubscriptionRepository
                     .findByMemberIdAndTechBlogId(memberId, command.techBlogId)

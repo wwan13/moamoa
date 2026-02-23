@@ -4,13 +4,16 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.global.lock.KeyedMutex
+import server.shared.lock.KeyedLock
 import test.UnitTest
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 class WarmupCoordinatorTest : UnitTest() {
@@ -74,8 +77,17 @@ class WarmupCoordinatorTest : UnitTest() {
                 CoroutineExceptionHandler { _, _ -> }
         )
         return WarmupCoordinator(
-            keyedMutex = KeyedMutex(),
+            keyedLock = TestKeyedLock(),
             warmupScope = scope,
         )
+    }
+
+    private class TestKeyedLock : KeyedLock {
+        private val mutexByKey = ConcurrentHashMap<String, Mutex>()
+
+        override suspend fun <T> withLock(key: String, block: suspend () -> T): T {
+            val mutex = mutexByKey.computeIfAbsent(key) { Mutex() }
+            return mutex.withLock { block() }
+        }
     }
 }

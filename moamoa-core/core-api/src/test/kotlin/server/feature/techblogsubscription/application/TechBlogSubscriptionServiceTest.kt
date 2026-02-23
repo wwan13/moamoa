@@ -19,7 +19,7 @@ import server.feature.techblogsubscription.domain.NotificationUpdatedEvent
 import server.feature.techblogsubscription.domain.TechBlogSubscribeUpdatedEvent
 import server.feature.techblogsubscription.domain.TechBlogSubscription
 import server.feature.techblogsubscription.domain.TechBlogSubscriptionRepository
-import server.global.lock.KeyedMutex
+import server.shared.lock.KeyedLock
 import server.infra.db.transaction.TransactionScope
 import server.infra.db.transaction.Transactional
 import server.fixture.createTechBlog
@@ -34,13 +34,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -73,13 +73,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -117,13 +117,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -157,13 +157,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -205,13 +205,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -239,13 +239,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -273,13 +273,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -305,13 +305,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -346,13 +346,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -392,13 +392,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -433,13 +433,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val transactionScope = mockk<TransactionScope>(relaxed = true)
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -478,13 +478,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogSubscriptionRepository = mockk<TechBlogSubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -503,13 +503,13 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         val techBlogSubscriptionRepository = mockk<TechBlogSubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedMutex = KeyedMutex()
+        val keyedLock = passThroughKeyedLock()
         val service = TechBlogSubscriptionService(
             transactional,
             techBlogSubscriptionRepository,
             techBlogRepository,
             memberRepository,
-            keyedMutex
+            keyedLock
         )
 
         val memberId = 1L
@@ -553,5 +553,9 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
 
         result.map { it.id } shouldBe listOf(10L, 20L)
         result.map { it.key } shouldBe listOf("key-10", "key-20")
+    }
+
+    private fun passThroughKeyedLock(): KeyedLock = object : KeyedLock {
+        override suspend fun <T> withLock(key: String, block: suspend () -> T): T = block()
     }
 }
