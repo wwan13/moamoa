@@ -1,0 +1,3 @@
+lock:
+  resilience:
+    recovery-probe-interval-ms: ${LOCK_RECOVERY_PROBE_INTERVAL_MS:30000}

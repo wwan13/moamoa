@@ -15,6 +15,7 @@ include("moamoa-infra:infra-jwt")
 include("moamoa-infra:infra-crypto")
 include("moamoa-infra:infra-caffeine")
 include("moamoa-infra:infra-cache")
+include("moamoa-infra:infra-lock")
 
 include("moamoa-support")
 include("moamoa-support:support-api-docs")

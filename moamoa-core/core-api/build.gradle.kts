@@ -21,6 +21,7 @@ dependencies {
     implementation(project(":moamoa-infra:infra-mailgun"))
     implementation(project(":moamoa-infra:infra-redis"))
     implementation(project(":moamoa-infra:infra-cache"))
+    implementation(project(":moamoa-infra:infra-lock"))
     implementation(project(":moamoa-infra:infra-jwt"))
     implementation(project(":moamoa-infra:infra-crypto"))
     implementation(project(":moamoa-support:support-api-docs"))
