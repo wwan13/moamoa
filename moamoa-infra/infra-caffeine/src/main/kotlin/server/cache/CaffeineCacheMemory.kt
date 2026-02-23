@@ -3,15 +3,20 @@ package server.cache
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import server.shared.cache.CacheMemory
 import java.util.concurrent.ConcurrentHashMap
 
 @Component("caffeineCacheMemory")
 internal class CaffeineCacheMemory(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    @param:Value("\${cache.caffeine.maximum-size:10000}")
+    private val maximumSize: Long = DEFAULT_MAXIMUM_SIZE
 ) : CacheMemory {
-    private val cache = Caffeine.newBuilder().build<String, CacheEntry>()
+    private val cache = Caffeine.newBuilder()
+        .maximumSize(maximumSize)
+        .build<String, CacheEntry>()
     private val keyLocks = ConcurrentHashMap<String, Any>()
 
     override suspend fun <T> get(key: String, type: Class<T>): T? {
@@ -90,6 +95,11 @@ internal class CaffeineCacheMemory(
         }
     }
 
+    internal fun estimatedSize(): Long {
+        cache.cleanUp()
+        return cache.estimatedSize()
+    }
+
     private fun getValue(key: String): String? {
         val entry = cache.getIfPresent(key) ?: return null
         if (entry.isExpired()) {
@@ -111,5 +121,9 @@ internal class CaffeineCacheMemory(
         fun isExpired(nowMillis: Long = System.currentTimeMillis()): Boolean {
             return expireAtMillis != null && nowMillis >= expireAtMillis
         }
+    }
+
+    companion object {
+        private const val DEFAULT_MAXIMUM_SIZE = 10000L
     }
 }

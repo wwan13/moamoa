@@ -108,6 +108,16 @@ class CaffeineCacheMemoryTest {
         )
     }
 
+    @Test
+    fun `최대 엔트리 수를 초과하면 eviction이 발생한다`() = runTest {
+        val limitedCacheMemory = CaffeineCacheMemory(jacksonObjectMapper(), maximumSize = 2L)
+        limitedCacheMemory.set("k1", "v1", null)
+        limitedCacheMemory.set("k2", "v2", null)
+        limitedCacheMemory.set("k3", "v3", null)
+
+        limitedCacheMemory.estimatedSize() shouldBe 2L
+    }
+
     private data class User(
         val name: String,
         val age: Int,
