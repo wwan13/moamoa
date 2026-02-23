@@ -1,6 +1,7 @@
 package server.cache
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -20,6 +21,7 @@ import org.springframework.data.redis.core.ReactiveValueOperations
 import org.yaml.snakeyaml.util.UriEncoder.decode
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import server.shared.cache.CacheInfraException
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
@@ -115,6 +117,19 @@ class CacheMemoryTest {
 
         result shouldBe 7L
         verify(exactly = 1) { valueOps.increment("k1", -3L) }
+    }
+
+    @Test
+    fun `Redis 호출 예외는 CacheInfraException으로 래핑한다`() = runTest {
+        every { redisTemplate.opsForValue() } returns valueOps
+        every { valueOps.set("k1", "\"v1\"") } returns Mono.error(IllegalStateException("redis down"))
+
+        val ex = shouldThrow<CacheInfraException> {
+            cacheMemory.set("k1", "v1", null)
+        }
+
+        ex.message shouldBe "Cache write failed. key=k1"
+        (ex.cause is IllegalStateException) shouldBe true
     }
 
     private inline fun <reified T> mockExecuteWithConnection() {

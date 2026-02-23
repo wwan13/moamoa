@@ -167,7 +167,12 @@ class ResilientLockTest {
 
     @Configuration
     @EnableAspectJAutoProxy(proxyTargetClass = true)
-    @Import(ResilientLock::class, ResilientLockAspect::class)
+    @Import(
+        ResilientKeyedLock::class,
+        ResilientKeyedLockAspect::class,
+        ResilientKeyedLockRouter::class,
+        ResilientKeyedLockMethodInvoker::class,
+    )
     internal class TestAopConfig
 
     private fun containsInfraException(throwable: Throwable?, message: String): Boolean {

@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.ScanOptions
 import org.springframework.data.redis.core.types.Expiration
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
+import server.shared.cache.CacheInfraException
 import server.shared.cache.CacheMemory
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
@@ -20,7 +21,7 @@ import java.time.Duration
 @Component("redisCacheMemory")
 internal class RedisCacheMemory(
     private val reactiveRedisTemplate: ReactiveRedisTemplate<String, String>,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) : CacheMemory {
 
     private val valueOps get() = reactiveRedisTemplate.opsForValue()
@@ -29,38 +30,52 @@ internal class RedisCacheMemory(
         get(key, object : TypeReference<T>() {})
 
     override suspend fun <T> get(key: String, type: Class<T>): T? {
-        val json = valueOps.get(key).awaitFirstOrNull() ?: return null
+        val json = runWithInfraException("Cache read failed. key=$key") {
+            valueOps.get(key).awaitFirstOrNull()
+        } ?: return null
         return runCatching { objectMapper.readValue(json, type) }.getOrNull()
     }
 
     override suspend fun <T> get(key: String, typeRef: TypeReference<T>): T? {
-        val json = valueOps.get(key).awaitFirstOrNull() ?: return null
+        val json = runWithInfraException("Cache read failed. key=$key") {
+            valueOps.get(key).awaitFirstOrNull()
+        } ?: return null
         return runCatching { objectMapper.readValue(json, typeRef) }.getOrNull()
     }
 
     override suspend fun <T> set(key: String, value: T, ttlMillis: Long?) {
         val json = objectMapper.writeValueAsString(value)
-        if (ttlMillis == null) valueOps.set(key, json).awaitSingle()
-        else valueOps.set(key, json, Duration.ofMillis(ttlMillis)).awaitSingle()
+        runWithInfraException("Cache write failed. key=$key") {
+            if (ttlMillis == null) valueOps.set(key, json).awaitSingle()
+            else valueOps.set(key, json, Duration.ofMillis(ttlMillis)).awaitSingle()
+        }
     }
 
     override suspend fun <T> setIfAbsent(key: String, value: T, ttlMillis: Long?): Boolean {
         val json = objectMapper.writeValueAsString(value)
-        return if (ttlMillis == null) {
-            valueOps.setIfAbsent(key, json).awaitSingle() ?: false
-        } else {
-            valueOps.setIfAbsent(key, json, Duration.ofMillis(ttlMillis)).awaitSingle() ?: false
+        return runWithInfraException("Cache setIfAbsent failed. key=$key") {
+            if (ttlMillis == null) {
+                valueOps.setIfAbsent(key, json).awaitSingle() ?: false
+            } else {
+                valueOps.setIfAbsent(key, json, Duration.ofMillis(ttlMillis)).awaitSingle() ?: false
+            }
         }
     }
 
     override suspend fun incr(key: String): Long =
-        valueOps.increment(key).awaitSingle()
+        runWithInfraException("Cache increment failed. key=$key") {
+            valueOps.increment(key).awaitSingle()
+        }
 
     override suspend fun decrBy(key: String, delta: Long): Long =
-        valueOps.increment(key, -delta).awaitSingle()
+        runWithInfraException("Cache decrement failed. key=$key delta=$delta") {
+            valueOps.increment(key, -delta).awaitSingle()
+        }
 
     override suspend fun evict(key: String) {
-        reactiveRedisTemplate.delete(key).awaitSingle()
+        runWithInfraException("Cache evict failed. key=$key") {
+            reactiveRedisTemplate.delete(key).awaitSingle()
+        }
     }
 
     override suspend fun evictByPrefix(prefix: String) {
@@ -71,22 +86,26 @@ internal class RedisCacheMemory(
             .count(500)
             .build()
 
-        reactiveRedisTemplate
-            .scan(scanOptions)
-            .asFlow()
-            .collect { key ->
-                reactiveRedisTemplate.delete(key).awaitSingle()
-            }
+        runWithInfraException("Cache evictByPrefix failed. prefix=$prefix") {
+            reactiveRedisTemplate
+                .scan(scanOptions)
+                .asFlow()
+                .collect { key ->
+                    reactiveRedisTemplate.delete(key).awaitSingle()
+                }
+        }
     }
 
     override suspend fun mget(keys: Collection<String>): Map<String, String?> {
         if (keys.isEmpty()) return emptyMap()
         val keyList = keys.toList()
-        val values = reactiveRedisTemplate.execute { connection ->
-            connection.stringCommands()
-                .mGet(keyList.map(::encode))
-                .map { buffers -> buffers.map { buffer -> buffer?.let(::decode) } }
-        }.awaitFirstOrNull() ?: emptyList()
+        val values = runWithInfraException("Cache mget failed. size=${keyList.size}") {
+            reactiveRedisTemplate.execute { connection ->
+                connection.stringCommands()
+                    .mGet(keyList.map(::encode))
+                    .map { buffers -> buffers.map { buffer -> buffer?.let(::decode) } }
+            }.awaitFirstOrNull() ?: emptyList()
+        }
 
         return keyList.mapIndexed { idx, key -> key to values.getOrNull(idx) }.toMap()
     }
@@ -113,29 +132,30 @@ internal class RedisCacheMemory(
             encoded[encode(key)] = encode(value)
         }
 
-        if (ttlMillis == null) {
-            reactiveRedisTemplate
-                .execute { connection -> connection.stringCommands().mSet(encoded) }
-                .awaitFirstOrNull()
-            return
+        runWithInfraException("Cache mset failed. size=${valuesByKey.size}") {
+            if (ttlMillis == null) {
+                reactiveRedisTemplate
+                    .execute { connection -> connection.stringCommands().mSet(encoded) }
+                    .awaitFirstOrNull()
+            } else {
+                val ttl = Expiration.milliseconds(ttlMillis)
+                val commands = Flux.fromIterable(jsonByKey.entries)
+                    .map { (key, value) ->
+                        SetCommand.set(encode(key))
+                            .value(encode(value))
+                            .expiring(ttl)
+                            .withSetOption(SetOption.UPSERT)
+                    }
+
+                reactiveRedisTemplate
+                    .execute { connection ->
+                        connection.stringCommands()
+                            .set(commands)
+                            .all { response -> response.isPresent && response.output == true }
+                    }
+                    .awaitFirstOrNull()
+            }
         }
-
-        val ttl = Expiration.milliseconds(ttlMillis)
-        val commands = Flux.fromIterable(jsonByKey.entries)
-            .map { (key, value) ->
-                SetCommand.set(encode(key))
-                    .value(encode(value))
-                    .expiring(ttl)
-                    .withSetOption(SetOption.UPSERT)
-            }
-
-        reactiveRedisTemplate
-            .execute { connection ->
-                connection.stringCommands()
-                    .set(commands)
-                    .all { response -> response.isPresent && response.output == true }
-            }
-            .awaitFirstOrNull()
     }
 
     private fun encode(value: String): ByteBuffer =
@@ -144,4 +164,17 @@ internal class RedisCacheMemory(
     private fun decode(value: ByteBuffer): String =
         StandardCharsets.UTF_8.decode(value.asReadOnlyBuffer()).toString()
 
+    private suspend inline fun <T> runWithInfraException(
+        message: String,
+        crossinline block: suspend () -> T,
+    ): T {
+        return try {
+            block()
+        } catch (ex: Throwable) {
+            if (ex is CacheInfraException) {
+                throw ex
+            }
+            throw CacheInfraException(message, ex)
+        }
+    }
 }

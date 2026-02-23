@@ -5,9 +5,9 @@ import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 import server.shared.lock.KeyedLock
 
-@Component("resilientLock")
+@Component("resilientKeyedLock")
 @Primary
-internal class ResilientLock(
+internal class ResilientKeyedLock(
     @param:Qualifier("redissonLock")
     private val delegate: KeyedLock,
 ) : KeyedLock by delegate

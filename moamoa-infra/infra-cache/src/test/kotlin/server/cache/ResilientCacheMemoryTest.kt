@@ -1,5 +1,6 @@
 package server.cache
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.context.annotation.Import
 import server.config.ResilientCacheProperties
+import server.shared.cache.CacheInfraException
 import server.shared.cache.CacheMemory
 import java.util.function.Supplier
 
@@ -34,7 +36,7 @@ class ResilientCacheMemoryTest {
     fun `Redis 실패 시 Caffeine으로 fallback 한다`() = runTest {
         val redis = mockk<CacheMemory>()
         val caffeine = mockk<CacheMemory>()
-        coEvery { redis.get("k1", String::class.java) } throws IllegalStateException("redis down")
+        coEvery { redis.get("k1", String::class.java) } throws CacheInfraException("redis down")
         coEvery { caffeine.get("k1", String::class.java) } returns "local"
 
         withContext(redis, caffeine) { cacheMemory ->
@@ -50,7 +52,7 @@ class ResilientCacheMemoryTest {
     fun `복구 probe 간격 전에는 Redis를 재시도하지 않는다`() = runTest {
         val redis = mockk<CacheMemory>()
         val caffeine = mockk<CacheMemory>()
-        coEvery { redis.get("k1", String::class.java) } throws IllegalStateException("redis down")
+        coEvery { redis.get("k1", String::class.java) } throws CacheInfraException("redis down")
         coEvery { caffeine.get("k1", String::class.java) } returns "local"
 
         withContext(redis, caffeine) { cacheMemory ->
@@ -66,7 +68,7 @@ class ResilientCacheMemoryTest {
     fun `probe 성공 시 Redis로 복귀한다`() = runTest {
         val redis = mockk<CacheMemory>()
         val caffeine = mockk<CacheMemory>()
-        coEvery { redis.get("k1", String::class.java) } throws IllegalStateException("redis down") andThen "redis-recovered" andThen "redis-next"
+        coEvery { redis.get("k1", String::class.java) } throws CacheInfraException("redis down") andThen "redis-recovered" andThen "redis-next"
         coEvery { caffeine.get("k1", String::class.java) } returns "local"
 
         withContext(redis, caffeine) { cacheMemory ->
@@ -87,7 +89,7 @@ class ResilientCacheMemoryTest {
     fun `degrade 상태에서는 write가 Caffeine으로 처리된다`() = runTest {
         val redis = mockk<CacheMemory>()
         val caffeine = mockk<CacheMemory>()
-        coEvery { redis.get("k0", String::class.java) } throws IllegalStateException("redis down")
+        coEvery { redis.get("k0", String::class.java) } throws CacheInfraException("redis down")
         coEvery { caffeine.get("k0", String::class.java) } returns "local"
         coEvery { caffeine.set("k1", "v1", 1_000L) } returns Unit
         coEvery { caffeine.mset(mapOf("k2" to 2), 1_000L) } returns Unit
@@ -105,6 +107,40 @@ class ResilientCacheMemoryTest {
             coVerify(exactly = 1) { caffeine.set("k1", "v1", 1_000L) }
             coVerify(exactly = 1) { caffeine.mset(mapOf("k2" to 2), 1_000L) }
             coVerify(exactly = 1) { caffeine.evict("k3") }
+        }
+    }
+
+    @Test
+    fun `fallback 실패 시 원래 인프라 예외를 suppressed로 보존한다`() = runTest {
+        val redis = mockk<CacheMemory>()
+        val caffeine = mockk<CacheMemory>()
+        val infraEx = CacheInfraException("redis down")
+        coEvery { redis.get("k1", String::class.java) } throws infraEx
+        coEvery { caffeine.get("k1", String::class.java) } throws IllegalStateException("local fail")
+
+        withContext(redis, caffeine) { cacheMemory ->
+            val ex = shouldThrow<IllegalStateException> {
+                cacheMemory.get("k1", String::class.java)
+            }
+
+            ex.message shouldBe "local fail"
+            containsInfraException(ex, "redis down") shouldBe true
+        }
+    }
+
+    @Test
+    fun `비인프라 예외는 fallback 트리거가 아니다`() = runTest {
+        val redis = mockk<CacheMemory>()
+        val caffeine = mockk<CacheMemory>()
+        coEvery { redis.get("k1", String::class.java) } throws IllegalStateException("business fail")
+
+        withContext(redis, caffeine) { cacheMemory ->
+            val ex = shouldThrow<IllegalStateException> {
+                cacheMemory.get("k1", String::class.java)
+            }
+
+            ex.message shouldBe "business fail"
+            coVerify(exactly = 0) { caffeine.get("k1", String::class.java) }
         }
     }
 
@@ -129,6 +165,18 @@ class ResilientCacheMemoryTest {
 
     @Configuration
     @EnableAspectJAutoProxy(proxyTargetClass = true)
-    @Import(ResilientCacheMemory::class, ResilientCacheAspect::class)
+    @Import(
+        ResilientCacheMemory::class,
+        ResilientCacheAspect::class,
+        ResilientCacheRouter::class,
+        ResilientCacheMethodInvoker::class,
+    )
     internal class TestAopConfig
+
+    private fun containsInfraException(throwable: Throwable?, message: String): Boolean {
+        if (throwable == null) return false
+        if (throwable is CacheInfraException && throwable.message == message) return true
+        if (containsInfraException(throwable.cause, message)) return true
+        return throwable.suppressed.any { containsInfraException(it, message) }
+    }
 }
