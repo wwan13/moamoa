@@ -5,6 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.redisson.Redisson
+import org.redisson.api.RedissonClient
+import org.redisson.config.Config
 import org.springframework.data.redis.connection.RedisPassword
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
@@ -47,6 +50,10 @@ internal class RedisConfig {
         @Qualifier("streamRedisConnectionFactory") connectionFactory: LettuceConnectionFactory,
     ): StringRedisTemplate = StringRedisTemplate(connectionFactory)
 
+    @Bean(destroyMethod = "shutdown")
+    fun redissonClient(properties: RedisProperties): RedissonClient =
+        Redisson.create(redissonConfig(properties))
+
     private fun buildConnectionFactory(
         properties: RedisProperties,
         commandTimeout: Duration,
@@ -76,5 +83,21 @@ internal class RedisConfig {
             .hashKey(serializer)
             .hashValue(serializer)
             .build()
+    }
+
+    private fun redissonConfig(properties: RedisProperties): Config {
+        val config = Config()
+        config.useSingleServer()
+            .setAddress("redis://${properties.host}:${properties.port}")
+            .setDatabase(properties.database)
+            .apply {
+                if (!properties.username.isNullOrBlank()) {
+                    setUsername(properties.username)
+                }
+                if (!properties.password.isNullOrBlank()) {
+                    setPassword(properties.password)
+                }
+            }
+        return config
     }
 }
