@@ -33,17 +33,21 @@ class RequestBoundaryLogFilter(
         exchange.response.headers.set(RequestLogContextHolder.TRACE_ID_HEADER, traceId)
         RequestLogContextHolder.writeToExchange(exchange, context)
 
-        val method = exchange.request.method?.name().orEmpty()
+        val method = exchange.request.method.name()
         val path = exchange.request.path.value()
+        val isActuatorRequest = path == "/api/actuator" || path.startsWith("/api/actuator/")
         val startedAt = System.nanoTime()
 
-        logger.infoWithTraceId(traceId) {
-            "[REQ_START] method=$method path=$path userId=${userId ?: "NONE"} clientIp=${clientIp ?: "NONE"}"
+        if (!isActuatorRequest) {
+            logger.infoWithTraceId(traceId) {
+                "[REQ_START] method=$method path=$path userId=${userId ?: "NONE"} clientIp=${clientIp ?: "NONE"}"
+            }
         }
 
         return chain.filter(exchange)
             .contextWrite(RequestLogContextHolder.writeToReactor(context))
             .doFinally {
+                if (isActuatorRequest) return@doFinally
                 val status = exchange.response.statusCode?.value() ?: 200
                 val latencyMs = (System.nanoTime() - startedAt) / 1_000_000
                 logger.infoWithTraceId(traceId) {
