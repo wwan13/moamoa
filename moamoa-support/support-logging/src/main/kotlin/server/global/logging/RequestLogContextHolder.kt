@@ -6,6 +6,7 @@ import org.springframework.web.server.ServerWebExchange
 import reactor.util.context.Context
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.coroutineContext
+import java.util.UUID
 
 object RequestLogContextHolder {
     const val TRACE_ID_HEADER = "X-Trace-Id"
@@ -27,7 +28,15 @@ object RequestLogContextHolder {
 
     fun normalizeTraceId(rawTraceId: String?): String {
         val normalized = rawTraceId?.trim()
-        return if (normalized.isNullOrBlank()) SYSTEM_TRACE_ID else normalized
+        if (normalized.isNullOrBlank()) {
+            return UUID.randomUUID().toString().substring(0, 8)
+        }
+
+        return runCatching { UUID.fromString(normalized) }
+            .getOrNull()
+            ?.toString()
+            ?.substring(0, 8)
+            ?: normalized
     }
 
     fun writeToReactor(context: RequestLogContext): (Context) -> Context = { reactorContext ->

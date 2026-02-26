@@ -216,20 +216,23 @@ class TypedLogger internal constructor(
 class EventTypedLogger internal constructor(
     private val typedLogger: TypedLogger,
 ) {
-    fun info(
+    suspend fun info(
         event: Any,
         message: () -> String,
     ) {
-        typedLogger.info(*eventFields(event)) {
+        val traceId = RequestLogContextHolder.current()?.traceId
+        typedLogger.infoWithTraceId(traceId, *eventFields(event)) {
             message()
         }
     }
 
-    fun info(
+    suspend fun info(
         vararg fields: Pair<String, Any?>,
         message: () -> String,
     ) {
-        typedLogger.info(
+        val traceId = RequestLogContextHolder.current()?.traceId
+        typedLogger.infoWithTraceId(
+            traceId,
             *eventFields("NONE", fields),
             message = message
         )
