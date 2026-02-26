@@ -72,8 +72,13 @@ class RepositoryLoggingAspect {
 
     private fun logSuccess(signature: String, context: RequestLogContext?, latencyMs: Long) {
         if (shouldSkipSuccessLog(signature, context)) return
-        logger.infoWithTraceId(context?.traceId) {
-            "[DB] result=SUCCESS call=$signature target=DB latencyMs=$latencyMs retry=0 timeout=false userId=${context?.userId ?: "NONE"}"
+        logger.db.info(
+            traceId = context?.traceId,
+            "call" to signature,
+            "latencyMs" to latencyMs,
+            "success" to true,
+        ) {
+            "DB 호출이 성공했습니다"
         }
     }
 
@@ -84,9 +89,25 @@ class RepositoryLoggingAspect {
         error: Throwable
     ) {
         val errorCode = error::class.simpleName ?: "UnknownException"
-        val errorSummary = error.message?.replace(Regex("\\s+"), " ")?.take(180) ?: "-"
-        logger.warnWithTraceId(context?.traceId, error) {
-            "[DB] result=FAIL call=$signature target=DB latencyMs=$latencyMs retry=0 timeout=false errorCode=$errorCode errorSummary=$errorSummary userId=${context?.userId ?: "NONE"}"
+        val errorSummary = error.message?.replace(Regex("\\s+"), " ")?.take(180) ?: "unknown"
+        logger.db.warn(
+            traceId = context?.traceId,
+            throwable = error,
+            "call" to signature,
+            "latencyMs" to latencyMs,
+            "success" to false,
+            "errorType" to errorCode,
+        ) {
+            "DB 호출이 실패했습니다"
+        }
+        logger.errorType.warn(
+            traceId = context?.traceId,
+            throwable = error,
+            "call" to signature,
+            "errorType" to errorCode,
+            "message" to errorSummary,
+        ) {
+            "DB 호출 오류가 발생했습니다"
         }
     }
 

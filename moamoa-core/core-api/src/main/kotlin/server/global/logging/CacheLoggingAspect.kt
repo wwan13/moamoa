@@ -54,8 +54,13 @@ class CacheLoggingAspect {
     }
 
     private fun logSuccess(signature: String, context: RequestLogContext?, latencyMs: Long) {
-        logger.infoWithTraceId(context?.traceId) {
-            "[REDIS] result=SUCCESS call=$signature target=Redis latencyMs=$latencyMs retry=0 timeout=false userId=${context?.userId ?: "NONE"}"
+        logger.redis.info(
+            traceId = context?.traceId,
+            "call" to signature,
+            "latencyMs" to latencyMs,
+            "success" to true,
+        ) {
+            "Redis 호출이 성공했습니다"
         }
     }
 
@@ -66,9 +71,25 @@ class CacheLoggingAspect {
         error: Throwable
     ) {
         val errorCode = error::class.simpleName ?: "UnknownException"
-        val errorSummary = error.message?.replace(Regex("\\s+"), " ")?.take(180) ?: "-"
-        logger.warnWithTraceId(context?.traceId, error) {
-            "[REDIS] result=FAIL call=$signature target=Redis latencyMs=$latencyMs retry=0 timeout=false errorCode=$errorCode errorSummary=$errorSummary userId=${context?.userId ?: "NONE"}"
+        val errorSummary = error.message?.replace(Regex("\\s+"), " ")?.take(180) ?: "unknown"
+        logger.redis.warn(
+            traceId = context?.traceId,
+            throwable = error,
+            "call" to signature,
+            "latencyMs" to latencyMs,
+            "success" to false,
+            "errorType" to errorCode,
+        ) {
+            "Redis 호출이 실패했습니다"
+        }
+        logger.errorType.warn(
+            traceId = context?.traceId,
+            throwable = error,
+            "call" to signature,
+            "errorType" to errorCode,
+            "message" to errorSummary,
+        ) {
+            "Redis 호출 오류가 발생했습니다"
         }
     }
 

@@ -18,32 +18,55 @@ class ExternalCallLogger {
     ): T {
         val mark = TimeSource.Monotonic.markNow()
         val context = RequestLogContextHolder.current()
-        val type = externalType(target)
+        val typedLogger = externalType(target)
         return runCatching { block() }
             .onSuccess {
                 val latencyMs = mark.elapsedNow().inWholeMilliseconds
-                logger.infoWithTraceId(context?.traceId) {
-                    "[$type] result=SUCCESS call=$call target=$target latencyMs=$latencyMs retry=$retry timeout=$timeout userId=${context?.userId ?: "NONE"}"
+                typedLogger.info(
+                    traceId = context?.traceId,
+                    "call" to call,
+                    "latencyMs" to latencyMs,
+                    "success" to true,
+                ) {
+                    "외부 호출이 성공했습니다"
                 }
             }
             .onFailure { error ->
                 val latencyMs = mark.elapsedNow().inWholeMilliseconds
-                val isTimeout = timeout || error is TimeoutCancellationException
-                val result = if (isTimeout) "TIMEOUT" else "FAIL"
-                val errorCode = error::class.simpleName ?: "UnknownException"
+                val errorType = if (timeout || error is TimeoutCancellationException) {
+                    "TimeoutCancellationException"
+                } else {
+                    error::class.simpleName ?: "UnknownException"
+                }
                 val errorSummary = error.message.sanitizeForLog()
-                logger.warnWithTraceId(context?.traceId, error) {
-                    "[$type] result=$result call=$call target=$target latencyMs=$latencyMs retry=$retry timeout=$isTimeout errorCode=$errorCode errorSummary=$errorSummary userId=${context?.userId ?: "NONE"}"
+                typedLogger.warn(
+                    traceId = context?.traceId,
+                    throwable = error,
+                    "call" to call,
+                    "latencyMs" to latencyMs,
+                    "success" to false,
+                    "errorType" to errorType,
+                ) {
+                    "외부 호출이 실패했습니다"
+                }
+                logger.errorType.warn(
+                    traceId = context?.traceId,
+                    throwable = error,
+                    "call" to call,
+                    "errorType" to errorType,
+                    "message" to errorSummary,
+                ) {
+                    "외부 호출 오류가 발생했습니다"
                 }
             }
             .getOrThrow()
     }
 
-    private fun externalType(target: String): String =
+    private fun externalType(target: String): TypedLogger =
         when (target.uppercase()) {
-            "DB" -> "DB"
-            "REDIS" -> "REDIS"
-            else -> "API"
+            "DB" -> logger.db
+            "REDIS" -> logger.redis
+            else -> logger.api
         }
 
     private fun String?.sanitizeForLog(): String {

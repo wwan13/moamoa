@@ -19,7 +19,7 @@ class RequestBoundaryLogFilter(
     override fun getOrder(): Int = Ordered.HIGHEST_PRECEDENCE
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
-        val traceId = RequestLogContextHolder.normalizeToShortTraceId(
+        val traceId = RequestLogContextHolder.normalizeTraceId(
             exchange.request.headers.getFirst(RequestLogContextHolder.TRACE_ID_HEADER)
         )
         val userId = resolveUserId(exchange)
@@ -38,20 +38,21 @@ class RequestBoundaryLogFilter(
         val isActuatorRequest = path == "/api/actuator" || path.startsWith("/api/actuator/")
         val startedAt = System.nanoTime()
 
-        if (!isActuatorRequest) {
-            logger.infoWithTraceId(traceId) {
-                "[REQ_START] method=$method path=$path userId=${userId ?: "NONE"} clientIp=${clientIp ?: "NONE"}"
-            }
-        }
-
         return chain.filter(exchange)
             .contextWrite(RequestLogContextHolder.writeToReactor(context))
             .doFinally {
                 if (isActuatorRequest) return@doFinally
                 val status = exchange.response.statusCode?.value() ?: 200
                 val latencyMs = (System.nanoTime() - startedAt) / 1_000_000
-                logger.infoWithTraceId(traceId) {
-                    "[REQ_END] method=$method path=$path status=$status latencyMs=$latencyMs userId=${userId ?: "NONE"} clientIp=${clientIp ?: "NONE"}"
+                logger.request.info(
+                    traceId = traceId,
+                    "method" to method,
+                    "path" to path,
+                    "status" to status,
+                    "latencyMs" to latencyMs,
+                    "userId" to (userId?.toString() ?: "none"),
+                ) {
+                    "요청 처리가 완료되었습니다"
                 }
             }
     }

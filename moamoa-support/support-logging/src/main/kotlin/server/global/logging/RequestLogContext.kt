@@ -5,4 +5,3 @@ data class RequestLogContext(
     val userId: Long?,
     val clientIp: String?,
 )
-

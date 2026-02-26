@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import server.feature.member.command.domain.Member
 import server.feature.member.command.domain.MemberRepository
 import server.feature.member.command.domain.Provider
-import server.global.logging.infoWithTrace
+import server.global.logging.event
 import server.infra.cache.EmailVerificationCache
 import server.infra.cache.SocialMemberSessionCache
 import server.infra.db.transaction.Transactional
@@ -67,8 +67,8 @@ class MemberService(
 
         val event = saved.created()
         registerEvent(event)
-        logger.infoWithTrace {
-            "[BIZ] what=memberCreate result=SUCCESS targetId=${saved.id} reason=신규 가입 userId=${saved.id}"
+        logger.event.info(event) {
+            "회원 생성 이벤트를 발행했습니다"
         }
 
         MemberData(saved)

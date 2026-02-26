@@ -3,7 +3,7 @@ package server.infra.messagebroker
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import server.global.logging.ExternalCallLogger
-import server.global.logging.warnWithTraceId
+import server.global.logging.errorType
 import server.infra.db.outbox.EventOutboxRepository
 import server.messaging.health.RedisHealthStateManager
 import server.shared.messaging.EventPublisher
@@ -42,8 +42,14 @@ class OutboxPublishWorker(
                     if (healthStateManager.isFailure(e)) {
                         throw e
                     }
-                    logger.warnWithTraceId(traceId = null, throwable = e) {
-                        "[WORKER] result=FAIL call=EventPublisher.publish target=MQ outboxId=${row.id} topic=${row.topic} errorCode=${e::class.simpleName ?: "UnknownException"}"
+                    logger.errorType.warn(
+                        traceId = null,
+                        throwable = e,
+                        "call" to "EventPublisher.publish",
+                        "errorType" to (e::class.simpleName ?: "UnknownException"),
+                        "message" to "outboxId=${row.id} topic=${row.topic}",
+                    ) {
+                        "아웃박스 이벤트 발행 중 오류가 발생했습니다"
                     }
                 }
             }

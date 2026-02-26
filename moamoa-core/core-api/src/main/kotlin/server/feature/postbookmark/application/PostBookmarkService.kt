@@ -11,7 +11,7 @@ import server.feature.post.command.application.PostData
 import server.feature.post.command.domain.PostRepository
 import server.feature.postbookmark.domain.PostBookmark
 import server.feature.postbookmark.domain.PostBookmarkRepository
-import server.global.logging.infoWithTrace
+import server.global.logging.event
 import server.infra.db.transaction.Transactional
 import server.shared.lock.KeyedLock
 
@@ -46,8 +46,8 @@ class PostBookmarkService(
 
                         val event = postBookmark.unbookmark()
                         registerEvent(event)
-                        logger.infoWithTrace {
-                            "[BIZ] what=postBookmark result=SUCCESS targetId=${command.postId} reason=북마크 해제 userId=$memberId"
+                        logger.event.info(event) {
+                            "게시글 북마크 해제 이벤트를 발행했습니다"
                         }
 
                         PostBookmarkToggleResult(false)
@@ -62,8 +62,8 @@ class PostBookmarkService(
 
                         val event = saved.bookmark()
                         registerEvent(event)
-                        logger.infoWithTrace {
-                            "[BIZ] what=postBookmark result=SUCCESS targetId=${command.postId} reason=북마크 등록 userId=$memberId"
+                        logger.event.info(event) {
+                            "게시글 북마크 등록 이벤트를 발행했습니다"
                         }
 
                         PostBookmarkToggleResult(true)

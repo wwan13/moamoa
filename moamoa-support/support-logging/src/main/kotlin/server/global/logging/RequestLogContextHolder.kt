@@ -4,7 +4,6 @@ import kotlinx.coroutines.reactor.ReactorContext
 import org.slf4j.MDC
 import org.springframework.web.server.ServerWebExchange
 import reactor.util.context.Context
-import java.util.UUID
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.coroutineContext
 
@@ -13,6 +12,8 @@ object RequestLogContextHolder {
     const val TRACE_ID_ATTR = "traceId"
     const val USER_ID_ATTR = "userId"
     const val CLIENT_IP_ATTR = "clientIp"
+
+    const val SYSTEM_TRACE_ID = "SYSTEM"
 
     private const val REACTOR_TRACE_ID_KEY = "request.traceId"
     private const val REACTOR_USER_ID_KEY = "request.userId"
@@ -24,14 +25,9 @@ object RequestLogContextHolder {
         context.clientIp?.let { exchange.attributes[CLIENT_IP_ATTR] = it }
     }
 
-    fun normalizeToShortTraceId(rawTraceId: String?): String {
-        val raw = rawTraceId?.trim().orEmpty()
-        if (raw.isNotEmpty()) {
-            runCatching { UUID.fromString(raw) }.getOrNull()?.let {
-                return it.toString().substring(0, 8)
-            }
-        }
-        return UUID.randomUUID().toString().substring(0, 8)
+    fun normalizeTraceId(rawTraceId: String?): String {
+        val normalized = rawTraceId?.trim()
+        return if (normalized.isNullOrBlank()) SYSTEM_TRACE_ID else normalized
     }
 
     fun writeToReactor(context: RequestLogContext): (Context) -> Context = { reactorContext ->
@@ -56,7 +52,7 @@ object RequestLogContextHolder {
     }
 
     inline fun <T> withTraceId(traceId: String?, block: () -> T): T {
-        val normalized = traceId?.takeIf { it.isNotBlank() } ?: "NONE"
+        val normalized = normalizeTraceId(traceId)
         val closeable = MDC.putCloseable("traceId", normalized)
         return try {
             block()

@@ -2,7 +2,7 @@ package server.feature.submission.application
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
-import server.global.logging.infoWithTrace
+import server.global.logging.event
 import server.feature.submission.domain.Submission
 import server.feature.submission.domain.SubmissionRepository
 import server.infra.db.transaction.Transactional
@@ -29,8 +29,8 @@ class SubmissionService(
 
         val event = saved.created()
         registerEvent(event)
-        logger.infoWithTrace {
-            "[BIZ] what=submissionCreate result=SUCCESS targetId=${saved.id} reason=사용자 제출 userId=$memberId"
+        logger.event.info(event) {
+            "제보 생성 이벤트를 발행했습니다"
         }
 
         SubmissionCreateResult(saved.id)

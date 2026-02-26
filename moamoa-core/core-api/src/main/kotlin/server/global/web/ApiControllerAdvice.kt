@@ -13,8 +13,7 @@ import org.springframework.web.server.*
 import server.WebhookSender
 import server.content.WebhookContent
 import server.global.logging.RequestLogContextHolder
-import server.global.logging.errorWithTraceId
-import server.global.logging.warnWithTraceId
+import server.global.logging.errorType
 import server.shared.security.jwt.ExpiredTokenException
 import server.shared.security.jwt.InvalidTokenException
 import server.security.ForbiddenException
@@ -40,7 +39,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: BindException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, "요청 값이 올바르지 않습니다") }
+        logClientError(exchange, 400, "요청 값이 올바르지 않습니다", e)
         return badRequest("요청 값이 올바르지 않습니다")
     }
 
@@ -49,7 +48,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: MethodArgumentNotValidException,
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, "요청 값이 올바르지 않습니다") }
+        logClientError(exchange, 400, "요청 값이 올바르지 않습니다", e)
         return badRequest("요청 값이 올바르지 않습니다")
     }
 
@@ -59,7 +58,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: ServerWebInputException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, "요청 본문/값이 올바르지 않습니다") }
+        logClientError(exchange, 400, "요청 본문/값이 올바르지 않습니다", e)
         return badRequest("요청 본문/값이 올바르지 않습니다")
     }
 
@@ -69,7 +68,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: HttpMessageNotReadableException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, "요청 본문(JSON)이 올바르지 않습니다") }
+        logClientError(exchange, 400, "요청 본문(JSON)이 올바르지 않습니다", e)
         return badRequest("요청 본문(JSON)이 올바르지 않습니다")
     }
 
@@ -79,7 +78,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: MissingRequestValueException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, "필수 값이 누락되었습니다 reason=${e.reason}") }
+        logClientError(exchange, 400, "필수 값이 누락되었습니다 reason=${e.reason}", e)
         return badRequest("필수 값이 누락되었습니다")
     }
 
@@ -89,7 +88,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: MethodNotAllowedException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, "지원하지 않는 HTTP 메서드입니다") }
+        logClientError(exchange, 405, "지원하지 않는 HTTP 메서드입니다", e)
         return error(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다")
     }
 
@@ -99,7 +98,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: UnsupportedMediaTypeStatusException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, "지원하지 않는 Content-Type 입니다") }
+        logClientError(exchange, 415, "지원하지 않는 Content-Type 입니다", e)
         return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 Content-Type 입니다")
     }
 
@@ -109,7 +108,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: NotAcceptableStatusException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, "지원하지 않는 Accept 입니다") }
+        logClientError(exchange, 406, "지원하지 않는 Accept 입니다", e)
         return error(HttpStatus.NOT_ACCEPTABLE, "지원하지 않는 응답 형식입니다")
     }
 
@@ -119,7 +118,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: IllegalArgumentException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, e.message ?: "잘못된 요청입니다") }
+        logClientError(exchange, 400, e.message ?: "잘못된 요청입니다", e)
         return badRequest(e.message ?: "잘못된 요청입니다")
     }
 
@@ -129,7 +128,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: UnauthorizedException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, e.message ?: "LOGIN_AGAIN") }
+        logClientError(exchange, 401, e.message ?: "LOGIN_AGAIN", e)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
     }
 
@@ -139,7 +138,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: ForbiddenException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, e.message ?: "접근 권한이 없습니다") }
+        logClientError(exchange, 403, e.message ?: "접근 권한이 없습니다", e)
         return error(HttpStatus.FORBIDDEN, e.message ?: "접근 권한이 없습니다")
     }
 
@@ -149,7 +148,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: InvalidTokenException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, e.message ?: "LOGIN_AGAIN") }
+        logClientError(exchange, 401, e.message ?: "LOGIN_AGAIN", e)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
     }
 
@@ -159,7 +158,7 @@ class ApiControllerAdvice(
         exchange: ServerWebExchange,
         e: ExpiredTokenException
     ): ResponseEntity<ErrorResponse> {
-        logger.warnWithTraceId(traceId(exchange)) { reqEndLog(exchange, e.message ?: "TOKEN_EXPIRED") }
+        logClientError(exchange, 401, e.message ?: "TOKEN_EXPIRED", e)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "TOKEN_EXPIRED")
     }
 
@@ -170,7 +169,7 @@ class ApiControllerAdvice(
         e: IllegalStateException
     ): ResponseEntity<ErrorResponse> {
         sendWebhook(exchange, e)
-        logger.errorWithTraceId(traceId(exchange), e) { reqEndLog(exchange, e.message ?: "서버 오류가 발생했습니다") }
+        logServerError(exchange, e.message ?: "서버 오류가 발생했습니다", e)
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다")
     }
 
@@ -181,7 +180,7 @@ class ApiControllerAdvice(
         e: Exception
     ): ResponseEntity<ErrorResponse> {
         sendWebhook(exchange, e)
-        logger.errorWithTraceId(traceId(exchange), e) { reqEndLog(exchange, e.message ?: "서버 오류가 발생했습니다") }
+        logServerError(exchange, e.message ?: "서버 오류가 발생했습니다", e)
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다")
     }
 
@@ -212,12 +211,39 @@ class ApiControllerAdvice(
         webhookSender.sendAsync(content)
     }
 
-    private fun reqEndLog(exchange: ServerWebExchange, reason: String): String {
-        val userId = exchange.attributes[RequestLogContextHolder.USER_ID_ATTR]?.toString() ?: "NONE"
-        val path = exchange.request.path.value()
-        return "[REQ_ERROR] path=$path reason=$reason userId=$userId"
-    }
-
     private fun traceId(exchange: ServerWebExchange): String? =
         exchange.attributes[RequestLogContextHolder.TRACE_ID_ATTR]?.toString()
+
+    private fun logClientError(
+        exchange: ServerWebExchange,
+        status: Int,
+        reason: String,
+        throwable: Throwable
+    ) {
+        logger.errorType.warn(
+            traceId = traceId(exchange),
+            throwable = throwable,
+            "call" to "api.request",
+            "errorType" to "ClientError",
+            "message" to reason,
+            "path" to exchange.request.path.value(),
+            "status" to status,
+        ) { "요청 처리 중 클라이언트 오류가 발생했습니다" }
+    }
+
+    private fun logServerError(
+        exchange: ServerWebExchange,
+        reason: String,
+        throwable: Throwable
+    ) {
+        logger.errorType.error(
+            traceId = traceId(exchange),
+            throwable = throwable,
+            "call" to "api.request",
+            "errorType" to (throwable::class.simpleName ?: "UnknownException"),
+            "message" to reason,
+            "path" to exchange.request.path.value(),
+            "status" to 500,
+        ) { "요청 처리 중 서버 오류가 발생했습니다" }
+    }
 }

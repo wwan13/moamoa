@@ -11,7 +11,7 @@ import server.feature.techblog.command.application.TechBlogData
 import server.feature.techblog.command.domain.TechBlogRepository
 import server.feature.techblogsubscription.domain.TechBlogSubscription
 import server.feature.techblogsubscription.domain.TechBlogSubscriptionRepository
-import server.global.logging.infoWithTrace
+import server.global.logging.event
 import server.infra.db.transaction.Transactional
 import server.shared.lock.KeyedLock
 
@@ -45,8 +45,8 @@ class TechBlogSubscriptionService(
 
                         val event = subscription.unsubscribe()
                         registerEvent(event)
-                        logger.infoWithTrace {
-                            "[BIZ] what=techBlogSubscribe result=SUCCESS targetId=${command.techBlogId} reason=구독 해제 userId=$memberId"
+                        logger.event.info(event) {
+                            "기술 블로그 구독 해제 이벤트를 발행했습니다"
                         }
 
                         TechBlogSubscriptionToggleResult(false)
@@ -61,8 +61,8 @@ class TechBlogSubscriptionService(
 
                         val event = saved.subscribe()
                         registerEvent(event)
-                        logger.infoWithTrace {
-                            "[BIZ] what=techBlogSubscribe result=SUCCESS targetId=${command.techBlogId} reason=구독 등록 userId=$memberId"
+                        logger.event.info(event) {
+                            "기술 블로그 구독 등록 이벤트를 발행했습니다"
                         }
 
                         TechBlogSubscriptionToggleResult(true)
@@ -86,8 +86,8 @@ class TechBlogSubscriptionService(
                 val updated = subscription.toggleNotification()
                 techBlogSubscriptionRepository.save(updated.entity)
                 registerEvent(updated.event)
-                logger.infoWithTrace {
-                    "[BIZ] what=techBlogNotification result=SUCCESS targetId=${command.techBlogId} reason=알림 토글 userId=$memberId"
+                logger.event.info(updated.event) {
+                    "기술 블로그 알림 설정 변경 이벤트를 발행했습니다"
                 }
 
                 NotificationEnabledToggleResult(updated.entity.notificationEnabled)
