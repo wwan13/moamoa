@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.core.DefaultParameterNameDiscoverer
 import org.springframework.core.MethodParameter
@@ -13,6 +14,7 @@ import org.springframework.mock.web.server.MockServerWebExchange
 import org.springframework.web.reactive.BindingContext
 import server.feature.member.command.domain.MemberRole
 import server.shared.security.jwt.AuthPrincipal
+import server.shared.security.jwt.InvalidTokenException
 import server.shared.security.jwt.TokenProvider
 import server.shared.security.jwt.TokenType
 import test.UnitTest
@@ -145,6 +147,85 @@ class PassportResolverTest : UnitTest() {
             memberId = 42L,
             role = MemberRole.USER
         )
+        verify(exactly = 1) { tokenProvider.decodeToken("access-token") }
+    }
+
+    @Test
+    fun `캐시된 principal이 있으면 decodeToken을 호출하지 않는다`() {
+        val tokenProvider = mockk<TokenProvider>()
+        val resolver = PassportResolver(tokenProvider)
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
+                .build()
+        )
+        exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] = AuthPrincipal(
+            memberId = 77L,
+            type = TokenType.ACCESS,
+            role = "USER"
+        )
+
+        val result = resolver.resolveArgument(
+            methodParameter("required"),
+            mockk<BindingContext>(),
+            exchange
+        ).block()
+
+        result shouldBe Passport(
+            memberId = 77L,
+            role = MemberRole.USER
+        )
+        verify(exactly = 0) { tokenProvider.decodeToken(any()) }
+    }
+
+    @Test
+    fun `캐시된 decode 예외가 있으면 그대로 전파한다`() {
+        val tokenProvider = mockk<TokenProvider>()
+        val resolver = PassportResolver(tokenProvider)
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
+                .build()
+        )
+        exchange.attributes[TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR] = InvalidTokenException()
+
+        shouldThrow<InvalidTokenException> {
+            resolver.resolveArgument(
+                methodParameter("required"),
+                mockk<BindingContext>(),
+                exchange
+            ).block()
+        }
+
+        verify(exactly = 0) { tokenProvider.decodeToken(any()) }
+    }
+
+    @Test
+    fun `캐시가 없으면 decodeToken을 호출한다`() {
+        val tokenProvider = mockk<TokenProvider>()
+        every { tokenProvider.decodeToken("access-token") } returns AuthPrincipal(
+            memberId = 101L,
+            type = TokenType.ACCESS,
+            role = "USER"
+        )
+        val resolver = PassportResolver(tokenProvider)
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
+                .build()
+        )
+
+        val result = resolver.resolveArgument(
+            methodParameter("required"),
+            mockk<BindingContext>(),
+            exchange
+        ).block()
+
+        result shouldBe Passport(
+            memberId = 101L,
+            role = MemberRole.USER
+        )
+        verify(exactly = 1) { tokenProvider.decodeToken("access-token") }
     }
 
     private fun methodParameter(name: String): MethodParameter {

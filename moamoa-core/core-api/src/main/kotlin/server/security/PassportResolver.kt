@@ -8,6 +8,7 @@ import org.springframework.web.reactive.result.method.HandlerMethodArgumentResol
 import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import server.feature.member.command.domain.MemberRole
+import server.shared.security.jwt.AuthPrincipal
 import server.shared.security.jwt.TokenProvider
 import server.shared.security.jwt.TokenType
 import kotlin.reflect.jvm.kotlinFunction
@@ -48,7 +49,15 @@ class PassportResolver(
         }
         val accessToken = bearerToken.removePrefix("Bearer").trim()
 
-        val principal = tokenProvider.decodeToken(accessToken)
+        val decodeError = exchange.attributes[TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR] as? RuntimeException
+        if (decodeError != null) {
+            throw decodeError
+        }
+
+        val principal = (exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] as? AuthPrincipal)
+            ?: tokenProvider.decodeToken(accessToken).also {
+                exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] = it
+            }
         if (principal.type != TokenType.ACCESS) {
             return unauthorized()
         }

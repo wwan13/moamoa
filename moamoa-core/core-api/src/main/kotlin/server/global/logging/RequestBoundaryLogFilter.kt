@@ -2,21 +2,19 @@ package server.global.logging
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.core.Ordered
-import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
-import server.shared.security.jwt.TokenProvider
+import server.security.TokenDecodeCacheAttributes
+import server.shared.security.jwt.AuthPrincipal
 
 @Component
-class RequestBoundaryLogFilter(
-    private val tokenProvider: TokenProvider,
-) : WebFilter, Ordered {
+class RequestBoundaryLogFilter : WebFilter, Ordered {
     private val logger = KotlinLogging.logger {}
 
-    override fun getOrder(): Int = Ordered.HIGHEST_PRECEDENCE
+    override fun getOrder(): Int = Ordered.HIGHEST_PRECEDENCE + 1
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         val traceId = RequestLogContextHolder.normalizeTraceId(
@@ -58,17 +56,8 @@ class RequestBoundaryLogFilter(
     }
 
     private fun resolveUserId(exchange: ServerWebExchange): Long? {
-        val authorization = exchange.request.headers.getFirst(HttpHeaders.AUTHORIZATION) ?: return null
-        if (!authorization.startsWith("Bearer ", ignoreCase = true)) return null
-
-        val accessToken = authorization.substringAfter(' ', "").trim()
-        if (accessToken.isBlank()) return null
-
-        return try {
-            tokenProvider.decodeToken(accessToken).memberId
-        } catch (_: Exception) {
-            null
-        }
+        val principal = exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] as? AuthPrincipal
+        return principal?.memberId
     }
 
     private fun resolveClientIp(exchange: ServerWebExchange): String? {
