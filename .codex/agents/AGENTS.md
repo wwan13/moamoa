@@ -26,7 +26,7 @@
 - 아키텍처/모듈 구조/의존성 방향 변경: `$core-architecture`
 - 프론트엔드(`moamoa-web`, `moamoa-admin/admin-web`) 작업: `$web-frontend-architecture`
 - API 계약 변경: `$api-contract`
-- R2DBC/DatabaseClient/트랜잭션 경계 작업: `$persistence-r2dbc`
+- JPA/JDBC/트랜잭션 경계 작업: `$persistence-jpa`
 - 테스트 추가/수정: `$testing-style`
 
 ## 기존 전용 에이전트
