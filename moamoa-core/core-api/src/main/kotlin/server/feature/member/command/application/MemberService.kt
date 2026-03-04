@@ -1,6 +1,7 @@
 package server.feature.member.command.application
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import server.feature.member.command.domain.Member
 import server.feature.member.command.domain.MemberRepository
@@ -24,7 +25,7 @@ class MemberService(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    suspend fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
+    fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
 //        if (!emailVerificationCache.isVerified(command.email)) {
 //            throw IllegalArgumentException("인증되지 않은 이메일 입니다.")
 //        }
@@ -43,23 +44,33 @@ class MemberService(
         }
     }
 
-    suspend fun createSocialMember(command: CreateSocialMemberCommand): MemberData = transactional {
+    fun createSocialMember(command: CreateSocialMemberCommand): MemberData {
         val member = Member.fromSocial(
             email = command.email,
             provider = command.provider,
             providerKey = command.providerKey,
         )
-        createMember(member)
+        return transactional {
+            createMember(member)
+        }
     }
 
-    suspend fun createSocialMemberWithSession(command: CreateSocialMemberCommand): CreateSocialMemberResult {
-        val member = createSocialMember(command)
+    fun createSocialMemberWithSession(command: CreateSocialMemberCommand): CreateSocialMemberResult {
+        val member = transactional {
+            createMember(
+                Member.fromSocial(
+                    email = command.email,
+                    provider = command.provider,
+                    providerKey = command.providerKey,
+                )
+            )
+        }
         val sessionToken = UUID.randomUUID().toString()
         socialMemberSessionCache.set(sessionToken, member.id)
         return CreateSocialMemberResult(member, sessionToken)
     }
 
-    private suspend fun createMember(member: Member): MemberData = transactional {
+    private fun createMember(member: Member): MemberData = transactional {
         if (memberRepository.existsByEmail(member.email)) {
             throw IllegalArgumentException("이미 가입된 이메일 입니다.")
         }
@@ -74,12 +85,12 @@ class MemberService(
         MemberData(saved)
     }
 
-    suspend fun findById(memberId: Long): MemberData? {
-        return memberRepository.findById(memberId)?.let(::MemberData)
+    fun findById(memberId: Long): MemberData? {
+        return memberRepository.findByIdOrNull(memberId)?.let(::MemberData)
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
     }
 
-    suspend fun findSocialMember(provider: Provider, providerKey: String): MemberData {
+    fun findSocialMember(provider: Provider, providerKey: String): MemberData {
         return memberRepository.findByProviderAndProviderKey(
             provider = provider,
             providerKey = providerKey,
@@ -88,12 +99,12 @@ class MemberService(
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
     }
 
-    suspend fun emailExists(command: EmailExistsCommand): EmailExistsResult {
+    fun emailExists(command: EmailExistsCommand): EmailExistsResult {
         val exists = memberRepository.existsByEmail(command.email)
         return EmailExistsResult(exists)
     }
 
-    suspend fun changePassword(
+    fun changePassword(
         command: ChangePasswordCommand,
         passport: Passport
     ): ChangePasswordResult {
@@ -104,7 +115,7 @@ class MemberService(
         if (command.newPassword != command.passwordConfirm) {
             throw IllegalArgumentException("비밀번호가 일치하지 않습니다.")
         }
-        val member = memberRepository.findById(passport.memberId)
+        val member = memberRepository.findByIdOrNull(passport.memberId)
             ?: throw UnauthorizedException()
         if (member.provider != Provider.INTERNAL) {
             throw IllegalArgumentException("이메일로 회원가입한 사용자가 아닙니다.")
@@ -113,10 +124,8 @@ class MemberService(
             throw IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.")
         }
 
-        val updated = member.copy(
-            password = passwordEncoder.encode(command.newPassword),
-        )
-        memberRepository.save(updated)
+        member.updatePassword(passwordEncoder.encode(command.newPassword))
+        memberRepository.save(member)
 
         return ChangePasswordResult(true)
     }

@@ -8,12 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.data.redis.connection.stream.Consumer
@@ -79,16 +75,16 @@ internal class StreamReader(
         scope.cancel()
     }
 
-    private suspend fun loopForSubscription(subscription: SubscriptionDefinition) {
+    private fun loopForSubscription(subscription: SubscriptionDefinition) {
         val context = open(subscription)
         var skippedByHealth = false
 
-        while (currentCoroutineContext().isActive) {
+        while (true) {
             if (healthStateManager.isDegraded()) {
                 val result = healthStateManager.tryRecover()
 
                 if (!result) {
-                    delay(10_000)
+                    Thread.sleep(10_000)
                     continue
                 }
             }
@@ -100,20 +96,20 @@ internal class StreamReader(
             } catch (e: Exception) {
                 if (isNoGroupException(e)) {
                     streamGroupEnsurer.ensureForRecovery(context.subscription)
-                    delay(10_000)
+                    Thread.sleep(10_000)
                     continue
                 }
 
                 logger.warn(e) {
                     "read failed. channelKey=${subscription.channel} consumerGroup=${subscription.consumerGroup}"
                 }
-                delay(500)
+                Thread.sleep(500)
                 continue
             }
 
             if (records.isFailure) {
                 skippedByHealth = true
-                delay(10_000)
+                Thread.sleep(10_000)
                 continue
             }
 
@@ -126,7 +122,7 @@ internal class StreamReader(
         }
     }
 
-    private suspend fun open(subscription: SubscriptionDefinition): ReadContext {
+    private fun open(subscription: SubscriptionDefinition): ReadContext {
         val ops = redis.opsForStream<String, String>()
         val consumerName = "worker-${subscription.channel}-${subscription.consumerGroup}-${UUID.randomUUID()}"
         val consumer = Consumer.from(subscription.consumerGroup, consumerName)
@@ -142,14 +138,12 @@ internal class StreamReader(
         )
     }
 
-    private suspend fun read(context: ReadContext): List<MapRecord<String, String, String>> =
-        withContext(Dispatchers.IO) {
-            context.ops.read(
-                context.consumer,
-                context.options,
-                StreamOffset.create(context.subscription.channel.key, ReadOffset.lastConsumed())
-            ) ?: emptyList()
-        }
+    private fun read(context: ReadContext): List<MapRecord<String, String, String>> =
+        context.ops.read(
+            context.consumer,
+            context.options,
+            StreamOffset.create(context.subscription.channel.key, ReadOffset.lastConsumed())
+        ) ?: emptyList()
 
     private fun isNoGroupException(exception: Exception): Boolean =
         exception.message?.contains("NOGROUP", ignoreCase = true) == true

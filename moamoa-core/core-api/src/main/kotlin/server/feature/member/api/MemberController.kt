@@ -35,7 +35,7 @@ class MemberController(
 ) {
 
     @PostMapping
-    suspend fun createInternalMember(
+    fun createInternalMember(
         @RequestBody @Valid command: CreateInternalMemberCommand
     ): ResponseEntity<MemberData> {
         val response = memberService.createInternalMember(command)
@@ -45,7 +45,7 @@ class MemberController(
     }
 
     @PostMapping("/social")
-    suspend fun createSocialMember(
+    fun createSocialMember(
         @RequestBody @Valid command: CreateSocialMemberCommand
     ): ResponseEntity<CreateSocialMemberResult> {
         val response = memberService.createSocialMemberWithSession(command)
@@ -55,7 +55,7 @@ class MemberController(
     }
 
     @GetMapping("/email-exists")
-    suspend fun emailExists(
+    fun emailExists(
         @Valid command: EmailExistsCommand
     ): ResponseEntity<EmailExistsResult> {
         val response = memberService.emailExists(command)
@@ -64,7 +64,7 @@ class MemberController(
     }
 
     @GetMapping
-    suspend fun findByPassport(
+    fun findByPassport(
         @RequestPassport passport: Passport
     ): ResponseEntity<MemberSummary> {
         val response = memberQueryService.findById(passport.memberId)
@@ -73,7 +73,7 @@ class MemberController(
     }
 
     @PatchMapping("/password")
-    suspend fun changePassword(
+    fun changePassword(
         @RequestBody @Valid command: ChangePasswordCommand,
         @RequestPassport passport: Passport
     ): ResponseEntity<ChangePasswordResult> {
@@ -83,7 +83,7 @@ class MemberController(
     }
 
     @DeleteMapping
-    suspend fun unjoin(
+    fun unjoin(
         @RequestPassport passport: Passport
     ): ResponseEntity<MemberUnjoinResult> {
         val response = memberUnjoinService.unjoin(passport)

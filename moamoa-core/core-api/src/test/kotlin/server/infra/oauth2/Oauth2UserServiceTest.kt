@@ -2,17 +2,15 @@ package server.infra.oauth2
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.security.oauth2.client.registration.ClientRegistration
-import org.springframework.security.oauth2.client.userinfo.DefaultReactiveOAuth2UserService
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.OAuth2AccessToken
 import org.springframework.security.oauth2.core.user.OAuth2User
-import reactor.core.publisher.Mono
 import server.feature.member.command.application.CreateSocialMemberCommand
 import server.feature.member.command.application.MemberData
 import server.feature.member.command.application.MemberService
@@ -26,13 +24,13 @@ class Oauth2UserServiceTest : UnitTest() {
     fun `기존 소셜 회원이면 Authenticated를 반환한다`() {
         val memberService = mockk<MemberService>()
         val service = Oauth2UserService(memberService)
-        val delegate = mockk<DefaultReactiveOAuth2UserService>()
+        val delegate = mockk<DefaultOAuth2UserService>()
         val userRequest = userRequest("google")
         val oauth2User = oauthUser(mapOf("sub" to "google-1", "email" to "a@b.com"))
 
         setDelegate(service, delegate)
-        every { delegate.loadUser(userRequest) } returns Mono.just(oauth2User)
-        coEvery {
+        every { delegate.loadUser(userRequest) } returns oauth2User
+        every {
             memberService.findSocialMember(Provider.GOOGLE, "google-1")
         } returns MemberData(
             id = 10L,
@@ -40,7 +38,7 @@ class Oauth2UserServiceTest : UnitTest() {
             role = MemberRole.USER
         )
 
-        val result = service.loadUser(userRequest).block()
+        val result = service.loadUser(userRequest)
 
         result shouldBe Oauth2SocialUser.Authenticated(
             memberId = 10L,
@@ -53,17 +51,17 @@ class Oauth2UserServiceTest : UnitTest() {
     fun `이메일이 없으면 EmailRequired를 반환한다`() {
         val memberService = mockk<MemberService>()
         val service = Oauth2UserService(memberService)
-        val delegate = mockk<DefaultReactiveOAuth2UserService>()
+        val delegate = mockk<DefaultOAuth2UserService>()
         val userRequest = userRequest("github")
         val oauth2User = oauthUser(mapOf("id" to 1234))
 
         setDelegate(service, delegate)
-        every { delegate.loadUser(userRequest) } returns Mono.just(oauth2User)
-        coEvery {
+        every { delegate.loadUser(userRequest) } returns oauth2User
+        every {
             memberService.findSocialMember(Provider.GITHUB, "1234")
         } throws IllegalArgumentException("not found")
 
-        val result = service.loadUser(userRequest).block()
+        val result = service.loadUser(userRequest)
 
         result shouldBe Oauth2SocialUser.EmailRequired(
             provider = Provider.GITHUB,
@@ -75,16 +73,16 @@ class Oauth2UserServiceTest : UnitTest() {
     fun `없던 회원이고 이메일이 있으면 생성 후 Authenticated를 반환한다`() {
         val memberService = mockk<MemberService>()
         val service = Oauth2UserService(memberService)
-        val delegate = mockk<DefaultReactiveOAuth2UserService>()
+        val delegate = mockk<DefaultOAuth2UserService>()
         val userRequest = userRequest("google")
         val oauth2User = oauthUser(mapOf("sub" to "google-2", "email" to "new@b.com"))
 
         setDelegate(service, delegate)
-        every { delegate.loadUser(userRequest) } returns Mono.just(oauth2User)
-        coEvery {
+        every { delegate.loadUser(userRequest) } returns oauth2User
+        every {
             memberService.findSocialMember(Provider.GOOGLE, "google-2")
         } throws IllegalArgumentException("not found")
-        coEvery {
+        every {
             memberService.createSocialMember(
                 CreateSocialMemberCommand(
                     email = "new@b.com",
@@ -98,7 +96,7 @@ class Oauth2UserServiceTest : UnitTest() {
             role = MemberRole.USER
         )
 
-        val result = service.loadUser(userRequest).block()
+        val result = service.loadUser(userRequest)
 
         result shouldBe Oauth2SocialUser.Authenticated(
             memberId = 20L,
@@ -111,16 +109,16 @@ class Oauth2UserServiceTest : UnitTest() {
     fun `회원 생성 중 예외가 발생하면 HasError를 반환한다`() {
         val memberService = mockk<MemberService>()
         val service = Oauth2UserService(memberService)
-        val delegate = mockk<DefaultReactiveOAuth2UserService>()
+        val delegate = mockk<DefaultOAuth2UserService>()
         val userRequest = userRequest("google")
         val oauth2User = oauthUser(mapOf("sub" to "google-3", "email" to "err@b.com"))
 
         setDelegate(service, delegate)
-        every { delegate.loadUser(userRequest) } returns Mono.just(oauth2User)
-        coEvery {
+        every { delegate.loadUser(userRequest) } returns oauth2User
+        every {
             memberService.findSocialMember(Provider.GOOGLE, "google-3")
         } throws IllegalArgumentException("not found")
-        coEvery {
+        every {
             memberService.createSocialMember(
                 CreateSocialMemberCommand(
                     email = "err@b.com",
@@ -130,7 +128,7 @@ class Oauth2UserServiceTest : UnitTest() {
             )
         } throws IllegalStateException("boom")
 
-        val result = service.loadUser(userRequest).block()
+        val result = service.loadUser(userRequest)
 
         result shouldBe Oauth2SocialUser.HasError(message = "boom")
     }
@@ -139,25 +137,25 @@ class Oauth2UserServiceTest : UnitTest() {
     fun `지원하지 않는 provider 이면 예외를 반환한다`() {
         val memberService = mockk<MemberService>()
         val service = Oauth2UserService(memberService)
-        val delegate = mockk<DefaultReactiveOAuth2UserService>()
+        val delegate = mockk<DefaultOAuth2UserService>()
         val userRequest = userRequest("naver")
         val oauth2User = oauthUser(mapOf("id" to "x"))
 
         setDelegate(service, delegate)
-        every { delegate.loadUser(userRequest) } returns Mono.just(oauth2User)
+        every { delegate.loadUser(userRequest) } returns oauth2User
 
         shouldThrow<IllegalStateException> {
-            service.loadUser(userRequest).block()
+            service.loadUser(userRequest)
         }
     }
 
     private fun oauthUser(attributes: Map<String, Any?>): OAuth2User {
         val oauth2User = mockk<OAuth2User>()
-        io.mockk.every { oauth2User.attributes } returns attributes
+        every { oauth2User.attributes } returns attributes
         return oauth2User
     }
 
-    private fun setDelegate(service: Oauth2UserService, delegate: DefaultReactiveOAuth2UserService) {
+    private fun setDelegate(service: Oauth2UserService, delegate: DefaultOAuth2UserService) {
         val field = Oauth2UserService::class.java.getDeclaredField("delegate")
         field.isAccessible = true
         field.set(service, delegate)

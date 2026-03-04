@@ -14,17 +14,17 @@ class BookmarkedAllPostIdSetCache(
     fun versionKey(memberId: Long) = "$prefix$memberId:VER"
     fun key(memberId: Long, version: Long) = "$prefix$memberId:V:$version"
 
-    suspend fun get(memberId: Long): Set<Long>? {
+    fun get(memberId: Long): Set<Long>? {
         val ver = cacheMemory.get<Long>(versionKey(memberId)) ?: 1L
         return cacheMemory.get(key(memberId, ver))
     }
 
-    suspend fun set(memberId: Long, postIds: Set<Long>) {
+    fun set(memberId: Long, postIds: Set<Long>) {
         val ver = cacheMemory.get<Long>(versionKey(memberId)) ?: 1L
         cacheMemory.set(key(memberId, ver), postIds, ttlMillis)
     }
 
-    suspend fun evictAll(memberId: Long) {
+    fun evictAll(memberId: Long) {
         cacheMemory.incr(versionKey(memberId))
     }
 }

@@ -1,7 +1,5 @@
 package server.batch.techblog.monitoring
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.springframework.stereotype.Component
 import server.batch.techblog.dto.TechBlogKey
 import server.shared.cache.CacheMemory
@@ -9,14 +7,16 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 @Component
 internal class TechBlogCollectMonitorStore(
     private val cacheMemory: CacheMemory,
 ) {
-    private val lock = Mutex()
+    private val lock = ReentrantLock()
 
-    suspend fun recordFetchSuccess(
+    fun recordFetchSuccess(
         runId: Long,
         techBlog: TechBlogKey,
         fetchedPostCount: Int,
@@ -35,7 +35,7 @@ internal class TechBlogCollectMonitorStore(
         persist(snapshot.copy(sources = upsertSource(snapshot.sources, updatedSource)))
     }
 
-    suspend fun recordFetchFailure(
+    fun recordFetchFailure(
         runId: Long,
         techBlog: TechBlogKey,
         throwable: Throwable,
@@ -54,7 +54,7 @@ internal class TechBlogCollectMonitorStore(
         persist(snapshot.copy(sources = upsertSource(snapshot.sources, updatedSource)))
     }
 
-    suspend fun accumulateAddedCount(runId: Long, addedCountByTechBlogId: Map<Long, Int>) = lock.withLock {
+    fun accumulateAddedCount(runId: Long, addedCountByTechBlogId: Map<Long, Int>) = lock.withLock {
         val snapshot = loadOrInitSnapshot(runId)
         if (addedCountByTechBlogId.isEmpty()) {
             persist(snapshot)
@@ -69,7 +69,7 @@ internal class TechBlogCollectMonitorStore(
         persist(snapshot.copy(sources = updatedSources))
     }
 
-    suspend fun markNotified(notifyRunId: Long, nowMillis: Long, resultType: NotifyResultType) = lock.withLock {
+    fun markNotified(notifyRunId: Long, nowMillis: Long, resultType: NotifyResultType) = lock.withLock {
         val snapshot = cacheMemory.get(KEY, TechBlogCollectMonitorSnapshot::class.java)
             ?: defaultSnapshot()
 
@@ -82,10 +82,10 @@ internal class TechBlogCollectMonitorStore(
         )
     }
 
-    suspend fun getLatest(): TechBlogCollectMonitorSnapshot? =
+    fun getLatest(): TechBlogCollectMonitorSnapshot? =
         cacheMemory.get(KEY, TechBlogCollectMonitorSnapshot::class.java)
 
-    private suspend fun loadOrInitSnapshot(runId: Long): TechBlogCollectMonitorSnapshot {
+    private fun loadOrInitSnapshot(runId: Long): TechBlogCollectMonitorSnapshot {
         val current = cacheMemory.get(KEY, TechBlogCollectMonitorSnapshot::class.java)
         if (current == null || current.collectRunId != runId) {
             return TechBlogCollectMonitorSnapshot(
@@ -104,7 +104,7 @@ internal class TechBlogCollectMonitorStore(
         return current
     }
 
-    private suspend fun persist(snapshot: TechBlogCollectMonitorSnapshot) {
+    private fun persist(snapshot: TechBlogCollectMonitorSnapshot) {
         val updated = snapshot.copy(
             updatedAtMillis = nowMillis(),
             totals = calculateTotals(snapshot.sources),

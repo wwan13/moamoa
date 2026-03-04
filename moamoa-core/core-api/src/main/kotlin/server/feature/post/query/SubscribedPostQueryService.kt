@@ -1,12 +1,7 @@
 package server.feature.post.query
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactor.awaitSingle
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import server.infra.cache.SubscribedPostListCache
 import server.infra.cache.WarmupCoordinator
@@ -16,28 +11,25 @@ import support.paging.calculateTotalPage
 
 @Service
 class SubscribedPostQueryService(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val subscribedPostListCache: SubscribedPostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
     private val postStatsReader: PostStatsReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findAllByConditions(
+    fun findAllByConditions(
         conditions: PostQueryConditions,
         passport: Passport,
-    ): PostList = coroutineScope {
+    ): PostList {
 
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
 
-        val totalCountDeferred = async { countSubscribingPosts(memberId = passport.memberId) }
-        val basePostsDeferred = async { loadPosts(memberId = passport.memberId, paging = paging) }
-
-        val totalCount = totalCountDeferred.await()
-        val basePosts = basePostsDeferred.await()
+        val totalCount = countSubscribingPosts(memberId = passport.memberId)
+        val basePosts = loadPosts(memberId = passport.memberId, paging = paging)
 
         val meta = PostListMeta(
             page = paging.page,
@@ -46,23 +38,15 @@ class SubscribedPostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        if (basePosts.isEmpty()) return@coroutineScope PostList(meta, basePosts)
+        if (basePosts.isEmpty()) return PostList(meta, basePosts)
 
         val postIds = basePosts.map { it.id }
 
-        val bookmarkCountMapDeferred = async {
-            postStatsReader.findPostStatsMap(postIds)
-        }
-
-        val bookmarkedIdSetDeferred = async {
-            bookmarkedPostReader.findBookmarkedPostIdSet(
-                memberId = passport.memberId,
-                postIds = postIds
-            )
-        }
-
-        val bookmarkedIdSet = bookmarkedIdSetDeferred.await()
-        val postStatsByPostId = bookmarkCountMapDeferred.await()
+        val postStatsByPostId = postStatsReader.findPostStatsMap(postIds)
+        val bookmarkedIdSet = bookmarkedPostReader.findBookmarkedPostIdSet(
+            memberId = passport.memberId,
+            postIds = postIds
+        )
 
         val posts = basePosts.map { post ->
             post.copy(
@@ -72,18 +56,18 @@ class SubscribedPostQueryService(
             )
         }
 
-        PostList(meta, posts)
+        return PostList(meta, posts)
     }
 
-    private suspend fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
+    private fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
         if (paging.page > 5) {
-            return fetchSubscribingBasePosts(paging, memberId).toList()
+            return fetchSubscribingBasePosts(paging, memberId)
         }
 
         val cached = subscribedPostListCache.get(memberId, paging.page)
         if (cached != null) return cached
 
-        return fetchSubscribingBasePosts(paging, memberId).toList().also { posts ->
+        return fetchSubscribingBasePosts(paging, memberId).also { posts ->
             val warmupKey = "${subscribedPostListCache.versionKey(memberId)}:PAGE:${paging.page}"
             warmupCoordinator.launchIfAbsent(warmupKey) {
                 subscribedPostListCache.set(memberId, paging.page, posts)
@@ -91,10 +75,10 @@ class SubscribedPostQueryService(
         }
     }
 
-    private suspend fun fetchSubscribingBasePosts(
+    private fun fetchSubscribingBasePosts(
         paging: Paging,
         memberId: Long,
-    ): Flow<PostSummary> {
+    ): List<PostSummary> {
         val offset = (paging.page - 1L) * paging.size
 
         val sql = """
@@ -108,16 +92,14 @@ class SubscribedPostQueryService(
             LIMIT :limit OFFSET :offset
         """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("memberId", memberId)
-            .bind("limit", paging.size)
-            .bind("offset", offset)
-            .map { row, _ -> mapToPostSummary(row) }
-            .all()
-            .asFlow()
+        val params = MapSqlParameterSource()
+            .addValue("memberId", memberId)
+            .addValue("limit", paging.size)
+            .addValue("offset", offset)
+        return jdbc.query(sql, params) { rs, _ -> mapToPostSummary(rs) }
     }
 
-    private suspend fun countSubscribingPosts(memberId: Long): Long {
+    private fun countSubscribingPosts(memberId: Long): Long {
         val sql = """
             SELECT COUNT(*) AS cnt
             FROM tech_blog_subscription s
@@ -125,10 +107,6 @@ class SubscribedPostQueryService(
             WHERE s.member_id = :memberId
         """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("memberId", memberId)
-            .map { row, _ -> row.get("cnt", Long::class.java) ?: 0L }
-            .one()
-            .awaitSingle()
+        return jdbc.queryForObject(sql, mapOf("memberId" to memberId), Long::class.java) ?: 0L
     }
 }

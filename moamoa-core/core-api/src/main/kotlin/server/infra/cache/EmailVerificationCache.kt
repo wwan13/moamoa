@@ -21,7 +21,7 @@ class EmailVerificationCache(
     private fun verifiedKey(email: String): String =
         emailVerifiedPrefix + email
 
-    suspend fun setVerificationCode(email: String, verificationCode: String) {
+    fun setVerificationCode(email: String, verificationCode: String) {
         cacheMemory.set(
             key = verificationCodeKey(email),
             value = verificationCode,
@@ -29,11 +29,11 @@ class EmailVerificationCache(
         )
     }
 
-    suspend fun getVerificationCode(email: String): String? {
+    fun getVerificationCode(email: String): String? {
         return cacheMemory.get(verificationCodeKey(email))
     }
 
-    suspend fun setVerified(email: String) {
+    fun setVerified(email: String) {
         cacheMemory.set(
             key = verifiedKey(email),
             value = true,
@@ -41,7 +41,7 @@ class EmailVerificationCache(
         )
     }
 
-    suspend fun isVerified(email: String): Boolean {
+    fun isVerified(email: String): Boolean {
         return cacheMemory.get<Boolean>(verifiedKey(email)) != null
     }
 }

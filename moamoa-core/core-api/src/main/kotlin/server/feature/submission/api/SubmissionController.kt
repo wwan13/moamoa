@@ -19,7 +19,7 @@ class SubmissionController(
 ) {
 
     @PostMapping
-    suspend fun create(
+    fun create(
         @Valid @RequestBody command: SubmissionCreateCommand,
         @RequestPassport passport: Passport
     ): ResponseEntity<SubmissionCreateResult> {

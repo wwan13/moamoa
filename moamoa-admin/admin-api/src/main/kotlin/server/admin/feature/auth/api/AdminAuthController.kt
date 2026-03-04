@@ -21,7 +21,7 @@ internal class AdminAuthController(
 ) {
 
     @PostMapping("/login")
-    suspend fun login(
+    fun login(
         @RequestBody @Valid command: AdminLoginCommand
     ): ResponseEntity<AdminAuthTokens> {
         val tokens = authService.adminLogin(command)
@@ -29,7 +29,7 @@ internal class AdminAuthController(
     }
 
     @PostMapping("/reissue")
-    suspend fun reissue(
+    fun reissue(
         @RequestHeader("X-Refresh-Token") refreshToken: String
     ): ResponseEntity<AdminAuthTokens> {
         val tokens = authService.adminReissue(refreshToken)
@@ -37,7 +37,7 @@ internal class AdminAuthController(
     }
 
     @PostMapping("/logout")
-    suspend fun logout(
+    fun logout(
         @RequestAdminPassport passport: AdminPassport
     ): ResponseEntity<AdminLogoutResult> {
         val response = authService.logout(passport.memberId)

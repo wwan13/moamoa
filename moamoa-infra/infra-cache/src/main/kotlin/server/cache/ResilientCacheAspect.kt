@@ -6,7 +6,6 @@ import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
 import server.shared.cache.CacheInfraException
 import server.shared.cache.CacheMemory
 
@@ -21,8 +20,7 @@ internal class ResilientCacheAspect(
 
     @Around(
         "bean(resilientCacheMemoryProxy) && " +
-            "execution(* server.shared.cache.CacheMemory.*(..)) && " +
-            "args(.., kotlin.coroutines.Continuation)"
+            "execution(* server.shared.cache.CacheMemory.*(..))"
     )
     fun around(joinPoint: ProceedingJoinPoint): Any? {
         val method = (joinPoint.signature as? MethodSignature)?.method ?: return joinPoint.proceed()
@@ -31,22 +29,19 @@ internal class ResilientCacheAspect(
         val promotedToRedis = resilientCacheRouter.maybePromoteToRedis()
         val current = resilientCacheRouter.current()
         if (resilientCacheRouter.isCaffeine(current)) {
-            return resilientCacheMethodInvoker.invokeAsMono(current, method, args)
+            return resilientCacheMethodInvoker.invoke(current, method, args)
         }
 
-        val mono = joinPoint.proceed() as Mono<Any?>
-        return mono
-            .doOnSuccess {
+        return try {
+            joinPoint.proceed().also {
                 if (promotedToRedis) {
                     logger.warn { "Cache recovered. backend=redis" }
                 }
             }
-            .onErrorResume { ex ->
-                if (ex !is CacheInfraException) {
-                    return@onErrorResume Mono.error(ex)
-                }
-                val fallbackTarget = resilientCacheRouter.switchToCaffeine(ex)
-                resilientCacheMethodInvoker.invokeAsMono(fallbackTarget, method, args, ex)
-            }
+        } catch (ex: Throwable) {
+            if (ex !is CacheInfraException) throw ex
+            val fallbackTarget = resilientCacheRouter.switchToCaffeine(ex)
+            resilientCacheMethodInvoker.invoke(fallbackTarget, method, args, ex)
+        }
     }
 }

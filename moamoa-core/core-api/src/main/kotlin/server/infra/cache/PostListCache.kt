@@ -16,11 +16,11 @@ class PostListCache(
     fun key(page: Long, size: Long) =
         "$prefix:PAGE:$page:SIZE:$size"
 
-    suspend fun get(page: Long, size: Long): List<PostSummary>? {
+    fun get(page: Long, size: Long): List<PostSummary>? {
         return cacheMemory.get(key(page, size))
     }
 
-    suspend fun set(
+    fun set(
         page: Long,
         size: Long,
         posts: List<PostSummary>

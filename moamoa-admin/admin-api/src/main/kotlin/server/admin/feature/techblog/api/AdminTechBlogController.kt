@@ -17,7 +17,7 @@ internal class AdminTechBlogController(
     private val techBlogService: AdminTechBlogService
 ) {
     @PostMapping
-    suspend fun create(
+    fun create(
         @RequestBody @Valid command: AdminCreateTechBlogCommand
     ): ResponseEntity<AdminTechBlogData> {
         val response = techBlogService.create(command)
@@ -26,7 +26,7 @@ internal class AdminTechBlogController(
     }
 
     @PostMapping("/init")
-    suspend fun init(
+    fun init(
         @RequestBody @Valid command: AdminInitTechBlogCommand
     ): ResponseEntity<AdminInitTechBlogResult> {
         val response = techBlogService.initTechBlog(command)
@@ -34,7 +34,7 @@ internal class AdminTechBlogController(
     }
 
     @PatchMapping("/{techBlogId}")
-    suspend fun update(
+    fun update(
         @PathVariable techBlogId: Long,
         @RequestBody @Valid command: AdminUpdateTechBlogCommand
     ): ResponseEntity<AdminTechBlogData> {

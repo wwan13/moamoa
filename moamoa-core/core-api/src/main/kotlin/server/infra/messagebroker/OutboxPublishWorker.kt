@@ -1,9 +1,11 @@
 package server.infra.messagebroker
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import server.global.logging.ExternalCallLogger
 import server.global.logging.errorType
+import server.infra.db.transaction.Transactional
 import server.infra.db.outbox.EventOutboxRepository
 import server.messaging.health.RedisHealthStateManager
 import server.shared.messaging.EventPublisher
@@ -12,12 +14,13 @@ import server.shared.messaging.EventPublisher
 class OutboxPublishWorker(
     private val eventPublisher: EventPublisher,
     private val eventOutboxRepository: EventOutboxRepository,
+    private val transactional: Transactional,
     private val externalCallLogger: ExternalCallLogger,
     private val healthStateManager: RedisHealthStateManager,
 ) {
     private val logger = KotlinLogging.logger {}
 
-    suspend fun runOnce(batchSize: Int): Boolean {
+    fun runOnce(batchSize: Int): Boolean {
         if (healthStateManager.isDegraded()) {
             val recovered = healthStateManager.tryRecover()
             if (!recovered) return false
@@ -37,7 +40,12 @@ class OutboxPublishWorker(
                     ) {
                         eventPublisher.publish(row.topic, row.type, row.payload)
                     }
-                    eventOutboxRepository.markPublished(row.id)
+                    transactional {
+                        val outbox = eventOutboxRepository.findByIdOrNull(row.id) ?: return@transactional
+                        if (!outbox.published) {
+                            outbox.markPublished()
+                        }
+                    }
                 } catch (e: Exception) {
                     if (healthStateManager.isFailure(e)) {
                         throw e

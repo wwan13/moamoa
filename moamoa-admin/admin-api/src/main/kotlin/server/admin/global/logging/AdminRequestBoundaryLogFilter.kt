@@ -1,4 +1,4 @@
-package server.global.logging
+package server.admin.global.logging
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.servlet.FilterChain
@@ -8,15 +8,18 @@ import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import server.global.logging.RequestLogContext
+import server.global.logging.RequestLogContextHolder
+import server.global.logging.request
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
-class RequestBoundaryLogFilter : OncePerRequestFilter() {
+internal class AdminRequestBoundaryLogFilter : OncePerRequestFilter() {
     private val log = KotlinLogging.logger {}
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.requestURI
-        return path.startsWith("/admin")
+        return !path.startsWith("/admin")
     }
 
     override fun doFilterInternal(
@@ -40,29 +43,22 @@ class RequestBoundaryLogFilter : OncePerRequestFilter() {
         context.userId?.let { request.setAttribute(RequestLogContextHolder.USER_ID_ATTR, it.toString()) }
         context.clientIp?.let { request.setAttribute(RequestLogContextHolder.CLIENT_IP_ATTR, it) }
 
-        val method = request.method
-        val path = request.requestURI
-        val isActuatorRequest = path == "/api/actuator" || path.startsWith("/api/actuator/")
         val startedAt = System.nanoTime()
-
         try {
             RequestLogContextHolder.withContext(context) {
                 filterChain.doFilter(request, response)
             }
         } finally {
-            if (!isActuatorRequest) {
-                val status = response.status
-                val latencyMs = (System.nanoTime() - startedAt) / 1_000_000
-                log.request.info(
-                    traceId = traceId,
-                    "method" to method,
-                    "path" to path,
-                    "status" to status,
-                    "latencyMs" to latencyMs,
-                    "userId" to (userId?.toString() ?: "none"),
-                ) {
-                    "요청 처리가 완료되었습니다"
-                }
+            val latencyMs = (System.nanoTime() - startedAt) / 1_000_000
+            log.request.info(
+                traceId = traceId,
+                "method" to request.method,
+                "path" to request.requestURI,
+                "status" to response.status,
+                "latencyMs" to latencyMs,
+                "userId" to (userId?.toString() ?: "none"),
+            ) {
+                "요청 처리가 완료되었습니다"
             }
         }
     }

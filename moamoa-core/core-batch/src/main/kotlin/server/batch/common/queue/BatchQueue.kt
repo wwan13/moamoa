@@ -3,6 +3,7 @@ package server.batch.common.queue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParameters
 import org.springframework.batch.core.launch.JobLauncher
@@ -23,7 +24,9 @@ internal class BatchQueue(
         }
     }
 
-    suspend fun enqueue(job: Job, params: JobParameters) {
-        channel.send(job to params)
+    fun enqueue(job: Job, params: JobParameters) {
+        runBlocking {
+            channel.send(job to params)
+        }
     }
 }

@@ -40,7 +40,7 @@ class SubmissionServiceTest : UnitTest() {
             memberId = memberId
         )
         coEvery { transactional.invoke<SubmissionCreateResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> SubmissionCreateResult>()
+            val block = secondArg<TransactionScope.() -> SubmissionCreateResult>()
             block(transactionScope)
         }
 
@@ -78,7 +78,7 @@ class SubmissionServiceTest : UnitTest() {
             memberId = memberId
         )
         coEvery { transactional.invoke<SubmissionCreateResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> SubmissionCreateResult>()
+            val block = secondArg<TransactionScope.() -> SubmissionCreateResult>()
             block(transactionScope)
         }
 

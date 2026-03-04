@@ -12,7 +12,7 @@ internal class BatchJobRunner(
 ) {
     private val jobsByName = jobs.associateBy { it.name }
 
-    suspend fun enqueue(command: BatchJobRunCommand): BatchJobRunResult {
+    fun enqueue(command: BatchJobRunCommand): BatchJobRunResult {
         val job = jobsByName[command.jobName]
             ?: throw IllegalArgumentException("지원하지 않는 job 입니다: ${command.jobName}")
 

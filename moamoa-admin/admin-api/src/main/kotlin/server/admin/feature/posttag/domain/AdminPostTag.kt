@@ -1,19 +1,21 @@
 package server.admin.feature.posttag.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Entity
+import jakarta.persistence.Column
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import support.admin.domain.AdminBaseEntity
 
+@Entity
 @Table(name = "post_tag")
-internal data class AdminPostTag(
+internal class AdminPostTag(
     @Id
-    @Column("id")
+    @Column(name = "id")
     override val id: Long = 0,
 
-    @Column("post_id")
+    @Column(name = "post_id")
     val postId: Long,
 
-    @Column("tag_id")
+    @Column(name = "tag_id")
     val tagId: Long,
 ) : AdminBaseEntity()

@@ -1,29 +1,34 @@
 package server.feature.submission.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import support.domain.BaseEntity
 
+@Entity
 @Table(name = "submission")
-data class Submission(
+class Submission(
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     override val id: Long = 0,
 
-    @Column("blog_title")
+    @Column(name = "blog_title", length = 255, nullable = false)
     val blogTitle: String,
 
-    @Column("blog_url")
+    @Column(name = "blog_url", length = 255, nullable = false)
     val blogUrl: String,
 
-    @Column("notification_enabled")
+    @Column(name = "notification_enabled", nullable = false)
     val notificationEnabled: Boolean,
 
-    @Column("accepted")
+    @Column(name = "accepted", nullable = false)
     val accepted: Boolean,
 
-    @Column("member_id")
+    @Column(name = "member_id", nullable = false)
     val memberId: Long
 ) : BaseEntity() {
 

@@ -1,6 +1,6 @@
 package server.feature.posttag.domain
 
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface PostTagRepository : CoroutineCrudRepository<PostTag, Long> {
+interface PostTagRepository : JpaRepository<PostTag, Long> {
 }

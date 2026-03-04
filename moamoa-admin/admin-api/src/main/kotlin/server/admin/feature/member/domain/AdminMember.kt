@@ -1,29 +1,31 @@
 package server.admin.feature.member.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Entity
+import jakarta.persistence.Column
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import support.admin.domain.AdminBaseEntity
 
-@Table("member")
-internal data class AdminMember(
+@Entity
+@Table(name = "member")
+internal class AdminMember(
     @Id
-    @Column("id")
+    @Column(name = "id")
     override val id: Long = 0,
 
-    @Column("role")
+    @Column(name = "role")
     val role: AdminMemberRole = AdminMemberRole.USER,
 
-    @Column("email")
+    @Column(name = "email")
     val email: String,
 
-    @Column("pw")
+    @Column(name = "pw")
     val password: String,
 
-    @Column("provider")
+    @Column(name = "provider")
     val provider: AdminProvider,
 
-    @Column("provider_key")
+    @Column(name = "provider_key")
     val providerKey: String,
 ) : AdminBaseEntity() {
 

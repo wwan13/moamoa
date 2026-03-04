@@ -1,16 +1,14 @@
 package server.infra.oauth2
 
-import kotlinx.coroutines.reactor.mono
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
-import org.springframework.security.web.server.WebFilterExchange
-import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
 import server.feature.auth.application.AuthService
 import server.infra.cache.RefreshTokenCache
-import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -19,49 +17,48 @@ class Oauth2SuccessHandler(
     private val authService: AuthService,
     private val refreshTokenCache: RefreshTokenCache,
     private val environment: Environment
-) : ServerAuthenticationSuccessHandler {
+) : AuthenticationSuccessHandler {
 
     private val refreshTokenExpires = 604_800_000L
 
     override fun onAuthenticationSuccess(
-        webFilterExchange: WebFilterExchange,
-        authentication: Authentication
-    ): Mono<Void> {
-        return mono {
-            val authenticatedUser = authentication.principal as Oauth2SocialUser
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        authentication: Authentication,
+    ) {
+        val authenticatedUser = authentication.principal as Oauth2SocialUser
 
-            when (authenticatedUser) {
-                is Oauth2SocialUser.Authenticated -> {
-                    val tokens = authService.issueTokens(authenticatedUser.memberId, authenticatedUser.role.toString())
-                    refreshTokenCache.set(authenticatedUser.memberId, tokens.refreshToken, refreshTokenExpires)
+        val redirectUrl = when (authenticatedUser) {
+            is Oauth2SocialUser.Authenticated -> {
+                val tokens = authService.issueTokens(authenticatedUser.memberId, authenticatedUser.role.toString())
+                refreshTokenCache.set(authenticatedUser.memberId, tokens.refreshToken, refreshTokenExpires)
 
-                    redirectUrl(
-                        "type" to "success",
-                        "accessToken" to tokens.accessToken,
-                        "refreshToken" to tokens.refreshToken,
-                        "isNew" to authenticatedUser.isNew.toString()
-                    )
-                }
-                is Oauth2SocialUser.EmailRequired -> {
-                    redirectUrl(
-                        "emailRequired" to "emailRequired",
-                        "provider" to authenticatedUser.provider.name,
-                        "providerKey" to authenticatedUser.providerKey
-                    )
-                }
-                is Oauth2SocialUser.HasError -> {
-                    redirectUrl(
-                        "type" to "hasError",
-                        "errorMessage" to authenticatedUser.message,
-                    )
-                }
+                redirectUrl(
+                    "type" to "success",
+                    "accessToken" to tokens.accessToken,
+                    "refreshToken" to tokens.refreshToken,
+                    "isNew" to authenticatedUser.isNew.toString()
+                )
             }
-        }.flatMap { redirectUrl ->
-            val response = webFilterExchange.exchange.response
-            response.statusCode = HttpStatus.FOUND
-            response.headers.location = URI.create(redirectUrl)
-            response.setComplete()
+
+            is Oauth2SocialUser.EmailRequired -> {
+                redirectUrl(
+                    "emailRequired" to "emailRequired",
+                    "provider" to authenticatedUser.provider.name,
+                    "providerKey" to authenticatedUser.providerKey
+                )
+            }
+
+            is Oauth2SocialUser.HasError -> {
+                redirectUrl(
+                    "type" to "hasError",
+                    "errorMessage" to authenticatedUser.message,
+                )
+            }
         }
+
+        response.status = HttpStatus.FOUND.value()
+        response.sendRedirect(redirectUrl)
     }
 
     private fun redirectUrl(vararg param: Pair<String, String>): String {

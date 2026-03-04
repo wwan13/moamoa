@@ -1,28 +1,30 @@
 package server.admin.feature.submission.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Entity
+import jakarta.persistence.Column
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import support.admin.domain.AdminBaseEntity
 
+@Entity
 @Table(name = "submission")
-internal data class AdminSubmission(
+internal class AdminSubmission(
     @Id
-    @Column("id")
+    @Column(name = "id")
     override val id: Long = 0,
 
-    @Column("blog_title")
+    @Column(name = "blog_title")
     val blogTitle: String,
 
-    @Column("blog_url")
+    @Column(name = "blog_url")
     val blogUrl: String,
 
-    @Column("notification_enabled")
+    @Column(name = "notification_enabled")
     val notificationEnabled: Boolean,
 
-    @Column("accepted")
+    @Column(name = "accepted")
     val accepted: Boolean,
 
-    @Column("member_id")
+    @Column(name = "member_id")
     val memberId: Long
 ) : AdminBaseEntity()

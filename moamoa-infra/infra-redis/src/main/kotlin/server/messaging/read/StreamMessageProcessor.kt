@@ -3,9 +3,7 @@ package server.messaging.read
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.springframework.data.redis.connection.stream.MapRecord
 import org.springframework.data.redis.connection.stream.RecordId
 import org.springframework.data.redis.core.StreamOperations
@@ -22,7 +20,7 @@ internal class StreamMessageProcessor(
 
     fun subscriptions(): List<SubscriptionDefinition> = handlers.subscriptions()
 
-    suspend fun handleRecords(
+    fun handleRecords(
         subscription: SubscriptionDefinition,
         ops: StreamOperations<String, String, String>,
         records: List<MapRecord<String, String, String>>,
@@ -33,7 +31,7 @@ internal class StreamMessageProcessor(
         }
     }
 
-    private suspend fun handleRecord(
+    private fun handleRecord(
         subscription: SubscriptionDefinition,
         ops: StreamOperations<String, String, String>,
         record: MapRecord<String, String, String>,
@@ -95,11 +93,11 @@ internal class StreamMessageProcessor(
         }
     }
 
-    private suspend fun ack(
+    private fun ack(
         ops: StreamOperations<String, String, String>,
         subscription: SubscriptionDefinition,
         recordId: RecordId
-    ) = withContext(Dispatchers.IO) {
+    ) {
         ops.acknowledge(subscription.channel.key, subscription.consumerGroup, recordId)
     }
 }

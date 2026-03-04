@@ -15,7 +15,7 @@ class PostViewCountCache(
 
     private fun postViewCountKey(postId: Long) = postViewCountPrefix + postId
 
-    suspend fun incr(postId: Long) {
+    fun incr(postId: Long) {
         cacheMemory.incr(postViewCountKey(postId))
         setMemory.add(dirtySetKey, postId.toString())
     }

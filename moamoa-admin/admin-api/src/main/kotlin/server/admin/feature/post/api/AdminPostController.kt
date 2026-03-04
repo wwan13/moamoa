@@ -26,7 +26,7 @@ internal class AdminPostController(
 ) {
 
     @GetMapping
-    suspend fun findByConditions(
+    fun findByConditions(
         conditions: AdminPostQueryConditions,
         @RequestAdminPassport passport: AdminPassport
     ): ResponseEntity<AdminPostList> {
@@ -36,7 +36,7 @@ internal class AdminPostController(
     }
 
     @PatchMapping("/{postId}")
-    suspend fun updateCategory(
+    fun updateCategory(
         @PathVariable postId: Long,
         @RequestBody @Valid command: AdminUpdateCategoryCommand,
         @RequestAdminPassport passport: AdminPassport

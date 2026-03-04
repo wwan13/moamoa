@@ -13,7 +13,7 @@ class TagController(
     private val tagService: TagService
 ) {
     @GetMapping
-    suspend fun findAll(): ResponseEntity<List<TagData>> {
+    fun findAll(): ResponseEntity<List<TagData>> {
         val response = tagService.findAll()
         return ResponseEntity.ok(response)
     }

@@ -1,10 +1,7 @@
 package server.feature.techblog.query
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import server.infra.cache.TechBlogListCache
 import server.infra.cache.WarmupCoordinator
@@ -12,34 +9,27 @@ import server.security.Passport
 
 @Service
 class TechBlogQueryService(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val techBlogListCache: TechBlogListCache,
     private val techBlogStatsReader: TechBlogStatsReader,
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findAll(
+    fun findAll(
         passport: Passport?,
         conditions: TechBlogQueryConditions
-    ): TechBlogList = coroutineScope {
-        val baseDeferred = async { loadBaseList(conditions.query) }
-        val base = baseDeferred.await()
+    ): TechBlogList {
+        val base = loadBaseList(conditions.query)
 
         val meta = TechBlogListMeta(totalCount = base.size.toLong())
-        if (base.isEmpty()) return@coroutineScope TechBlogList(meta, emptyList())
+        if (base.isEmpty()) return TechBlogList(meta, emptyList())
 
         val ids = base.map { it.id }
 
-        val statsDeferred = async { techBlogStatsReader.findTechBlogStatsMap(ids) }
-
-        val subscribedTechBlogMapDeferred = async {
-            if (passport == null) emptyMap()
-            else subscribedTechBlogReader.findSubscribedMap(passport.memberId, ids)
-        }
-
-        val statsMap = statsDeferred.await()
-        val subscribedTechBlogMap = subscribedTechBlogMapDeferred.await()
+        val statsMap = techBlogStatsReader.findTechBlogStatsMap(ids)
+        val subscribedTechBlogMap = if (passport == null) emptyMap()
+        else subscribedTechBlogReader.findSubscribedMap(passport.memberId, ids)
 
         val result = base.map { techBlog ->
             val stats = statsMap[techBlog.id]
@@ -53,10 +43,10 @@ class TechBlogQueryService(
             )
         }
 
-        TechBlogList(meta, result)
+        return TechBlogList(meta, result)
     }
 
-    private suspend fun loadBaseList(
+    private fun loadBaseList(
         query: String? = null
     ): List<TechBlogSummary> {
         if (query == null) {
@@ -83,53 +73,41 @@ class TechBlogQueryService(
             ORDER BY t.title ASC
         """.trimIndent()
 
-        var spec = databaseClient.sql(sql)
+        val params = MapSqlParameterSource()
+        if (query != null) params.addValue("keyword", "%$query%")
 
-        if (query != null) {
-            spec = spec.bind("keyword", "%$query%")
-        }
-
-        return spec
-            .map { row, _ ->
+        val list: List<TechBlogSummary> = jdbc.query(sql, params) { row, _ ->
                 TechBlogSummary(
-                    id = row.get("tech_blog_id", Long::class.java) ?: 0L,
-                    title = row.get("tech_blog_title", String::class.java).orEmpty(),
-                    icon = row.get("tech_blog_icon", String::class.java).orEmpty(),
-                    blogUrl = row.get("tech_blog_url", String::class.java).orEmpty(),
-                    key = row.get("tech_blog_key", String::class.java).orEmpty(),
+                    id = row.getLong("tech_blog_id"),
+                    title = row.getString("tech_blog_title") ?: "",
+                    icon = row.getString("tech_blog_icon") ?: "",
+                    blogUrl = row.getString("tech_blog_url") ?: "",
+                    key = row.getString("tech_blog_key") ?: "",
                     subscriptionCount = 0L,
                     postCount = 0L,
                     subscribed = false,
                     notificationEnabled = false,
                 )
             }
-            .all()
-            .asFlow()
-            .toList()
-            .also { list ->
-                if (query == null) {
-                    warmupCoordinator.launchIfAbsent(techBlogListCache.key) {
-                        techBlogListCache.set(list)
-                    }
-                }
+
+        if (query == null) {
+            warmupCoordinator.launchIfAbsent(techBlogListCache.key) {
+                techBlogListCache.set(list)
             }
-    }
-
-    suspend fun findById(passport: Passport?, techBlogId: Long): TechBlogSummary = coroutineScope {
-        val baseDeferred = async { loadBaseById(techBlogId) }
-        val base = baseDeferred.await()
-            ?: throw IllegalStateException("존재하지 않는 기술블로그 입니다.")
-
-        val statsDeferred = async { techBlogStatsReader.findById(base.id) }
-        val subInfoDeferred = async {
-            if (passport == null) null
-            else subscribedTechBlogReader.findById(passport.memberId, base.id)
         }
 
-        val stats = statsDeferred.await()
-        val subInfo = subInfoDeferred.await()
+        return list
+    }
 
-        base.copy(
+    fun findById(passport: Passport?, techBlogId: Long): TechBlogSummary {
+        val base = loadBaseById(techBlogId)
+            ?: throw IllegalStateException("존재하지 않는 기술블로그 입니다.")
+
+        val stats = techBlogStatsReader.findById(base.id)
+        val subInfo = if (passport == null) null
+        else subscribedTechBlogReader.findById(passport.memberId, base.id)
+
+        return base.copy(
             subscriptionCount = stats?.subscriptionCount ?: 0L,
             postCount = stats?.postCount ?: 0L,
             subscribed = subInfo?.subscribed ?: false,
@@ -137,7 +115,7 @@ class TechBlogQueryService(
         )
     }
 
-    private suspend fun loadBaseById(techBlogId: Long): TechBlogSummary? {
+    private fun loadBaseById(techBlogId: Long): TechBlogSummary? {
         val sql = """
             SELECT
                 t.id            AS tech_blog_id,
@@ -150,24 +128,19 @@ class TechBlogQueryService(
             LIMIT 1
         """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("id", techBlogId)
-            .map { row, _ ->
+        return jdbc.query(sql, mapOf("id" to techBlogId)) { row, _ ->
                 TechBlogSummary(
-                    id = row.get("tech_blog_id", Long::class.java) ?: 0L,
-                    title = row.get("tech_blog_title", String::class.java).orEmpty(),
-                    icon = row.get("tech_blog_icon", String::class.java).orEmpty(),
-                    blogUrl = row.get("tech_blog_url", String::class.java).orEmpty(),
-                    key = row.get("tech_blog_key", String::class.java).orEmpty(),
+                    id = row.getLong("tech_blog_id"),
+                    title = row.getString("tech_blog_title") ?: "",
+                    icon = row.getString("tech_blog_icon") ?: "",
+                    blogUrl = row.getString("tech_blog_url") ?: "",
+                    key = row.getString("tech_blog_key") ?: "",
                     subscriptionCount = 0L,
                     postCount = 0L,
                     subscribed = false,
                     notificationEnabled = false,
                 )
             }
-            .one()
-            .asFlow()
-            .toList()
             .firstOrNull()
     }
 }

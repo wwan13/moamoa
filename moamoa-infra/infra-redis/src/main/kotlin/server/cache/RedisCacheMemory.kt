@@ -2,178 +2,108 @@ package server.cache
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitSingle
-import org.springframework.data.redis.connection.ReactiveStringCommands.SetCommand
-import org.springframework.data.redis.connection.RedisStringCommands.SetOption
-import org.springframework.data.redis.core.ReactiveRedisTemplate
-import org.springframework.data.redis.core.ScanOptions
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.core.types.Expiration
+import org.springframework.data.redis.core.ScanOptions
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Flux
 import server.shared.cache.CacheInfraException
 import server.shared.cache.CacheMemory
-import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
-import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 @Component("redisCacheMemory")
 internal class RedisCacheMemory(
-    private val reactiveRedisTemplate: ReactiveRedisTemplate<String, String>,
+    @param:Qualifier("cacheStringRedisTemplate")
+    private val redis: StringRedisTemplate,
     private val objectMapper: ObjectMapper,
 ) : CacheMemory {
 
-    private val valueOps get() = reactiveRedisTemplate.opsForValue()
+    private val valueOps get() = redis.opsForValue()
 
-    final suspend inline fun <reified T> get(key: String): T? =
-        get(key, object : TypeReference<T>() {})
-
-    override suspend fun <T> get(key: String, type: Class<T>): T? {
-        val json = runWithInfraException("Cache read failed. key=$key") {
-            valueOps.get(key).awaitFirstOrNull()
-        } ?: return null
+    override fun <T> get(key: String, type: Class<T>): T? {
+        val json = runWithInfraException("Cache read failed. key=$key") { valueOps.get(key) } ?: return null
         return runCatching { objectMapper.readValue(json, type) }.getOrNull()
     }
 
-    override suspend fun <T> get(key: String, typeRef: TypeReference<T>): T? {
-        val json = runWithInfraException("Cache read failed. key=$key") {
-            valueOps.get(key).awaitFirstOrNull()
-        } ?: return null
+    override fun <T> get(key: String, typeRef: TypeReference<T>): T? {
+        val json = runWithInfraException("Cache read failed. key=$key") { valueOps.get(key) } ?: return null
         return runCatching { objectMapper.readValue(json, typeRef) }.getOrNull()
     }
 
-    override suspend fun <T> set(key: String, value: T, ttlMillis: Long?) {
+    override fun <T> set(key: String, value: T, ttlMillis: Long?) {
         val json = objectMapper.writeValueAsString(value)
         runWithInfraException("Cache write failed. key=$key") {
-            if (ttlMillis == null) valueOps.set(key, json).awaitSingle()
-            else valueOps.set(key, json, Duration.ofMillis(ttlMillis)).awaitSingle()
+            if (ttlMillis == null) valueOps.set(key, json)
+            else valueOps.set(key, json, ttlMillis, TimeUnit.MILLISECONDS)
         }
     }
 
-    override suspend fun <T> setIfAbsent(key: String, value: T, ttlMillis: Long?): Boolean {
+    override fun <T> setIfAbsent(key: String, value: T, ttlMillis: Long?): Boolean {
         val json = objectMapper.writeValueAsString(value)
         return runWithInfraException("Cache setIfAbsent failed. key=$key") {
-            if (ttlMillis == null) {
-                valueOps.setIfAbsent(key, json).awaitSingle() ?: false
-            } else {
-                valueOps.setIfAbsent(key, json, Duration.ofMillis(ttlMillis)).awaitSingle() ?: false
+            if (ttlMillis == null) valueOps.setIfAbsent(key, json) ?: false
+            else valueOps.setIfAbsent(key, json, ttlMillis, TimeUnit.MILLISECONDS) ?: false
+        }
+    }
+
+    override fun incr(key: String): Long =
+        runWithInfraException("Cache increment failed. key=$key") { valueOps.increment(key) ?: 0L }
+
+    override fun decrBy(key: String, delta: Long): Long =
+        runWithInfraException("Cache decrement failed. key=$key delta=$delta") { valueOps.increment(key, -delta) ?: 0L }
+
+    override fun evict(key: String) {
+        runWithInfraException("Cache evict failed. key=$key") { redis.delete(key) }
+    }
+
+    override fun evictByPrefix(prefix: String) {
+        val pattern = "$prefix*"
+        val scanOptions = ScanOptions.scanOptions().match(pattern).count(500).build()
+        runWithInfraException("Cache evictByPrefix failed. prefix=$prefix") {
+            redis.scan(scanOptions).use { cursor ->
+                while (cursor.hasNext()) {
+                    redis.delete(cursor.next())
+                }
             }
         }
     }
 
-    override suspend fun incr(key: String): Long =
-        runWithInfraException("Cache increment failed. key=$key") {
-            valueOps.increment(key).awaitSingle()
-        }
-
-    override suspend fun decrBy(key: String, delta: Long): Long =
-        runWithInfraException("Cache decrement failed. key=$key delta=$delta") {
-            valueOps.increment(key, -delta).awaitSingle()
-        }
-
-    override suspend fun evict(key: String) {
-        runWithInfraException("Cache evict failed. key=$key") {
-            reactiveRedisTemplate.delete(key).awaitSingle()
-        }
-    }
-
-    override suspend fun evictByPrefix(prefix: String) {
-        val pattern = "$prefix*"
-
-        val scanOptions = ScanOptions.scanOptions()
-            .match(pattern)
-            .count(500)
-            .build()
-
-        runWithInfraException("Cache evictByPrefix failed. prefix=$prefix") {
-            reactiveRedisTemplate
-                .scan(scanOptions)
-                .asFlow()
-                .collect { key ->
-                    reactiveRedisTemplate.delete(key).awaitSingle()
-                }
-        }
-    }
-
-    override suspend fun mget(keys: Collection<String>): Map<String, String?> {
+    override fun mget(keys: Collection<String>): Map<String, String?> {
         if (keys.isEmpty()) return emptyMap()
         val keyList = keys.toList()
         val values = runWithInfraException("Cache mget failed. size=${keyList.size}") {
-            reactiveRedisTemplate.execute { connection ->
-                connection.stringCommands()
-                    .mGet(keyList.map(::encode))
-                    .map { buffers -> buffers.map { buffer -> buffer?.let(::decode) } }
-            }.awaitFirstOrNull() ?: emptyList()
+            valueOps.multiGet(keyList) ?: emptyList()
         }
-
         return keyList.mapIndexed { idx, key -> key to values.getOrNull(idx) }.toMap()
     }
 
-    final suspend inline fun <reified T> mgetAs(keys: Collection<String>): Map<String, T?> =
-        mgetAs(keys, object : TypeReference<T>() {})
-
-    override suspend fun <T> mgetAs(keys: Collection<String>, typeRef: TypeReference<T>): Map<String, T?> {
+    override fun <T> mgetAs(keys: Collection<String>, typeRef: TypeReference<T>): Map<String, T?> {
         val raw = mget(keys)
         if (raw.isEmpty()) return emptyMap()
-
         return raw.mapValues { (_, json) ->
-            if (json == null) null
-            else runCatching { objectMapper.readValue(json, typeRef) }.getOrNull()
+            if (json == null) null else runCatching { objectMapper.readValue(json, typeRef) }.getOrNull()
         }
     }
 
-    override suspend fun mset(valuesByKey: Map<String, Any>, ttlMillis: Long?) {
+    override fun mset(valuesByKey: Map<String, Any>, ttlMillis: Long?) {
         if (valuesByKey.isEmpty()) return
-
-        val jsonByKey = valuesByKey.mapValues { (_, v) -> objectMapper.writeValueAsString(v) }
-        val encoded = LinkedHashMap<ByteBuffer, ByteBuffer>(jsonByKey.size)
-        jsonByKey.forEach { (key, value) ->
-            encoded[encode(key)] = encode(value)
-        }
-
         runWithInfraException("Cache mset failed. size=${valuesByKey.size}") {
-            if (ttlMillis == null) {
-                reactiveRedisTemplate
-                    .execute { connection -> connection.stringCommands().mSet(encoded) }
-                    .awaitFirstOrNull()
-            } else {
-                val ttl = Expiration.milliseconds(ttlMillis)
-                val commands = Flux.fromIterable(jsonByKey.entries)
-                    .map { (key, value) ->
-                        SetCommand.set(encode(key))
-                            .value(encode(value))
-                            .expiring(ttl)
-                            .withSetOption(SetOption.UPSERT)
-                    }
-
-                reactiveRedisTemplate
-                    .execute { connection ->
-                        connection.stringCommands()
-                            .set(commands)
-                            .all { response -> response.isPresent && response.output == true }
-                    }
-                    .awaitFirstOrNull()
+            val jsonByKey = valuesByKey.mapValues { (_, v) -> objectMapper.writeValueAsString(v) }
+            valueOps.multiSet(jsonByKey)
+            if (ttlMillis != null) {
+                val expiration = Expiration.milliseconds(ttlMillis)
+                for (key in jsonByKey.keys) {
+                    redis.expire(key, expiration.expirationTimeInMilliseconds, TimeUnit.MILLISECONDS)
+                }
             }
         }
     }
 
-    private fun encode(value: String): ByteBuffer =
-        StandardCharsets.UTF_8.encode(value)
-
-    private fun decode(value: ByteBuffer): String =
-        StandardCharsets.UTF_8.decode(value.asReadOnlyBuffer()).toString()
-
-    private suspend inline fun <T> runWithInfraException(
-        message: String,
-        crossinline block: suspend () -> T,
-    ): T {
+    private inline fun <T> runWithInfraException(message: String, block: () -> T): T {
         return try {
             block()
         } catch (ex: Throwable) {
-            if (ex is CacheInfraException) {
-                throw ex
-            }
+            if (ex is CacheInfraException) throw ex
             throw CacheInfraException(message, ex)
         }
     }

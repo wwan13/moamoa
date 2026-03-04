@@ -19,21 +19,21 @@ internal class CaffeineCacheMemory(
         .build<String, CacheEntry>()
     private val keyLocks = ConcurrentHashMap<String, Any>()
 
-    override suspend fun <T> get(key: String, type: Class<T>): T? {
+    override fun <T> get(key: String, type: Class<T>): T? {
         val json = getValue(key) ?: return null
         return runCatching { objectMapper.readValue(json, type) }.getOrNull()
     }
 
-    override suspend fun <T> get(key: String, typeRef: TypeReference<T>): T? {
+    override fun <T> get(key: String, typeRef: TypeReference<T>): T? {
         val json = getValue(key) ?: return null
         return runCatching { objectMapper.readValue(json, typeRef) }.getOrNull()
     }
 
-    override suspend fun <T> set(key: String, value: T, ttlMillis: Long?) {
+    override fun <T> set(key: String, value: T, ttlMillis: Long?) {
         cache.put(key, CacheEntry(objectMapper.writeValueAsString(value), toExpireAt(ttlMillis)))
     }
 
-    override suspend fun <T> setIfAbsent(key: String, value: T, ttlMillis: Long?): Boolean {
+    override fun <T> setIfAbsent(key: String, value: T, ttlMillis: Long?): Boolean {
         val lock = keyLocks.computeIfAbsent(key) { Any() }
         synchronized(lock) {
             val existing = cache.getIfPresent(key)
@@ -46,7 +46,7 @@ internal class CaffeineCacheMemory(
         }
     }
 
-    override suspend fun incr(key: String): Long {
+    override fun incr(key: String): Long {
         val lock = keyLocks.computeIfAbsent(key) { Any() }
         synchronized(lock) {
             val current = getValue(key)?.toLongOrNull() ?: 0L
@@ -56,7 +56,7 @@ internal class CaffeineCacheMemory(
         }
     }
 
-    override suspend fun decrBy(key: String, delta: Long): Long {
+    override fun decrBy(key: String, delta: Long): Long {
         val lock = keyLocks.computeIfAbsent(key) { Any() }
         synchronized(lock) {
             val current = getValue(key)?.toLongOrNull() ?: 0L
@@ -66,21 +66,21 @@ internal class CaffeineCacheMemory(
         }
     }
 
-    override suspend fun evict(key: String) {
+    override fun evict(key: String) {
         cache.invalidate(key)
     }
 
-    override suspend fun evictByPrefix(prefix: String) {
+    override fun evictByPrefix(prefix: String) {
         cache.asMap().keys
             .filter { it.startsWith(prefix) }
             .forEach(cache::invalidate)
     }
 
-    override suspend fun mget(keys: Collection<String>): Map<String, String?> {
+    override fun mget(keys: Collection<String>): Map<String, String?> {
         return keys.associateWith(::getValue)
     }
 
-    override suspend fun <T> mgetAs(keys: Collection<String>, typeRef: TypeReference<T>): Map<String, T?> {
+    override fun <T> mgetAs(keys: Collection<String>, typeRef: TypeReference<T>): Map<String, T?> {
         return keys.associateWith { key ->
             getValue(key)?.let { json ->
                 runCatching { objectMapper.readValue(json, typeRef) }.getOrNull()
@@ -88,7 +88,7 @@ internal class CaffeineCacheMemory(
         }
     }
 
-    override suspend fun mset(valuesByKey: Map<String, Any>, ttlMillis: Long?) {
+    override fun mset(valuesByKey: Map<String, Any>, ttlMillis: Long?) {
         val expireAt = toExpireAt(ttlMillis)
         valuesByKey.forEach { (key, value) ->
             cache.put(key, CacheEntry(objectMapper.writeValueAsString(value), expireAt))

@@ -15,10 +15,10 @@ class TechBlogPostListCache(
     fun key(techBlogId: Long, page: Long) =
         "$prefix$techBlogId:PAGE:$page"
 
-    suspend fun get(techBlogId: Long, page: Long): List<PostSummary>? =
+    fun get(techBlogId: Long, page: Long): List<PostSummary>? =
         cacheMemory.get(key(techBlogId, page))
 
-    suspend fun set(techBlogId: Long, page: Long, posts: List<PostSummary>) {
+    fun set(techBlogId: Long, page: Long, posts: List<PostSummary>) {
         cacheMemory.set(key(techBlogId, page), posts, thirtyMinutes)
     }
 }

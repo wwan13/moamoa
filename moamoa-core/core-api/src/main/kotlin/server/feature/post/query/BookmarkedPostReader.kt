@@ -1,20 +1,19 @@
 package server.feature.post.query
 
-import kotlinx.coroutines.flow.toSet
-import kotlinx.coroutines.reactive.asFlow
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.infra.cache.BookmarkedAllPostIdSetCache
 import server.infra.cache.WarmupCoordinator
 
 @Component
 class BookmarkedPostReader(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findBookmarkedPostIdSet(
+    fun findBookmarkedPostIdSet(
         memberId: Long,
         postIds: List<Long>,
     ): Set<Long> {
@@ -33,7 +32,7 @@ class BookmarkedPostReader(
         }
     }
 
-    private suspend fun warmUpAllBookmarkedSet(memberId: Long) {
+    private fun warmUpAllBookmarkedSet(memberId: Long) {
         if (bookmarkedAllPostIdSetCache.get(memberId) != null) return
 
         val sql = """
@@ -42,17 +41,15 @@ class BookmarkedPostReader(
             WHERE pb.member_id = :memberId
         """.trimIndent()
 
-        val allIds = databaseClient.sql(sql)
-            .bind("memberId", memberId)
-            .map { row, _ -> row.get("post_id", Long::class.java) ?: 0L }
-            .all()
-            .asFlow()
-            .toSet()
+        val allIds = jdbc.query(
+            sql,
+            mapOf("memberId" to memberId)
+        ) { rs, _ -> rs.getLong("post_id") }.toSet()
 
         bookmarkedAllPostIdSetCache.set(memberId, allIds)
     }
 
-    private suspend fun fetchBookmarkedPostIdSetByIn(
+    private fun fetchBookmarkedPostIdSetByIn(
         memberId: Long,
         postIds: List<Long>,
     ): Set<Long> {
@@ -65,13 +62,9 @@ class BookmarkedPostReader(
               AND pb.post_id IN ($placeholders)
         """.trimIndent()
 
-        var spec = databaseClient.sql(sql).bind("memberId", memberId)
-        postIds.forEachIndexed { idx, id -> spec = spec.bind("id$idx", id) }
+        val params = MapSqlParameterSource().addValue("memberId", memberId)
+        postIds.forEachIndexed { idx, id -> params.addValue("id$idx", id) }
 
-        return spec
-            .map { row, _ -> row.get("post_id", Long::class.java) ?: 0L }
-            .all()
-            .asFlow()
-            .toSet()
+        return jdbc.query(sql, params) { rs, _ -> rs.getLong("post_id") }.toSet()
     }
 }

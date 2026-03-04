@@ -1,15 +1,19 @@
 package server.global.web
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.validation.BindException
+import org.springframework.web.HttpMediaTypeNotAcceptableException
+import org.springframework.web.HttpMediaTypeNotSupportedException
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import org.springframework.web.server.*
 import server.WebhookSender
 import server.content.WebhookContent
 import server.global.logging.RequestLogContextHolder
@@ -33,154 +37,131 @@ class ApiControllerAdvice(
         val message: String
     )
 
-    // 400 - 바인딩/검증 실패 (@ModelAttribute 유사)
     @ExceptionHandler(BindException::class)
     fun handleBindException(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: BindException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 400, "요청 값이 올바르지 않습니다", e)
+        logClientError(request, 400, "요청 값이 올바르지 않습니다", e)
         return badRequest("요청 값이 올바르지 않습니다")
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handle(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: MethodArgumentNotValidException,
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 400, "요청 값이 올바르지 않습니다", e)
+        logClientError(request, 400, "요청 값이 올바르지 않습니다", e)
         return badRequest("요청 값이 올바르지 않습니다")
     }
 
-    // 400 - JSON 파싱/바인딩 실패 (body 관련)
-    @ExceptionHandler(ServerWebInputException::class)
-    fun handleWebInput(
-        exchange: ServerWebExchange,
-        e: ServerWebInputException
-    ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 400, "요청 본문/값이 올바르지 않습니다", e)
-        return badRequest("요청 본문/값이 올바르지 않습니다")
-    }
-
-    // 400 - JSON 파싱 실패(케이스에 따라 얘도 올 수 있음)
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleNotReadable(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: HttpMessageNotReadableException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 400, "요청 본문(JSON)이 올바르지 않습니다", e)
+        logClientError(request, 400, "요청 본문(JSON)이 올바르지 않습니다", e)
         return badRequest("요청 본문(JSON)이 올바르지 않습니다")
     }
 
-    // 400 - 필수 값 누락(query/header/path 등)
-    @ExceptionHandler(MissingRequestValueException::class)
+    @ExceptionHandler(MissingServletRequestParameterException::class)
     fun handleMissingValue(
-        exchange: ServerWebExchange,
-        e: MissingRequestValueException
+        request: HttpServletRequest,
+        e: MissingServletRequestParameterException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 400, "필수 값이 누락되었습니다 reason=${e.reason}", e)
+        logClientError(request, 400, "필수 값이 누락되었습니다 reason=${e.message}", e)
         return badRequest("필수 값이 누락되었습니다")
     }
 
-    // 405 - 메서드 미지원
-    @ExceptionHandler(MethodNotAllowedException::class)
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
     fun handleMethodNotAllowed(
-        exchange: ServerWebExchange,
-        e: MethodNotAllowedException
+        request: HttpServletRequest,
+        e: HttpRequestMethodNotSupportedException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 405, "지원하지 않는 HTTP 메서드입니다", e)
+        logClientError(request, 405, "지원하지 않는 HTTP 메서드입니다", e)
         return error(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다")
     }
 
-    // 415 - Content-Type 미지원
-    @ExceptionHandler(UnsupportedMediaTypeStatusException::class)
+    @ExceptionHandler(HttpMediaTypeNotSupportedException::class)
     fun handleUnsupportedMediaType(
-        exchange: ServerWebExchange,
-        e: UnsupportedMediaTypeStatusException
+        request: HttpServletRequest,
+        e: HttpMediaTypeNotSupportedException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 415, "지원하지 않는 Content-Type 입니다", e)
+        logClientError(request, 415, "지원하지 않는 Content-Type 입니다", e)
         return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 Content-Type 입니다")
     }
 
-    // 406 - Accept 미지원
-    @ExceptionHandler(NotAcceptableStatusException::class)
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException::class)
     fun handleNotAcceptable(
-        exchange: ServerWebExchange,
-        e: NotAcceptableStatusException
+        request: HttpServletRequest,
+        e: HttpMediaTypeNotAcceptableException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 406, "지원하지 않는 Accept 입니다", e)
+        logClientError(request, 406, "지원하지 않는 Accept 입니다", e)
         return error(HttpStatus.NOT_ACCEPTABLE, "지원하지 않는 응답 형식입니다")
     }
 
-    // 400 - 도메인 예외
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgument(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: IllegalArgumentException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 400, e.message ?: "잘못된 요청입니다", e)
+        logClientError(request, 400, e.message ?: "잘못된 요청입니다", e)
         return badRequest(e.message ?: "잘못된 요청입니다")
     }
 
-    // 401
     @ExceptionHandler(UnauthorizedException::class)
     fun handleUnauthorized(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: UnauthorizedException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 401, e.message ?: "LOGIN_AGAIN", e)
+        logClientError(request, 401, e.message ?: "LOGIN_AGAIN", e)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
     }
 
-    // 403
     @ExceptionHandler(ForbiddenException::class)
     fun handleForbidden(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: ForbiddenException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 403, e.message ?: "접근 권한이 없습니다", e)
+        logClientError(request, 403, e.message ?: "접근 권한이 없습니다", e)
         return error(HttpStatus.FORBIDDEN, e.message ?: "접근 권한이 없습니다")
     }
 
-    // 401
     @ExceptionHandler(InvalidTokenException::class)
     fun handleInvalidToken(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: InvalidTokenException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 401, e.message ?: "LOGIN_AGAIN", e)
+        logClientError(request, 401, e.message ?: "LOGIN_AGAIN", e)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "LOGIN_AGAIN")
     }
 
-    // 401
     @ExceptionHandler(ExpiredTokenException::class)
     fun handleExpiredToken(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: ExpiredTokenException
     ): ResponseEntity<ErrorResponse> {
-        logClientError(exchange, 401, e.message ?: "TOKEN_EXPIRED", e)
+        logClientError(request, 401, e.message ?: "TOKEN_EXPIRED", e)
         return error(HttpStatus.UNAUTHORIZED, e.message ?: "TOKEN_EXPIRED")
     }
 
-    // 500 - 도메인 예외
     @ExceptionHandler(IllegalStateException::class)
     fun handleIllegalState(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: IllegalStateException
     ): ResponseEntity<ErrorResponse> {
-        sendWebhook(exchange, e)
-        logServerError(exchange, e.message ?: "서버 오류가 발생했습니다", e)
+        sendWebhook(request, e)
+        logServerError(request, e.message ?: "서버 오류가 발생했습니다", e)
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다")
     }
 
-    // 500 - 그 외
     @ExceptionHandler(Exception::class)
     fun handleException(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: Exception
     ): ResponseEntity<ErrorResponse> {
-        sendWebhook(exchange, e)
-        logServerError(exchange, e.message ?: "서버 오류가 발생했습니다", e)
+        sendWebhook(request, e)
+        logServerError(request, e.message ?: "서버 오류가 발생했습니다", e)
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다")
     }
 
@@ -193,7 +174,7 @@ class ApiControllerAdvice(
         )
 
     private fun sendWebhook(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         e: Exception
     ) {
         if (!environment.isProd()) return
@@ -202,7 +183,7 @@ class ApiControllerAdvice(
             title = "서버 오류",
             description = "알 수 없는 오류가 발생했습니다.",
             fields = listOf(
-                "apiPath" to exchange.request.path.value(),
+                "apiPath" to request.requestURI,
                 "errorMessage" to e.message.orEmpty(),
                 "stackTrace" to e.stackTraceToString(),
             )
@@ -211,38 +192,39 @@ class ApiControllerAdvice(
         webhookSender.sendAsync(content)
     }
 
-    private fun traceId(exchange: ServerWebExchange): String? =
-        exchange.attributes[RequestLogContextHolder.TRACE_ID_ATTR]?.toString()
+    private fun traceId(request: HttpServletRequest): String? =
+        request.getAttribute(RequestLogContextHolder.TRACE_ID_ATTR)?.toString()
+            ?: RequestLogContextHolder.current()?.traceId
 
     private fun logClientError(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         status: Int,
         reason: String,
         throwable: Throwable
     ) {
         logger.errorType.warn(
-            traceId = traceId(exchange),
+            traceId = traceId(request),
             throwable = throwable,
             "call" to "api.request",
             "errorType" to "ClientError",
             "message" to reason,
-            "path" to exchange.request.path.value(),
+            "path" to request.requestURI,
             "status" to status,
         ) { "요청 처리 중 클라이언트 오류가 발생했습니다" }
     }
 
     private fun logServerError(
-        exchange: ServerWebExchange,
+        request: HttpServletRequest,
         reason: String,
         throwable: Throwable
     ) {
         logger.errorType.error(
-            traceId = traceId(exchange),
+            traceId = traceId(request),
             throwable = throwable,
             "call" to "api.request",
             "errorType" to (throwable::class.simpleName ?: "UnknownException"),
             "message" to reason,
-            "path" to exchange.request.path.value(),
+            "path" to request.requestURI,
             "status" to 500,
         ) { "요청 처리 중 서버 오류가 발생했습니다" }
     }

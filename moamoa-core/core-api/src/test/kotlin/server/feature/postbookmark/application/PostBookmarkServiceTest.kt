@@ -49,10 +49,10 @@ class PostBookmarkServiceTest : UnitTest() {
         coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { postBookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns null
         coEvery { postBookmarkRepository.save(capture(savedSlot)) } coAnswers {
-            savedSlot.captured.copy(id = 101L)
+            PostBookmark(id = 101L, memberId = savedSlot.captured.memberId, postId = savedSlot.captured.postId)
         }
         coEvery { transactional.invoke<PostBookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> PostBookmarkToggleResult>()
+            val block = secondArg<TransactionScope.() -> PostBookmarkToggleResult>()
             block(transactionScope)
         }
 
@@ -86,10 +86,11 @@ class PostBookmarkServiceTest : UnitTest() {
         coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { postBookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns null
         coEvery { postBookmarkRepository.save(any()) } coAnswers {
-            firstArg<PostBookmark>().copy(id = 101L)
+            val bookmark = firstArg<PostBookmark>()
+            PostBookmark(id = 101L, memberId = bookmark.memberId, postId = bookmark.postId)
         }
         coEvery { transactional.invoke<PostBookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> PostBookmarkToggleResult>()
+            val block = secondArg<TransactionScope.() -> PostBookmarkToggleResult>()
             block(transactionScope)
         }
 
@@ -132,7 +133,7 @@ class PostBookmarkServiceTest : UnitTest() {
         coEvery { postBookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
         coEvery { postBookmarkRepository.deleteById(existing.id) } returns Unit
         coEvery { transactional.invoke<PostBookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> PostBookmarkToggleResult>()
+            val block = secondArg<TransactionScope.() -> PostBookmarkToggleResult>()
             block(transactionScope)
         }
 
@@ -167,7 +168,7 @@ class PostBookmarkServiceTest : UnitTest() {
         coEvery { postBookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
         coEvery { postBookmarkRepository.deleteById(existing.id) } returns Unit
         coEvery { transactional.invoke<PostBookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> PostBookmarkToggleResult>()
+            val block = secondArg<TransactionScope.() -> PostBookmarkToggleResult>()
             block(transactionScope)
         }
 
@@ -206,7 +207,7 @@ class PostBookmarkServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns false
         coEvery { transactional.invoke<PostBookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> PostBookmarkToggleResult>()
+            val block = secondArg<TransactionScope.() -> PostBookmarkToggleResult>()
             block(transactionScope)
         }
 
@@ -241,7 +242,7 @@ class PostBookmarkServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { postRepository.existsById(command.postId) } returns false
         coEvery { transactional.invoke<PostBookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> PostBookmarkToggleResult>()
+            val block = secondArg<TransactionScope.() -> PostBookmarkToggleResult>()
             block(transactionScope)
         }
 
@@ -270,9 +271,9 @@ class PostBookmarkServiceTest : UnitTest() {
 
         val memberId = 1L
 
-        coEvery { postBookmarkRepository.findAllByMemberId(memberId) } returns emptyFlow()
+        coEvery { postBookmarkRepository.findAllByMemberId(memberId) } returns emptyList()
 
-        val result = service.bookmarkedPosts(memberId).toList()
+        val result = service.bookmarkedPosts(memberId)
 
         result shouldBe emptyList()
         verify(exactly = 0) { postRepository.findAllById(any<Iterable<Long>>()) }
@@ -309,16 +310,16 @@ class PostBookmarkServiceTest : UnitTest() {
             )
         )
 
-        coEvery { postBookmarkRepository.findAllByMemberId(memberId) } returns flowOf(*bookmarks.toTypedArray())
-        every { postRepository.findAllById(listOf(10L, 20L)) } returns flowOf(*posts.toTypedArray())
+        coEvery { postBookmarkRepository.findAllByMemberId(memberId) } returns bookmarks
+        every { postRepository.findAllById(listOf(10L, 20L)) } returns posts
 
-        val result = service.bookmarkedPosts(memberId).toList()
+        val result = service.bookmarkedPosts(memberId)
 
         result.map { it.id } shouldBe listOf(10L, 20L)
         result.map { it.key } shouldBe listOf("key-10", "key-20")
     }
 
     private fun passThroughKeyedLock(): KeyedLock = object : KeyedLock {
-        override suspend fun <T> withLock(key: String, block: suspend () -> T): T = block()
+        override fun <T> withLock(key: String, block: () -> T): T = block()
     }
 }

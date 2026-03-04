@@ -1,7 +1,7 @@
 package server.feature.tag.domain
 
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface TagRepository : CoroutineCrudRepository<Tag, Long> {
-    suspend fun findAllByOrderByTitleAsc(): List<Tag>
+interface TagRepository : JpaRepository<Tag, Long> {
+    fun findAllByOrderByTitleAsc(): List<Tag>
 }

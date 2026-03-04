@@ -3,7 +3,6 @@ package server.lock
 import org.redisson.api.RLock
 import org.redisson.api.RedissonClient
 import org.springframework.stereotype.Component
-import server.async.await
 import server.shared.lock.KeyedLock
 import server.shared.lock.LockInfraException
 import java.util.concurrent.TimeUnit
@@ -14,7 +13,7 @@ internal class RedissonLock(
     private val redissonClient: RedissonClient,
 ) : KeyedLock {
 
-    override suspend fun <T> withLock(key: String, block: suspend () -> T): T {
+    override fun <T> withLock(key: String, block: () -> T): T {
         val lockName = "$LOCK_NAMESPACE:$key"
         val lock = redissonClient.getLock(lockName)
         val lockOwnerId = lockOwnerIdSequence.incrementAndGet()
@@ -26,9 +25,11 @@ internal class RedissonLock(
         return blockResult.getOrThrow()
     }
 
-    private suspend fun lock(lock: RLock, lockName: String, lockOwnerId: Long) {
+    private fun lock(lock: RLock, lockName: String, lockOwnerId: Long) {
         val acquire = try {
-            lock.tryLockAsync(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS, lockOwnerId).await()
+            lock.tryLockAsync(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS, lockOwnerId)
+                .toCompletableFuture()
+                .get()
         } catch (ex: Throwable) {
             throw LockInfraException("Distributed lock acquire failed. key=$lockName", ex)
         }
@@ -38,14 +39,14 @@ internal class RedissonLock(
         }
     }
 
-    private suspend fun unlock(
+    private fun unlock(
         lock: RLock,
         lockName: String,
         lockOwnerId: Long,
         blockFailure: Throwable?,
     ) {
         try {
-            lock.unlockAsync(lockOwnerId).await()
+            lock.unlockAsync(lockOwnerId).toCompletableFuture().get()
         } catch (ex: Throwable) {
             val unlockFailure = LockInfraException("Distributed lock release failed. key=$lockName", ex)
             if (blockFailure == null) {

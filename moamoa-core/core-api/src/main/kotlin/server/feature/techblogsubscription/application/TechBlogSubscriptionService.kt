@@ -1,10 +1,6 @@
 package server.feature.techblogsubscription.application
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.feature.member.command.domain.MemberRepository
 import server.feature.techblog.command.application.TechBlogData
@@ -25,7 +21,7 @@ class TechBlogSubscriptionService(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    suspend fun toggle(
+    fun toggle(
         command: TechBlogSubscriptionToggleCommand,
         memberId: Long
     ): TechBlogSubscriptionToggleResult {
@@ -72,7 +68,7 @@ class TechBlogSubscriptionService(
         }
     }
 
-    suspend fun notificationEnabledToggle(
+    fun notificationEnabledToggle(
         command: NotificationEnabledToggleCommand,
         memberId: Long
     ): NotificationEnabledToggleResult {
@@ -83,23 +79,22 @@ class TechBlogSubscriptionService(
                     .findByMemberIdAndTechBlogId(memberId, command.techBlogId)
                     ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
 
-                val updated = subscription.toggleNotification()
-                techBlogSubscriptionRepository.save(updated.entity)
-                registerEvent(updated.event)
-                logger.event.info(updated.event) {
+                val event = subscription.toggleNotification()
+                registerEvent(event)
+                logger.event.info(event) {
                     "기술 블로그 알림 설정 변경 이벤트를 발행했습니다"
                 }
 
-                NotificationEnabledToggleResult(updated.entity.notificationEnabled)
+                NotificationEnabledToggleResult(subscription.notificationEnabled)
             }
         }
     }
 
-    suspend fun subscribingTechBlogs(memberId: Long): Flow<TechBlogData> {
-        val subscriptions = techBlogSubscriptionRepository.findAllByMemberId(memberId).toList()
+    fun subscribingTechBlogs(memberId: Long): List<TechBlogData> {
+        val subscriptions = techBlogSubscriptionRepository.findAllByMemberId(memberId)
         val techBlogIds = subscriptions.map { it.techBlogId }
-        if (techBlogIds.isEmpty()) return emptyFlow()
+        if (techBlogIds.isEmpty()) return emptyList()
 
-        return techBlogRepository.findAllById(techBlogIds).map(::TechBlogData)
+        return techBlogRepository.findAllById(techBlogIds).map(::TechBlogData).toList()
     }
 }

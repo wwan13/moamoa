@@ -1,8 +1,7 @@
 package server.feature.techblog.query
 
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import server.infra.cache.TechBlogSummaryCache
 import server.infra.cache.WarmupCoordinator
@@ -11,19 +10,19 @@ import kotlin.collections.emptyMap
 
 @Service
 class SubscribedTechBlogQueryService(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
     private val techBlogSummaryCache: TechBlogSummaryCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findSubscribingTechBlogs(passport: Passport): TechBlogList {
+    fun findSubscribingTechBlogs(passport: Passport): TechBlogList {
         val techBlogs = loadAll(passport.memberId)
         val meta = TechBlogListMeta(totalCount = techBlogs.size.toLong())
         return TechBlogList(meta, techBlogs)
     }
 
-    private suspend fun loadAll(memberId: Long): List<TechBlogSummary> {
+    private fun loadAll(memberId: Long): List<TechBlogSummary> {
         val subscriptions: List<TechBlogSubscriptionInfo> =
             subscribedTechBlogReader.findAllSubscribedList(memberId)
 
@@ -69,7 +68,7 @@ class SubscribedTechBlogQueryService(
             .sortedBy { it.title }
     }
 
-    private suspend fun fetchTechBlogSummaries(techBlogIds: List<Long>): List<TechBlogSummary> {
+    private fun fetchTechBlogSummaries(techBlogIds: List<Long>): List<TechBlogSummary> {
         if (techBlogIds.isEmpty()) return emptyList()
 
         val placeholders = techBlogIds.indices.joinToString(",") { ":id$it" }
@@ -85,13 +84,9 @@ class SubscribedTechBlogQueryService(
                 WHERE t.id IN ($placeholders)
             """.trimIndent()
 
-        var spec = databaseClient.sql(sql)
-        techBlogIds.forEachIndexed { i, id -> spec = spec.bind("id$i", id) }
+        val params = MapSqlParameterSource()
+        techBlogIds.forEachIndexed { i, id -> params.addValue("id$i", id) }
 
-        return spec
-            .map { row, _ -> mapToTechBlogSummary(row) }
-            .all()
-            .asFlow()
-            .toList()
+        return jdbc.query(sql, params) { row, _ -> mapToTechBlogSummary(row) }
     }
 }

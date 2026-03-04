@@ -1,20 +1,19 @@
 package server.feature.post.query
 
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.infra.cache.PostStatsCache
 import server.infra.cache.WarmupCoordinator
 
 @Component
 class PostStatsReader(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val postStatsCache: PostStatsCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findPostStatsMap(postIds: List<Long>): Map<Long, PostStats> {
+    fun findPostStatsMap(postIds: List<Long>): Map<Long, PostStats> {
         if (postIds.isEmpty()) return emptyMap()
 
         val cachedMap = postStatsCache.mGet(postIds)
@@ -42,7 +41,7 @@ class PostStatsReader(
         return result
     }
 
-    private suspend fun fetchPostStatsMap(postIds: List<Long>): Map<Long, PostStats> {
+    private fun fetchPostStatsMap(postIds: List<Long>): Map<Long, PostStats> {
         if (postIds.isEmpty()) return emptyMap()
 
         val placeholders = postIds.indices.joinToString(",") { ":id$it" }
@@ -56,20 +55,17 @@ class PostStatsReader(
             WHERE p.id IN ($placeholders)
         """.trimIndent()
 
-        var spec = databaseClient.sql(sql)
-        postIds.forEachIndexed { idx, id -> spec = spec.bind("id$idx", id) }
+        val params = MapSqlParameterSource()
+        postIds.forEachIndexed { idx, id -> params.addValue("id$idx", id) }
 
-        return spec
-            .map { row, _ ->
+        val rows: List<PostStats> = jdbc.query(sql, params) { row, _ ->
                 PostStats(
-                    postId = row.get("post_id", Long::class.java) ?: 0L,
-                    bookmarkCount = row.get("bookmark_count", Long::class.java) ?: 0L,
-                    viewCount = row.get("view_count", Long::class.java) ?: 0L,
+                    postId = row.getLong("post_id"),
+                    bookmarkCount = row.getLong("bookmark_count"),
+                    viewCount = row.getLong("view_count"),
                 )
             }
-            .all()
-            .asFlow()
-            .toList()
-            .associateBy { it.postId }
+
+        return rows.associateBy { it.postId }
     }
 }

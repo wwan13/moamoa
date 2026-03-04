@@ -1,8 +1,6 @@
 package server.feature.techblog.query
 
-import io.r2dbc.spi.Row
-import server.infra.db.databaseclient.getInt01
-import server.infra.db.databaseclient.getOrDefault
+import java.sql.ResultSet
 
 const val TECH_BLOG_QUERY_BASE_SELECT = """
     SELECT
@@ -15,14 +13,14 @@ const val TECH_BLOG_QUERY_BASE_SELECT = """
         COALESCE(pc.post_count, 0) AS tech_blog_post_count
 """
 
-fun mapToTechBlogSummary(row: Row): TechBlogSummary = TechBlogSummary(
-    id = row.getOrDefault("tech_blog_id", 0L),
-    title = row.getOrDefault("tech_blog_title", ""),
-    icon = row.getOrDefault("tech_blog_icon", ""),
-    blogUrl = row.getOrDefault("tech_blog_url", ""),
-    key = row.getOrDefault("tech_blog_key", ""),
-    subscriptionCount = row.getOrDefault("tech_blog_subscription_count", 0L),
-    postCount = row.getOrDefault("tech_blog_post_count", 0L),
-    subscribed = row.getInt01("is_subscribed"),
-    notificationEnabled = row.getInt01("notification_enabled"),
+fun mapToTechBlogSummary(rs: ResultSet): TechBlogSummary = TechBlogSummary(
+    id = rs.getLong("tech_blog_id"),
+    title = rs.getString("tech_blog_title") ?: "",
+    icon = rs.getString("tech_blog_icon") ?: "",
+    blogUrl = rs.getString("tech_blog_url") ?: "",
+    key = rs.getString("tech_blog_key") ?: "",
+    subscriptionCount = rs.getLong("tech_blog_subscription_count"),
+    postCount = rs.getLong("tech_blog_post_count"),
+    subscribed = false,
+    notificationEnabled = false,
 )

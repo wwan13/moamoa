@@ -1,14 +1,13 @@
 package server.feature.postbookmark.domain
 
-import kotlinx.coroutines.flow.Flow
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface PostBookmarkRepository : CoroutineCrudRepository<PostBookmark, Long> {
-    suspend fun findByMemberIdAndPostId(memberId: Long, postId: Long): PostBookmark?
+interface PostBookmarkRepository : JpaRepository<PostBookmark, Long> {
+    fun findByMemberIdAndPostId(memberId: Long, postId: Long): PostBookmark?
 
-    suspend fun findAllByMemberId(memberId: Long): Flow<PostBookmark>
+    fun findAllByMemberId(memberId: Long): List<PostBookmark>
 
-    suspend fun countByMemberId(memberId: Long): Long
+    fun countByMemberId(memberId: Long): Long
 
-    suspend fun deleteAllByMemberId(memberId: Long): Long
+    fun deleteAllByMemberId(memberId: Long): Long
 }

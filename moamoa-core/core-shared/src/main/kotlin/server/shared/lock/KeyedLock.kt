@@ -1,9 +1,9 @@
 package server.shared.lock
 
 interface KeyedLock {
-    suspend fun <T> withLock(key: String, block: suspend () -> T): T
+    fun <T> withLock(key: String, block: () -> T): T
 
-    suspend fun <T> withGlobalLock(block: suspend () -> T): T =
+    fun <T> withGlobalLock(block: () -> T): T =
         withLock(GLOBAL_LOCK_KEY, block)
 
     private companion object {

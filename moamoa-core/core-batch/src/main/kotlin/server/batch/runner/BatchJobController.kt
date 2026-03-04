@@ -16,7 +16,7 @@ internal class BatchJobController(
 ) {
 
     @PostMapping("/run")
-    suspend fun run(
+    fun run(
         @RequestHeader("X-Batch-Run-Key", required = false) batchRunKey: String?,
         @RequestBody request: BatchJobRunCommand,
     ): ResponseEntity<BatchJobRunResult> {

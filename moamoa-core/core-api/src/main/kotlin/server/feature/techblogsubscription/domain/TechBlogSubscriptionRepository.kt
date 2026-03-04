@@ -1,14 +1,13 @@
 package server.feature.techblogsubscription.domain
 
-import kotlinx.coroutines.flow.Flow
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface TechBlogSubscriptionRepository : CoroutineCrudRepository<TechBlogSubscription, Long> {
-    suspend fun findByMemberIdAndTechBlogId(memberId: Long, techBlogId: Long): TechBlogSubscription?
+interface TechBlogSubscriptionRepository : JpaRepository<TechBlogSubscription, Long> {
+    fun findByMemberIdAndTechBlogId(memberId: Long, techBlogId: Long): TechBlogSubscription?
 
-    fun findAllByMemberId(memberId: Long): Flow<TechBlogSubscription>
+    fun findAllByMemberId(memberId: Long): List<TechBlogSubscription>
 
-    suspend fun countByMemberId(memberId: Long): Long
+    fun countByMemberId(memberId: Long): Long
 
-    suspend fun deleteAllByMemberId(memberId: Long): Long
+    fun deleteAllByMemberId(memberId: Long): Long
 }

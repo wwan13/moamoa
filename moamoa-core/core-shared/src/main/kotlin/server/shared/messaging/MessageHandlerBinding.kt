@@ -4,5 +4,5 @@ class MessageHandlerBinding<T : Any>(
     val subscription: SubscriptionDefinition,
     val type: String,
     val payloadClass: Class<T>,
-    val handler: suspend (T) -> Unit
+    val handler: (T) -> Unit
 )

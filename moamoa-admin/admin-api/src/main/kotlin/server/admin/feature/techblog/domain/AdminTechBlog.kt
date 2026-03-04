@@ -1,36 +1,47 @@
 package server.admin.feature.techblog.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Entity
+import jakarta.persistence.Column
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import support.admin.domain.AdminBaseEntity
 
+@Entity
 @Table(name = "tech_blog")
-internal data class AdminTechBlog(
+internal class AdminTechBlog(
     @Id
-    @Column("id")
+    @Column(name = "id")
     override val id: Long = 0,
 
-    @Column("title")
-    val title: String,
+    title: String,
 
-    @Column("tech_blog_key")
+    @Column(name = "tech_blog_key")
     val key: String,
 
-    @Column("blog_url")
-    val blogUrl: String,
+    blogUrl: String,
 
-    @Column("icon")
-    val icon: String
+    icon: String,
 ) : AdminBaseEntity() {
+    @Column(name = "title")
+    var title: String = title
+        private set
+
+    @Column(name = "blog_url")
+    var blogUrl: String = blogUrl
+        private set
+
+    @Column(name = "icon")
+    var icon: String = icon
+        private set
+
 
     fun update(
         title: String,
         blogUrl: String,
         icon: String
-    ): AdminTechBlog = copy(
-        title = title,
-        blogUrl = blogUrl,
-        icon = icon
-    )
+    ) {
+        this.title = title
+        this.blogUrl = blogUrl
+        this.icon = icon
+    }
 }

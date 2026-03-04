@@ -35,7 +35,7 @@ internal class UpdatePostViewCountReader(
         }
     }
 
-    private suspend fun loadItems(): List<PostViewCount> {
+    private fun loadItems(): List<PostViewCount> {
         val postIds = setMemory.members(dirtySetKey)
             .mapNotNull { it.toLongOrNull() }
             .sorted()

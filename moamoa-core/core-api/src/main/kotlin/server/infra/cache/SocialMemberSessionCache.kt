@@ -12,7 +12,7 @@ class SocialMemberSessionCache(
     private val prefix = "SOCIAL:SIGNUP:"
     private val oneMinute = 60_000L
 
-    suspend fun set(token: String, memberId: Long) {
+    fun set(token: String, memberId: Long) {
         cacheMemory.set(
             key = key(token),
             value = memberId,
@@ -20,11 +20,11 @@ class SocialMemberSessionCache(
         )
     }
 
-    suspend fun get(token: String): Long? {
+    fun get(token: String): Long? {
         return cacheMemory.get(key(token))
     }
 
-    suspend fun evict(token: String) {
+    fun evict(token: String) {
         return cacheMemory.evict(key(token))
     }
 

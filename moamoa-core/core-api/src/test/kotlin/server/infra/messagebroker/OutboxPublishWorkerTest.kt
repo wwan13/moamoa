@@ -1,7 +1,7 @@
 package server.infra.messagebroker
 
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -10,6 +10,8 @@ import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.global.logging.ExternalCallLogger
+import server.infra.db.transaction.TransactionScope
+import server.infra.db.transaction.Transactional
 import server.infra.db.outbox.EventOutbox
 import server.infra.db.outbox.EventOutboxRepository
 import server.messaging.health.RedisHealthStateManager
@@ -21,11 +23,13 @@ class OutboxPublishWorkerTest : UnitTest() {
     fun `미발행 이벤트가 없으면 아무 작업도 하지 않는다`() = runTest {
         val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
+        val transactional = newTransactional()
         coEvery { eventOutboxRepository.findUnpublished(10) } returns emptyList()
         val healthStateManager = newHealthStateManager()
         val worker = OutboxPublishWorker(
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
+            transactional = transactional,
             externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
@@ -33,24 +37,27 @@ class OutboxPublishWorkerTest : UnitTest() {
         worker.runOnce(10)
 
         verify(exactly = 0) { eventPublisher.publish(any<String>(), any<String>(), any<String>()) }
-        coVerify(exactly = 0) { eventOutboxRepository.markPublished(any()) }
+        verify(exactly = 0) { eventOutboxRepository.findById(any()) }
     }
 
     @Test
     fun `미발행 이벤트가 있으면 발행 후 published로 마킹한다`() = runTest {
         val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
+        val transactional = newTransactional()
         val rows = listOf(
             EventOutbox(id = 1L, topic = "topic-1", type = "type-1", payload = "payload-1"),
             EventOutbox(id = 2L, topic = "topic-2", type = "type-2", payload = "payload-2"),
         )
         coEvery { eventOutboxRepository.findUnpublished(5) } returns rows
         every { eventPublisher.publish(any<String>(), any<String>(), any<String>()) } just runs
-        coEvery { eventOutboxRepository.markPublished(any()) } returns 1
+        every { eventOutboxRepository.findById(1L) } returns java.util.Optional.of(rows[0])
+        every { eventOutboxRepository.findById(2L) } returns java.util.Optional.of(rows[1])
         val healthStateManager = newHealthStateManager()
         val worker = OutboxPublishWorker(
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
+            transactional = transactional,
             externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
@@ -59,14 +66,17 @@ class OutboxPublishWorkerTest : UnitTest() {
 
         verify(exactly = 1) { eventPublisher.publish("topic-1", "type-1", "payload-1") }
         verify(exactly = 1) { eventPublisher.publish("topic-2", "type-2", "payload-2") }
-        coVerify(exactly = 1) { eventOutboxRepository.markPublished(1L) }
-        coVerify(exactly = 1) { eventOutboxRepository.markPublished(2L) }
+        rows[0].published shouldBe true
+        rows[1].published shouldBe true
+        verify(exactly = 1) { eventOutboxRepository.findById(1L) }
+        verify(exactly = 1) { eventOutboxRepository.findById(2L) }
     }
 
     @Test
     fun `발행 실패한 이벤트는 마킹하지 않고 다음 이벤트를 처리한다`() = runTest {
         val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
+        val transactional = newTransactional()
         val rows = listOf(
             EventOutbox(id = 1L, topic = "topic-1", type = "type-1", payload = "payload-1"),
             EventOutbox(id = 2L, topic = "topic-2", type = "type-2", payload = "payload-2"),
@@ -74,11 +84,12 @@ class OutboxPublishWorkerTest : UnitTest() {
         coEvery { eventOutboxRepository.findUnpublished(2) } returns rows
         every { eventPublisher.publish("topic-1", "type-1", "payload-1") } throws RuntimeException("fail")
         every { eventPublisher.publish("topic-2", "type-2", "payload-2") } just runs
-        coEvery { eventOutboxRepository.markPublished(2L) } returns 1
+        every { eventOutboxRepository.findById(2L) } returns java.util.Optional.of(rows[1])
         val healthStateManager = newHealthStateManager()
         val worker = OutboxPublishWorker(
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
+            transactional = transactional,
             externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
@@ -87,8 +98,20 @@ class OutboxPublishWorkerTest : UnitTest() {
 
         verify(exactly = 1) { eventPublisher.publish("topic-1", "type-1", "payload-1") }
         verify(exactly = 1) { eventPublisher.publish("topic-2", "type-2", "payload-2") }
-        coVerify(exactly = 0) { eventOutboxRepository.markPublished(1L) }
-        coVerify(exactly = 1) { eventOutboxRepository.markPublished(2L) }
+        rows[0].published shouldBe false
+        rows[1].published shouldBe true
+        verify(exactly = 0) { eventOutboxRepository.findById(1L) }
+        verify(exactly = 1) { eventOutboxRepository.findById(2L) }
+    }
+
+    private fun newTransactional(): Transactional {
+        val transactional = mockk<Transactional>()
+        val transactionScope = mockk<TransactionScope>(relaxed = true)
+        every { transactional.invoke<Unit>(any(), any()) } answers {
+            val block = secondArg<TransactionScope.() -> Unit>()
+            block.invoke(transactionScope)
+        }
+        return transactional
     }
 
     private fun newHealthStateManager(): RedisHealthStateManager {
@@ -96,7 +119,7 @@ class OutboxPublishWorkerTest : UnitTest() {
             every { manager.isDegraded() } returns false
             coEvery { manager.tryRecover() } returns true
             coEvery { manager.runSafe<Unit>(any()) } coAnswers {
-                firstArg<suspend () -> Unit>().invoke()
+                firstArg<() -> Unit>().invoke()
                 Result.success(Unit)
             }
             every { manager.isFailure(any()) } returns false

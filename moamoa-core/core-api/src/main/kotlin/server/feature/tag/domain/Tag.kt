@@ -1,16 +1,25 @@
 package server.feature.tag.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import support.domain.BaseEntity
 
-@Table(name = "tag")
-data class Tag(
+@Entity
+@Table(
+    name = "tag",
+    uniqueConstraints = [UniqueConstraint(name = "idx_tag_title", columnNames = ["title"])]
+)
+class Tag(
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     override val id: Long = 0,
 
-    @Column("title")
+    @Column(name = "title", length = 255, nullable = false)
     val title: String,
 ) : BaseEntity()

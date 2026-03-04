@@ -8,7 +8,7 @@ class TagService(
     private val tagRepository: TagRepository
 ) {
 
-    suspend fun findAll(): List<TagData> {
+    fun findAll(): List<TagData> {
         return tagRepository.findAllByOrderByTitleAsc().map(::TagData)
     }
 }

@@ -1,42 +1,48 @@
 package server.admin.feature.post.command.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Entity
+import jakarta.persistence.Column
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import support.admin.domain.AdminBaseEntity
 import java.time.LocalDateTime
 
+@Entity
 @Table(name = "post")
-internal data class AdminPost(
+internal class AdminPost(
     @Id
-    @Column("id")
+    @Column(name = "id")
     override val id: Long = 0,
 
-    @Column("post_key")
+    @Column(name = "post_key")
     val key: String,
 
-    @Column("title")
+    @Column(name = "title")
     val title: String,
 
-    @Column("description")
+    @Column(name = "description")
     val description: String,
 
-    @Column("thumbnail")
+    @Column(name = "thumbnail")
     val thumbnail: String,
 
-    @Column("url")
+    @Column(name = "url")
     val url: String,
 
-    @Column("published_at")
+    @Column(name = "published_at")
     val publishedAt: LocalDateTime,
 
-    @Column("tech_blog_id")
+    @Column(name = "tech_blog_id")
     val techBlogId: Long,
 
-    @Column("category_id")
-    val categoryId: Long,
+    categoryId: Long,
 ) : AdminBaseEntity() {
+    @Column(name = "category_id")
+    var categoryId: Long = categoryId
+        private set
 
-    fun updateCategory(categoryId: Long): AdminPost =
-        copy(categoryId = categoryId)
+
+    fun updateCategory(categoryId: Long) {
+        this.categoryId = categoryId
+    }
 }

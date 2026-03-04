@@ -1,21 +1,41 @@
 package server.infra.db.outbox
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Index
+import jakarta.persistence.Table
 import support.domain.BaseEntity
 
-@Table("event_outbox")
-data class EventOutbox(
+@Entity
+@Table(
+    name = "event_outbox",
+    indexes = [Index(name = "idx_outbox_published_created", columnList = "published,created_at")]
+)
+class EventOutbox(
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     override val id: Long = 0,
 
+    @Column(name = "topic", length = 255, nullable = false)
     val topic: String,
 
+    @Column(name = "type", length = 256, nullable = false)
     val type: String,
 
+    @Column(name = "payload", columnDefinition = "json", nullable = false)
     val payload: String,
 
-    val published: Boolean = false,
-) : BaseEntity()
+    published: Boolean = false,
+) : BaseEntity() {
+    @Column(name = "published", nullable = false)
+    var published: Boolean = published
+        private set
+
+    fun markPublished() {
+        published = true
+    }
+}

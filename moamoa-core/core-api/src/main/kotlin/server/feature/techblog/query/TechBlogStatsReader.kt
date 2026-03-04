@@ -1,20 +1,19 @@
 package server.feature.techblog.query
 
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.infra.cache.TechBlogSummaryCache
 import server.infra.cache.WarmupCoordinator
 
 @Component
 class TechBlogStatsReader(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val techBlogSummaryCache: TechBlogSummaryCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findTechBlogStatsMap(techBlogIds: List<Long>): Map<Long, TechBlogStats> {
+    fun findTechBlogStatsMap(techBlogIds: List<Long>): Map<Long, TechBlogStats> {
         if (techBlogIds.isEmpty()) return emptyMap()
 
         val cached = techBlogSummaryCache.mGet(techBlogIds)
@@ -43,7 +42,7 @@ class TechBlogStatsReader(
         return result
     }
 
-    private suspend fun fetchTechBlogSummaryMap(ids: List<Long>): Map<Long, TechBlogSummary> {
+    private fun fetchTechBlogSummaryMap(ids: List<Long>): Map<Long, TechBlogSummary> {
         if (ids.isEmpty()) return emptyMap()
 
         val placeholders = ids.indices.joinToString(",") { ":id$it" }
@@ -59,18 +58,17 @@ class TechBlogStatsReader(
                 WHERE t.id IN ($placeholders)
             """.trimIndent()
 
-        var spec = databaseClient.sql(sql)
-        ids.forEachIndexed { i, id -> spec = spec.bind("id$i", id) }
+        val params = MapSqlParameterSource()
+        ids.forEachIndexed { i, id -> params.addValue("id$i", id) }
 
-        return spec
-            .map { row, _ -> mapToTechBlogSummary(row) }
-            .all()
-            .asFlow()
-            .toList()
-            .associateBy { it.id }
+        val summaries: List<TechBlogSummary> = jdbc.query(sql, params) { row, _ ->
+            mapToTechBlogSummary(row)
+        }
+
+        return summaries.associateBy { it.id }
     }
 
-    suspend fun findById(techBlogId: Long): TechBlogStats? {
+    fun findById(techBlogId: Long): TechBlogStats? {
         val cached = techBlogSummaryCache.get(techBlogId)
         if (cached != null) {
             return TechBlogStats(
@@ -94,7 +92,7 @@ class TechBlogStatsReader(
         )
     }
 
-    private suspend fun fetchTechBlogSummaryById(id: Long): TechBlogSummary? {
+    private fun fetchTechBlogSummaryById(id: Long): TechBlogSummary? {
         val sql = """
             $TECH_BLOG_QUERY_BASE_SELECT
             FROM tech_blog t
@@ -107,12 +105,7 @@ class TechBlogStatsReader(
             LIMIT 1
         """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("id", id)
-            .map { row, _ -> mapToTechBlogSummary(row) }
-            .one()
-            .asFlow()
-            .toList()
+        return jdbc.query(sql, mapOf("id" to id)) { row, _ -> mapToTechBlogSummary(row) }
             .firstOrNull()
     }
 }

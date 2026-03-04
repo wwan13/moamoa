@@ -1,9 +1,7 @@
 package server.feature.post.query
 
-import io.r2dbc.spi.Row
 import server.feature.techblog.command.application.TechBlogData
-import server.infra.db.databaseclient.getInt01
-import server.infra.db.databaseclient.getOrDefault
+import java.sql.ResultSet
 import java.time.LocalDateTime
 
 const val POST_QUERY_BASE_SELECT = """
@@ -26,23 +24,23 @@ const val POST_QUERY_BASE_SELECT = """
         t.subscription_count AS tech_blog_subscription_count
 """
 
-fun mapToPostSummary(row: Row): PostSummary = PostSummary(
-    id = row.getOrDefault("post_id", 0L),
-    key = row.getOrDefault("post_key", ""),
-    title = row.getOrDefault("post_title", ""),
-    description = row.getOrDefault("post_description", ""),
-    thumbnail = row.getOrDefault("post_thumbnail", ""),
-    url = row.getOrDefault("post_url", ""),
-    publishedAt = row.getOrDefault("published_at", LocalDateTime.MIN),
-    viewCount = row.getOrDefault("post_view_count", 0L),
-    bookmarkCount = row.getOrDefault("post_bookmark_count", 0L),
-    isBookmarked = row.getInt01("is_bookmarked"),
+fun mapToPostSummary(rs: ResultSet): PostSummary = PostSummary(
+    id = rs.getLong("post_id"),
+    key = rs.getString("post_key") ?: "",
+    title = rs.getString("post_title") ?: "",
+    description = rs.getString("post_description") ?: "",
+    thumbnail = rs.getString("post_thumbnail") ?: "",
+    url = rs.getString("post_url") ?: "",
+    publishedAt = rs.getObject("published_at", LocalDateTime::class.java) ?: LocalDateTime.MIN,
+    viewCount = rs.getLong("post_view_count"),
+    bookmarkCount = rs.getLong("post_bookmark_count"),
+    isBookmarked = (rs.getInt("is_bookmarked")) == 1,
     techBlog = TechBlogData(
-        id = row.getOrDefault("tech_blog_id", 0L),
-        title = row.getOrDefault("tech_blog_title", ""),
-        key = row.getOrDefault("tech_blog_key", ""),
-        blogUrl = row.getOrDefault("tech_blog_url", ""),
-        icon = row.getOrDefault("tech_blog_icon", ""),
-        subscriptionCount = row.getOrDefault("tech_blog_subscription_count", 0L),
+        id = rs.getLong("tech_blog_id"),
+        title = rs.getString("tech_blog_title") ?: "",
+        key = rs.getString("tech_blog_key") ?: "",
+        blogUrl = rs.getString("tech_blog_url") ?: "",
+        icon = rs.getString("tech_blog_icon") ?: "",
+        subscriptionCount = rs.getLong("tech_blog_subscription_count"),
     )
 )

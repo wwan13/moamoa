@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KLogger
 import org.slf4j.MDC
-import kotlin.coroutines.Continuation
 
 val KLogger.request: TypedLogger
     get() = TypedLogger(this, LogType.REQUEST)
@@ -216,7 +215,7 @@ class TypedLogger internal constructor(
 class EventTypedLogger internal constructor(
     private val typedLogger: TypedLogger,
 ) {
-    suspend fun info(
+    fun info(
         event: Any,
         message: () -> String,
     ) {
@@ -226,7 +225,7 @@ class EventTypedLogger internal constructor(
         }
     }
 
-    suspend fun info(
+    fun info(
         vararg fields: Pair<String, Any?>,
         message: () -> String,
     ) {
@@ -282,6 +281,3 @@ private enum class StructuredLevel {
     WARN,
     ERROR,
 }
-
-fun KLogger.traceIdFrom(continuation: Continuation<*>): String? =
-    RequestLogContextHolder.fromContinuation(continuation)?.traceId

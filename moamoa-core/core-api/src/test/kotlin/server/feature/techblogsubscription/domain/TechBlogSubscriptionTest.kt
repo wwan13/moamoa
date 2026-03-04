@@ -44,10 +44,9 @@ class TechBlogSubscriptionTest : UnitTest() {
             techBlogId = 22L
         )
 
-        val result = subscription.toggleNotification()
+        val event = subscription.toggleNotification()
 
-        result.entity.notificationEnabled shouldBe false
-        val event = result.event as NotificationUpdatedEvent
+        subscription.notificationEnabled shouldBe false
         event.memberId shouldBe 12L
         event.techBlogId shouldBe 22L
         event.enabled shouldBe false

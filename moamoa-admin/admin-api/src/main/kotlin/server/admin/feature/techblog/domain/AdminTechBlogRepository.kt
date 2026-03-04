@@ -1,7 +1,7 @@
 package server.admin.feature.techblog.domain
 
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-internal interface AdminTechBlogRepository : CoroutineCrudRepository<AdminTechBlog, Long> {
-    suspend fun existsByTitle(title: String): Boolean
+internal interface AdminTechBlogRepository : JpaRepository<AdminTechBlog, Long> {
+    fun existsByTitle(title: String): Boolean
 }

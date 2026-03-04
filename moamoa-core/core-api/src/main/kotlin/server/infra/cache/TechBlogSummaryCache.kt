@@ -15,10 +15,10 @@ class TechBlogSummaryCache(
 
     fun key(id: Long) = "$prefix$id"
 
-    suspend fun get(id: Long): TechBlogSummary? =
+    fun get(id: Long): TechBlogSummary? =
         cacheMemory.get(key(id))
 
-    suspend fun mGet(ids: Collection<Long>): Map<Long, TechBlogSummary?> {
+    fun mGet(ids: Collection<Long>): Map<Long, TechBlogSummary?> {
         if (ids.isEmpty()) return emptyMap()
 
         val idByKey = ids.distinct().associateBy { key(it) }
@@ -29,11 +29,11 @@ class TechBlogSummaryCache(
         }
     }
 
-    suspend fun set(summary: TechBlogSummary) {
+    fun set(summary: TechBlogSummary) {
         cacheMemory.set(key(summary.id), normalize(summary), ttlMillis)
     }
 
-    suspend fun mSet(summaries: Map<Long, TechBlogSummary>) {
+    fun mSet(summaries: Map<Long, TechBlogSummary>) {
         if (summaries.isEmpty()) return
 
         val payload = summaries.entries.associate { (id, s) ->
@@ -47,7 +47,7 @@ class TechBlogSummaryCache(
         notificationEnabled = false,
     )
 
-    suspend fun evict(id: Long) {
+    fun evict(id: Long) {
         cacheMemory.evict(key(id))
     }
 }

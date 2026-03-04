@@ -1,7 +1,7 @@
 package server.feature.submission.domain
 
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface SubmissionRepository : CoroutineCrudRepository<Submission, Long> {
-    suspend fun deleteAllByMemberId(memberId: Long): Long
+interface SubmissionRepository : JpaRepository<Submission, Long> {
+    fun deleteAllByMemberId(memberId: Long): Long
 }

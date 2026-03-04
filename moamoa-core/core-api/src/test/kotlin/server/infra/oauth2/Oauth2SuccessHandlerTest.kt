@@ -1,35 +1,32 @@
 package server.infra.oauth2
 
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest
-import org.springframework.mock.web.server.MockServerWebExchange
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.Authentication
-import org.springframework.security.web.server.WebFilterExchange
-import org.springframework.web.server.WebFilterChain
 import server.feature.auth.application.AuthService
 import server.feature.auth.application.AuthTokens
 import server.feature.member.command.domain.MemberRole
 import server.feature.member.command.domain.Provider
 import server.infra.cache.RefreshTokenCache
 import test.UnitTest
-import java.net.URI
 
 class Oauth2SuccessHandlerTest : UnitTest() {
     @Test
     fun `Authenticated 이면 토큰 발급 후 성공 리다이렉트한다`() {
         val authService = mockk<AuthService>()
-        val refreshTokenCache = mockk<RefreshTokenCache>()
+        val refreshTokenCache = mockk<RefreshTokenCache>(relaxed = true)
         val environment = mockk<Environment>()
         val handler = Oauth2SuccessHandler(authService, refreshTokenCache, environment)
         val authentication = mockk<Authentication>()
-        val exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/").build())
+        val request = MockHttpServletRequest("GET", "/")
+        val response = MockHttpServletResponse()
 
         every { environment.activeProfiles } returns emptyArray()
         every { authentication.principal } returns Oauth2SocialUser.Authenticated(
@@ -41,18 +38,12 @@ class Oauth2SuccessHandlerTest : UnitTest() {
             accessToken = "access",
             refreshToken = "refresh"
         )
-        coEvery { refreshTokenCache.set(10L, "refresh", any()) } returns Unit
 
-        handler.onAuthenticationSuccess(
-            WebFilterExchange(exchange, mockk<WebFilterChain>(relaxed = true)),
-            authentication
-        ).block()
+        handler.onAuthenticationSuccess(request, response, authentication)
 
-        exchange.response.statusCode shouldBe HttpStatus.FOUND
-        exchange.response.headers.location shouldBe URI.create(
-            "http://localhost:5173/oauth2?type=success&accessToken=access&refreshToken=refresh&isNew=false"
-        )
-        coVerify(exactly = 1) { refreshTokenCache.set(10L, "refresh", 604_800_000L) }
+        response.status shouldBe HttpStatus.FOUND.value()
+        response.redirectedUrl shouldBe "http://localhost:5173/oauth2?type=success&accessToken=access&refreshToken=refresh&isNew=false"
+        verify(exactly = 1) { refreshTokenCache.set(10L, "refresh", 604_800_000L) }
     }
 
     @Test
@@ -64,7 +55,7 @@ class Oauth2SuccessHandlerTest : UnitTest() {
             environment = environment
         )
         val authentication = mockk<Authentication>()
-        val exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/").build())
+        val response = MockHttpServletResponse()
 
         every { environment.activeProfiles } returns emptyArray()
         every { authentication.principal } returns Oauth2SocialUser.EmailRequired(
@@ -72,15 +63,10 @@ class Oauth2SuccessHandlerTest : UnitTest() {
             providerKey = "google-123"
         )
 
-        handler.onAuthenticationSuccess(
-            WebFilterExchange(exchange, mockk<WebFilterChain>(relaxed = true)),
-            authentication
-        ).block()
+        handler.onAuthenticationSuccess(MockHttpServletRequest("GET", "/"), response, authentication)
 
-        exchange.response.statusCode shouldBe HttpStatus.FOUND
-        exchange.response.headers.location shouldBe URI.create(
-            "http://localhost:5173/oauth2?emailRequired=emailRequired&provider=GOOGLE&providerKey=google-123"
-        )
+        response.status shouldBe HttpStatus.FOUND.value()
+        response.redirectedUrl shouldBe "http://localhost:5173/oauth2?emailRequired=emailRequired&provider=GOOGLE&providerKey=google-123"
     }
 
     @Test
@@ -92,22 +78,17 @@ class Oauth2SuccessHandlerTest : UnitTest() {
             environment = environment
         )
         val authentication = mockk<Authentication>()
-        val exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/").build())
+        val response = MockHttpServletResponse()
 
         every { environment.activeProfiles } returns emptyArray()
         every { authentication.principal } returns Oauth2SocialUser.HasError(
             message = "boom"
         )
 
-        handler.onAuthenticationSuccess(
-            WebFilterExchange(exchange, mockk<WebFilterChain>(relaxed = true)),
-            authentication
-        ).block()
+        handler.onAuthenticationSuccess(MockHttpServletRequest("GET", "/"), response, authentication)
 
-        exchange.response.statusCode shouldBe HttpStatus.FOUND
-        exchange.response.headers.location shouldBe URI.create(
-            "http://localhost:5173/oauth2?type=hasError&errorMessage=boom"
-        )
+        response.status shouldBe HttpStatus.FOUND.value()
+        response.redirectedUrl shouldBe "http://localhost:5173/oauth2?type=hasError&errorMessage=boom"
     }
 
     @Test
@@ -119,20 +100,15 @@ class Oauth2SuccessHandlerTest : UnitTest() {
             environment = environment
         )
         val authentication = mockk<Authentication>()
-        val exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/").build())
+        val response = MockHttpServletResponse()
 
         every { environment.activeProfiles } returns arrayOf("prod")
         every { authentication.principal } returns Oauth2SocialUser.HasError(
             message = "boom"
         )
 
-        handler.onAuthenticationSuccess(
-            WebFilterExchange(exchange, mockk<WebFilterChain>(relaxed = true)),
-            authentication
-        ).block()
+        handler.onAuthenticationSuccess(MockHttpServletRequest("GET", "/"), response, authentication)
 
-        exchange.response.headers.location shouldBe URI.create(
-            "https://moamoa.dev/oauth2?type=hasError&errorMessage=boom"
-        )
+        response.redirectedUrl shouldBe "https://moamoa.dev/oauth2?type=hasError&errorMessage=boom"
     }
 }

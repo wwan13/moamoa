@@ -22,6 +22,7 @@ import server.shared.security.jwt.TokenType
 import server.shared.security.password.PasswordEncoder
 import server.security.UnauthorizedException
 import test.UnitTest
+import java.util.Optional
 
 class AuthServiceTest : UnitTest() {
     @Test
@@ -408,7 +409,7 @@ class AuthServiceTest : UnitTest() {
 
         every { tokenProvider.decodeToken(refreshToken) } returns principal
         coEvery { refreshTokenCache.get(principal.memberId) } returns refreshToken
-        coEvery { memberRepository.findById(principal.memberId) } returns null
+        coEvery { memberRepository.findById(principal.memberId) } returns Optional.empty()
 
         shouldThrow<UnauthorizedException> {
             service.reissue(refreshToken)
@@ -440,7 +441,7 @@ class AuthServiceTest : UnitTest() {
 
         every { tokenProvider.decodeToken(refreshToken) } returns principal
         coEvery { refreshTokenCache.get(principal.memberId) } returns refreshToken
-        coEvery { memberRepository.findById(principal.memberId) } returns member
+        coEvery { memberRepository.findById(principal.memberId) } returns Optional.of(member)
         every { tokenProvider.encodeToken(any(), any()) } returnsMany listOf("new-access", "new-refresh")
         coEvery { refreshTokenCache.set(member.id, "new-refresh", 604_800_000L) } returns Unit
 
@@ -598,7 +599,7 @@ class AuthServiceTest : UnitTest() {
         val command = LoginSocialSessionCommand(token = "token", memberId = 1L)
 
         coEvery { socialMemberSessionCache.get(command.token) } returns command.memberId
-        coEvery { memberRepository.findById(command.memberId) } returns null
+        coEvery { memberRepository.findById(command.memberId) } returns Optional.empty()
 
         shouldThrow<UnauthorizedException> {
             service.loginSocialSession(command)
@@ -628,7 +629,7 @@ class AuthServiceTest : UnitTest() {
         val member = createMember(id = command.memberId)
 
         coEvery { socialMemberSessionCache.get(command.token) } returns command.memberId
-        coEvery { memberRepository.findById(command.memberId) } returns member
+        coEvery { memberRepository.findById(command.memberId) } returns Optional.of(member)
         every { tokenProvider.encodeToken(any(), any()) } returnsMany listOf("access-token", "refresh-token")
 
         val result = service.loginSocialSession(command)

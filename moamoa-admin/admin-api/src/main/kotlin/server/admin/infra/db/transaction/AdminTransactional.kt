@@ -1,34 +1,34 @@
 package server.admin.infra.db.transaction
 
-import io.r2dbc.spi.ConnectionFactory
-import org.springframework.r2dbc.connection.R2dbcTransactionManager
 import org.springframework.stereotype.Component
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.annotation.Propagation
-import org.springframework.transaction.reactive.TransactionalOperator
-import org.springframework.transaction.reactive.executeAndAwait
 import org.springframework.transaction.support.DefaultTransactionDefinition
+import org.springframework.transaction.support.TransactionTemplate
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
 internal class AdminTransactional(
-    connectionFactory: ConnectionFactory
+    private val txManager: PlatformTransactionManager,
 ) {
 
-    private val manager = R2dbcTransactionManager(connectionFactory)
-    private val operators = ConcurrentHashMap<Propagation, TransactionalOperator>()
+    private val templates = ConcurrentHashMap<Propagation, TransactionTemplate>()
 
-    suspend operator fun <T> invoke(
+    operator fun <T> invoke(
         propagation: Propagation = Propagation.REQUIRES_NEW,
-        block: suspend () -> T
+        block: () -> T,
     ): T {
-        val operator = operators.computeIfAbsent(propagation) { p ->
+        val template = templates.computeIfAbsent(propagation) { p ->
             val def = DefaultTransactionDefinition().apply {
                 propagationBehavior = p.toTxPropagationBehavior()
             }
-            TransactionalOperator.create(manager, def)
+            TransactionTemplate(txManager, def)
         }
-        return operator.executeAndAwait { block() }
+
+        return template.execute { _: TransactionStatus -> block() }
+            ?: throw IllegalStateException("AdminTransactional returned null")
     }
 
     private fun Propagation.toTxPropagationBehavior(): Int = when (this) {

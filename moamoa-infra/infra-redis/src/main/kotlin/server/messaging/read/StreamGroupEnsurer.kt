@@ -1,7 +1,5 @@
 package server.messaging.read
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.connection.stream.ReadOffset
 import org.springframework.data.redis.core.StringRedisTemplate
@@ -18,22 +16,22 @@ internal class StreamGroupEnsurer(
 
     private val ensured = ConcurrentHashMap.newKeySet<EnsureKey>()
 
-    suspend fun ensure(subscription: SubscriptionDefinition) {
+    fun ensure(subscription: SubscriptionDefinition) {
         val ensureKey = EnsureKey(subscription.channel.key, subscription.consumerGroup)
         ensureGroupOnce(subscription, ensureKey)
     }
 
-    suspend fun ensureForRecovery(subscription: SubscriptionDefinition) {
+    fun ensureForRecovery(subscription: SubscriptionDefinition) {
         val ensureKey = EnsureKey(subscription.channel.key, subscription.consumerGroup)
         ensured.remove(ensureKey)
         ensureGroupOnce(subscription, ensureKey)
     }
 
-    private suspend fun ensureGroupOnce(
+    private fun ensureGroupOnce(
         subscription: SubscriptionDefinition,
         ensureKey: EnsureKey,
-    ) = withContext(Dispatchers.IO) {
-        if (!ensured.add(ensureKey)) return@withContext
+    ) {
+        if (!ensured.add(ensureKey)) return
         try {
             redis.opsForStream<String, String>()
                 .createGroup(subscription.channel.key, ReadOffset.from("0-0"), subscription.consumerGroup)

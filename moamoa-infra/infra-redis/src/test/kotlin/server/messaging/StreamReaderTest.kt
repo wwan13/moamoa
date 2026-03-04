@@ -86,9 +86,17 @@ class StreamReaderTest {
         val ops = mockk<StreamOperations<String, String, String>>()
         every { redis.opsForStream<String, String>() } returns ops
         every { ops.createGroup(any(), any(), any()) } returns "OK"
+        var readCount = 0
         every {
             ops.read(any<Consumer>(), any<StreamReadOptions>(), any<StreamOffset<String>>())
-        } throws RedisConnectionFailureException("redis down") andThen emptyList()
+        } answers {
+            readCount += 1
+            if (readCount == 1) {
+                throw RedisConnectionFailureException("redis down")
+            }
+            Thread.sleep(20)
+            emptyList()
+        }
         every { redis.execute(any<RedisCallback<String>>()) } returns "PONG"
 
         val reader = newConnection(redis)

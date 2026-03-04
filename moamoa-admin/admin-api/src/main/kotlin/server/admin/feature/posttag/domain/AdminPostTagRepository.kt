@@ -1,6 +1,6 @@
 package server.admin.feature.posttag.domain
 
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-internal interface AdminPostTagRepository : CoroutineCrudRepository<AdminPostTag, Long>{
+internal interface AdminPostTagRepository : JpaRepository<AdminPostTag, Long>{
 }

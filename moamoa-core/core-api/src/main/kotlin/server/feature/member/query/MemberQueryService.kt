@@ -1,7 +1,6 @@
 package server.feature.member.query
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import server.feature.member.command.domain.MemberRepository
 import server.feature.postbookmark.domain.PostBookmarkRepository
@@ -18,23 +17,16 @@ class MemberQueryService(
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache
 ) {
 
-    suspend fun findById(memberId: Long): MemberSummary = coroutineScope {
-        val member = memberRepository.findById(memberId)
+    fun findById(memberId: Long): MemberSummary {
+        val member = memberRepository.findByIdOrNull(memberId)
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
 
-        val subscriptionCountDeferred = async {
-            techBlogSubscriptionCache.get(memberId)?.count()?.toLong()
-                ?: techBlogSubscriptionRepository.countByMemberId(memberId)
-        }
-        val bookmarkCountDeferred = async {
-            bookmarkedAllPostIdSetCache.get(memberId)?.count()?.toLong()
-                ?: postBookmarkRepository.countByMemberId(memberId)
-        }
+        val subscriptionCount = techBlogSubscriptionCache.get(memberId)?.count()?.toLong()
+            ?: techBlogSubscriptionRepository.countByMemberId(memberId)
+        val bookmarkCount = bookmarkedAllPostIdSetCache.get(memberId)?.count()?.toLong()
+            ?: postBookmarkRepository.countByMemberId(memberId)
 
-        val subscriptionCount = subscriptionCountDeferred.await()
-        val bookmarkCount = bookmarkCountDeferred.await()
-
-        MemberSummary(
+        return MemberSummary(
             memberId = member.id,
             email = member.email,
             provider = member.provider,

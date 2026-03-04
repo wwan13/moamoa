@@ -1,26 +1,42 @@
 package server.feature.techblogsubscription.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Index
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import support.domain.BaseEntity
-import support.domain.DomainModified
 
-@Table("tech_blog_subscription")
-data class TechBlogSubscription(
+@Entity
+@Table(
+    name = "tech_blog_subscription",
+    uniqueConstraints = [UniqueConstraint(name = "uk_member_tech_blog", columnNames = ["member_id", "tech_blog_id"])],
+    indexes = [
+        Index(name = "idx_member_id", columnList = "member_id"),
+        Index(name = "idx_tech_blog_id", columnList = "tech_blog_id")
+    ]
+)
+class TechBlogSubscription(
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     override val id: Long = 0,
 
-    @Column("notification_enabled")
-    val notificationEnabled: Boolean,
+    notificationEnabled: Boolean,
 
-    @Column("member_id")
+    @Column(name = "member_id", nullable = false)
     val memberId: Long,
 
-    @Column("tech_blog_id")
+    @Column(name = "tech_blog_id", nullable = false)
     val techBlogId: Long
 ) : BaseEntity() {
+    @Column(name = "notification_enabled", nullable = false)
+    var notificationEnabled: Boolean = notificationEnabled
+        private set
+
 
     fun subscribe() = TechBlogSubscribeUpdatedEvent(
         memberId = memberId,
@@ -34,16 +50,12 @@ data class TechBlogSubscription(
         subscribed = false
     )
 
-    fun toggleNotification(): DomainModified<TechBlogSubscription> {
-        val toggled = copy(
-            notificationEnabled = !notificationEnabled,
-        )
-        val event = NotificationUpdatedEvent(
+    fun toggleNotification(): NotificationUpdatedEvent {
+        notificationEnabled = !notificationEnabled
+        return NotificationUpdatedEvent(
             memberId = memberId,
             techBlogId = techBlogId,
-            enabled = toggled.notificationEnabled
+            enabled = notificationEnabled
         )
-
-        return DomainModified(toggled, event)
     }
 }

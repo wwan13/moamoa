@@ -7,11 +7,11 @@ tasks.getByName("jar") {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-    runtimeOnly("io.asyncer:r2dbc-mysql")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    runtimeOnly("com.mysql:mysql-connector-j")
 
     implementation(project(":moamoa-core:core-shared"))
     implementation(project(":moamoa-support:support-api-docs"))
@@ -26,3 +26,5 @@ dependencies {
 
     testImplementation(project(":moamoa-support:support-test"))
 }
+
+apply(plugin = "org.jetbrains.kotlin.plugin.jpa")

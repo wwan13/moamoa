@@ -2,7 +2,7 @@ package server.shared.messaging
 
 inline fun <reified T : Any> handleMessage(
     subscription: SubscriptionDefinition,
-    noinline handler: suspend (T) -> Unit
+    noinline handler: (T) -> Unit
 ) = MessageHandlerBinding(
     subscription = subscription,
     type = T::class.java.simpleName,

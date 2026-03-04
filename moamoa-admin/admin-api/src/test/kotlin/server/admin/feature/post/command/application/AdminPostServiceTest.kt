@@ -2,11 +2,12 @@ package server.admin.feature.post.command.application
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.verify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.util.Optional
 import server.admin.feature.post.command.domain.AdminPostRepository
 import server.admin.fixture.createAdminPost
 import server.admin.infra.db.transaction.AdminTransactional
@@ -24,19 +25,16 @@ class AdminPostServiceTest : UnitTest() {
         val command = AdminUpdateCategoryCommand(categoryId = 200L)
         val post = createAdminPost(id = postId, categoryId = 100L)
 
-        coEvery { postRepository.findById(postId) } returns post
-        coEvery { postRepository.save(any()) } answers { firstArg() }
-        coEvery { transactional.invoke<AdminUpdateCategoryResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend () -> AdminUpdateCategoryResult>()
+        every { postRepository.findById(postId) } returns Optional.of(post)
+        every { transactional.invoke<AdminUpdateCategoryResult>(any(), any()) } answers {
+            val block = secondArg<() -> AdminUpdateCategoryResult>()
             block.invoke()
         }
 
         val result = service.updateCategory(postId, command)
 
         result.success shouldBe true
-        coVerify(exactly = 1) {
-            postRepository.save(match { it.id == postId && it.categoryId == command.categoryId })
-        }
+        post.categoryId shouldBe command.categoryId
     }
 
     @Test
@@ -48,9 +46,9 @@ class AdminPostServiceTest : UnitTest() {
         val postId = 10L
         val command = AdminUpdateCategoryCommand(categoryId = 200L)
 
-        coEvery { postRepository.findById(postId) } returns null
-        coEvery { transactional.invoke<AdminUpdateCategoryResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend () -> AdminUpdateCategoryResult>()
+        every { postRepository.findById(postId) } returns Optional.empty()
+        every { transactional.invoke<AdminUpdateCategoryResult>(any(), any()) } answers {
+            val block = secondArg<() -> AdminUpdateCategoryResult>()
             block.invoke()
         }
 
@@ -59,6 +57,6 @@ class AdminPostServiceTest : UnitTest() {
         }
 
         exception.message shouldBe "존재하지 않는 게시글 입니다."
-        coVerify(exactly = 0) { postRepository.save(any()) }
+        verify(exactly = 1) { postRepository.findById(postId) }
     }
 }

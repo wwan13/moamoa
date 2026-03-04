@@ -9,12 +9,12 @@ import kotlin.time.TimeSource
 class ExternalCallLogger {
     private val logger = KotlinLogging.logger {}
 
-    suspend fun <T> execute(
+    fun <T> execute(
         call: String,
         target: String,
         retry: Int = 0,
         timeout: Boolean = false,
-        block: suspend () -> T
+        block: () -> T
     ): T {
         val mark = TimeSource.Monotonic.markNow()
         val context = RequestLogContextHolder.current()

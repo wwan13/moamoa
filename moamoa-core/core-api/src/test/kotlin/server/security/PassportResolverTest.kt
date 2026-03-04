@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.core.DefaultParameterNameDiscoverer
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpHeaders
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest
-import org.springframework.mock.web.server.MockServerWebExchange
-import org.springframework.web.reactive.BindingContext
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.mock.web.MockHttpServletResponse
+import org.springframework.web.context.request.ServletWebRequest
 import server.feature.member.command.domain.MemberRole
 import server.shared.security.jwt.AuthPrincipal
 import server.shared.security.jwt.InvalidTokenException
@@ -32,27 +32,19 @@ class PassportResolverTest : UnitTest() {
     @Test
     fun `Authorization 헤더가 없고 non-nullable 이면 UnauthorizedException이 발생한다`() {
         val resolver = PassportResolver(mockk())
-        val exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/").build())
+        val webRequest = webRequest()
 
         shouldThrow<UnauthorizedException> {
-            resolver.resolveArgument(
-                methodParameter("required"),
-                mockk<BindingContext>(),
-                exchange
-            ).block()
+            resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
         }
     }
 
     @Test
     fun `Authorization 헤더가 없고 nullable 이면 null을 반환한다`() {
         val resolver = PassportResolver(mockk())
-        val exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/").build())
+        val webRequest = webRequest()
 
-        val result = resolver.resolveArgument(
-            methodParameter("optional"),
-            mockk<BindingContext>(),
-            exchange
-        ).block()
+        val result = resolver.resolveArgument(methodParameter("optional"), null, webRequest, null)
 
         result shouldBe null
     }
@@ -60,18 +52,10 @@ class PassportResolverTest : UnitTest() {
     @Test
     fun `Bearer 토큰이 아니면 UnauthorizedException이 발생한다`() {
         val resolver = PassportResolver(mockk())
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Basic token")
-                .build()
-        )
+        val webRequest = webRequest(authorization = "Basic token")
 
         shouldThrow<UnauthorizedException> {
-            resolver.resolveArgument(
-                methodParameter("required"),
-                mockk<BindingContext>(),
-                exchange
-            ).block()
+            resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
         }
     }
 
@@ -83,18 +67,10 @@ class PassportResolverTest : UnitTest() {
             type = TokenType.REFRESH
         )
         val resolver = PassportResolver(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer refresh-token")
-                .build()
-        )
+        val webRequest = webRequest(authorization = "Bearer refresh-token")
 
         shouldThrow<UnauthorizedException> {
-            resolver.resolveArgument(
-                methodParameter("required"),
-                mockk<BindingContext>(),
-                exchange
-            ).block()
+            resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
         }
     }
 
@@ -107,18 +83,10 @@ class PassportResolverTest : UnitTest() {
             role = null
         )
         val resolver = PassportResolver(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
-                .build()
-        )
+        val webRequest = webRequest(authorization = "Bearer access-token")
 
         shouldThrow<UnauthorizedException> {
-            resolver.resolveArgument(
-                methodParameter("required"),
-                mockk<BindingContext>(),
-                exchange
-            ).block()
+            resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
         }
     }
 
@@ -131,17 +99,9 @@ class PassportResolverTest : UnitTest() {
             role = "USER"
         )
         val resolver = PassportResolver(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
-                .build()
-        )
+        val webRequest = webRequest(authorization = "Bearer access-token")
 
-        val result = resolver.resolveArgument(
-            methodParameter("required"),
-            mockk<BindingContext>(),
-            exchange
-        ).block()
+        val result = resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
 
         result shouldBe Passport(
             memberId = 42L,
@@ -154,22 +114,13 @@ class PassportResolverTest : UnitTest() {
     fun `캐시된 principal이 있으면 decodeToken을 호출하지 않는다`() {
         val tokenProvider = mockk<TokenProvider>()
         val resolver = PassportResolver(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
-                .build()
-        )
-        exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] = AuthPrincipal(
-            memberId = 77L,
-            type = TokenType.ACCESS,
-            role = "USER"
+        val webRequest = webRequest(authorization = "Bearer access-token")
+        webRequest.request.setAttribute(
+            TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR,
+            AuthPrincipal(memberId = 77L, type = TokenType.ACCESS, role = "USER")
         )
 
-        val result = resolver.resolveArgument(
-            methodParameter("required"),
-            mockk<BindingContext>(),
-            exchange
-        ).block()
+        val result = resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
 
         result shouldBe Passport(
             memberId = 77L,
@@ -182,19 +133,11 @@ class PassportResolverTest : UnitTest() {
     fun `캐시된 decode 예외가 있으면 그대로 전파한다`() {
         val tokenProvider = mockk<TokenProvider>()
         val resolver = PassportResolver(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
-                .build()
-        )
-        exchange.attributes[TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR] = InvalidTokenException()
+        val webRequest = webRequest(authorization = "Bearer access-token")
+        webRequest.request.setAttribute(TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR, InvalidTokenException())
 
         shouldThrow<InvalidTokenException> {
-            resolver.resolveArgument(
-                methodParameter("required"),
-                mockk<BindingContext>(),
-                exchange
-            ).block()
+            resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
         }
 
         verify(exactly = 0) { tokenProvider.decodeToken(any()) }
@@ -209,23 +152,24 @@ class PassportResolverTest : UnitTest() {
             role = "USER"
         )
         val resolver = PassportResolver(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
-                .build()
-        )
+        val webRequest = webRequest(authorization = "Bearer access-token")
 
-        val result = resolver.resolveArgument(
-            methodParameter("required"),
-            mockk<BindingContext>(),
-            exchange
-        ).block()
+        val result = resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
 
         result shouldBe Passport(
             memberId = 101L,
             role = MemberRole.USER
         )
         verify(exactly = 1) { tokenProvider.decodeToken("access-token") }
+    }
+
+    private fun webRequest(authorization: String? = null): ServletWebRequest {
+        val request = MockHttpServletRequest()
+        request.method = "GET"
+        if (authorization != null) {
+            request.addHeader(HttpHeaders.AUTHORIZATION, authorization)
+        }
+        return ServletWebRequest(request, MockHttpServletResponse())
     }
 
     private fun methodParameter(name: String): MethodParameter {

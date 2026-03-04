@@ -6,7 +6,6 @@ import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
 import server.shared.lock.LockInfraException
 
 @Aspect
@@ -20,8 +19,7 @@ internal class ResilientKeyedLockAspect(
 
     @Around(
         "bean(resilientKeyedLock) && " +
-            "execution(* server.shared.lock.KeyedLock.*(..)) && " +
-            "args(.., kotlin.coroutines.Continuation)"
+            "execution(* server.shared.lock.KeyedLock.*(..))"
     )
     fun around(joinPoint: ProceedingJoinPoint): Any? {
         val method = (joinPoint.signature as? MethodSignature)?.method ?: return joinPoint.proceed()
@@ -34,37 +32,17 @@ internal class ResilientKeyedLockAspect(
         }
 
         return try {
-            val proceeded = joinPoint.proceed()
-
-            if (proceeded !is Mono<*>) {
-                throw IllegalStateException("Expected Mono from suspend KeyedLock method")
+            joinPoint.proceed().also {
+                if (promotedToRedis) {
+                    logger.warn { "Lock recovered. backend=redis" }
+                }
             }
-
-            val mono = proceeded as Mono<Any?>
-            mono
-                .doOnSuccess {
-                    if (promotedToRedis) {
-                        logger.warn { "Lock recovered. backend=redis" }
-                    }
-                }
-                .onErrorResume { ex ->
-                    if (ex !is LockInfraException) {
-                        return@onErrorResume Mono.error(ex)
-                    }
-                    val fallbackTarget = resilientKeyedLockRouter.switchToCoroutineMutex(ex)
-                    resilientKeyedLockMethodInvoker.invokeAsMono(fallbackTarget, method, args, ex)
-                }
         } catch (ex: Throwable) {
             if (ex !is LockInfraException) {
                 throw ex
             }
             val fallbackTarget = resilientKeyedLockRouter.switchToCoroutineMutex(ex)
-            try {
-                resilientKeyedLockMethodInvoker.invoke(fallbackTarget, method, args)
-            } catch (fallbackException: Throwable) {
-                fallbackException.addSuppressed(ex)
-                throw fallbackException
-            }
+            resilientKeyedLockMethodInvoker.invoke(fallbackTarget, method, args, ex)
         }
     }
 }

@@ -1,6 +1,8 @@
 package server.feature.auth.application
 
 import org.springframework.stereotype.Service
+import kotlinx.coroutines.runBlocking
+import org.springframework.data.repository.findByIdOrNull
 import server.shared.mail.MailContent
 import server.shared.mail.MailSender
 import server.infra.cache.EmailVerificationCache
@@ -30,7 +32,7 @@ class AuthService(
     private val accessTokenExpires = 3_600_000L
     private val refreshTokenExpires = 604_800_000L
 
-    suspend fun emailVerification(command: EmailVerificationCommand): EmailVerificationResult {
+    fun emailVerification(command: EmailVerificationCommand): EmailVerificationResult {
         if (memberRepository.existsByEmail(command.email)) {
             throw IllegalArgumentException("이미 존재하는 이메일 입니다.")
         }
@@ -48,7 +50,9 @@ class AuthService(
             args = mailTemplate.toTemplateArgs(),
         )
 
-        mailSender.send(mailContent)
+        runBlocking {
+            mailSender.send(mailContent)
+        }
         emailVerificationCache.setVerificationCode(command.email, verificationCode)
 
         return EmailVerificationResult(true)
@@ -59,7 +63,7 @@ class AuthService(
         .toString()
         .padStart(6, '0')
 
-    suspend fun confirmEmail(command: ConfirmEmailCommand): ConfirmEmailResult {
+    fun confirmEmail(command: ConfirmEmailCommand): ConfirmEmailResult {
         val registered = emailVerificationCache.getVerificationCode(command.email)
             ?: throw IllegalArgumentException("인증번호를 먼저 전송해 주세요.")
 
@@ -72,7 +76,7 @@ class AuthService(
         return ConfirmEmailResult(true)
     }
 
-    suspend fun login(command: LoginCommand): AuthTokens {
+    fun login(command: LoginCommand): AuthTokens {
         val member = memberRepository.findByEmail(command.email)
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
 
@@ -86,7 +90,7 @@ class AuthService(
         return tokens
     }
 
-    suspend fun reissue(refreshToken: String): AuthTokens {
+    fun reissue(refreshToken: String): AuthTokens {
         val principal = tokenProvider.decodeToken(refreshToken)
 
         if (principal.type != TokenType.REFRESH) {
@@ -98,7 +102,7 @@ class AuthService(
             throw UnauthorizedException()
         }
 
-        val member = memberRepository.findById(principal.memberId)
+        val member = memberRepository.findByIdOrNull(principal.memberId)
             ?: throw UnauthorizedException()
         val tokens = issueTokens(member.id, member.role.name)
         refreshTokenCache.set(member.id, tokens.refreshToken, refreshTokenExpires)
@@ -116,13 +120,13 @@ class AuthService(
         return AuthTokens(accessToken, refreshToken)
     }
 
-    suspend fun logout(memberId: Long): LogoutResult {
+    fun logout(memberId: Long): LogoutResult {
         refreshTokenCache.evict(memberId)
 
         return LogoutResult(true)
     }
 
-    suspend fun loginSocialSession(command: LoginSocialSessionCommand): AuthTokens {
+    fun loginSocialSession(command: LoginSocialSessionCommand): AuthTokens {
         val memberId = socialMemberSessionCache.get(command.token)
             ?: throw UnauthorizedException()
 
@@ -130,7 +134,7 @@ class AuthService(
             throw UnauthorizedException()
         }
 
-        val member = memberRepository.findById(memberId)
+        val member = memberRepository.findByIdOrNull(memberId)
             ?: throw UnauthorizedException()
 
         return issueTokens(member.id, member.role.name)

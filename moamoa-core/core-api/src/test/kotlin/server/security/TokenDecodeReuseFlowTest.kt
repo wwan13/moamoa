@@ -8,11 +8,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.core.DefaultParameterNameDiscoverer
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpHeaders
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest
-import org.springframework.mock.web.server.MockServerWebExchange
-import org.springframework.web.reactive.BindingContext
-import org.springframework.web.server.WebFilterChain
-import reactor.core.publisher.Mono
+import org.springframework.mock.web.MockFilterChain
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.mock.web.MockHttpServletResponse
+import org.springframework.web.context.request.ServletWebRequest
 import server.feature.member.command.domain.MemberRole
 import server.shared.security.jwt.AuthPrincipal
 import server.shared.security.jwt.TokenProvider
@@ -30,23 +29,19 @@ class TokenDecodeReuseFlowTest : UnitTest() {
         )
         val filter = TokenDecodeCacheFilter(tokenProvider)
         val resolver = PassportResolver(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
-                .build()
-        )
-        var resolvedPassport: Passport? = null
-        val chain = WebFilterChain {
-            resolver.resolveArgument(
-                methodParameter(),
-                mockk<BindingContext>(),
-                exchange
-            )
-                .doOnNext { resolvedPassport = it as Passport }
-                .then(Mono.empty())
-        }
 
-        filter.filter(exchange, chain).block()
+        val request = MockHttpServletRequest("GET", "/")
+        request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer access-token")
+        val response = MockHttpServletResponse()
+
+        filter.doFilter(request, response, MockFilterChain())
+
+        val resolvedPassport = resolver.resolveArgument(
+            methodParameter(),
+            null,
+            ServletWebRequest(request, response),
+            null
+        ) as Passport
 
         resolvedPassport shouldBe Passport(memberId = 42L, role = MemberRole.USER)
         verify(exactly = 1) { tokenProvider.decodeToken("access-token") }

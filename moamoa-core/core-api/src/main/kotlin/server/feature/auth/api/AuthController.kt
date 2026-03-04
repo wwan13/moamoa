@@ -26,7 +26,7 @@ class AuthController(
 ) {
 
     @PostMapping("/email-verification")
-    suspend fun emailVerification(
+    fun emailVerification(
         @RequestBody @Valid command: EmailVerificationCommand
     ): ResponseEntity<EmailVerificationResult> {
         val response =  authService.emailVerification(command)
@@ -35,7 +35,7 @@ class AuthController(
     }
 
     @PostMapping("/email-verification/confirm")
-    suspend fun emailVerificationConfirm(
+    fun emailVerificationConfirm(
         @RequestBody @Valid command: ConfirmEmailCommand
     ): ResponseEntity<ConfirmEmailResult> {
         val response = authService.confirmEmail(command)
@@ -44,7 +44,7 @@ class AuthController(
     }
 
     @PostMapping("/login")
-    suspend fun login(
+    fun login(
         @RequestBody @Valid command: LoginCommand
     ): ResponseEntity<AuthTokens> {
         val tokens = authService.login(command)
@@ -53,7 +53,7 @@ class AuthController(
     }
 
     @PostMapping("/reissue")
-    suspend fun reissue(
+    fun reissue(
         @RequestHeader("X-Refresh-Token") refreshToken: String
     ): ResponseEntity<AuthTokens> {
         val tokens = authService.reissue(refreshToken)
@@ -62,7 +62,7 @@ class AuthController(
     }
 
     @PostMapping("/logout")
-    suspend fun logout(
+    fun logout(
         @RequestPassport passport: Passport
     ): ResponseEntity<LogoutResult> {
         val response = authService.logout(passport.memberId)
@@ -71,7 +71,7 @@ class AuthController(
     }
 
     @PostMapping("/login/social")
-    suspend fun loginSocialSession(
+    fun loginSocialSession(
         @RequestBody @Valid command: LoginSocialSessionCommand
     ): ResponseEntity<AuthTokens> {
         val tokens = authService.loginSocialSession(command)

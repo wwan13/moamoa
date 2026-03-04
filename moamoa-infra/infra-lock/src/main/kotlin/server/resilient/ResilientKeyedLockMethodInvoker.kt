@@ -2,7 +2,6 @@ package server.resilient
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
 import server.shared.lock.KeyedLock
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -37,21 +36,17 @@ internal class ResilientKeyedLockMethodInvoker(
         }
     }
 
-    fun invokeAsMono(
+    fun invoke(
         target: KeyedLock,
         method: Method,
         args: Array<Any?>,
         originalException: Throwable,
-    ): Mono<Any?> {
+    ): Any? {
         return try {
-            val result = invoke(target, method, args)
-            when (result) {
-                is Mono<*> -> result as Mono<Any?>
-                else -> Mono.justOrEmpty(result)
-            }
+            invoke(target, method, args)
         } catch (fallbackException: Throwable) {
             fallbackException.addSuppressed(originalException)
-            Mono.error(fallbackException)
+            throw fallbackException
         }
     }
 

@@ -12,27 +12,76 @@
 
         <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
+        <property name="LOG_PATH" value="log"/>
+        <property name="LOG_FILE_NAME" value="server"/>
+
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder>
-                <pattern>${LOG_PATTERN}</pattern>
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp>
+                        <fieldName>timestamp</fieldName>
+                        <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSXXX</pattern>
+                    </timestamp>
+                    <logLevel>
+                        <fieldName>level</fieldName>
+                    </logLevel>
+                    <pattern>
+                        <pattern>{"traceId":"%X{traceId:-SYSTEM}"}</pattern>
+                    </pattern>
+                    <loggerName>
+                        <fieldName>logger</fieldName>
+                    </loggerName>
+                    <keyValuePairs/>
+                    <arguments/>
+                    <stackTrace>
+                        <fieldName>stackTrace</fieldName>
+                    </stackTrace>
+                </providers>
             </encoder>
         </appender>
 
         <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>log/server.log</file>
-            <encoder>
-                <pattern>${LOG_PATTERN}</pattern>
+            <file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp>
+                        <fieldName>timestamp</fieldName>
+                        <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSXXX</pattern>
+                    </timestamp>
+                    <logLevel>
+                        <fieldName>level</fieldName>
+                    </logLevel>
+                    <pattern>
+                        <pattern>{"traceId":"%X{traceId:-SYSTEM}"}</pattern>
+                    </pattern>
+                    <loggerName>
+                        <fieldName>logger</fieldName>
+                    </loggerName>
+                    <keyValuePairs/>
+                    <arguments/>
+                    <stackTrace>
+                        <fieldName>stackTrace</fieldName>
+                    </stackTrace>
+                </providers>
             </encoder>
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>log/server.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <fileNamePattern>${LOG_PATH}/%d{yyyy-MM, aux}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
                 <maxHistory>30</maxHistory>
                 <totalSizeCap>20GB</totalSizeCap>
             </rollingPolicy>
         </appender>
 
+        <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+            <queueSize>8192</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <neverBlock>true</neverBlock>
+            <maxFlushTime>1000</maxFlushTime>
+            <appender-ref ref="FILE"/>
+        </appender>
+
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="FILE"/>
+            <appender-ref ref="ASYNC_FILE"/>
         </root>
 
     </springProfile>

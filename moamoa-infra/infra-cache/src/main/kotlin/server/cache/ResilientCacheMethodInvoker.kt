@@ -2,7 +2,6 @@ package server.cache
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
 import server.shared.cache.CacheMemory
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -28,24 +27,22 @@ internal class ResilientCacheMethodInvoker(
             }
     }
 
-    fun invokeAsMono(
+    fun invoke(
         target: CacheMemory,
         method: Method,
         args: Array<Any?>,
         originalException: Throwable? = null,
-    ): Mono<Any?> {
+    ): Any? {
         val targetMethod = resolveMethod(target, method)
         return try {
-            val result = targetMethod.invoke(target, *args)
-            result as? Mono<Any?>
-                ?: Mono.justOrEmpty(result)
+            targetMethod.invoke(target, *args)
         } catch (exception: Throwable) {
             val fallbackException = (exception as? InvocationTargetException)?.targetException
                 ?: exception
             if (originalException != null) {
                 fallbackException.addSuppressed(originalException)
             }
-            Mono.error(fallbackException)
+            throw fallbackException
         }
     }
 

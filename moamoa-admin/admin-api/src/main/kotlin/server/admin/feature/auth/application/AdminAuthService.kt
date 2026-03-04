@@ -1,6 +1,7 @@
 package server.admin.feature.auth.application
 
 import org.springframework.stereotype.Service
+import org.springframework.data.repository.findByIdOrNull
 import server.admin.feature.member.domain.AdminMemberRepository
 import server.admin.infra.cache.AdminRefreshTokenCache
 import server.admin.security.AdminForbiddenException
@@ -21,7 +22,7 @@ internal class AdminAuthService(
     private val accessTokenExpires = 3_600_000L
     private val refreshTokenExpires = 604_800_000L
 
-    suspend fun adminLogin(command: AdminLoginCommand): AdminAuthTokens {
+    fun adminLogin(command: AdminLoginCommand): AdminAuthTokens {
         val member = memberRepository.findByEmail(command.email)
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
 
@@ -39,7 +40,7 @@ internal class AdminAuthService(
         return tokens
     }
 
-    suspend fun adminReissue(refreshToken: String): AdminAuthTokens {
+    fun adminReissue(refreshToken: String): AdminAuthTokens {
         val principal = tokenProvider.decodeToken(refreshToken)
 
         if (principal.type != TokenType.REFRESH) {
@@ -51,7 +52,7 @@ internal class AdminAuthService(
             throw AdminUnauthorizedException()
         }
 
-        val member = memberRepository.findById(principal.memberId)
+        val member = memberRepository.findByIdOrNull(principal.memberId)
             ?: throw AdminUnauthorizedException()
         if (!member.isAdmin) {
             throw AdminForbiddenException()
@@ -73,7 +74,7 @@ internal class AdminAuthService(
         return AdminAuthTokens(accessToken, refreshToken)
     }
 
-    suspend fun logout(memberId: Long): AdminLogoutResult {
+    fun logout(memberId: Long): AdminLogoutResult {
         refreshTokenCache.evict(memberId)
 
         return AdminLogoutResult(true)

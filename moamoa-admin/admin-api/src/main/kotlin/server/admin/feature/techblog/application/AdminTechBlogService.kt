@@ -1,6 +1,8 @@
 package server.admin.feature.techblog.application
 
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import server.admin.feature.category.domain.AdminCategory
 import server.admin.feature.post.command.domain.AdminPost
@@ -25,45 +27,43 @@ internal class AdminTechBlogService(
     private val postTagRepository: AdminPostTagRepository,
 ) {
 
-    suspend fun create(command: AdminCreateTechBlogCommand): AdminTechBlogData = transactional {
+    fun create(command: AdminCreateTechBlogCommand): AdminTechBlogData = transactional {
         validateTitle(command.title)
         val techBlog = AdminTechBlog(
             title = command.title,
             icon = command.icon,
             blogUrl = command.blogUrl,
-            key = command.key
+            key = command.key,
         )
         techBlogSources.validateExists(techBlog.key)
-        techBlogRepository.save(techBlog).let(::AdminTechBlogData)
+        AdminTechBlogData(techBlogRepository.save(techBlog))
     }
 
-    suspend fun update(
-        id: Long,
-        command: AdminUpdateTechBlogCommand
-    ): AdminTechBlogData = transactional {
+    fun update(id: Long, command: AdminUpdateTechBlogCommand): AdminTechBlogData = transactional {
         validateTitle(command.title)
-        val techBlog = techBlogRepository.findById(id)
+        val techBlog = techBlogRepository.findByIdOrNull(id)
             ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
-        val updated = techBlog.update(command.title, command.blogUrl, command.icon)
-        techBlogRepository.save(updated).let(::AdminTechBlogData)
+        techBlog.update(command.title, command.blogUrl, command.icon)
+        AdminTechBlogData(techBlog)
     }
 
-    private suspend  fun validateTitle(title: String) {
+    private fun validateTitle(title: String) {
         if (techBlogRepository.existsByTitle(title)) {
             throw IllegalArgumentException("이미 존재하는 tech blog 입니다.")
         }
     }
 
-    suspend fun initTechBlog(command: AdminInitTechBlogCommand): AdminInitTechBlogResult {
+    fun initTechBlog(command: AdminInitTechBlogCommand): AdminInitTechBlogResult {
         if (postRepository.existsByTechBlogId(command.techBlogId)) {
             throw IllegalArgumentException("이미 초기화된 tech blog 입니다.")
         }
 
-        val techBlog = techBlogRepository.findById(command.techBlogId)
+        val techBlog = techBlogRepository.findByIdOrNull(command.techBlogId)
             ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
 
-        val techBlogClient = techBlogSources[techBlog.key]
-        val fetchedPosts = techBlogClient.getPosts().toList()
+        val fetchedPosts = runBlocking {
+            techBlogSources[techBlog.key].getPosts().toList()
+        }
 
         return transactional {
             val categoriesByTitle = upsertTags(fetchedPosts)
@@ -77,33 +77,24 @@ internal class AdminTechBlogService(
         }
     }
 
-    private suspend  fun upsertTags(fetchedPosts: List<TechBlogPost>): Map<String, AdminTag> {
+    private fun upsertTags(fetchedPosts: List<TechBlogPost>): Map<String, AdminTag> {
         val titles = fetchedPosts.flatMap { it.tags }.map { it.lowercase() }.distinct()
-
         if (titles.isEmpty()) return emptyMap()
 
         val existing = tagRepository.findAllByTitleIn(titles)
         val existingTitles = existing.map { it.title.lowercase() }.toHashSet()
-
-        val newTags = titles
-            .asSequence()
+        val newTags = titles.asSequence()
             .filterNot { it in existingTitles }
             .map { AdminTag(title = it) }
             .toList()
-            .toList()
 
-        if (newTags.isEmpty()) {
-            return existing.associateBy { it.title }
-        }
+        if (newTags.isEmpty()) return existing.associateBy { it.title }
 
         val saved = tagRepository.saveAll(newTags).toList()
         return (existing + saved).associateBy { it.title }
     }
 
-    private suspend  fun savePosts(
-        techBlog: AdminTechBlog,
-        fetchedPosts: List<TechBlogPost>
-    ): List<AdminPost> {
+    private fun savePosts(techBlog: AdminTechBlog, fetchedPosts: List<TechBlogPost>): List<AdminPost> {
         val posts = fetchedPosts.map {
             AdminPost(
                 key = it.key,
@@ -119,13 +110,12 @@ internal class AdminTechBlogService(
         return postRepository.saveAll(posts).toList()
     }
 
-    private suspend fun savePostTags(
+    private fun savePostTags(
         savedPosts: List<AdminPost>,
         fetchedPosts: List<TechBlogPost>,
-        categoriesByTitle: Map<String, AdminTag>
+        categoriesByTitle: Map<String, AdminTag>,
     ) {
         val fetchedByKey = fetchedPosts.associateBy { it.key }
-
         val postTags = savedPosts.flatMap { savedPost ->
             val fetched = fetchedByKey[savedPost.key]
                 ?: throw IllegalStateException("포스트가 존재하지 않습니다.")
@@ -135,11 +125,8 @@ internal class AdminTechBlogService(
                 .distinct()
                 .map { normalizedTitle ->
                     val tag = categoriesByTitle[normalizedTitle]
-                        ?: throw IllegalStateException("카테고리가 존재하지 않습니다. title=$normalizedTitle keys=${categoriesByTitle.keys.take(10)}")
-                    AdminPostTag(
-                        postId = savedPost.id,
-                        tagId = tag.id
-                    )
+                        ?: throw IllegalStateException("카테고리가 존재하지 않습니다. title=$normalizedTitle")
+                    AdminPostTag(postId = savedPost.id, tagId = tag.id)
                 }
         }
 

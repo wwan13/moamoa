@@ -1,28 +1,47 @@
 package server.feature.techblog.command.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import support.domain.BaseEntity
 
-@Table(name = "tech_blog")
-data class TechBlog(
+@Entity
+@Table(
+    name = "tech_blog",
+    uniqueConstraints = [
+        UniqueConstraint(name = "UK3ryw1jcyeyug2bgvouo9fuv8l", columnNames = ["title"]),
+        UniqueConstraint(name = "UKlkrp410nrwg3dj8dao6a1gcok", columnNames = ["tech_blog_key"])
+    ]
+)
+class TechBlog(
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     override val id: Long = 0,
 
-    @Column("title")
+    @Column(name = "title", length = 255, nullable = false)
     val title: String,
 
-    @Column("tech_blog_key")
+    @Column(name = "tech_blog_key", length = 255, nullable = false)
     val key: String,
 
-    @Column("blog_url")
+    @Column(name = "blog_url", length = 1024, nullable = false)
     val blogUrl: String,
 
-    @Column("icon")
+    @Column(name = "icon", length = 255, nullable = false)
     val icon: String,
 
-    @Column("subscription_count")
-    val subscriptionCount: Long = 0
-) : BaseEntity()
+    subscriptionCount: Long = 0
+) : BaseEntity() {
+    @Column(name = "subscription_count", nullable = false)
+    var subscriptionCount: Long = subscriptionCount
+        private set
+
+    fun updateSubscriptionCount(delta: Long) {
+        subscriptionCount = (subscriptionCount + delta).coerceAtLeast(0)
+    }
+}

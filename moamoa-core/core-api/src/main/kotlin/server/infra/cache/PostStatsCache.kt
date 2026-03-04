@@ -15,11 +15,11 @@ class PostStatsCache(
 
     fun key(postId: Long) = "$prefix$postId"
 
-    suspend fun get(postId: Long): PostStats? {
+    fun get(postId: Long): PostStats? {
         return cacheMemory.get(key(postId))
     }
 
-    suspend fun mGet(postIds: Collection<Long>): Map<Long, PostStats?> {
+    fun mGet(postIds: Collection<Long>): Map<Long, PostStats?> {
         if (postIds.isEmpty()) return emptyMap()
 
         val idByKey = postIds.distinct().associateBy { key(it) }
@@ -30,11 +30,11 @@ class PostStatsCache(
         }
     }
 
-    suspend fun set(postId: Long, postStats: PostStats) {
+    fun set(postId: Long, postStats: PostStats) {
         cacheMemory.set(key(postId), postStats, ttlMillis)
     }
 
-    suspend fun mSet(statsByPostId: Map<Long, PostStats>) {
+    fun mSet(statsByPostId: Map<Long, PostStats>) {
         if (statsByPostId.isEmpty()) return
 
         val payload = statsByPostId.entries.associate { (postId, stats) ->
@@ -44,7 +44,7 @@ class PostStatsCache(
         cacheMemory.mset(payload, ttlMillis)
     }
 
-    suspend fun evict(postId: Long) {
+    fun evict(postId: Long) {
         cacheMemory.evict(key(postId))
     }
 }

@@ -1,25 +1,19 @@
 package server.infra.db.outbox
 
-import org.springframework.data.r2dbc.repository.Modifying
-import org.springframework.data.r2dbc.repository.Query
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface EventOutboxRepository : CoroutineCrudRepository<EventOutbox, Long> {
+interface EventOutboxRepository : JpaRepository<EventOutbox, Long> {
 
-    @Query("""
+    @Query(
+        value = """
         SELECT * 
         FROM event_outbox
         WHERE published = false
         ORDER BY created_at
         LIMIT :limit
-    """)
-    suspend fun findUnpublished(limit: Int): List<EventOutbox>
-
-    @Modifying
-    @Query("""
-    UPDATE event_outbox
-    SET published = true
-    WHERE id = :id AND published = false
-""")
-    suspend fun markPublished(id: Long): Int?
+    """,
+        nativeQuery = true
+    )
+    fun findUnpublished(limit: Int): List<EventOutbox>
 }

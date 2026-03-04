@@ -51,10 +51,15 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns true
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns null
         coEvery { techBlogSubscriptionRepository.save(capture(savedSlot)) } coAnswers {
-            savedSlot.captured.copy(id = 101L)
+            TechBlogSubscription(
+                id = 101L,
+                notificationEnabled = savedSlot.captured.notificationEnabled,
+                memberId = savedSlot.captured.memberId,
+                techBlogId = savedSlot.captured.techBlogId,
+            )
         }
         coEvery { transactional.invoke<TechBlogSubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> TechBlogSubscriptionToggleResult>()
+            val block = secondArg<TransactionScope.() -> TechBlogSubscriptionToggleResult>()
             block(transactionScope)
         }
 
@@ -89,10 +94,17 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns true
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns null
         coEvery { techBlogSubscriptionRepository.save(any()) } coAnswers {
-            firstArg<TechBlogSubscription>().copy(id = 101L)
+            firstArg<TechBlogSubscription>().let {
+                TechBlogSubscription(
+                    id = 101L,
+                    notificationEnabled = it.notificationEnabled,
+                    memberId = it.memberId,
+                    techBlogId = it.techBlogId,
+                )
+            }
         }
         coEvery { transactional.invoke<TechBlogSubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> TechBlogSubscriptionToggleResult>()
+            val block = secondArg<TransactionScope.() -> TechBlogSubscriptionToggleResult>()
             block(transactionScope)
         }
 
@@ -140,7 +152,7 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { techBlogSubscriptionRepository.deleteById(existing.id) } returns Unit
         coEvery { transactional.invoke<TechBlogSubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> TechBlogSubscriptionToggleResult>()
+            val block = secondArg<TransactionScope.() -> TechBlogSubscriptionToggleResult>()
             block(transactionScope)
         }
 
@@ -180,7 +192,7 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { techBlogSubscriptionRepository.deleteById(existing.id) } returns Unit
         coEvery { transactional.invoke<TechBlogSubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> TechBlogSubscriptionToggleResult>()
+            val block = secondArg<TransactionScope.() -> TechBlogSubscriptionToggleResult>()
             block(transactionScope)
         }
 
@@ -219,7 +231,7 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns false
         coEvery { transactional.invoke<TechBlogSubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> TechBlogSubscriptionToggleResult>()
+            val block = secondArg<TransactionScope.() -> TechBlogSubscriptionToggleResult>()
             block(transactionScope)
         }
 
@@ -254,7 +266,7 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns false
         coEvery { transactional.invoke<TechBlogSubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> TechBlogSubscriptionToggleResult>()
+            val block = secondArg<TransactionScope.() -> TechBlogSubscriptionToggleResult>()
             block(transactionScope)
         }
 
@@ -287,7 +299,7 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
 
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns null
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> NotificationEnabledToggleResult>()
+            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
             block(transactionScope)
         }
 
@@ -322,21 +334,17 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
             memberId = memberId,
             techBlogId = command.techBlogId
         )
-        val savedSlot = slot<TechBlogSubscription>()
 
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
-        coEvery { techBlogSubscriptionRepository.save(capture(savedSlot)) } coAnswers {
-            savedSlot.captured
-        }
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> NotificationEnabledToggleResult>()
+            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
             block(transactionScope)
         }
 
         val result = service.notificationEnabledToggle(command, memberId)
 
         result.notificationEnabled shouldBe false
-        savedSlot.captured.notificationEnabled shouldBe false
+        existing.notificationEnabled shouldBe false
     }
 
     @Test
@@ -367,7 +375,7 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { techBlogSubscriptionRepository.save(any()) } coAnswers { firstArg() }
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> NotificationEnabledToggleResult>()
+            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
             block(transactionScope)
         }
 
@@ -409,21 +417,17 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
             memberId = memberId,
             techBlogId = command.techBlogId
         )
-        val savedSlot = slot<TechBlogSubscription>()
 
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
-        coEvery { techBlogSubscriptionRepository.save(capture(savedSlot)) } coAnswers {
-            savedSlot.captured
-        }
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> NotificationEnabledToggleResult>()
+            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
             block(transactionScope)
         }
 
         val result = service.notificationEnabledToggle(command, memberId)
 
         result.notificationEnabled shouldBe true
-        savedSlot.captured.notificationEnabled shouldBe true
+        existing.notificationEnabled shouldBe true
     }
 
     @Test
@@ -454,7 +458,7 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
         coEvery { techBlogSubscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { techBlogSubscriptionRepository.save(any()) } coAnswers { firstArg() }
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> NotificationEnabledToggleResult>()
+            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
             block(transactionScope)
         }
 
@@ -489,9 +493,9 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
 
         val memberId = 1L
 
-        every { techBlogSubscriptionRepository.findAllByMemberId(memberId) } returns emptyFlow()
+        every { techBlogSubscriptionRepository.findAllByMemberId(memberId) } returns emptyList()
 
-        val result = service.subscribingTechBlogs(memberId).toList()
+        val result = service.subscribingTechBlogs(memberId)
 
         result shouldBe emptyList()
         verify(exactly = 0) { techBlogRepository.findAllById(any<Iterable<Long>>()) }
@@ -546,16 +550,16 @@ class TechBlogSubscriptionServiceTest : UnitTest() {
             )
         )
 
-        every { techBlogSubscriptionRepository.findAllByMemberId(memberId) } returns flowOf(*subscriptions.toTypedArray())
-        every { techBlogRepository.findAllById(listOf(10L, 20L)) } returns flowOf(*techBlogs.toTypedArray())
+        every { techBlogSubscriptionRepository.findAllByMemberId(memberId) } returns subscriptions
+        every { techBlogRepository.findAllById(listOf(10L, 20L)) } returns techBlogs
 
-        val result = service.subscribingTechBlogs(memberId).toList()
+        val result = service.subscribingTechBlogs(memberId)
 
         result.map { it.id } shouldBe listOf(10L, 20L)
         result.map { it.key } shouldBe listOf("key-10", "key-20")
     }
 
     private fun passThroughKeyedLock(): KeyedLock = object : KeyedLock {
-        override suspend fun <T> withLock(key: String, block: suspend () -> T): T = block()
+        override fun <T> withLock(key: String, block: () -> T): T = block()
     }
 }

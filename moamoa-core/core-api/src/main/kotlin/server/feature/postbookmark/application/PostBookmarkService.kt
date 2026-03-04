@@ -1,10 +1,6 @@
 package server.feature.postbookmark.application
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import server.feature.member.command.domain.MemberRepository
 import server.feature.post.command.application.PostData
@@ -25,7 +21,7 @@ class PostBookmarkService(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    suspend fun toggle(
+    fun toggle(
         command: PostBookmarkToggleCommand,
         memberId: Long
     ): PostBookmarkToggleResult {
@@ -72,11 +68,11 @@ class PostBookmarkService(
         }
     }
 
-    suspend fun bookmarkedPosts(memberId: Long): Flow<PostData> {
-        val postBookmarks = postBookmarkRepository.findAllByMemberId(memberId).toList()
+    fun bookmarkedPosts(memberId: Long): List<PostData> {
+        val postBookmarks = postBookmarkRepository.findAllByMemberId(memberId)
         val postIds = postBookmarks.map { it.postId }
-        if (postIds.isEmpty()) return emptyFlow()
+        if (postIds.isEmpty()) return emptyList()
 
-        return postRepository.findAllById(postIds).map(::PostData)
+        return postRepository.findAllById(postIds).map(::PostData).toList()
     }
 }

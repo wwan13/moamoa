@@ -16,7 +16,7 @@ class WarmupCoordinator(
 ) {
     private val inFlightKeys = ConcurrentHashMap.newKeySet<String>()
 
-    fun launchIfAbsent(key: String, block: suspend () -> Unit) {
+    fun launchIfAbsent(key: String, block: () -> Unit) {
         if (!inFlightKeys.add(key)) return
 
         warmupScope.launch {

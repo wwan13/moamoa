@@ -25,7 +25,7 @@ class PostController(
 ) {
 
     @PostMapping("/{postId}/view")
-    suspend fun increaseViewCount(
+    fun increaseViewCount(
         @PathVariable postId: Long
     ): ResponseEntity<IncreaseViewCountResult> {
         val response = postService.increaseViewCount(postId)
@@ -34,7 +34,7 @@ class PostController(
     }
 
     @GetMapping
-    suspend fun findByConditions(
+    fun findByConditions(
         conditions: PostQueryConditions,
         @RequestPassport passport: Passport?
     ): ResponseEntity<PostList> {
@@ -44,7 +44,7 @@ class PostController(
     }
 
     @GetMapping("/tech-blog")
-    suspend fun findAllByTechBlogConditions(
+    fun findAllByTechBlogConditions(
         conditions: TechBlogPostQueryConditions,
         @RequestPassport passport: Passport?
     ): ResponseEntity<PostList> {
@@ -54,7 +54,7 @@ class PostController(
     }
 
     @GetMapping("/subscribed")
-    suspend fun findAllBySubscribedConditions(
+    fun findAllBySubscribedConditions(
         conditions: PostQueryConditions,
         @RequestPassport passport: Passport
     ): ResponseEntity<PostList> {
@@ -64,7 +64,7 @@ class PostController(
     }
 
     @GetMapping("/bookmarked")
-    suspend fun findAllByBookmarkedConditions(
+    fun findAllByBookmarkedConditions(
         conditions: PostQueryConditions,
         @RequestPassport passport: Passport
     ): ResponseEntity<PostList> {

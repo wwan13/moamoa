@@ -1,11 +1,11 @@
 package server.feature.member.command.domain
 
-import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface MemberRepository : CoroutineCrudRepository<Member, Long> {
-    suspend fun findByEmail(email: String): Member?
+interface MemberRepository : JpaRepository<Member, Long> {
+    fun findByEmail(email: String): Member?
 
-    suspend fun findByProviderAndProviderKey(provider: Provider, providerKey: String): Member?
+    fun findByProviderAndProviderKey(provider: Provider, providerKey: String): Member?
 
-    suspend fun existsByEmail(email: String): Boolean
+    fun existsByEmail(email: String): Boolean
 }

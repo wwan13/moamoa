@@ -1,20 +1,18 @@
 package server.feature.techblog.query
 
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import server.infra.cache.TechBlogSubscriptionCache
 import server.infra.cache.WarmupCoordinator
 
 @Component
 class SubscribedTechBlogReader(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val techBlogSubscriptionCache: TechBlogSubscriptionCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findSubscribedMap(
+    fun findSubscribedMap(
         memberId: Long,
         techBlogIds: List<Long>
     ): Map<Long, TechBlogSubscriptionInfo> {
@@ -31,11 +29,11 @@ class SubscribedTechBlogReader(
         return result
     }
 
-    suspend fun findAllSubscribedList(memberId: Long): List<TechBlogSubscriptionInfo> {
+    fun findAllSubscribedList(memberId: Long): List<TechBlogSubscriptionInfo> {
         return loadAll(memberId)
     }
 
-    private suspend fun loadAll(memberId: Long): List<TechBlogSubscriptionInfo> {
+    private fun loadAll(memberId: Long): List<TechBlogSubscriptionInfo> {
         techBlogSubscriptionCache.get(memberId)?.let { return it }
 
         val sql = """
@@ -46,27 +44,23 @@ class SubscribedTechBlogReader(
                 WHERE s.member_id = :memberId
             """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("memberId", memberId)
-            .map { row, _ ->
+        val subscriptions: List<TechBlogSubscriptionInfo> = jdbc.query(sql, mapOf("memberId" to memberId)) { row, _ ->
                 TechBlogSubscriptionInfo(
-                    techBlogId = row.get("tech_blog_id", Long::class.java) ?: 0L,
+                    techBlogId = row.getLong("tech_blog_id"),
                     subscribed = true,
-                    notificationEnabled = (row.get("notification_enabled", Int::class.java) ?: 0) == 1,
+                    notificationEnabled = row.getInt("notification_enabled") == 1,
                 )
             }
-            .all()
-            .asFlow()
-            .toList()
-            .also {
-                val warmupKey = techBlogSubscriptionCache.versionKey(memberId)
-                warmupCoordinator.launchIfAbsent(warmupKey) {
-                    techBlogSubscriptionCache.set(memberId, it)
-                }
-            }
+
+        val warmupKey = techBlogSubscriptionCache.versionKey(memberId)
+        warmupCoordinator.launchIfAbsent(warmupKey) {
+            techBlogSubscriptionCache.set(memberId, subscriptions)
+        }
+
+        return subscriptions
     }
 
-    suspend fun findById(
+    fun findById(
         memberId: Long,
         techBlogId: Long
     ): TechBlogSubscriptionInfo? {

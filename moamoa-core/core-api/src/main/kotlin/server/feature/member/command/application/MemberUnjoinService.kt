@@ -17,7 +17,7 @@ class MemberUnjoinService(
     private val submissionRepository: SubmissionRepository
 ) {
 
-    suspend fun unjoin(passport: Passport) = transactional {
+    fun unjoin(passport: Passport) = transactional {
         postBookmarkRepository.deleteAllByMemberId(passport.memberId)
         techBlogSubscriptionRepository.deleteAllByMemberId(passport.memberId)
         submissionRepository.deleteAllByMemberId(passport.memberId)

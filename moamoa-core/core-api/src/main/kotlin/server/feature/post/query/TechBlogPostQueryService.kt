@@ -1,12 +1,7 @@
 package server.feature.post.query
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactor.awaitSingle
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import server.infra.cache.TechBlogPostListCache
 import server.infra.cache.WarmupCoordinator
@@ -16,28 +11,25 @@ import support.paging.calculateTotalPage
 
 @Service
 class TechBlogPostQueryService(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val techBlogPostListCache: TechBlogPostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
     private val postStatsReader: PostStatsReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findAllByConditions(
+    fun findAllByConditions(
         conditions: TechBlogPostQueryConditions,
         passport: Passport?,
-    ): PostList = coroutineScope {
+    ): PostList {
 
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
 
-        val totalCountDeferred = async { countByTechBlogKey(conditions.techBlogId) }
-        val basePostsDeferred = async { loadPosts(paging, conditions.techBlogId) }
-
-        val totalCount = totalCountDeferred.await()
-        val basePosts = basePostsDeferred.await()
+        val totalCount = countByTechBlogKey(conditions.techBlogId)
+        val basePosts = loadPosts(paging, conditions.techBlogId)
 
         val meta = PostListMeta(
             page = paging.page,
@@ -46,24 +38,16 @@ class TechBlogPostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        if (basePosts.isEmpty()) return@coroutineScope PostList(meta, basePosts)
+        if (basePosts.isEmpty()) return PostList(meta, basePosts)
 
         val postIds = basePosts.map { it.id }
 
-        val bookmarkCountMapDeferred = async {
-            postStatsReader.findPostStatsMap(postIds)
-        }
-
-        val bookmarkedIdSetDeferred = async {
-            if (passport == null) emptySet()
-            else bookmarkedPostReader.findBookmarkedPostIdSet(
-                memberId = passport.memberId,
-                postIds = postIds
-            )
-        }
-
-        val bookmarkedIdSet = bookmarkedIdSetDeferred.await()
-        val postStatsByPostId = bookmarkCountMapDeferred.await()
+        val postStatsByPostId = postStatsReader.findPostStatsMap(postIds)
+        val bookmarkedIdSet = if (passport == null) emptySet()
+        else bookmarkedPostReader.findBookmarkedPostIdSet(
+            memberId = passport.memberId,
+            postIds = postIds
+        )
 
         val posts = basePosts.map { post ->
             post.copy(
@@ -73,21 +57,21 @@ class TechBlogPostQueryService(
             )
         }
 
-        PostList(meta, posts)
+        return PostList(meta, posts)
     }
 
-    private suspend fun loadPosts(
+    private fun loadPosts(
         paging: Paging,
         techBlogId: Long,
     ): List<PostSummary> {
         if (paging.page > 5) {
-            return fetchBasePostsByTechBlogKey(paging, techBlogId).toList()
+            return fetchBasePostsByTechBlogKey(paging, techBlogId)
         }
 
         val cached = techBlogPostListCache.get(techBlogId, paging.page)
         if (cached != null) return cached
 
-        return fetchBasePostsByTechBlogKey(paging, techBlogId).toList().also { posts ->
+        return fetchBasePostsByTechBlogKey(paging, techBlogId).also { posts ->
             val warmupKey = techBlogPostListCache.key(techBlogId, paging.page)
             warmupCoordinator.launchIfAbsent(warmupKey) {
                 techBlogPostListCache.set(techBlogId, paging.page, posts)
@@ -95,10 +79,10 @@ class TechBlogPostQueryService(
         }
     }
 
-    private suspend fun fetchBasePostsByTechBlogKey(
+    private fun fetchBasePostsByTechBlogKey(
         paging: Paging,
         techBlogId: Long,
-    ): Flow<PostSummary> {
+    ): List<PostSummary> {
         val offset = (paging.page - 1L) * paging.size
 
         val sql = """
@@ -111,16 +95,14 @@ class TechBlogPostQueryService(
             LIMIT :limit OFFSET :offset
         """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("techBlogId", techBlogId)
-            .bind("limit", paging.size)
-            .bind("offset", offset)
-            .map { row, _ -> mapToPostSummary(row) }
-            .all()
-            .asFlow()
+        val params = MapSqlParameterSource()
+            .addValue("techBlogId", techBlogId)
+            .addValue("limit", paging.size)
+            .addValue("offset", offset)
+        return jdbc.query(sql, params) { rs, _ -> mapToPostSummary(rs) }
     }
 
-    private suspend fun countByTechBlogKey(techBlogId: Long): Long {
+    private fun countByTechBlogKey(techBlogId: Long): Long {
         val sql = """
             SELECT COUNT(*) AS cnt
             FROM post p
@@ -128,10 +110,6 @@ class TechBlogPostQueryService(
             WHERE t.id = :techBlogId
         """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("techBlogId", techBlogId)
-            .map { row, _ -> row.get("cnt", Long::class.java) ?: 0L }
-            .one()
-            .awaitSingle()
+        return jdbc.queryForObject(sql, mapOf("techBlogId" to techBlogId), Long::class.java) ?: 0L
     }
 }

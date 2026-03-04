@@ -1,19 +1,33 @@
 package server.feature.posttag.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Index
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import support.domain.BaseEntity
 
-@Table(name = "post_tag")
-data class PostTag(
+@Entity
+@Table(
+    name = "post_tag",
+    uniqueConstraints = [UniqueConstraint(name = "uk_post_tag_post_id_tag_id", columnNames = ["post_id", "tag_id"])],
+    indexes = [
+        Index(name = "FK_POST_TAG_ON_POST", columnList = "post_id"),
+        Index(name = "FK_POST_TAG_ON_TAG", columnList = "tag_id")
+    ]
+)
+class PostTag(
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     override val id: Long = 0,
 
-    @Column("post_id")
+    @Column(name = "post_id", nullable = false)
     val postId: Long,
 
-    @Column("tag_id")
+    @Column(name = "tag_id", nullable = false)
     val tagId: Long,
 ) : BaseEntity()

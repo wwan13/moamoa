@@ -21,6 +21,7 @@ import server.shared.security.password.PasswordEncoder
 import server.security.Passport
 import server.security.UnauthorizedException
 import test.UnitTest
+import java.util.Optional
 
 class MemberServiceTest : UnitTest() {
     @Test
@@ -75,7 +76,7 @@ class MemberServiceTest : UnitTest() {
         every { passwordEncoder.encode(command.password) } returns "encoded-password"
         coEvery { memberRepository.existsByEmail(command.email) } returns true
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> MemberData>()
+            val block = secondArg<TransactionScope.() -> MemberData>()
             block(transactionScope)
         }
 
@@ -114,7 +115,7 @@ class MemberServiceTest : UnitTest() {
         coEvery { memberRepository.existsByEmail(command.email) } returns false
         coEvery { memberRepository.save(capture(savedSlot)) } returns savedMember
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> MemberData>()
+            val block = secondArg<TransactionScope.() -> MemberData>()
             block(transactionScope)
         }
 
@@ -159,7 +160,7 @@ class MemberServiceTest : UnitTest() {
         )
 
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> MemberData>()
+            val block = secondArg<TransactionScope.() -> MemberData>()
             block(transactionScope)
         }
 
@@ -194,7 +195,7 @@ class MemberServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsByEmail(command.email) } returns true
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> MemberData>()
+            val block = secondArg<TransactionScope.() -> MemberData>()
             block(transactionScope)
         }
 
@@ -238,7 +239,7 @@ class MemberServiceTest : UnitTest() {
         coEvery { memberRepository.existsByEmail(command.email) } returns false
         coEvery { memberRepository.save(capture(savedSlot)) } returns savedMember
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> MemberData>()
+            val block = secondArg<TransactionScope.() -> MemberData>()
             block(transactionScope)
         }
 
@@ -293,7 +294,7 @@ class MemberServiceTest : UnitTest() {
         coEvery { memberRepository.save(any()) } returns savedMember
         coEvery { socialMemberSessionCache.set(any(), any()) } returns Unit
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> MemberData>()
+            val block = secondArg<TransactionScope.() -> MemberData>()
             block(transactionScope)
         }
 
@@ -327,7 +328,7 @@ class MemberServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsByEmail(command.email) } returns true
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<suspend TransactionScope.() -> MemberData>()
+            val block = secondArg<TransactionScope.() -> MemberData>()
             block(transactionScope)
         }
 
@@ -355,7 +356,7 @@ class MemberServiceTest : UnitTest() {
         val memberId = 101L
         val member = createMember(id = memberId, email = "user@example.com")
 
-        coEvery { memberRepository.findById(memberId) } returns member
+        coEvery { memberRepository.findById(memberId) } returns Optional.of(member)
 
         val result = service.findById(memberId)
 
@@ -380,7 +381,7 @@ class MemberServiceTest : UnitTest() {
         )
         val memberId = 101L
 
-        coEvery { memberRepository.findById(memberId) } returns null
+        coEvery { memberRepository.findById(memberId) } returns Optional.empty()
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.findById(memberId)
@@ -571,7 +572,7 @@ class MemberServiceTest : UnitTest() {
         )
         val passport = Passport(memberId = 404L, role = createMember().role)
 
-        coEvery { memberRepository.findById(passport.memberId) } returns null
+        coEvery { memberRepository.findById(passport.memberId) } returns Optional.empty()
 
         shouldThrow<UnauthorizedException> {
             service.changePassword(command, passport)
@@ -600,7 +601,7 @@ class MemberServiceTest : UnitTest() {
         val member = createMember(id = 1L, provider = Provider.GITHUB, providerKey = "github-key", password = "")
         val passport = Passport(memberId = member.id, role = member.role)
 
-        coEvery { memberRepository.findById(passport.memberId) } returns member
+        coEvery { memberRepository.findById(passport.memberId) } returns Optional.of(member)
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.changePassword(command, passport)
@@ -631,7 +632,7 @@ class MemberServiceTest : UnitTest() {
         val member = createMember(id = 1L, password = "encoded-old")
         val passport = Passport(memberId = member.id, role = member.role)
 
-        coEvery { memberRepository.findById(passport.memberId) } returns member
+        coEvery { memberRepository.findById(passport.memberId) } returns Optional.of(member)
         every { passwordEncoder.matches(command.oldPassword, member.password) } returns false
 
         val exception = shouldThrow<IllegalArgumentException> {
@@ -664,10 +665,10 @@ class MemberServiceTest : UnitTest() {
         val passport = Passport(memberId = member.id, role = member.role)
         val savedSlot = slot<server.feature.member.command.domain.Member>()
 
-        coEvery { memberRepository.findById(passport.memberId) } returns member
+        coEvery { memberRepository.findById(passport.memberId) } returns Optional.of(member)
         every { passwordEncoder.matches(command.oldPassword, member.password) } returns true
         every { passwordEncoder.encode(command.newPassword) } returns "encoded-new"
-        coEvery { memberRepository.save(capture(savedSlot)) } returns member.copy(password = "encoded-new")
+        coEvery { memberRepository.save(capture(savedSlot)) } returns member
 
         val result = service.changePassword(command, passport)
 

@@ -14,7 +14,7 @@ class AdminRefreshTokenCache(
     private fun key(memberId: Long): String =
         refreshTokenPrefix + memberId
 
-    suspend fun set(
+    fun set(
         memberId: Long,
         refreshToken: String,
         ttlMillis: Long,
@@ -26,11 +26,11 @@ class AdminRefreshTokenCache(
         )
     }
 
-    suspend fun get(memberId: Long): String? {
+    fun get(memberId: Long): String? {
         return cacheMemory.get(key(memberId))
     }
 
-    suspend fun evict(memberId: Long) {
+    fun evict(memberId: Long) {
         cacheMemory.evict(key(memberId))
     }
 }

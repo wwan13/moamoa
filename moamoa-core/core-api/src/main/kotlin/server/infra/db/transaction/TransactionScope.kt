@@ -13,7 +13,7 @@ class TransactionScope(
     private val objectMapper: ObjectMapper
 ) {
 
-    suspend fun registerEvent(
+    fun registerEvent(
         event: Any,
         topic: MessageChannel = defaultTopic
     ) {

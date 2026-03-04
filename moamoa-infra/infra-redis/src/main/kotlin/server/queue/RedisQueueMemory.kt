@@ -1,66 +1,53 @@
 package server.queue
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitSingle
-import org.springframework.data.redis.core.ReactiveRedisTemplate
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import server.shared.queue.QueueMemory
 
 @Component
 internal class RedisQueueMemory(
-    private val redis: ReactiveRedisTemplate<String, String>,
+    @param:Qualifier("cacheStringRedisTemplate")
+    private val redis: StringRedisTemplate,
     private val objectMapper: ObjectMapper,
 ) : QueueMemory {
     private val ops = redis.opsForList()
 
-    override suspend fun rPush(key: String, value: Any): Long {
-        val json = objectMapper.writeValueAsString(value)
-        return ops.rightPush(key, json).awaitSingle()
-    }
+    override fun rPush(key: String, value: Any): Long =
+        ops.rightPush(key, objectMapper.writeValueAsString(value)) ?: 0L
 
-    override suspend fun lPush(key: String, value: Any): Long {
-        val json = objectMapper.writeValueAsString(value)
-        return ops.leftPush(key, json).awaitSingle()
-    }
+    override fun lPush(key: String, value: Any): Long =
+        ops.leftPush(key, objectMapper.writeValueAsString(value)) ?: 0L
 
-    override suspend fun rPushAll(key: String, values: Collection<Any>): Long {
+    override fun rPushAll(key: String, values: Collection<Any>): Long {
         if (values.isEmpty()) return len(key)
-
-        val jsons = values.map { objectMapper.writeValueAsString(it) }
-        return ops.rightPushAll(key, jsons).awaitSingle()
+        return ops.rightPushAll(key, values.map(objectMapper::writeValueAsString)) ?: 0L
     }
 
-    override suspend fun lPushAll(key: String, values: Collection<Any>): Long {
+    override fun lPushAll(key: String, values: Collection<Any>): Long {
         if (values.isEmpty()) return len(key)
-
-        val jsons = values.map { objectMapper.writeValueAsString(it) }
-        return ops.leftPushAll(key, jsons).awaitSingle()
+        return ops.leftPushAll(key, values.map(objectMapper::writeValueAsString)) ?: 0L
     }
 
-    override suspend fun <T> lPop(key: String, type: Class<T>): T? {
-        val json = ops.leftPop(key).awaitFirstOrNull() ?: return null
-        return runCatching { objectMapper.readValue(json, type) }.getOrNull()
-    }
+    override fun <T> lPop(key: String, type: Class<T>): T? =
+        ops.leftPop(key)?.let { runCatching { objectMapper.readValue(it, type) }.getOrNull() }
 
-    override suspend fun <T> rPop(key: String, type: Class<T>): T? {
-        val json = ops.rightPop(key).awaitFirstOrNull() ?: return null
-        return runCatching { objectMapper.readValue(json, type) }.getOrNull()
-    }
+    override fun <T> rPop(key: String, type: Class<T>): T? =
+        ops.rightPop(key)?.let { runCatching { objectMapper.readValue(it, type) }.getOrNull() }
 
-    override suspend fun <T> drain(key: String, type: Class<T>, max: Int): List<T> {
+    override fun <T> drain(key: String, type: Class<T>, max: Int): List<T> {
         val result = ArrayList<T>(minOf(max, 1000))
         repeat(max) {
-            val v = lPop(key, type) ?: return result
-            result.add(v)
+            val value = lPop(key, type) ?: return result
+            result.add(value)
         }
         return result
     }
 
-    override suspend fun len(key: String): Long =
-        ops.size(key).awaitSingle()
+    override fun len(key: String): Long = ops.size(key) ?: 0L
 
-    override suspend fun delete(key: String) {
-        redis.delete(key).awaitSingle()
+    override fun delete(key: String) {
+        redis.delete(key)
     }
 }

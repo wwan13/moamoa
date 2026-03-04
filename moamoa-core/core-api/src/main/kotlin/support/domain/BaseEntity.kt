@@ -1,23 +1,23 @@
 package support.domain
 
+import jakarta.persistence.Column
+import jakarta.persistence.EntityListeners
+import jakarta.persistence.MappedSuperclass
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
-import org.springframework.data.domain.Persistable
-import org.springframework.data.relational.core.mapping.Column
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.LocalDateTime
 
-abstract class BaseEntity : Persistable<Long> {
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener::class)
+abstract class BaseEntity {
     abstract val id: Long
 
     @CreatedDate
-    @Column("created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now()
 
     @LastModifiedDate
-    @Column("last_modified_at")
+    @Column(name = "last_modified_at", nullable = false)
     var lastModifiedAt: LocalDateTime = LocalDateTime.now()
-
-    override fun getId(): Long = id
-
-    override fun isNew(): Boolean = id == 0L
 }

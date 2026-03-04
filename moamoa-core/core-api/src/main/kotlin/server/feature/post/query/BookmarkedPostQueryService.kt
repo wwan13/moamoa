@@ -1,12 +1,7 @@
 package server.feature.post.query
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactor.awaitSingle
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import server.infra.cache.BookmarkedPostListCache
 import server.infra.cache.WarmupCoordinator
@@ -16,27 +11,24 @@ import support.paging.calculateTotalPage
 
 @Service
 class BookmarkedPostQueryService(
-    private val databaseClient: DatabaseClient,
+    private val jdbc: NamedParameterJdbcTemplate,
     private val bookmarkedPostListCache: BookmarkedPostListCache,
     private val postStatsReader: PostStatsReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
-    suspend fun findAllByConditions(
+    fun findAllByConditions(
         conditions: PostQueryConditions,
         passport: Passport,
-    ): PostList = coroutineScope {
+    ): PostList {
 
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
 
-        val totalCountDeferred = async { countBookmarkedPosts(memberId = passport.memberId) }
-        val basePostsDeferred = async { loadPosts(memberId = passport.memberId, paging = paging) }
-
-        val totalCount = totalCountDeferred.await()
-        val basePosts = basePostsDeferred.await()
+        val totalCount = countBookmarkedPosts(memberId = passport.memberId)
+        val basePosts = loadPosts(memberId = passport.memberId, paging = paging)
 
         val meta = PostListMeta(
             page = paging.page,
@@ -45,15 +37,11 @@ class BookmarkedPostQueryService(
             totalPages = calculateTotalPage(totalCount, paging.size)
         )
 
-        if (basePosts.isEmpty()) return@coroutineScope PostList(meta, basePosts)
+        if (basePosts.isEmpty()) return PostList(meta, basePosts)
 
         val postIds = basePosts.map { it.id }
 
-        val postStatsMapDeferred = async {
-            postStatsReader.findPostStatsMap(postIds)
-        }
-
-        val postStatsByPostId = postStatsMapDeferred.await()
+        val postStatsByPostId = postStatsReader.findPostStatsMap(postIds)
 
         val posts = basePosts.map { post ->
             post.copy(
@@ -63,18 +51,18 @@ class BookmarkedPostQueryService(
             )
         }
 
-        PostList(meta, posts)
+        return PostList(meta, posts)
     }
 
-    private suspend fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
+    private fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
         if (paging.page > 5) {
-            return fetchBookmarkedBasePosts(paging, memberId).toList()
+            return fetchBookmarkedBasePosts(paging, memberId)
         }
 
         val cached = bookmarkedPostListCache.get(memberId, paging.page)
         if (cached != null) return cached
 
-        return fetchBookmarkedBasePosts(paging, memberId).toList().also { posts ->
+        return fetchBookmarkedBasePosts(paging, memberId).also { posts ->
             val warmupKey = "${bookmarkedPostListCache.versionKey(memberId)}:PAGE:${paging.page}"
             warmupCoordinator.launchIfAbsent(warmupKey) {
                 bookmarkedPostListCache.set(memberId, paging.page, posts)
@@ -82,10 +70,10 @@ class BookmarkedPostQueryService(
         }
     }
 
-    private suspend fun fetchBookmarkedBasePosts(
+    private fun fetchBookmarkedBasePosts(
         paging: Paging,
         memberId: Long,
-    ): Flow<PostSummary> {
+    ): List<PostSummary> {
         val offset = (paging.page - 1L) * paging.size
 
         val sql = """
@@ -99,26 +87,20 @@ class BookmarkedPostQueryService(
             LIMIT :limit OFFSET :offset
         """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("memberId", memberId)
-            .bind("limit", paging.size)
-            .bind("offset", offset)
-            .map { row, _ -> mapToPostSummary(row) }
-            .all()
-            .asFlow()
+        val params = MapSqlParameterSource()
+            .addValue("memberId", memberId)
+            .addValue("limit", paging.size)
+            .addValue("offset", offset)
+        return jdbc.query(sql, params) { rs, _ -> mapToPostSummary(rs) }
     }
 
-    private suspend fun countBookmarkedPosts(memberId: Long): Long {
+    private fun countBookmarkedPosts(memberId: Long): Long {
         val sql = """
             SELECT COUNT(*) AS cnt
             FROM post_bookmark pb
             WHERE pb.member_id = :memberId
         """.trimIndent()
 
-        return databaseClient.sql(sql)
-            .bind("memberId", memberId)
-            .map { row, _ -> row.get("cnt", Long::class.java) ?: 0L }
-            .one()
-            .awaitSingle()
+        return jdbc.queryForObject(sql, mapOf("memberId" to memberId), Long::class.java) ?: 0L
     }
 }

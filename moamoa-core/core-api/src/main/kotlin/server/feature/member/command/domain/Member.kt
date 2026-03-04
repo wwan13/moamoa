@@ -1,36 +1,56 @@
 package server.feature.member.command.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import support.domain.BaseEntity
 
-@Table("member")
-data class Member(
+@Entity
+@Table(
+    name = "member",
+    uniqueConstraints = [UniqueConstraint(name = "uk_member_email", columnNames = ["email"])]
+)
+class Member(
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     override val id: Long = 0,
 
-    @Column("role")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 50, nullable = false)
     val role: MemberRole = MemberRole.USER,
 
-    @Column("email")
+    @Column(name = "email", length = 255, nullable = false)
     val email: String,
 
-    @Column("pw")
-    val password: String,
+    password: String,
 
-    @Column("provider")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider", length = 128, nullable = false)
     val provider: Provider,
 
-    @Column("provider_key")
+    @Column(name = "provider_key", length = 256, nullable = false)
     val providerKey: String,
 ) : BaseEntity() {
+    @Column(name = "pw", length = 255, nullable = false)
+    var password: String = password
+        private set
+
 
     fun created() = MemberCreateEvent(
         memberId = id,
         email = email,
     )
+
+    fun updatePassword(encodedPassword: String) {
+        password = encodedPassword
+    }
 
     companion object {
         fun fromInternal(

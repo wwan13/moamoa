@@ -1,22 +1,20 @@
 package server.set
 
-import kotlinx.coroutines.reactive.awaitSingle
-import org.springframework.data.redis.core.ReactiveRedisTemplate
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import server.shared.set.SetMemory
 
 @Component
 internal class RedisSetMemory(
-    private val redis: ReactiveRedisTemplate<String, String>,
+    @param:Qualifier("cacheStringRedisTemplate")
+    private val redis: StringRedisTemplate,
 ) : SetMemory {
     private val ops = redis.opsForSet()
 
-    override suspend fun add(key: String, value: String): Boolean =
-        (ops.add(key, value).awaitSingle()) > 0L
+    override fun add(key: String, value: String): Boolean = (ops.add(key, value) ?: 0L) > 0L
 
-    override suspend fun members(key: String): Set<String> =
-        ops.members(key).collectList().awaitSingle().toSet()
+    override fun members(key: String): Set<String> = ops.members(key) ?: emptySet()
 
-    override suspend fun remove(key: String, value: String): Long =
-        ops.remove(key, value).awaitSingle()
+    override fun remove(key: String, value: String): Long = ops.remove(key, value) ?: 0L
 }

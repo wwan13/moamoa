@@ -1,8 +1,6 @@
 package server.messaging.health
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.RedisConnectionFailureException
 import org.springframework.data.redis.RedisSystemException
@@ -26,7 +24,7 @@ class RedisHealthStateManager(
 
     private val state = AtomicReference(State.ACTIVE)
 
-    suspend fun <T> runSafe(block: suspend () -> T): Result<T> {
+    fun <T> runSafe(block: () -> T): Result<T> {
         if (isDegraded()) return Result.failure(IllegalStateException("redis is degraded"))
 
         return try {
@@ -45,7 +43,7 @@ class RedisHealthStateManager(
 
     fun isFailure(exception: Throwable): Boolean = isRedisFailure(exception)
 
-    suspend fun tryRecover(): Boolean {
+    fun tryRecover(): Boolean {
         if (!isDegraded()) return true
 
         val recovered = runCatching { ping() }
@@ -76,10 +74,9 @@ class RedisHealthStateManager(
         logger.warn(cause) { "redis degraded" }
     }
 
-    private suspend fun ping(): String = withContext(Dispatchers.IO) {
+    private fun ping(): String =
         redis.execute(RedisCallback { connection -> connection.ping() })
             ?: error("redis ping returned null")
-    }
 
     private fun isRedisFailure(exception: Throwable): Boolean =
         exception is RedisConnectionFailureException || exception is RedisSystemException

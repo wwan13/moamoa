@@ -23,7 +23,7 @@ class TechBlogController(
 ) {
 
     @GetMapping("/{techBlogId}")
-    suspend fun findById(
+    fun findById(
         @PathVariable techBlogId: Long,
         @RequestPassport passport: Passport?,
     ): ResponseEntity<TechBlogSummary> {
@@ -32,7 +32,7 @@ class TechBlogController(
     }
 
     @GetMapping
-    suspend fun findAll(
+    fun findAll(
         conditions: TechBlogQueryConditions,
         @RequestPassport passport: Passport?,
     ): ResponseEntity<TechBlogList> {
@@ -41,7 +41,7 @@ class TechBlogController(
     }
 
     @GetMapping("/subscription")
-    suspend fun findSubscribingTechBlogs(
+    fun findSubscribingTechBlogs(
         @RequestPassport passport: Passport
     ): ResponseEntity<TechBlogList> {
         val response = subscribedTechBlogQueryService.findSubscribingTechBlogs(passport)

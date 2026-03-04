@@ -15,17 +15,17 @@ class TechBlogSubscriptionCache(
     fun versionKey(memberId: Long) = "$prefix$memberId:VER"
     fun key(memberId: Long, version: Long) = "$prefix$memberId:V:$version"
 
-    suspend fun get(memberId: Long): List<TechBlogSubscriptionInfo>? {
+    fun get(memberId: Long): List<TechBlogSubscriptionInfo>? {
         val ver = cacheMemory.get<Long>(versionKey(memberId)) ?: 1L
         return cacheMemory.get(key(memberId, ver))
     }
 
-    suspend fun set(memberId: Long, value: List<TechBlogSubscriptionInfo>) {
+    fun set(memberId: Long, value: List<TechBlogSubscriptionInfo>) {
         val ver = cacheMemory.get<Long>(versionKey(memberId)) ?: 1L
         cacheMemory.set(key(memberId, ver), value, ttlMillis)
     }
 
-    suspend fun evictAll(memberId: Long) {
+    fun evictAll(memberId: Long) {
         cacheMemory.incr(versionKey(memberId))
     }
 }

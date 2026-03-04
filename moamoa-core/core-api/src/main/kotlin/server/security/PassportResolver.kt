@@ -1,13 +1,15 @@
 package server.security
 
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
-import org.springframework.web.reactive.BindingContext
-import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver
-import org.springframework.web.server.ServerWebExchange
-import reactor.core.publisher.Mono
+import org.springframework.web.bind.support.WebDataBinderFactory
+import org.springframework.web.context.request.NativeWebRequest
+import org.springframework.web.method.support.HandlerMethodArgumentResolver
+import org.springframework.web.method.support.ModelAndViewContainer
 import server.feature.member.command.domain.MemberRole
+import server.global.logging.RequestLogContextHolder
 import server.shared.security.jwt.AuthPrincipal
 import server.shared.security.jwt.TokenProvider
 import server.shared.security.jwt.TokenType
@@ -26,9 +28,10 @@ class PassportResolver(
 
     override fun resolveArgument(
         parameter: MethodParameter,
-        bindingContext: BindingContext,
-        exchange: ServerWebExchange
-    ): Mono<Any?> {
+        mavContainer: ModelAndViewContainer?,
+        webRequest: NativeWebRequest,
+        binderFactory: WebDataBinderFactory?,
+    ): Any? {
         val isNullable = parameter
             .method
             ?.kotlinFunction
@@ -37,37 +40,36 @@ class PassportResolver(
             ?.type
             ?.isMarkedNullable == true
 
-        fun unauthorized(): Mono<Any?> =
-            if (isNullable) Mono.justOrEmpty(null)
-            else Mono.error(UnauthorizedException())
+        fun unauthorized(): Any? =
+            if (isNullable) null
+            else throw UnauthorizedException()
 
-        val bearerToken = exchange.request.headers
-            .getFirst(HttpHeaders.AUTHORIZATION)
-            ?: return unauthorized()
+        val request = webRequest.getNativeRequest(HttpServletRequest::class.java) ?: return unauthorized()
+        val bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION) ?: return unauthorized()
         if (!bearerToken.startsWith("Bearer ", ignoreCase = true)) {
             return unauthorized()
         }
         val accessToken = bearerToken.removePrefix("Bearer").trim()
 
-        val decodeError = exchange.attributes[TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR] as? RuntimeException
+        val decodeError = request.getAttribute(TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR) as? RuntimeException
         if (decodeError != null) {
             throw decodeError
         }
 
-        val principal = (exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] as? AuthPrincipal)
+        val principal = (request.getAttribute(TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR) as? AuthPrincipal)
             ?: tokenProvider.decodeToken(accessToken).also {
-                exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] = it
+                request.setAttribute(TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR, it)
             }
         if (principal.type != TokenType.ACCESS) {
             return unauthorized()
         }
         val role = principal.role ?: return unauthorized()
 
-        return Mono.just(
-            Passport(
-                memberId = principal.memberId,
-                role = MemberRole.valueOf(role)
-            )
+        request.setAttribute(RequestLogContextHolder.USER_ID_ATTR, principal.memberId.toString())
+
+        return Passport(
+            memberId = principal.memberId,
+            role = MemberRole.valueOf(role)
         )
     }
 }

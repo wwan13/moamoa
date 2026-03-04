@@ -14,7 +14,7 @@ class SubmissionService(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    suspend fun create(
+    fun create(
         command: SubmissionCreateCommand,
         memberId: Long
     ): SubmissionCreateResult = transactional {

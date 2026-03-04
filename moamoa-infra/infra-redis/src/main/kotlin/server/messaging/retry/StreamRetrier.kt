@@ -45,7 +45,7 @@ internal class StreamRetrier(
         retryJob = null
     }
 
-    suspend fun runOnce() {
+    fun runOnce() {
         if (!running.compareAndSet(false, true)) return
 
         try {

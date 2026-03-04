@@ -7,8 +7,6 @@ import io.mockk.coVerify
 import io.mockk.verify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.feature.techblog.command.domain.TechBlogRepository
@@ -63,9 +61,9 @@ class TechBlogServiceTest : UnitTest() {
             createTechBlog(id = 2L, title = "B Blog", key = "b")
         )
 
-        every { techBlogRepository.findAllByOrderByTitleAsc() } returns flowOf(*techBlogs.toTypedArray())
+        every { techBlogRepository.findAllByOrderByTitleAsc() } returns techBlogs
 
-        val result = service.findAll().toList()
+        val result = service.findAll()
 
         result shouldBe techBlogs.map(::TechBlogData)
         verify(exactly = 1) { techBlogRepository.findAllByOrderByTitleAsc() }

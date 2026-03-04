@@ -2,10 +2,9 @@ package server.resilient
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Configuration
@@ -19,65 +18,65 @@ import java.util.function.Supplier
 class ResilientLockTest {
 
     @Test
-    fun `redisson 성공 시 redisson만 사용한다`() = runTest {
+    fun `redisson 성공 시 redisson만 사용한다`() {
         val redissonLock = mockk<KeyedLock>()
         val coroutineMutexLock = mockk<KeyedLock>()
-        coEvery { redissonLock.withLock<String>("k1", any()) } coAnswers {
-            secondArg<suspend () -> String>().invoke()
+        every { redissonLock.withLock<String>("k1", any()) } answers {
+            secondArg<() -> String>().invoke()
         }
 
         withContext(redissonLock, coroutineMutexLock) { keyedLock ->
             val result = keyedLock.withLock("k1") { "ok" }
 
             result shouldBe "ok"
-            coVerify(exactly = 1) { redissonLock.withLock<String>("k1", any()) }
-            coVerify(exactly = 0) { coroutineMutexLock.withLock<String>(any(), any()) }
+            verify(exactly = 1) { redissonLock.withLock<String>("k1", any()) }
+            verify(exactly = 0) { coroutineMutexLock.withLock<String>(any(), any()) }
         }
     }
 
     @Test
-    fun `redisson 인프라 예외 발생 시 coroutine mutex로 폴백한다`() = runTest {
+    fun `redisson 인프라 예외 발생 시 coroutine mutex로 폴백한다`() {
         val redissonLock = mockk<KeyedLock>()
         val coroutineMutexLock = mockk<KeyedLock>()
-        coEvery { redissonLock.withLock<String>("k1", any()) } throws LockInfraException("redis down")
-        coEvery { coroutineMutexLock.withLock<String>("k1", any()) } coAnswers {
-            secondArg<suspend () -> String>().invoke()
+        every { redissonLock.withLock<String>("k1", any()) } throws LockInfraException("redis down")
+        every { coroutineMutexLock.withLock<String>("k1", any()) } answers {
+            secondArg<() -> String>().invoke()
         }
 
         withContext(redissonLock, coroutineMutexLock) { keyedLock ->
             val result = keyedLock.withLock("k1") { "local" }
 
             result shouldBe "local"
-            coVerify(exactly = 1) { redissonLock.withLock<String>("k1", any()) }
-            coVerify(exactly = 1) { coroutineMutexLock.withLock<String>("k1", any()) }
+            verify(exactly = 1) { redissonLock.withLock<String>("k1", any()) }
+            verify(exactly = 1) { coroutineMutexLock.withLock<String>("k1", any()) }
         }
     }
 
     @Test
-    fun `degrade 상태에서는 probe 간격 전 redisson을 재시도하지 않는다`() = runTest {
+    fun `degrade 상태에서는 probe 간격 전 redisson을 재시도하지 않는다`() {
         val redissonLock = mockk<KeyedLock>()
         val coroutineMutexLock = mockk<KeyedLock>()
-        coEvery { redissonLock.withLock<String>("k1", any()) } throws LockInfraException("redis down")
-        coEvery { coroutineMutexLock.withLock<String>("k1", any()) } coAnswers {
-            secondArg<suspend () -> String>().invoke()
+        every { redissonLock.withLock<String>("k1", any()) } throws LockInfraException("redis down")
+        every { coroutineMutexLock.withLock<String>("k1", any()) } answers {
+            secondArg<() -> String>().invoke()
         }
 
         withContext(redissonLock, coroutineMutexLock) { keyedLock ->
             keyedLock.withLock("k1") { "local-1" }
             keyedLock.withLock("k1") { "local-2" }
 
-            coVerify(exactly = 1) { redissonLock.withLock<String>("k1", any()) }
-            coVerify(exactly = 2) { coroutineMutexLock.withLock<String>("k1", any()) }
+            verify(exactly = 1) { redissonLock.withLock<String>("k1", any()) }
+            verify(exactly = 2) { coroutineMutexLock.withLock<String>("k1", any()) }
         }
     }
 
     @Test
-    fun `probe 성공 시 redisson으로 복귀한다`() = runTest {
+    fun `probe 성공 시 redisson으로 복귀한다`() {
         val redissonLock = mockk<KeyedLock>()
         val coroutineMutexLock = mockk<KeyedLock>()
-        coEvery { redissonLock.withLock<String>("k1", any()) } throws LockInfraException("redis down") andThen "redis-recovered" andThen "redis-next"
-        coEvery { coroutineMutexLock.withLock<String>("k1", any()) } coAnswers {
-            secondArg<suspend () -> String>().invoke()
+        every { redissonLock.withLock<String>("k1", any()) } throws LockInfraException("redis down") andThen "redis-recovered" andThen "redis-next"
+        every { coroutineMutexLock.withLock<String>("k1", any()) } answers {
+            secondArg<() -> String>().invoke()
         }
 
         withContext(redissonLock, coroutineMutexLock, probeIntervalMs = 150L) { keyedLock ->
@@ -89,18 +88,18 @@ class ResilientLockTest {
             degraded shouldBe "local"
             recovered shouldBe "redis-recovered"
             healthy shouldBe "redis-next"
-            coVerify(exactly = 3) { redissonLock.withLock<String>("k1", any()) }
-            coVerify(exactly = 1) { coroutineMutexLock.withLock<String>("k1", any()) }
+            verify(exactly = 3) { redissonLock.withLock<String>("k1", any()) }
+            verify(exactly = 1) { coroutineMutexLock.withLock<String>("k1", any()) }
         }
     }
 
     @Test
-    fun `fallback 실패 시 원래 인프라 예외를 suppressed로 보존한다`() = runTest {
+    fun `fallback 실패 시 원래 인프라 예외를 suppressed로 보존한다`() {
         val redissonLock = mockk<KeyedLock>()
         val coroutineMutexLock = mockk<KeyedLock>()
         val infraEx = LockInfraException("redis down")
-        coEvery { redissonLock.withLock<String>("k1", any()) } throws infraEx
-        coEvery { coroutineMutexLock.withLock<String>("k1", any()) } throws IllegalStateException("local fail")
+        every { redissonLock.withLock<String>("k1", any()) } throws infraEx
+        every { coroutineMutexLock.withLock<String>("k1", any()) } throws IllegalStateException("local fail")
 
         withContext(redissonLock, coroutineMutexLock) { keyedLock ->
             val ex = shouldThrow<IllegalStateException> {
@@ -113,10 +112,10 @@ class ResilientLockTest {
     }
 
     @Test
-    fun `비인프라 예외는 fallback 트리거가 아니다`() = runTest {
+    fun `비인프라 예외는 fallback 트리거가 아니다`() {
         val redissonLock = mockk<KeyedLock>()
         val coroutineMutexLock = mockk<KeyedLock>()
-        coEvery { redissonLock.withLock<String>("k1", any()) } throws IllegalStateException("business fail")
+        every { redissonLock.withLock<String>("k1", any()) } throws IllegalStateException("business fail")
 
         withContext(redissonLock, coroutineMutexLock) { keyedLock ->
             val ex = shouldThrow<IllegalStateException> {
@@ -124,24 +123,24 @@ class ResilientLockTest {
             }
 
             ex.message shouldBe "business fail"
-            coVerify(exactly = 0) { coroutineMutexLock.withLock<String>(any(), any()) }
+            verify(exactly = 0) { coroutineMutexLock.withLock<String>(any(), any()) }
         }
     }
 
     @Test
-    fun `withGlobalLock도 AOP 대상으로 동작한다`() = runTest {
+    fun `withGlobalLock도 AOP 대상으로 동작한다`() {
         val redissonLock = mockk<KeyedLock>()
         val coroutineMutexLock = mockk<KeyedLock>()
-        coEvery { redissonLock.withGlobalLock<String>(any()) } coAnswers {
-            firstArg<suspend () -> String>().invoke()
+        every { redissonLock.withGlobalLock<String>(any()) } answers {
+            firstArg<() -> String>().invoke()
         }
 
         withContext(redissonLock, coroutineMutexLock) { keyedLock ->
             val result = keyedLock.withGlobalLock { "global-ok" }
 
             result shouldBe "global-ok"
-            coVerify(exactly = 1) { redissonLock.withGlobalLock<String>(any()) }
-            coVerify(exactly = 0) { coroutineMutexLock.withGlobalLock<String>(any()) }
+            verify(exactly = 1) { redissonLock.withGlobalLock<String>(any()) }
+            verify(exactly = 0) { coroutineMutexLock.withGlobalLock<String>(any()) }
         }
     }
 

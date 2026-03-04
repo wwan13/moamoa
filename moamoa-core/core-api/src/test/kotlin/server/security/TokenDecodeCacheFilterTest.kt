@@ -6,10 +6,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest
-import org.springframework.mock.web.server.MockServerWebExchange
-import org.springframework.web.server.WebFilterChain
-import reactor.core.publisher.Mono
+import org.springframework.mock.web.MockFilterChain
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.mock.web.MockHttpServletResponse
 import server.shared.security.jwt.AuthPrincipal
 import server.shared.security.jwt.ExpiredTokenException
 import server.shared.security.jwt.InvalidTokenException
@@ -22,13 +21,14 @@ class TokenDecodeCacheFilterTest : UnitTest() {
     fun `Bearer 헤더가 없으면 decodeToken을 호출하지 않는다`() {
         val tokenProvider = mockk<TokenProvider>()
         val filter = TokenDecodeCacheFilter(tokenProvider)
-        val exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/").build())
+        val request = MockHttpServletRequest("GET", "/")
+        val response = MockHttpServletResponse()
 
-        filter.filter(exchange, passThroughChain()).block()
+        filter.doFilter(request, response, MockFilterChain())
 
         verify(exactly = 0) { tokenProvider.decodeToken(any()) }
-        exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] shouldBe null
-        exchange.attributes[TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR] shouldBe null
+        request.getAttribute(TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR) shouldBe null
+        request.getAttribute(TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR) shouldBe null
     }
 
     @Test
@@ -37,17 +37,15 @@ class TokenDecodeCacheFilterTest : UnitTest() {
         val principal = AuthPrincipal(memberId = 10L, type = TokenType.ACCESS, role = "USER")
         every { tokenProvider.decodeToken("access-token") } returns principal
         val filter = TokenDecodeCacheFilter(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer access-token")
-                .build()
-        )
+        val request = MockHttpServletRequest("GET", "/")
+        request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer access-token")
+        val response = MockHttpServletResponse()
 
-        filter.filter(exchange, passThroughChain()).block()
+        filter.doFilter(request, response, MockFilterChain())
 
         verify(exactly = 1) { tokenProvider.decodeToken("access-token") }
-        exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] shouldBe principal
-        exchange.attributes[TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR] shouldBe null
+        request.getAttribute(TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR) shouldBe principal
+        request.getAttribute(TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR) shouldBe null
     }
 
     @Test
@@ -55,23 +53,15 @@ class TokenDecodeCacheFilterTest : UnitTest() {
         val tokenProvider = mockk<TokenProvider>()
         every { tokenProvider.decodeToken("invalid-token") } throws InvalidTokenException()
         val filter = TokenDecodeCacheFilter(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer invalid-token")
-                .build()
-        )
-        var chainCalled = false
-        val chain = WebFilterChain {
-            chainCalled = true
-            Mono.empty()
-        }
+        val request = MockHttpServletRequest("GET", "/")
+        request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer invalid-token")
+        val response = MockHttpServletResponse()
 
-        filter.filter(exchange, chain).block()
+        filter.doFilter(request, response, MockFilterChain())
 
         verify(exactly = 1) { tokenProvider.decodeToken("invalid-token") }
-        chainCalled shouldBe true
-        (exchange.attributes[TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR] is InvalidTokenException) shouldBe true
-        exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] shouldBe null
+        (request.getAttribute(TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR) is InvalidTokenException) shouldBe true
+        request.getAttribute(TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR) shouldBe null
     }
 
     @Test
@@ -79,33 +69,27 @@ class TokenDecodeCacheFilterTest : UnitTest() {
         val tokenProvider = mockk<TokenProvider>()
         every { tokenProvider.decodeToken("expired-token") } throws ExpiredTokenException()
         val filter = TokenDecodeCacheFilter(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer expired-token")
-                .build()
-        )
+        val request = MockHttpServletRequest("GET", "/")
+        request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer expired-token")
+        val response = MockHttpServletResponse()
 
-        filter.filter(exchange, passThroughChain()).block()
+        filter.doFilter(request, response, MockFilterChain())
 
         verify(exactly = 1) { tokenProvider.decodeToken("expired-token") }
-        (exchange.attributes[TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR] is ExpiredTokenException) shouldBe true
-        exchange.attributes[TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR] shouldBe null
+        (request.getAttribute(TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR) is ExpiredTokenException) shouldBe true
+        request.getAttribute(TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR) shouldBe null
     }
 
     @Test
     fun `Bearer 형식이 아니면 decodeToken을 호출하지 않는다`() {
         val tokenProvider = mockk<TokenProvider>()
         val filter = TokenDecodeCacheFilter(tokenProvider)
-        val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/")
-                .header(HttpHeaders.AUTHORIZATION, "Basic token")
-                .build()
-        )
+        val request = MockHttpServletRequest("GET", "/")
+        request.addHeader(HttpHeaders.AUTHORIZATION, "Basic token")
+        val response = MockHttpServletResponse()
 
-        filter.filter(exchange, passThroughChain()).block()
+        filter.doFilter(request, response, MockFilterChain())
 
         verify(exactly = 0) { tokenProvider.decodeToken(any()) }
     }
-
-    private fun passThroughChain(): WebFilterChain = WebFilterChain { Mono.empty() }
 }

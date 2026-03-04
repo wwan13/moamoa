@@ -1,13 +1,15 @@
 package server.admin.security
 
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
-import org.springframework.web.reactive.BindingContext
-import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver
-import org.springframework.web.server.ServerWebExchange
-import reactor.core.publisher.Mono
+import org.springframework.web.bind.support.WebDataBinderFactory
+import org.springframework.web.context.request.NativeWebRequest
+import org.springframework.web.method.support.HandlerMethodArgumentResolver
+import org.springframework.web.method.support.ModelAndViewContainer
 import server.admin.feature.member.domain.AdminMemberRole
+import server.global.logging.RequestLogContextHolder
 import server.shared.security.jwt.TokenProvider
 import server.shared.security.jwt.TokenType
 import kotlin.reflect.jvm.kotlinFunction
@@ -25,45 +27,31 @@ class AdminPassportResolver(
 
     override fun resolveArgument(
         parameter: MethodParameter,
-        bindingContext: BindingContext,
-        exchange: ServerWebExchange
-    ): Mono<Any?> {
-        val isNullable = parameter
-            .method
+        mavContainer: ModelAndViewContainer?,
+        webRequest: NativeWebRequest,
+        binderFactory: WebDataBinderFactory?,
+    ): Any? {
+        val isNullable = parameter.method
             ?.kotlinFunction
             ?.parameters
             ?.firstOrNull { it.name == parameter.parameterName }
             ?.type
             ?.isMarkedNullable == true
 
-        fun unauthorized(): Mono<Any?> =
-            if (isNullable) Mono.justOrEmpty(null)
-            else Mono.error(AdminUnauthorizedException())
+        fun unauthorized(): Any? = if (isNullable) null else throw AdminUnauthorizedException()
 
-        val bearerToken = exchange.request.headers
-            .getFirst(HttpHeaders.AUTHORIZATION)
-            ?: return unauthorized()
-        if (!bearerToken.startsWith("Bearer ", ignoreCase = true)) {
-            return unauthorized()
-        }
+        val request = webRequest.getNativeRequest(HttpServletRequest::class.java) ?: return unauthorized()
+        val bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION) ?: return unauthorized()
+        if (!bearerToken.startsWith("Bearer ", ignoreCase = true)) return unauthorized()
+
         val accessToken = bearerToken.removePrefix("Bearer").trim()
-
         val principal = tokenProvider.decodeToken(accessToken)
-        if (principal.type != TokenType.ACCESS) {
-            return unauthorized()
-        }
-        val role = principal.role?.let { AdminMemberRole.valueOf(it) }
-            ?: return unauthorized()
+        if (principal.type != TokenType.ACCESS) return unauthorized()
 
-        if (role != AdminMemberRole.ADMIN) {
-            return unauthorized()
-        }
+        val role = principal.role?.let { AdminMemberRole.valueOf(it) } ?: return unauthorized()
+        if (role != AdminMemberRole.ADMIN) return unauthorized()
+        request.setAttribute(RequestLogContextHolder.USER_ID_ATTR, principal.memberId.toString())
 
-        return Mono.just(
-            AdminPassport(
-                memberId = principal.memberId,
-                role = role
-            )
-        )
+        return AdminPassport(memberId = principal.memberId, role = role)
     }
 }

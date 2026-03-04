@@ -1,44 +1,60 @@
 package server.feature.post.command.domain
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import support.domain.BaseEntity
 import java.time.LocalDateTime
 
-@Table(name = "post")
-data class Post(
+@Entity
+@Table(
+    name = "post",
+    uniqueConstraints = [UniqueConstraint(name = "uq_post_tech_blog_key", columnNames = ["tech_blog_id", "post_key"])]
+)
+class Post(
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     override val id: Long = 0,
 
-    @Column("post_key")
+    @Column(name = "post_key", length = 255, nullable = false)
     val key: String,
 
-    @Column("title")
+    @Column(name = "title", length = 255, nullable = false)
     val title: String,
 
-    @Column("description")
+    @Column(name = "description", length = 2047, nullable = false)
     val description: String,
 
-    @Column("thumbnail")
+    @Column(name = "thumbnail", length = 5000, nullable = false)
     val thumbnail: String,
 
-    @Column("url")
+    @Column(name = "url", length = 1027, nullable = false)
     val url: String,
 
-    @Column("published_at")
+    @Column(name = "published_at", nullable = false)
     val publishedAt: LocalDateTime,
 
-    @Column("view_count")
+    @Column(name = "view_count", nullable = false)
     val viewCount: Long = 0,
 
-    @Column("bookmark_count")
-    val bookmarkCount: Long = 0,
+    bookmarkCount: Long = 0,
 
-    @Column("tech_blog_id")
+    @Column(name = "tech_blog_id", nullable = false)
     val techBlogId: Long,
 
-    @Column("category_id")
+    @Column(name = "category_id", nullable = false)
     val categoryId: Long,
-) : BaseEntity()
+) : BaseEntity() {
+    @Column(name = "bookmark_count", nullable = false)
+    var bookmarkCount: Long = bookmarkCount
+        private set
+
+    fun updateBookmarkCount(delta: Long) {
+        bookmarkCount = (bookmarkCount + delta).coerceAtLeast(0)
+    }
+}
