@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   bookmarkApi,
-  type PostBookmarkToggleCommand,
-  type PostBookmarkToggleResult,
+  type BookmarkToggleCommand,
+  type BookmarkToggleResult,
 } from "../api/bookmark.api"
 import useAuth from "../auth/useAuth"
 
@@ -17,7 +17,7 @@ export const useBookmarkToggleMutation = (options: BookmarkToggleOptions = {}) =
 
   const invalidateOnSuccess = options.invalidateOnSuccess ?? true
 
-  return useMutation<PostBookmarkToggleResult, Error, PostBookmarkToggleCommand>({
+  return useMutation<BookmarkToggleResult, Error, BookmarkToggleCommand>({
     mutationFn: (command) => bookmarkApi.toggle(command),
     onSuccess: (_data, variables) => {
       if (!invalidateOnSuccess) return

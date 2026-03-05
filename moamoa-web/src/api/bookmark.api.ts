@@ -1,19 +1,19 @@
 import { http, type ApiRequestConfig } from "./client"
 
-export type PostBookmarkToggleCommand = {
+export type BookmarkToggleCommand = {
   postId: number
 }
 
-export type PostBookmarkToggleResult = {
+export type BookmarkToggleResult = {
   bookmarked: boolean
 }
 
 export const bookmarkApi = {
   toggle: async (
-    command: PostBookmarkToggleCommand,
+    command: BookmarkToggleCommand,
     config?: ApiRequestConfig
-  ): Promise<PostBookmarkToggleResult> => {
-    const res = await http.post<PostBookmarkToggleResult>("/api/post-bookmark", command, config)
+  ): Promise<BookmarkToggleResult> => {
+    const res = await http.post<BookmarkToggleResult>("/api/bookmark", command, config)
     return res ?? { bookmarked: false }
   },
 }

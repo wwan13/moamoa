@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
-  techBlogSubscriptionApi,
+  subscriptionApi,
   type NotificationEnabledToggleCommand,
   type NotificationEnabledToggleResult,
-  type TechBlogSubscriptionToggleCommand,
-  type TechBlogSubscriptionToggleResult,
-} from "../api/techBlogSubscription.api"
+  type SubscriptionToggleCommand,
+  type SubscriptionToggleResult,
+} from "../api/subscriptionApi.ts"
 import useAuth from "../auth/useAuth"
 
 type ToggleOptions = {
@@ -18,8 +18,8 @@ export const useSubscriptionToggleMutation = (options: ToggleOptions = {}) => {
 
   const invalidateOnSuccess = options.invalidateOnSuccess ?? true
 
-  return useMutation<TechBlogSubscriptionToggleResult, Error, TechBlogSubscriptionToggleCommand>({
-    mutationFn: (command) => techBlogSubscriptionApi.toggleSubscription(command),
+  return useMutation<SubscriptionToggleResult, Error, SubscriptionToggleCommand>({
+    mutationFn: (command) => subscriptionApi.toggleSubscription(command),
     onSuccess: () => {
       if (!invalidateOnSuccess) return
       qc.invalidateQueries({ queryKey: ["techBlogs", "subscribed", authScope] })
@@ -32,6 +32,6 @@ export const useSubscriptionToggleMutation = (options: ToggleOptions = {}) => {
 
 export const useNotificationToggleMutation = () => {
   return useMutation<NotificationEnabledToggleResult, Error, NotificationEnabledToggleCommand>({
-    mutationFn: (command) => techBlogSubscriptionApi.toggleNotification(command),
+    mutationFn: (command) => subscriptionApi.toggleNotification(command),
   })
 }
