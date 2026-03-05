@@ -6,23 +6,23 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.techblog.query.SubscribedTechBlogReader
-import server.core.feature.techblog.query.TechBlogSubscriptionInfo
-import server.core.infra.cache.TechBlogSubscriptionCache
+import server.core.feature.techblog.query.SubscriptionInfo
+import server.core.infra.cache.SubscriptionCache
 import server.core.infra.cache.WarmupCoordinator
 import test.UnitTest
 
 class SubscribedTechBlogReaderTest : UnitTest() {
     @Test
     fun `캐시된 구독 목록이 있으면 캐시에서 필터링한다`() {
-        val techBlogSubscriptionCache = mockk<TechBlogSubscriptionCache>()
-        every { techBlogSubscriptionCache.get(1L) } returns listOf(
-            TechBlogSubscriptionInfo(1L, subscribed = true, notificationEnabled = false),
-            TechBlogSubscriptionInfo(3L, subscribed = true, notificationEnabled = true)
+        val subscriptionCache = mockk<SubscriptionCache>()
+        every { subscriptionCache.get(1L) } returns listOf(
+            SubscriptionInfo(1L, subscribed = true, notificationEnabled = false),
+            SubscriptionInfo(3L, subscribed = true, notificationEnabled = true)
         )
 
         val reader = SubscribedTechBlogReader(
             jdbc = mockk<NamedParameterJdbcTemplate>(),
-            techBlogSubscriptionCache = techBlogSubscriptionCache,
+            subscriptionCache = subscriptionCache,
             warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
         )
 

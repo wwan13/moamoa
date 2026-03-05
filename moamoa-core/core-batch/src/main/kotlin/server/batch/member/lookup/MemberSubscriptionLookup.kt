@@ -15,7 +15,7 @@ internal class MemberSubscriptionLookup(
             SELECT
                 tbs.member_id,
                 tbs.tech_blog_id
-            FROM tech_blog_subscription tbs
+            FROM subscription tbs
             JOIN tech_blog tb
               ON tb.id = tbs.tech_blog_id
             WHERE tbs.notification_enabled = 1

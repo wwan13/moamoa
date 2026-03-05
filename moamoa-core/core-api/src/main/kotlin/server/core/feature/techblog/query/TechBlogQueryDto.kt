@@ -31,7 +31,7 @@ data class TechBlogStats(
     val postCount: Long,
 )
 
-data class TechBlogSubscriptionInfo(
+data class SubscriptionInfo(
     val techBlogId: Long,
     val subscribed: Boolean,
     val notificationEnabled: Boolean,

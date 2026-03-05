@@ -12,17 +12,17 @@ import server.batch.common.queue.BatchQueue
 internal class TechBlogScheduler(
     private val batchScope: CoroutineScope,
     private val batchQueue: BatchQueue,
-    private val syncTechBlogSubscriptionCountJob: Job,
+    private val syncSubscriptionCountJob: Job,
     private val collectTechBlogPostJob: Job,
     private val notifyTechBlogCollectResultJob: Job,
 ) {
 
     @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Seoul")
-    fun launchSyncTechBlogSubscriptionCountJob() = batchScope.launch {
+    fun launchSyncSubscriptionCountJob() = batchScope.launch {
         val params = JobParametersBuilder()
             .addLong("run.id", System.currentTimeMillis())
             .toJobParameters()
-        batchQueue.enqueue(syncTechBlogSubscriptionCountJob, params)
+        batchQueue.enqueue(syncSubscriptionCountJob, params)
     }
 
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")

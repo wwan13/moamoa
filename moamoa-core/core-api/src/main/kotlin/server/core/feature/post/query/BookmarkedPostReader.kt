@@ -37,7 +37,7 @@ class BookmarkedPostReader(
 
         val sql = """
             SELECT pb.post_id AS post_id
-            FROM post_bookmark pb
+            FROM bookmark pb
             WHERE pb.member_id = :memberId
         """.trimIndent()
 
@@ -57,7 +57,7 @@ class BookmarkedPostReader(
 
         val sql = """
             SELECT pb.post_id AS post_id
-            FROM post_bookmark pb
+            FROM bookmark pb
             WHERE pb.member_id = :memberId
               AND pb.post_id IN ($placeholders)
         """.trimIndent()

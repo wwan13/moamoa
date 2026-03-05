@@ -79,7 +79,7 @@ class BookmarkedPostQueryService(
         val sql = """
             $POST_QUERY_BASE_SELECT,
                 1 AS is_bookmarked
-            FROM post_bookmark pb
+            FROM bookmark pb
             INNER JOIN post p ON p.id = pb.post_id
             INNER JOIN tech_blog t ON t.id = p.tech_blog_id
             WHERE pb.member_id = :memberId
@@ -97,7 +97,7 @@ class BookmarkedPostQueryService(
     private fun countBookmarkedPosts(memberId: Long): Long {
         val sql = """
             SELECT COUNT(*) AS cnt
-            FROM post_bookmark pb
+            FROM bookmark pb
             WHERE pb.member_id = :memberId
         """.trimIndent()
 

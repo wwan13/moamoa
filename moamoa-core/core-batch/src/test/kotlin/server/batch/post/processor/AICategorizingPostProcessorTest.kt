@@ -8,8 +8,8 @@ import io.mockk.mockk
 import io.mockk.slot
 import org.junit.jupiter.api.Test
 import server.batch.post.dto.PostSummary
-import server.shared.ai.ChatCompletion
-import server.shared.ai.Prompt
+import server.ai.ChatCompletion
+import server.ai.Prompt
 import test.UnitTest
 
 class AICategorizingPostProcessorTest : UnitTest() {

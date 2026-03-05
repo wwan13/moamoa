@@ -84,7 +84,7 @@ class SubscribedPostQueryService(
         val sql = """
             $POST_QUERY_BASE_SELECT,
                 0 AS is_bookmarked
-            FROM tech_blog_subscription s
+            FROM subscription s
             INNER JOIN tech_blog t ON t.id = s.tech_blog_id
             INNER JOIN post p ON p.tech_blog_id = t.id
             WHERE s.member_id = :memberId
@@ -102,7 +102,7 @@ class SubscribedPostQueryService(
     private fun countSubscribingPosts(memberId: Long): Long {
         val sql = """
             SELECT COUNT(*) AS cnt
-            FROM tech_blog_subscription s
+            FROM subscription s
             INNER JOIN post p ON p.tech_blog_id = s.tech_blog_id
             WHERE s.member_id = :memberId
         """.trimIndent()

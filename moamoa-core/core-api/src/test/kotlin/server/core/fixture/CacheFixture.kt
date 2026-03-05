@@ -3,7 +3,7 @@ package server.core.fixture
 import server.core.feature.post.query.PostStats
 import server.core.feature.post.query.PostSummary
 import server.core.feature.techblog.application.TechBlogData
-import server.core.feature.techblog.query.TechBlogSubscriptionInfo
+import server.core.feature.techblog.query.SubscriptionInfo
 import server.core.feature.techblog.query.TechBlogSummary
 import java.time.LocalDateTime
 
@@ -81,11 +81,11 @@ fun createTechBlogSummary(
     notificationEnabled = notificationEnabled
 )
 
-fun createTechBlogSubscriptionInfo(
+fun createSubscriptionInfo(
     techBlogId: Long = 1L,
     subscribed: Boolean = true,
     notificationEnabled: Boolean = true
-): TechBlogSubscriptionInfo = TechBlogSubscriptionInfo(
+): SubscriptionInfo = SubscriptionInfo(
     techBlogId = techBlogId,
     subscribed = subscribed,
     notificationEnabled = notificationEnabled

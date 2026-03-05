@@ -14,14 +14,14 @@ const val POST_QUERY_BASE_SELECT = """
         p.url              AS post_url,
         p.published_at     AS published_at,
         p.view_count       AS post_view_count,
-        p.bookmark_count   AS post_bookmark_count,
+        p.bookmark_count   AS bookmark_count,
         
         t.id               AS tech_blog_id,
         t.title            AS tech_blog_title,
         t.tech_blog_key    AS tech_blog_key,
         t.blog_url         AS tech_blog_url,
         t.icon             AS tech_blog_icon,
-        t.subscription_count AS tech_blog_subscription_count
+        t.subscription_count AS subscription_count
 """
 
 fun mapToPostSummary(rs: ResultSet): PostSummary = PostSummary(
@@ -33,7 +33,7 @@ fun mapToPostSummary(rs: ResultSet): PostSummary = PostSummary(
     url = rs.getString("post_url") ?: "",
     publishedAt = rs.getObject("published_at", LocalDateTime::class.java) ?: LocalDateTime.MIN,
     viewCount = rs.getLong("post_view_count"),
-    bookmarkCount = rs.getLong("post_bookmark_count"),
+    bookmarkCount = rs.getLong("bookmark_count"),
     isBookmarked = (rs.getInt("is_bookmarked")) == 1,
     techBlog = TechBlogData(
         id = rs.getLong("tech_blog_id"),
@@ -41,6 +41,6 @@ fun mapToPostSummary(rs: ResultSet): PostSummary = PostSummary(
         key = rs.getString("tech_blog_key") ?: "",
         blogUrl = rs.getString("tech_blog_url") ?: "",
         icon = rs.getString("tech_blog_icon") ?: "",
-        subscriptionCount = rs.getLong("tech_blog_subscription_count"),
+        subscriptionCount = rs.getLong("subscription_count"),
     )
 )

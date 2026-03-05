@@ -29,7 +29,7 @@ class TechBlogQueryServiceTest : UnitTest() {
             1L to TechBlogStats(techBlogId = 1L, subscriptionCount = 3L, postCount = 5L)
         )
         every { subscribedTechBlogReader.findSubscribedMap(1L, listOf(1L, 2L)) } returns mapOf(
-            2L to TechBlogSubscriptionInfo(2L, subscribed = true, notificationEnabled = true)
+            2L to SubscriptionInfo(2L, subscribed = true, notificationEnabled = true)
         )
 
         val service = TechBlogQueryService(

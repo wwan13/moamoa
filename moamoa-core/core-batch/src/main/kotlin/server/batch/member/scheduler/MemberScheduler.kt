@@ -16,7 +16,7 @@ internal class MemberScheduler(
 ) {
 
     @Scheduled(cron = "0 0 5 * * *", zone = "Asia/Seoul")
-    fun launchSyncPostBookmarkCountJob() = batchScope.launch {
+    fun launchSyncBookmarkCountJob() = batchScope.launch {
         val params = JobParametersBuilder()
             .addLong("run.id", System.currentTimeMillis())
             .toJobParameters()

@@ -5,8 +5,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.post.application.PostCacheEvictService
-import server.core.feature.postbookmark.domain.PostBookmarkUpdatedEvent
-import server.core.feature.techblogsubscription.domain.TechBlogSubscribeUpdatedEvent
+import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
+import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.core.infra.cache.BookmarkedAllPostIdSetCache
 import server.core.infra.cache.BookmarkedPostListCache
 import server.core.infra.cache.PostStatsCache
@@ -50,7 +50,7 @@ class PostCacheEvictServiceTest : UnitTest() {
             postStatsCache,
             bookmarkedAllPostIdSetCache
         )
-        val event = PostBookmarkUpdatedEvent(memberId = 10L, postId = 200L, bookmarked = true)
+        val event = BookmarkUpdatedEvent(memberId = 10L, postId = 200L, bookmarked = true)
 
         val handler = service.bookmarkUpdatedPostCacheEvict()
         handler.handler(event)

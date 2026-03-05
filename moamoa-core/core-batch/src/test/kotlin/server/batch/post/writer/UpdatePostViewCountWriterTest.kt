@@ -8,8 +8,8 @@ import org.springframework.batch.item.Chunk
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.post.dto.PostViewCount
-import server.shared.cache.CacheMemory
-import server.shared.set.SetMemory
+import server.cache.CacheMemory
+import server.set.SetMemory
 import test.UnitTest
 
 class UpdatePostViewCountWriterTest : UnitTest() {

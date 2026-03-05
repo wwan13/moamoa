@@ -24,13 +24,13 @@ class SubscribedTechBlogQueryService(
     }
 
     private fun loadAll(memberId: Long): List<TechBlogSummary> {
-        val subscriptions: List<TechBlogSubscriptionInfo> =
+        val subscriptions: List<SubscriptionInfo> =
             subscribedTechBlogReader.findAllSubscribedList(memberId)
 
         if (subscriptions.isEmpty()) return emptyList()
 
         val techBlogIds: List<Long> = subscriptions.map { it.techBlogId }
-        val subscriptionMap: Map<Long, TechBlogSubscriptionInfo> =
+        val subscriptionMap: Map<Long, SubscriptionInfo> =
             subscriptions.associateBy { it.techBlogId }
 
         val cached = techBlogSummaryCache.mGet(techBlogIds)

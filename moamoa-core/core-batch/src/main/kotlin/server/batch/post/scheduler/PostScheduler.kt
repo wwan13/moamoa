@@ -12,16 +12,16 @@ import server.batch.common.queue.BatchQueue
 internal class PostScheduler(
     private val batchScope: CoroutineScope,
     private val batchQueue: BatchQueue,
-    private val syncPostBookmarkCountJob: Job,
+    private val syncBookmarkCountJob: Job,
     private val updatePostViewCountJob: Job,
 ) {
 
     @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Seoul")
-    fun launchSyncPostBookmarkCountJob() = batchScope.launch {
+    fun launchSyncBookmarkCountJob() = batchScope.launch {
         val params = JobParametersBuilder()
             .addLong("run.id", System.currentTimeMillis())
             .toJobParameters()
-        batchQueue.enqueue(syncPostBookmarkCountJob, params)
+        batchQueue.enqueue(syncBookmarkCountJob, params)
     }
 
     @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Seoul")
@@ -37,6 +37,6 @@ internal class PostScheduler(
         val params = JobParametersBuilder()
             .addLong("run.id", System.currentTimeMillis())
             .toJobParameters()
-        batchQueue.enqueue(syncPostBookmarkCountJob, params)
+        batchQueue.enqueue(syncBookmarkCountJob, params)
     }
 }
