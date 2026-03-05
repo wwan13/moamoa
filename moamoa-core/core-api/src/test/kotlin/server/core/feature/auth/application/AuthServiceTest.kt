@@ -12,9 +12,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.MemberRepository
 import server.core.fixture.createMember
-import server.core.infra.cache.EmailVerificationCache
-import server.core.infra.cache.RefreshTokenCache
-import server.core.infra.cache.SocialMemberSessionCache
+import server.core.feature.auth.infra.EmailVerificationCache
+import server.core.feature.auth.infra.RefreshTokenCache
+import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.token.AuthPrincipal
 import server.token.TokenProvider
 import server.token.TokenType

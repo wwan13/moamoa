@@ -6,7 +6,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.post.query.BookmarkedPostReader
-import server.core.infra.cache.BookmarkedAllPostIdSetCache
+import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
 import server.core.infra.cache.WarmupCoordinator
 import test.UnitTest
 

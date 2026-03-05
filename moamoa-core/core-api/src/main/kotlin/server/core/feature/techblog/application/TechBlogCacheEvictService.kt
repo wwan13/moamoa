@@ -3,8 +3,8 @@ package server.core.feature.techblog.application
 import org.springframework.stereotype.Service
 import server.core.feature.subscription.domain.NotificationUpdatedEvent
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
-import server.core.infra.cache.SubscriptionCache
-import server.core.infra.cache.TechBlogSummaryCache
+import server.core.feature.techblog.infra.SubscriptionCache
+import server.core.feature.techblog.infra.TechBlogSummaryCache
 import server.messaging.EventHandler
 import server.messaging.SubscriptionDefinition
 

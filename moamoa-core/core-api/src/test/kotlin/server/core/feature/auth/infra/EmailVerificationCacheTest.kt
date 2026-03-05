@@ -1,4 +1,4 @@
-package server.core.infra.cache
+package server.core.feature.auth.infra
 
 import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.matchers.shouldBe
@@ -9,7 +9,7 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.infra.cache.EmailVerificationCache
+import server.core.feature.auth.infra.EmailVerificationCache
 import server.cache.CacheMemory
 import test.UnitTest
 

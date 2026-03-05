@@ -3,7 +3,7 @@ package server.core.feature.post.query
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import server.core.infra.cache.PostStatsCache
+import server.core.feature.post.infra.PostStatsCache
 import server.core.infra.cache.WarmupCoordinator
 
 @Component

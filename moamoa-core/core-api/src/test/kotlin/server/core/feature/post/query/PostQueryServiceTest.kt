@@ -8,7 +8,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.member.domain.MemberRole
 import server.core.feature.techblog.application.TechBlogData
-import server.core.infra.cache.PostListCache
+import server.core.feature.post.infra.PostListCache
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
 import test.UnitTest

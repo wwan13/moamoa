@@ -1,14 +1,14 @@
-package server.core.infra.cache
+package server.core.feature.post.infra
 
 import org.springframework.stereotype.Component
-import server.core.feature.post.query.PostStats
 import server.cache.CacheMemory
 import server.cache.get
 import server.cache.mgetAs
+import server.core.feature.post.query.PostStats
 
 @Component
 class PostStatsCache(
-    private val cacheMemory: server.cache.CacheMemory,
+    private val cacheMemory: CacheMemory,
 ) {
     private val prefix = "POST:STATS:"
     private val ttlMillis: Long = 60_000L

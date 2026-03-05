@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import server.core.feature.techblog.application.TechBlogCacheEvictService
 import server.core.feature.subscription.domain.NotificationUpdatedEvent
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
-import server.core.infra.cache.SubscriptionCache
-import server.core.infra.cache.TechBlogSummaryCache
+import server.core.feature.techblog.infra.SubscriptionCache
+import server.core.feature.techblog.infra.TechBlogSummaryCache
 import test.UnitTest
 
 class TechBlogCacheEvictServiceTest : UnitTest() {

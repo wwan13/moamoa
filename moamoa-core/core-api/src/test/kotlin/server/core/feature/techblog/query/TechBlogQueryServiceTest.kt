@@ -6,7 +6,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.member.domain.MemberRole
-import server.core.infra.cache.TechBlogListCache
+import server.core.feature.techblog.infra.TechBlogListCache
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
 import test.UnitTest

@@ -1,7 +1,7 @@
 package server.core.feature.post.application
 
 import org.springframework.stereotype.Service
-import server.core.infra.cache.PostViewCountCache
+import server.core.feature.post.infra.PostViewCountCache
 
 @Service
 class PostService(

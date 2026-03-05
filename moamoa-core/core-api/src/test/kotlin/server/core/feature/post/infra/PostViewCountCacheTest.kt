@@ -1,11 +1,11 @@
-package server.core.infra.cache
+package server.core.feature.post.infra
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.infra.cache.PostViewCountCache
+import server.core.feature.post.infra.PostViewCountCache
 import server.cache.CacheMemory
 import server.set.SetMemory
 import test.UnitTest

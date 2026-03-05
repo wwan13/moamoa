@@ -1,14 +1,14 @@
-package server.core.infra.cache
+package server.core.feature.techblog.infra
 
 import org.springframework.stereotype.Component
-import server.core.feature.techblog.query.TechBlogSummary
 import server.cache.CacheMemory
 import server.cache.get
 import server.cache.mgetAs
+import server.core.feature.techblog.query.TechBlogSummary
 
 @Component
 class TechBlogSummaryCache(
-    private val cacheMemory: server.cache.CacheMemory,
+    private val cacheMemory: CacheMemory,
 ) {
     private val prefix = "TECHBLOG:SUMMARY:"
     private val ttlMillis: Long = 60_000L

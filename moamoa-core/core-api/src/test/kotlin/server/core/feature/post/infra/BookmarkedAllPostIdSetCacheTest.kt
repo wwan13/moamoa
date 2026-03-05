@@ -1,4 +1,4 @@
-package server.core.infra.cache
+package server.core.feature.post.infra
 
 import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.matchers.shouldBe
@@ -9,7 +9,7 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.infra.cache.BookmarkedAllPostIdSetCache
+import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
 import server.cache.CacheMemory
 import test.UnitTest
 

@@ -1,13 +1,13 @@
-package server.core.infra.cache
+package server.core.feature.techblog.infra
 
 import org.springframework.stereotype.Component
-import server.core.feature.techblog.query.SubscriptionInfo
 import server.cache.CacheMemory
 import server.cache.get
+import server.core.feature.techblog.query.SubscriptionInfo
 
 @Component
 class SubscriptionCache(
-    private val cacheMemory: server.cache.CacheMemory,
+    private val cacheMemory: CacheMemory,
 ) {
     private val prefix = "TECHBLOG:SUBSCRIPTION:ALL:"
     private val ttlMillis: Long = 60_000L

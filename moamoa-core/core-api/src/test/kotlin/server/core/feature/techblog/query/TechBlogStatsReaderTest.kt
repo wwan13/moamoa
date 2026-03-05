@@ -8,7 +8,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.techblog.query.TechBlogStats
 import server.core.feature.techblog.query.TechBlogStatsReader
 import server.core.feature.techblog.query.TechBlogSummary
-import server.core.infra.cache.TechBlogSummaryCache
+import server.core.feature.techblog.infra.TechBlogSummaryCache
 import server.core.infra.cache.WarmupCoordinator
 import test.UnitTest
 

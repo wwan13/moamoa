@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.bookmark.domain.BookmarkRepository
 import server.core.feature.subscription.domain.SubscriptionRepository
-import server.core.infra.cache.BookmarkedAllPostIdSetCache
-import server.core.infra.cache.SubscriptionCache
+import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
+import server.core.feature.techblog.infra.SubscriptionCache
 
 @Service
 class MemberQueryService(

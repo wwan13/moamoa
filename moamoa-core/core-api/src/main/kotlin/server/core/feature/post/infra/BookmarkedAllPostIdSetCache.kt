@@ -1,4 +1,4 @@
-package server.core.infra.cache
+package server.core.feature.post.infra
 
 import org.springframework.stereotype.Component
 import server.cache.CacheMemory
@@ -6,7 +6,7 @@ import server.cache.get
 
 @Component
 class BookmarkedAllPostIdSetCache(
-    private val cacheMemory: server.cache.CacheMemory,
+    private val cacheMemory: CacheMemory,
 ) {
     private val prefix = "POST:BOOKMARKED:ALL:"
     private val ttlMillis: Long = 60_000L

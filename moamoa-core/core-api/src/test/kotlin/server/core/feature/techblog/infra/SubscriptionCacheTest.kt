@@ -1,4 +1,4 @@
-package server.core.infra.cache
+package server.core.feature.techblog.infra
 
 import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.matchers.shouldBe
@@ -6,7 +6,7 @@ import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.techblog.query.SubscriptionInfo
-import server.core.infra.cache.SubscriptionCache
+import server.core.feature.techblog.infra.SubscriptionCache
 import server.cache.CacheMemory
 import server.core.fixture.createSubscriptionInfo
 import test.UnitTest

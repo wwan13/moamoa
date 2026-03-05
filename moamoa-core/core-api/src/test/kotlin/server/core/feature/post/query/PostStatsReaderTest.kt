@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.post.query.PostStats
 import server.core.feature.post.query.PostStatsReader
-import server.core.infra.cache.PostStatsCache
+import server.core.feature.post.infra.PostStatsCache
 import server.core.infra.cache.WarmupCoordinator
 import test.UnitTest
 

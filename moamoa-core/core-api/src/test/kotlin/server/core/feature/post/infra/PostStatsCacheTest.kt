@@ -1,4 +1,4 @@
-package server.core.infra.cache
+package server.core.feature.post.infra
 
 import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.matchers.shouldBe
@@ -7,7 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.cache.CacheMemory
 import server.core.feature.post.query.PostStats
-import server.core.infra.cache.PostStatsCache
+import server.core.feature.post.infra.PostStatsCache
 import server.core.fixture.createPostStats
 import test.UnitTest
 

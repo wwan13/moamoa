@@ -6,7 +6,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.post.application.PostService
-import server.core.infra.cache.PostViewCountCache
+import server.core.feature.post.infra.PostViewCountCache
 import test.UnitTest
 
 class PostServiceTest : UnitTest() {

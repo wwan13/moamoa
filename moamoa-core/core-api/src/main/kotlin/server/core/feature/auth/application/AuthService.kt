@@ -4,9 +4,9 @@ import org.springframework.stereotype.Service
 import kotlinx.coroutines.runBlocking
 import org.springframework.data.repository.findByIdOrNull
 import server.core.feature.member.domain.MemberRepository
-import server.core.infra.cache.EmailVerificationCache
-import server.core.infra.cache.RefreshTokenCache
-import server.core.infra.cache.SocialMemberSessionCache
+import server.core.feature.auth.infra.EmailVerificationCache
+import server.core.feature.auth.infra.RefreshTokenCache
+import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.global.security.UnauthorizedException
 import server.token.AuthPrincipal
 import server.token.TokenProvider

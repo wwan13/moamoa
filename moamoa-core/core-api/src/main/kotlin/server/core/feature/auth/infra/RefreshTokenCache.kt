@@ -1,4 +1,4 @@
-package server.core.infra.cache
+package server.core.feature.auth.infra
 
 import org.springframework.stereotype.Component
 import server.cache.CacheMemory
@@ -6,7 +6,7 @@ import server.cache.get
 
 @Component
 class RefreshTokenCache(
-    private val cacheMemory: server.cache.CacheMemory
+    private val cacheMemory: CacheMemory
 ) {
 
     private val refreshTokenPrefix = "REFRESH_TOKEN:"

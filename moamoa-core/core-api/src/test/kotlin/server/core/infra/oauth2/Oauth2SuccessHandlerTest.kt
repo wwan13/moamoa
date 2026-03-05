@@ -14,7 +14,7 @@ import server.core.feature.auth.application.AuthService
 import server.core.feature.auth.application.AuthTokens
 import server.core.feature.member.domain.MemberRole
 import server.core.feature.member.domain.Provider
-import server.core.infra.cache.RefreshTokenCache
+import server.core.feature.auth.infra.RefreshTokenCache
 import test.UnitTest
 
 class Oauth2SuccessHandlerTest : UnitTest() {

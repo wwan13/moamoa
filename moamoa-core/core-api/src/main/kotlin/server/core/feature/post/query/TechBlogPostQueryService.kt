@@ -3,7 +3,7 @@ package server.core.feature.post.query
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
-import server.core.infra.cache.TechBlogPostListCache
+import server.core.feature.post.infra.TechBlogPostListCache
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
 import server.core.support.paging.Paging

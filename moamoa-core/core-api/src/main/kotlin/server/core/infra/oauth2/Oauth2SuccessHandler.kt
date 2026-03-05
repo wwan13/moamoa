@@ -8,7 +8,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.stereotype.Component
 import server.core.feature.auth.application.AuthService
-import server.core.infra.cache.RefreshTokenCache
+import server.core.feature.auth.infra.RefreshTokenCache
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 

@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service
 import server.core.feature.member.domain.Member
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.member.domain.Provider
-import server.core.infra.cache.EmailVerificationCache
-import server.core.infra.cache.SocialMemberSessionCache
+import server.core.feature.auth.infra.EmailVerificationCache
+import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.infra.db.transaction.Transactional
 import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException

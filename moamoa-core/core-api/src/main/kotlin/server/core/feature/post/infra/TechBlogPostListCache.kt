@@ -1,13 +1,13 @@
-package server.core.infra.cache
+package server.core.feature.post.infra
 
 import org.springframework.stereotype.Component
-import server.core.feature.post.query.PostSummary
 import server.cache.CacheMemory
 import server.cache.get
+import server.core.feature.post.query.PostSummary
 
 @Component
 class TechBlogPostListCache(
-    private val cacheMemory: server.cache.CacheMemory
+    private val cacheMemory: CacheMemory
 ) {
     private val prefix = "POST:LIST:TECHBLOG:"
     private val thirtyMinutes: Long = 1_800_000L

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.techblog.query.SubscribedTechBlogReader
 import server.core.feature.techblog.query.SubscriptionInfo
-import server.core.infra.cache.SubscriptionCache
+import server.core.feature.techblog.infra.SubscriptionCache
 import server.core.infra.cache.WarmupCoordinator
 import test.UnitTest
 

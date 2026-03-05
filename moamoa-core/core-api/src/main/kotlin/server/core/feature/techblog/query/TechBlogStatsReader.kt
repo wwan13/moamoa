@@ -3,7 +3,7 @@ package server.core.feature.techblog.query
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
-import server.core.infra.cache.TechBlogSummaryCache
+import server.core.feature.techblog.infra.TechBlogSummaryCache
 import server.core.infra.cache.WarmupCoordinator
 
 @Component

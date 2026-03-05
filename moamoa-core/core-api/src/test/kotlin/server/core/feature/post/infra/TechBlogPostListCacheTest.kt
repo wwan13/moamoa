@@ -1,46 +1,42 @@
-package server.core.infra.cache
+package server.core.feature.post.infra
 
 import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.matchers.shouldBe
-import io.mockk.Runs
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.just
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.post.query.PostSummary
-import server.core.infra.cache.PostListCache
+import server.core.feature.post.infra.TechBlogPostListCache
 import server.cache.CacheMemory
 import server.core.fixture.createPostSummary
 import test.UnitTest
 
-class PostListCacheTest : UnitTest() {
+class TechBlogPostListCacheTest : UnitTest() {
     @Test
-    fun `페이지와 사이즈로 게시글 목록을 조회한다`() = runTest {
+    fun `기술 블로그 게시글 목록을 조회한다`() = runTest {
         val cacheMemory = mockk<CacheMemory>()
-        val cache = PostListCache(cacheMemory)
-        val key = "POST:LIST:PAGE:1:SIZE:20"
+        val cache = TechBlogPostListCache(cacheMemory)
+        val key = "POST:LIST:TECHBLOG:10:PAGE:1"
         val expected = listOf(createPostSummary())
 
         coEvery { cacheMemory.get(key, any<TypeReference<List<PostSummary>>>()) } returns expected
 
-        val result = cache.get(1, 20)
+        val result = cache.get(10L, 1L)
 
         result shouldBe expected
         coVerify(exactly = 1) { cacheMemory.get(key, any<TypeReference<List<PostSummary>>>()) }
     }
 
     @Test
-    fun `페이지와 사이즈로 게시글 목록을 저장한다`() = runTest {
+    fun `기술 블로그 게시글 목록을 저장한다`() = runTest {
         val cacheMemory = mockk<CacheMemory>()
-        val cache = PostListCache(cacheMemory)
-        val key = "POST:LIST:PAGE:1:SIZE:20"
+        val cache = TechBlogPostListCache(cacheMemory)
+        val key = "POST:LIST:TECHBLOG:10:PAGE:1"
         val posts = listOf(createPostSummary())
 
         coEvery { cacheMemory.set(key, posts, 1_800_000L) } just Runs
 
-        cache.set(1, 20, posts)
+        cache.set(10L, 1L, posts)
 
         coVerify(exactly = 1) { cacheMemory.set(key, posts, 1_800_000L) }
     }

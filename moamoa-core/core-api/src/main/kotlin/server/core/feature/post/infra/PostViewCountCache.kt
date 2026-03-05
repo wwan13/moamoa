@@ -1,4 +1,4 @@
-package server.core.infra.cache
+package server.core.feature.post.infra
 
 import org.springframework.stereotype.Component
 import server.cache.CacheMemory
@@ -6,8 +6,8 @@ import server.set.SetMemory
 
 @Component
 class PostViewCountCache(
-    private val cacheMemory: server.cache.CacheMemory,
-    private val setMemory: server.set.SetMemory,
+    private val cacheMemory: CacheMemory,
+    private val setMemory: SetMemory,
 ) {
 
     private val postViewCountPrefix = "POST:VIEW_COUNT:"
