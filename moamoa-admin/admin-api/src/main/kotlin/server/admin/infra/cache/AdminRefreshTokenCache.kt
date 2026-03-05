@@ -1,12 +1,12 @@
 package server.admin.infra.cache
 
 import org.springframework.stereotype.Component
-import server.shared.cache.CacheMemory
-import server.shared.cache.get
+import server.cache.CacheMemory
+import server.cache.get
 
 @Component
 class AdminRefreshTokenCache(
-    private val cacheMemory: CacheMemory
+    private val cacheMemory: server.cache.CacheMemory
 ) {
 
     private val refreshTokenPrefix = "REFRESH_TOKEN:ADMIN:"

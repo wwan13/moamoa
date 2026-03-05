@@ -2,7 +2,7 @@ package server.batch.techblog.monitoring
 
 import org.springframework.stereotype.Component
 import server.batch.techblog.dto.TechBlogKey
-import server.shared.cache.CacheMemory
+import server.cache.CacheMemory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId

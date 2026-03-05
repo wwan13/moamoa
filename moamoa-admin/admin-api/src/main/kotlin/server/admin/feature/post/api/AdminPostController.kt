@@ -14,9 +14,9 @@ import server.admin.feature.post.command.application.AdminUpdateCategoryResult
 import server.admin.feature.post.query.AdminPostList
 import server.admin.feature.post.query.AdminPostQueryConditions
 import server.admin.feature.post.query.AdminPostQueryService
-import server.admin.security.AdminPassport
-import server.admin.security.RequestAdminPassport
-import server.admin.security.ensureAdmin
+import server.admin.global.security.AdminPassport
+import server.admin.global.security.RequestAdminPassport
+import server.admin.global.security.ensureAdmin
 
 @RestController
 @RequestMapping("/api/admin/post")

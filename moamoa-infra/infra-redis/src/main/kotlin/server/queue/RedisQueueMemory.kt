@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.shared.queue.QueueMemory
+import server.queue.QueueMemory
 
 @Component
 internal class RedisQueueMemory(

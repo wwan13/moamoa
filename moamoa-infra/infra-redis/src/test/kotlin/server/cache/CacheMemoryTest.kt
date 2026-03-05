@@ -9,7 +9,6 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.core.ValueOperations
-import server.shared.cache.CacheInfraException
 
 class CacheMemoryTest {
     private val redis = mockk<StringRedisTemplate>()

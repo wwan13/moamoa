@@ -4,7 +4,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Column
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import support.admin.domain.AdminBaseEntity
+import server.admin.support.domain.AdminBaseEntity
 import java.time.LocalDateTime
 
 @Entity

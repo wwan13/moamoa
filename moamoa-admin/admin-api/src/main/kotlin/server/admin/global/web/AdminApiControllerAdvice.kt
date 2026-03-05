@@ -13,10 +13,10 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.bind.support.WebExchangeBindException
-import server.admin.security.AdminForbiddenException
-import server.admin.security.AdminUnauthorizedException
-import server.shared.security.jwt.ExpiredTokenException
-import server.shared.security.jwt.InvalidTokenException
+import server.admin.global.security.AdminForbiddenException
+import server.admin.global.security.AdminUnauthorizedException
+import server.token.ExpiredTokenException
+import server.token.InvalidTokenException
 
 @RestControllerAdvice
 internal class AdminApiControllerAdvice {

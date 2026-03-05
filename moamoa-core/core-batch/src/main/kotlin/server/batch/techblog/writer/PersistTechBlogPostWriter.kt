@@ -1,6 +1,5 @@
 package server.batch.techblog.writer
 
-import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
@@ -11,10 +10,11 @@ import server.batch.common.time.dbNow
 import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.techblog.dto.PostData
 import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
-import server.shared.cache.CacheMemory
-import server.shared.queue.QueueMemory
+import server.cache.CacheMemory
+import server.queue.QueueMemory
 import java.sql.Timestamp
 import java.time.LocalDateTime
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 
 @StepScope
 @Component

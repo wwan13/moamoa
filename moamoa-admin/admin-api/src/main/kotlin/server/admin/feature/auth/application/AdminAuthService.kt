@@ -4,12 +4,12 @@ import org.springframework.stereotype.Service
 import org.springframework.data.repository.findByIdOrNull
 import server.admin.feature.member.domain.AdminMemberRepository
 import server.admin.infra.cache.AdminRefreshTokenCache
-import server.admin.security.AdminForbiddenException
-import server.admin.security.AdminUnauthorizedException
-import server.shared.security.jwt.AuthPrincipal
-import server.shared.security.jwt.TokenProvider
-import server.shared.security.jwt.TokenType
-import server.shared.security.password.PasswordEncoder
+import server.admin.global.security.AdminForbiddenException
+import server.admin.global.security.AdminUnauthorizedException
+import server.token.AuthPrincipal
+import server.token.TokenProvider
+import server.token.TokenType
+import server.password.PasswordEncoder
 
 @Service
 internal class AdminAuthService(

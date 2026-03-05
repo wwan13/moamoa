@@ -1,18 +1,17 @@
 package server.messaging.retry
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.Range
-import org.springframework.data.redis.connection.stream.RecordId
 import org.springframework.data.redis.connection.stream.StreamRecords
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
+import server.messaging.MessageChannel
 import server.messaging.StreamEventHandlers
+import server.messaging.SubscriptionDefinition
 import server.messaging.health.RedisHealthStateManager
-import server.shared.messaging.MessageChannel
-import server.shared.messaging.SubscriptionDefinition
 import java.time.Duration
+import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 
 @Component
 internal class StreamRetryProcessor(

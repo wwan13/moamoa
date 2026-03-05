@@ -3,7 +3,7 @@ package server.set
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.shared.set.SetMemory
+import server.set.SetMemory
 
 @Component
 internal class RedisSetMemory(

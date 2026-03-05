@@ -8,7 +8,7 @@ import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.post.dto.PostCategory
 import server.batch.post.dto.PostSummary
 import server.batch.post.dto.PreCategorizingPostResult
-import server.shared.queue.QueueMemory
+import server.queue.QueueMemory
 
 @Component
 internal class PreCategorizingPostWriter(

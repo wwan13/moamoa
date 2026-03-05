@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import server.shared.cache.CacheMemory
 import java.util.concurrent.ConcurrentHashMap
 
 @Component("caffeineCacheMemory")

@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test
 import org.redisson.api.RFuture
 import org.redisson.api.RLock
 import org.redisson.api.RedissonClient
-import server.shared.lock.LockInfraException
 import test.UnitTest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit

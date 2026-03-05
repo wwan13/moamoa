@@ -3,13 +3,7 @@ package server.admin.feature.techblog.api
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import server.admin.feature.techblog.application.AdminCreateTechBlogCommand
-import server.admin.feature.techblog.application.AdminInitTechBlogCommand
-import server.admin.feature.techblog.application.AdminInitTechBlogResult
-import server.admin.feature.techblog.application.AdminTechBlogData
-import server.admin.feature.techblog.application.AdminTechBlogService
-import server.admin.feature.techblog.application.AdminUpdateTechBlogCommand
-import support.admin.uri.toUri
+import server.admin.feature.techblog.application.*
 
 @RestController
 @RequestMapping("/api/admin/tech-blog")
@@ -21,8 +15,8 @@ internal class AdminTechBlogController(
         @RequestBody @Valid command: AdminCreateTechBlogCommand
     ): ResponseEntity<AdminTechBlogData> {
         val response = techBlogService.create(command)
-        val uri = "/api/tech-blog/${response.id}".toUri()
-        return ResponseEntity.created(uri).body(response)
+
+        return ResponseEntity.ok(response)
     }
 
     @PostMapping("/init")

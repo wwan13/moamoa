@@ -19,9 +19,6 @@ import org.springframework.data.redis.connection.stream.StreamReadOptions
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
-import server.shared.messaging.MessageChannel
-import server.shared.messaging.MessageHandlerBinding
-import server.shared.messaging.SubscriptionDefinition
 import kotlinx.coroutines.runBlocking
 import server.messaging.health.RedisHealthStateManager
 import server.messaging.health.RedisRecoveryAction

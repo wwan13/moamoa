@@ -3,8 +3,8 @@ package server.lock
 import org.redisson.api.RLock
 import org.redisson.api.RedissonClient
 import org.springframework.stereotype.Component
-import server.shared.lock.KeyedLock
-import server.shared.lock.LockInfraException
+import server.lock.KeyedLock
+import server.lock.LockInfraException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 

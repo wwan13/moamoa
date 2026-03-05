@@ -31,6 +31,9 @@
                     <loggerName>
                         <fieldName>logger</fieldName>
                     </loggerName>
+                    <message>
+                        <fieldName>message</fieldName>
+                    </message>
                     <keyValuePairs/>
                     <arguments/>
                     <stackTrace>
@@ -57,6 +60,9 @@
                     <loggerName>
                         <fieldName>logger</fieldName>
                     </loggerName>
+                    <message>
+                        <fieldName>message</fieldName>
+                    </message>
                     <keyValuePairs/>
                     <arguments/>
                     <stackTrace>
@@ -111,6 +117,9 @@
                     <loggerName>
                         <fieldName>logger</fieldName>
                     </loggerName>
+                    <message>
+                        <fieldName>message</fieldName>
+                    </message>
                     <keyValuePairs/>
                     <arguments/>
                     <stackTrace>
@@ -138,6 +147,9 @@
                     <loggerName>
                         <fieldName>logger</fieldName>
                     </loggerName>
+                    <message>
+                        <fieldName>message</fieldName>
+                    </message>
                     <keyValuePairs/>
                     <arguments/>
                     <stackTrace>

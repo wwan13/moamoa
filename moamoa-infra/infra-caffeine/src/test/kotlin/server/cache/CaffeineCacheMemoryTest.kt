@@ -8,6 +8,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import server.cache.CaffeineCacheMemory
 
 class CaffeineCacheMemoryTest {
     private val cacheMemory = CaffeineCacheMemory(jacksonObjectMapper())

@@ -2,7 +2,6 @@ package server.password
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
-import server.shared.security.password.PasswordEncoder
 
 @Component
 internal class CryptoPasswordEncoder : PasswordEncoder {

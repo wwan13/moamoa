@@ -1,14 +1,7 @@
 package server.batch.techblog.writer
 
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.runs
-import io.mockk.slot
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.springframework.batch.item.Chunk
@@ -17,9 +10,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.batch.common.transaction.AfterCommitExecutor
 import server.batch.techblog.dto.PostData
 import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
-import server.shared.cache.CacheMemory
-import server.shared.cache.get
-import server.shared.queue.QueueMemory
+import server.cache.CacheMemory
+import server.queue.QueueMemory
 import test.UnitTest
 import java.time.LocalDateTime
 

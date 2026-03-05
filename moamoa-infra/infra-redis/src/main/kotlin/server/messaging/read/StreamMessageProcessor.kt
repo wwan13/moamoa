@@ -9,7 +9,7 @@ import org.springframework.data.redis.connection.stream.RecordId
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.stereotype.Component
 import server.messaging.StreamEventHandlers
-import server.shared.messaging.SubscriptionDefinition
+import server.messaging.SubscriptionDefinition
 
 @Component
 internal class StreamMessageProcessor(

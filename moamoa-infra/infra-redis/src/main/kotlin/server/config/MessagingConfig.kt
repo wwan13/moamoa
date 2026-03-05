@@ -5,7 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import server.shared.messaging.MessageChannel
+import server.messaging.MessageChannel
 
 @Configuration
 internal class MessagingConfig {

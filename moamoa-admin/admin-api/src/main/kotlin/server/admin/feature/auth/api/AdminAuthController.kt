@@ -11,8 +11,8 @@ import server.admin.feature.auth.application.AdminAuthService
 import server.admin.feature.auth.application.AdminAuthTokens
 import server.admin.feature.auth.application.AdminLoginCommand
 import server.admin.feature.auth.application.AdminLogoutResult
-import server.admin.security.AdminPassport
-import server.admin.security.RequestAdminPassport
+import server.admin.global.security.AdminPassport
+import server.admin.global.security.RequestAdminPassport
 
 @RestController
 @RequestMapping("/api/admin/auth")

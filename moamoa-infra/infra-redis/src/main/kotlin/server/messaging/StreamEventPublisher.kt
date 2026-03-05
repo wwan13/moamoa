@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.connection.stream.StreamRecords
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.shared.messaging.EventPublisher
-import server.shared.messaging.MessageChannel
+import server.messaging.EventPublisher
+import server.messaging.MessageChannel
 import java.time.Instant
 import java.util.UUID
 

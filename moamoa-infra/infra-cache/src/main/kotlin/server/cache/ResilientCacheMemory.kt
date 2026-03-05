@@ -3,7 +3,6 @@ package server.cache
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
-import server.shared.cache.CacheMemory
 
 @Component("resilientCacheMemoryProxy")
 @Primary

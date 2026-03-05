@@ -1,8 +1,8 @@
 package server.messaging
 
 import org.springframework.stereotype.Component
-import server.shared.messaging.MessageHandlerBinding
-import server.shared.messaging.SubscriptionDefinition
+import server.messaging.MessageHandlerBinding
+import server.messaging.SubscriptionDefinition
 
 @Component
 internal class StreamEventHandlers(

@@ -5,10 +5,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
+import server.ai.ChatCompletion
+import server.ai.Prompt
 import server.batch.post.dto.PostCategory
 import server.batch.post.dto.PostSummary
-import server.shared.ai.ChatCompletion
-import server.shared.ai.Prompt
 
 @Component
 internal class AICategorizingPostProcessor(

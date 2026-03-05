@@ -2,7 +2,6 @@ package server.cache
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
-import server.shared.cache.CacheMemory
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
