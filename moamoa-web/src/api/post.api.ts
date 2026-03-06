@@ -1,5 +1,4 @@
 import { http, type ApiRequestConfig } from "./client"
-import type { TechBlogData } from "./techBlog.api"
 
 const DEFAULT_PAGE_SIZE = 20
 
@@ -37,7 +36,12 @@ export type PostSummary = {
   isBookmarked: boolean
   viewCount: number
   bookmarkCount: number
-  techBlog: TechBlogData
+  techBlogId: number
+  techBlogTitle: string
+  techBlogIcon: string
+  techBlogBlogUrl: string
+  techBlogKey: string
+  techBlogSubscriptionCount: number
 }
 
 export type PostListMeta = {

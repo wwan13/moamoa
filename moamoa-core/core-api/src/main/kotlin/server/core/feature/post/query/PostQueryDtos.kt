@@ -1,6 +1,5 @@
 package server.core.feature.post.query
 
-import server.core.feature.techblog.application.TechBlogData
 import java.time.LocalDateTime
 
 data class PostQueryConditions(
@@ -32,7 +31,12 @@ data class PostSummary(
     val isBookmarked: Boolean,
     val viewCount: Long,
     val bookmarkCount: Long,
-    val techBlog: TechBlogData
+    val techBlogId: Long,
+    val techBlogTitle: String,
+    val techBlogIcon: String,
+    val techBlogBlogUrl: String,
+    val techBlogKey: String,
+    val techBlogSubscriptionCount: Long,
 )
 
 data class TechBlogPostQueryConditions(

@@ -1,17 +1,24 @@
 package server.core.feature.post.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import server.core.feature.post.domain.Post
+import server.core.feature.post.domain.PostTag
 import server.core.feature.post.infra.PostListCache
-import server.core.infra.cache.WarmupCoordinator
+import server.core.feature.tag.domain.Tag
+import server.core.feature.techblog.domain.TechBlog
 import server.core.global.security.Passport
+import server.core.infra.cache.WarmupCoordinator
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
+import server.core.support.query.createJdslQuery
 
 @Service
 class PostQueryService(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val postListCache: PostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
     private val postStatsReader: PostStatsReader,
@@ -28,7 +35,7 @@ class PostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCount = countAll(conditions.query)
+        val totalCount = countAllPosts(conditions.query)
         val basePosts = loadPosts(paging, conditions.query)
 
         val meta = PostListMeta(
@@ -83,57 +90,72 @@ class PostQueryService(
         paging: Paging,
         query: String? = null
     ): List<PostSummary> {
+        val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
+        val jpqlQuery = createBasePostsQuery(query)
 
-        val whereClause = if (!query.isNullOrBlank()) {
-            """
-            WHERE
-                p.title LIKE :keyword
-                OR p.description LIKE :keyword
-                OR EXISTS (
-                    SELECT 1
-                    FROM post_tag pt
-                    INNER JOIN tag tg ON tg.id = pt.tag_id
-                    WHERE pt.post_id = p.id
-                      AND tg.title LIKE :keyword
-                )
-            """.trimIndent()
-        } else {
-            ""
-        }
+        val rows = entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = PostSummary::class.java,
+                offset = offset.toInt(),
+                limit = limit,
+            )
+            .resultList
 
-        val sql = """
-            $POST_QUERY_BASE_SELECT,
-                0 AS is_bookmarked
-            FROM post p
-            INNER JOIN tech_blog t ON t.id = p.tech_blog_id
-            $whereClause
-            ORDER BY p.published_at DESC
-            LIMIT :limit OFFSET :offset
-        """.trimIndent()
-
-        val params = MapSqlParameterSource()
-            .addValue("limit", paging.size)
-            .addValue("offset", offset)
-        if (query != null) params.addValue("keyword", "%$query%")
-
-        return jdbc.query(sql, params) { rs, _ -> mapToPostSummary(rs) }
+        return rows.distinctBy { it.id }
     }
 
-    private fun countAll(query: String?): Long {
-        val whereClause = if (query != null) {
-            "WHERE title LIKE :keyword OR description LIKE :keyword"
-        } else ""
+    private fun countAllPosts(query: String?): Long {
+        val jpqlQuery = createCountAllPostsQuery(query)
 
-        val sql = """
-        SELECT COUNT(*) AS cnt
-        FROM post
-        $whereClause
-    """.trimIndent()
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = Long::class.javaObjectType,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .firstOrNull()
+            ?: 0L
+    }
 
-        val params = MapSqlParameterSource()
-        if (query != null) params.addValue("keyword", "%$query%")
+    private fun createBasePostsQuery(query: String?) = jpql {
+        val keyword = query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
 
-        return jdbc.queryForObject(sql, params, Long::class.java) ?: 0L
+        selectBasePostSummary(isBookmarked = false)
+            .from(
+                entity(Post::class),
+                join(TechBlog::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
+                leftJoin(PostTag::class).on(path(PostTag::postId).equal(path(Post::id))),
+                leftJoin(Tag::class).on(path(PostTag::tagId).equal(path(Tag::id))),
+            )
+            .whereAnd(
+                keyword?.let {
+                    or(
+                        path(Post::title).like(it),
+                        path(Post::description).like(it),
+                        path(Tag::title).like(it),
+                    )
+                }
+            )
+            .orderBy(path(Post::publishedAt).desc())
+    }
+
+    private fun createCountAllPostsQuery(query: String?) = jpql {
+        val keyword = query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
+        select(count(path(Post::id)))
+            .from(
+                entity(Post::class)
+            )
+            .whereAnd(
+                keyword?.let {
+                    or(
+                        path(Post::title).like(it),
+                        path(Post::description).like(it),
+                    )
+                }
+            )
     }
 }

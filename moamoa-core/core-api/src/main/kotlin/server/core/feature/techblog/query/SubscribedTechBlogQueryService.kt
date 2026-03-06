@@ -1,17 +1,22 @@
 package server.core.feature.techblog.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import server.core.feature.post.domain.Post
+import server.core.feature.techblog.domain.TechBlog
 import server.core.feature.techblog.infra.TechBlogSummaryCache
-import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
+import server.core.infra.cache.WarmupCoordinator
+import server.core.support.query.createJdslQuery
 import kotlin.collections.emptyMap
 import kotlin.collections.forEach
 
 @Service
 class SubscribedTechBlogQueryService(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
     private val techBlogSummaryCache: TechBlogSummaryCache,
     private val warmupCoordinator: WarmupCoordinator,
@@ -39,8 +44,7 @@ class SubscribedTechBlogQueryService(
         val fetchedMap = if (missedIds.isEmpty()) {
             emptyMap()
         } else {
-            val fetched = fetchTechBlogSummaries(missedIds)
-            fetched.associateBy { it.id }.also {
+            findTechBlogSummaryMap(missedIds).also {
                 val cacheKeys = it.keys.map(techBlogSummaryCache::key)
                 val warmupKey = WarmupCoordinator.Companion.msetKey("TechBlogSummaryCache", cacheKeys)
                 warmupCoordinator.launchIfAbsent(warmupKey) {
@@ -69,25 +73,61 @@ class SubscribedTechBlogQueryService(
             .sortedBy { it.title }
     }
 
-    private fun fetchTechBlogSummaries(techBlogIds: List<Long>): List<TechBlogSummary> {
-        if (techBlogIds.isEmpty()) return emptyList()
+    private fun findTechBlogSummaryMap(ids: List<Long>): Map<Long, TechBlogSummary> {
+        if (ids.isEmpty()) return emptyMap()
 
-        val placeholders = techBlogIds.indices.joinToString(",") { ":id$it" }
+        val rows = entityManager
+            .createJdslQuery(
+                query = findTechBlogSummaryMapQuery(ids),
+                resultClass = TechBlogSummary::class.java,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+        val postCountMap = findPostCountMap(ids)
+        return rows
+            .map { row -> row.copy(postCount = postCountMap[row.id] ?: 0L) }
+            .associateBy { it.id }
+    }
 
-        val sql = """
-                $TECH_BLOG_QUERY_BASE_SELECT
-                FROM tech_blog t
-                LEFT JOIN (
-                    SELECT tech_blog_id, COUNT(*) AS post_count
-                    FROM post
-                    GROUP BY tech_blog_id
-                ) pc ON pc.tech_blog_id = t.id
-                WHERE t.id IN ($placeholders)
-            """.trimIndent()
+    private fun findPostCountMap(techBlogIds: List<Long>): Map<Long, Long> {
+        if (techBlogIds.isEmpty()) return emptyMap()
 
-        val params = MapSqlParameterSource()
-        techBlogIds.forEachIndexed { i, id -> params.addValue("id$i", id) }
+        return entityManager
+            .createJdslQuery(
+                query = findPostCountMapQuery(techBlogIds),
+                resultClass = TechBlogStats::class.java,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .associate { it.techBlogId to it.postCount }
+    }
 
-        return jdbc.query(sql, params) { row, _ -> mapToTechBlogSummary(row) }
+    private fun findTechBlogSummaryMapQuery(ids: List<Long>) = jpql {
+        selectBaseTechBlogSummary()
+            .from(
+                entity(TechBlog::class)
+            )
+            .where(
+                path(TechBlog::id).`in`(ids)
+            )
+    }
+
+    private fun findPostCountMapQuery(techBlogIds: List<Long>) = jpql {
+        selectNew<TechBlogStats>(
+            path(Post::techBlogId),
+            longLiteral(0L),
+            count(path(Post::id)),
+        )
+            .from(
+                entity(Post::class)
+            )
+            .where(
+                path(Post::techBlogId).`in`(techBlogIds)
+            )
+            .groupBy(
+                path(Post::techBlogId)
+            )
     }
 }

@@ -12,6 +12,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("com.linecorp.kotlin-jdsl:jpql-dsl:3.7.2")
+    implementation("com.linecorp.kotlin-jdsl:jpql-render:3.7.2")
     runtimeOnly("com.mysql:mysql-connector-j")
 
     implementation("org.springframework.boot:spring-boot-starter-security")

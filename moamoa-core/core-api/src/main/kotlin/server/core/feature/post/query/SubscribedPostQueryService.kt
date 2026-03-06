@@ -1,17 +1,23 @@
 package server.core.feature.post.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.SubscribedPostListCache
-import server.core.infra.cache.WarmupCoordinator
+import server.core.feature.subscription.domain.Subscription
+import server.core.feature.techblog.domain.TechBlog
 import server.core.global.security.Passport
+import server.core.infra.cache.WarmupCoordinator
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
+import server.core.support.query.createJdslQuery
 
 @Service
 class SubscribedPostQueryService(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val subscribedPostListCache: SubscribedPostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
     private val postStatsReader: PostStatsReader,
@@ -28,7 +34,7 @@ class SubscribedPostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCount = countSubscribingPosts(memberId = passport.memberId)
+        val totalCount = countSubscribedPosts(memberId = passport.memberId)
         val basePosts = loadPosts(memberId = passport.memberId, paging = paging)
 
         val meta = PostListMeta(
@@ -79,34 +85,56 @@ class SubscribedPostQueryService(
         paging: Paging,
         memberId: Long,
     ): List<PostSummary> {
+        val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
+        val jpqlQuery = createSubscribedBasePostsQuery(memberId)
 
-        val sql = """
-            $POST_QUERY_BASE_SELECT,
-                0 AS is_bookmarked
-            FROM subscription s
-            INNER JOIN tech_blog t ON t.id = s.tech_blog_id
-            INNER JOIN post p ON p.tech_blog_id = t.id
-            WHERE s.member_id = :memberId
-            ORDER BY p.published_at DESC
-            LIMIT :limit OFFSET :offset
-        """.trimIndent()
-
-        val params = MapSqlParameterSource()
-            .addValue("memberId", memberId)
-            .addValue("limit", paging.size)
-            .addValue("offset", offset)
-        return jdbc.query(sql, params) { rs, _ -> mapToPostSummary(rs) }
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = PostSummary::class.java,
+                offset = offset.toInt(),
+                limit = limit,
+            )
+            .resultList
     }
 
-    private fun countSubscribingPosts(memberId: Long): Long {
-        val sql = """
-            SELECT COUNT(*) AS cnt
-            FROM subscription s
-            INNER JOIN post p ON p.tech_blog_id = s.tech_blog_id
-            WHERE s.member_id = :memberId
-        """.trimIndent()
+    private fun countSubscribedPosts(memberId: Long): Long {
+        val jpqlQuery = createCountSubscribedPostsQuery(memberId)
 
-        return jdbc.queryForObject(sql, mapOf("memberId" to memberId), Long::class.java) ?: 0L
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = Long::class.javaObjectType,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .firstOrNull()
+            ?: 0L
+    }
+
+    private fun createSubscribedBasePostsQuery(memberId: Long) = jpql {
+        selectBasePostSummary(isBookmarked = false)
+            .from(
+                entity(Subscription::class),
+                join(TechBlog::class).on(path(Subscription::techBlogId).equal(path(TechBlog::id))),
+                join(Post::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
+            )
+            .where(
+                path(Subscription::memberId).equal(memberId)
+            )
+            .orderBy(path(Post::publishedAt).desc())
+    }
+
+    private fun createCountSubscribedPostsQuery(memberId: Long) = jpql {
+        select(count(path(Post::id)))
+            .from(
+                entity(Subscription::class),
+                join(Post::class).on(path(Post::techBlogId).equal(path(Subscription::techBlogId))),
+            )
+            .where(
+                path(Subscription::memberId).equal(memberId)
+            )
     }
 }

@@ -155,15 +155,15 @@ const PostItem = ({ post, isBlogDetail = false, isLoading = false }: PostItemPro
                                     className={styles.sourceLink}
                                     onClick={(e) => {
                                         stop(e)
-                                        navigate(`/${post.techBlog.id}`)
+                                        navigate(`/${post.techBlogId}`)
                                     }}
                                 >
                                     <img
-                                        src={post.techBlog?.icon || ""}
-                                        alt={post.techBlog?.title || ""}
+                                        src={post.techBlogIcon || ""}
+                                        alt={post.techBlogTitle || ""}
                                         className={styles.sourceIcon}
                                     />
-                                    <span className={styles.sourceName}>{post.techBlog?.title || ""}</span>
+                                    <span className={styles.sourceName}>{post.techBlogTitle || ""}</span>
                                 </div>
                                 <span className={styles.dot}>·</span>
                             </>

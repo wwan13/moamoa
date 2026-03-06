@@ -3,8 +3,8 @@ package server.core.feature.post.query
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.post.query.PostStats
 import server.core.feature.post.query.PostStatsReader
 import server.core.feature.post.infra.PostStatsCache
@@ -14,7 +14,7 @@ import test.UnitTest
 class PostStatsReaderTest : UnitTest() {
     @Test
     fun `캐시된 통계가 있으면 캐시에서 조회한다`() {
-        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val entityManager = mockk<EntityManager>(relaxed = true)
         val postStatsCache = mockk<PostStatsCache>()
 
         val cachedStats = mapOf(
@@ -24,7 +24,7 @@ class PostStatsReaderTest : UnitTest() {
 
         every { postStatsCache.mGet(listOf(1L, 2L)) } returns cachedStats
 
-        val reader = PostStatsReader(jdbc, postStatsCache, mockk<WarmupCoordinator>(relaxed = true))
+        val reader = PostStatsReader(entityManager, postStatsCache, mockk<WarmupCoordinator>(relaxed = true))
 
         val result = reader.findPostStatsMap(listOf(1L, 2L))
 

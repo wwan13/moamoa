@@ -1,17 +1,23 @@
 package server.core.feature.post.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import server.core.feature.bookmark.domain.Bookmark
+import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.BookmarkedPostListCache
-import server.core.infra.cache.WarmupCoordinator
+import server.core.feature.techblog.domain.TechBlog
 import server.core.global.security.Passport
+import server.core.infra.cache.WarmupCoordinator
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
+import server.core.support.query.createJdslQuery
 
 @Service
 class BookmarkedPostQueryService(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val bookmarkedPostListCache: BookmarkedPostListCache,
     private val postStatsReader: PostStatsReader,
     private val warmupCoordinator: WarmupCoordinator,
@@ -74,33 +80,55 @@ class BookmarkedPostQueryService(
         paging: Paging,
         memberId: Long,
     ): List<PostSummary> {
+        val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
+        val jpqlQuery = createBookmarkedBasePostsQuery(memberId)
 
-        val sql = """
-            $POST_QUERY_BASE_SELECT,
-                1 AS is_bookmarked
-            FROM bookmark pb
-            INNER JOIN post p ON p.id = pb.post_id
-            INNER JOIN tech_blog t ON t.id = p.tech_blog_id
-            WHERE pb.member_id = :memberId
-            ORDER BY pb.created_at DESC
-            LIMIT :limit OFFSET :offset
-        """.trimIndent()
-
-        val params = MapSqlParameterSource()
-            .addValue("memberId", memberId)
-            .addValue("limit", paging.size)
-            .addValue("offset", offset)
-        return jdbc.query(sql, params) { rs, _ -> mapToPostSummary(rs) }
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = PostSummary::class.java,
+                offset = offset.toInt(),
+                limit = limit,
+            )
+            .resultList
     }
 
     private fun countBookmarkedPosts(memberId: Long): Long {
-        val sql = """
-            SELECT COUNT(*) AS cnt
-            FROM bookmark pb
-            WHERE pb.member_id = :memberId
-        """.trimIndent()
+        val jpqlQuery = createCountBookmarkedPostsQuery(memberId)
 
-        return jdbc.queryForObject(sql, mapOf("memberId" to memberId), Long::class.java) ?: 0L
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = Long::class.javaObjectType,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .firstOrNull()
+            ?: 0L
+    }
+
+    private fun createBookmarkedBasePostsQuery(memberId: Long) = jpql {
+        selectBasePostSummary(isBookmarked = true)
+            .from(
+                entity(Bookmark::class),
+                join(Post::class).on(path(Bookmark::postId).equal(path(Post::id))),
+                join(TechBlog::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
+            )
+            .where(
+                path(Bookmark::memberId).equal(memberId)
+            )
+            .orderBy(path(Bookmark::createdAt).desc())
+    }
+
+    private fun createCountBookmarkedPostsQuery(memberId: Long) = jpql {
+        select(count(path(Bookmark::id)))
+            .from(
+                entity(Bookmark::class)
+            )
+            .where(
+                path(Bookmark::memberId).equal(memberId)
+            )
     }
 }

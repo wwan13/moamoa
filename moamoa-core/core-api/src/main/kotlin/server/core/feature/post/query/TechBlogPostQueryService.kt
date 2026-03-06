@@ -1,17 +1,22 @@
 package server.core.feature.post.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.TechBlogPostListCache
-import server.core.infra.cache.WarmupCoordinator
+import server.core.feature.techblog.domain.TechBlog
 import server.core.global.security.Passport
+import server.core.infra.cache.WarmupCoordinator
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
+import server.core.support.query.createJdslQuery
 
 @Service
 class TechBlogPostQueryService(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val techBlogPostListCache: TechBlogPostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
     private val postStatsReader: PostStatsReader,
@@ -28,7 +33,7 @@ class TechBlogPostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCount = countByTechBlogKey(conditions.techBlogId)
+        val totalCount = countTechBlogPosts(conditions.techBlogId)
         val basePosts = loadPosts(paging, conditions.techBlogId)
 
         val meta = PostListMeta(
@@ -43,11 +48,12 @@ class TechBlogPostQueryService(
         val postIds = basePosts.map { it.id }
 
         val postStatsByPostId = postStatsReader.findPostStatsMap(postIds)
-        val bookmarkedIdSet = if (passport == null) emptySet()
-        else bookmarkedPostReader.findBookmarkedPostIdSet(
-            memberId = passport.memberId,
-            postIds = postIds
-        )
+        val bookmarkedIdSet =
+            if (passport == null) emptySet()
+            else bookmarkedPostReader.findBookmarkedPostIdSet(
+                memberId = passport.memberId,
+                postIds = postIds
+            )
 
         val posts = basePosts.map { post ->
             post.copy(
@@ -83,33 +89,54 @@ class TechBlogPostQueryService(
         paging: Paging,
         techBlogId: Long,
     ): List<PostSummary> {
+        val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
+        val jpqlQuery = createTechBlogBasePostsQuery(techBlogId)
 
-        val sql = """
-            $POST_QUERY_BASE_SELECT,
-                0 AS is_bookmarked
-            FROM post p
-            INNER JOIN tech_blog t ON t.id = p.tech_blog_id
-            WHERE t.id = :techBlogId
-            ORDER BY p.published_at DESC
-            LIMIT :limit OFFSET :offset
-        """.trimIndent()
-
-        val params = MapSqlParameterSource()
-            .addValue("techBlogId", techBlogId)
-            .addValue("limit", paging.size)
-            .addValue("offset", offset)
-        return jdbc.query(sql, params) { rs, _ -> mapToPostSummary(rs) }
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = PostSummary::class.java,
+                offset = offset.toInt(),
+                limit = limit,
+            )
+            .resultList
     }
 
-    private fun countByTechBlogKey(techBlogId: Long): Long {
-        val sql = """
-            SELECT COUNT(*) AS cnt
-            FROM post p
-            INNER JOIN tech_blog t ON t.id = p.tech_blog_id
-            WHERE t.id = :techBlogId
-        """.trimIndent()
+    private fun countTechBlogPosts(techBlogId: Long): Long {
+        val jpqlQuery = createCountTechBlogPostsQuery(techBlogId)
 
-        return jdbc.queryForObject(sql, mapOf("techBlogId" to techBlogId), Long::class.java) ?: 0L
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = Long::class.javaObjectType,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .firstOrNull()
+            ?: 0L
+    }
+
+    private fun createTechBlogBasePostsQuery(techBlogId: Long) = jpql {
+        selectBasePostSummary(isBookmarked = false)
+            .from(
+                entity(Post::class),
+                join(TechBlog::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
+            )
+            .where(
+                path(TechBlog::id).equal(techBlogId)
+            )
+            .orderBy(path(Post::publishedAt).desc())
+    }
+
+    private fun createCountTechBlogPostsQuery(techBlogId: Long) = jpql {
+        select(count(path(Post::id)))
+            .from(
+                entity(Post::class)
+            )
+            .where(
+                path(Post::techBlogId).equal(techBlogId)
+            )
     }
 }

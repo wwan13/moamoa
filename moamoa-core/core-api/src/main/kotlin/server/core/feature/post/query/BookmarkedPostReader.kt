@@ -1,14 +1,18 @@
 package server.core.feature.post.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
+import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
 import server.core.infra.cache.WarmupCoordinator
+import server.core.support.query.createJdslQuery
 
 @Component
 class BookmarkedPostReader(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
@@ -24,7 +28,7 @@ class BookmarkedPostReader(
             return postIds.asSequence().filter { cachedAll.contains(it) }.toSet()
         }
 
-        return fetchBookmarkedPostIdSetByIn(memberId, postIds).also {
+        return queryBookmarkedPostIdSet(memberId, postIds).also {
             val warmupKey = bookmarkedAllPostIdSetCache.versionKey(memberId)
             warmupCoordinator.launchIfAbsent(warmupKey) {
                 warmUpAllBookmarkedSet(memberId)
@@ -35,36 +39,54 @@ class BookmarkedPostReader(
     private fun warmUpAllBookmarkedSet(memberId: Long) {
         if (bookmarkedAllPostIdSetCache.get(memberId) != null) return
 
-        val sql = """
-            SELECT pb.post_id AS post_id
-            FROM bookmark pb
-            WHERE pb.member_id = :memberId
-        """.trimIndent()
-
-        val allIds = jdbc.query(
-            sql,
-            mapOf("memberId" to memberId)
-        ) { rs, _ -> rs.getLong("post_id") }.toSet()
-
+        val allIds = queryAllBookmarkedPostIds(memberId)
         bookmarkedAllPostIdSetCache.set(memberId, allIds)
     }
 
-    private fun fetchBookmarkedPostIdSetByIn(
-        memberId: Long,
-        postIds: List<Long>,
-    ): Set<Long> {
-        val placeholders = postIds.indices.joinToString(",") { ":id$it" }
+    private fun queryAllBookmarkedPostIds(memberId: Long): Set<Long> {
+        val jpqlQuery = jpql {
+            select(path(Bookmark::postId))
+                .from(
+                    entity(Bookmark::class)
+                )
+                .where(
+                    path(Bookmark::memberId).equal(memberId)
+                )
+        }
 
-        val sql = """
-            SELECT pb.post_id AS post_id
-            FROM bookmark pb
-            WHERE pb.member_id = :memberId
-              AND pb.post_id IN ($placeholders)
-        """.trimIndent()
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = Long::class.javaObjectType,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .toSet()
+    }
 
-        val params = MapSqlParameterSource().addValue("memberId", memberId)
-        postIds.forEachIndexed { idx, id -> params.addValue("id$idx", id) }
+    private fun queryBookmarkedPostIdSet(memberId: Long, postIds: List<Long>): Set<Long> {
+        if (postIds.isEmpty()) return emptySet()
 
-        return jdbc.query(sql, params) { rs, _ -> rs.getLong("post_id") }.toSet()
+        val jpqlQuery = jpql {
+            select(path(Bookmark::postId))
+                .from(
+                    entity(Bookmark::class)
+                )
+                .whereAnd(
+                    path(Bookmark::memberId).equal(memberId),
+                    path(Bookmark::postId).`in`(postIds),
+                )
+        }
+
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = Long::class.javaObjectType,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .toSet()
     }
 }

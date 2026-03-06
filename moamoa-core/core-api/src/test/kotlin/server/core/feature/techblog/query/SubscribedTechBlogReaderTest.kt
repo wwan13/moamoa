@@ -3,8 +3,8 @@ package server.core.feature.techblog.query
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.techblog.query.SubscribedTechBlogReader
 import server.core.feature.techblog.query.SubscriptionInfo
 import server.core.feature.techblog.infra.SubscriptionCache
@@ -21,7 +21,7 @@ class SubscribedTechBlogReaderTest : UnitTest() {
         )
 
         val reader = SubscribedTechBlogReader(
-            jdbc = mockk<NamedParameterJdbcTemplate>(),
+            entityManager = mockk<EntityManager>(relaxed = true),
             subscriptionCache = subscriptionCache,
             warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
         )

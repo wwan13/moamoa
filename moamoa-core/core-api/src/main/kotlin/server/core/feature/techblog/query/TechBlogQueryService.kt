@@ -1,15 +1,20 @@
 package server.core.feature.techblog.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import server.core.feature.post.domain.Post
+import server.core.feature.techblog.domain.TechBlog
 import server.core.feature.techblog.infra.TechBlogListCache
-import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
+import server.core.infra.cache.WarmupCoordinator
+import server.core.support.query.createJdslQuery
 
 @Service
 class TechBlogQueryService(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val techBlogListCache: TechBlogListCache,
     private val techBlogStatsReader: TechBlogStatsReader,
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
@@ -53,42 +58,7 @@ class TechBlogQueryService(
             techBlogListCache.get()?.let { return it }
         }
 
-        val whereClause = if (query != null) {
-            """
-            WHERE t.title LIKE :keyword
-               OR t.blog_url LIKE :keyword
-               OR t.tech_blog_key LIKE :keyword
-        """.trimIndent()
-        } else ""
-
-        val sql = """
-            SELECT
-                t.id            AS tech_blog_id,
-                t.title         AS tech_blog_title,
-                t.icon          AS tech_blog_icon,
-                t.blog_url      AS tech_blog_url,
-                t.tech_blog_key AS tech_blog_key
-            FROM tech_blog t
-            $whereClause
-            ORDER BY t.title ASC
-        """.trimIndent()
-
-        val params = MapSqlParameterSource()
-        if (query != null) params.addValue("keyword", "%$query%")
-
-        val list: List<TechBlogSummary> = jdbc.query(sql, params) { row, _ ->
-                TechBlogSummary(
-                    id = row.getLong("tech_blog_id"),
-                    title = row.getString("tech_blog_title") ?: "",
-                    icon = row.getString("tech_blog_icon") ?: "",
-                    blogUrl = row.getString("tech_blog_url") ?: "",
-                    key = row.getString("tech_blog_key") ?: "",
-                    subscriptionCount = 0L,
-                    postCount = 0L,
-                    subscribed = false,
-                    notificationEnabled = false,
-                )
-            }
+        val list = findAllTechBlogs(query)
 
         if (query == null) {
             warmupCoordinator.launchIfAbsent(techBlogListCache.key) {
@@ -100,7 +70,7 @@ class TechBlogQueryService(
     }
 
     fun findById(passport: Passport?, techBlogId: Long): TechBlogSummary {
-        val base = loadBaseById(techBlogId)
+        val base = findTechBlogById(techBlogId)
             ?: throw IllegalStateException("존재하지 않는 기술블로그 입니다.")
 
         val stats = techBlogStatsReader.findById(base.id)
@@ -115,32 +85,89 @@ class TechBlogQueryService(
         )
     }
 
-    private fun loadBaseById(techBlogId: Long): TechBlogSummary? {
-        val sql = """
-            SELECT
-                t.id            AS tech_blog_id,
-                t.title         AS tech_blog_title,
-                t.icon          AS tech_blog_icon,
-                t.blog_url      AS tech_blog_url,
-                t.tech_blog_key AS tech_blog_key
-            FROM tech_blog t
-            WHERE t.id = :id
-            LIMIT 1
-        """.trimIndent()
+    private fun findAllTechBlogs(query: String?): List<TechBlogSummary> {
+        val keyword = query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
 
-        return jdbc.query(sql, mapOf("id" to techBlogId)) { row, _ ->
-                TechBlogSummary(
-                    id = row.getLong("tech_blog_id"),
-                    title = row.getString("tech_blog_title") ?: "",
-                    icon = row.getString("tech_blog_icon") ?: "",
-                    blogUrl = row.getString("tech_blog_url") ?: "",
-                    key = row.getString("tech_blog_key") ?: "",
-                    subscriptionCount = 0L,
-                    postCount = 0L,
-                    subscribed = false,
-                    notificationEnabled = false,
-                )
-            }
-            .firstOrNull()
+        return entityManager
+            .createJdslQuery(
+                query = findAllTechBlogsQuery(keyword),
+                resultClass = TechBlogSummary::class.java,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+    }
+
+    private fun findTechBlogById(techBlogId: Long): TechBlogSummary? {
+        val blog = entityManager
+            .createJdslQuery(
+                query = findTechBlogByIdQuery(techBlogId),
+                resultClass = TechBlogSummary::class.java,
+                offset = 0,
+                limit = 1,
+            )
+            .resultList
+            .firstOrNull() ?: return null
+
+        val postCount = findPostCountMap(listOf(techBlogId))[techBlogId] ?: 0L
+        return blog.copy(postCount = postCount)
+    }
+
+    private fun findPostCountMap(techBlogIds: List<Long>): Map<Long, Long> {
+        if (techBlogIds.isEmpty()) return emptyMap()
+
+        return entityManager
+            .createJdslQuery(
+                query = findPostCountMapQuery(techBlogIds),
+                resultClass = TechBlogStats::class.java,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .associate { it.techBlogId to it.postCount }
+    }
+
+    private fun findAllTechBlogsQuery(keyword: String?) = jpql {
+        selectBaseTechBlogSummary()
+            .from(
+                entity(TechBlog::class)
+            )
+            .whereAnd(
+                keyword?.let {
+                    or(
+                        path(TechBlog::title).like(it),
+                        path(TechBlog::blogUrl).like(it),
+                        path(TechBlog::key).like(it),
+                    )
+                }
+            )
+            .orderBy(path(TechBlog::title).asc())
+    }
+
+    private fun findTechBlogByIdQuery(techBlogId: Long) = jpql {
+        selectBaseTechBlogSummary()
+            .from(
+                entity(TechBlog::class)
+            )
+            .where(
+                path(TechBlog::id).equal(techBlogId)
+            )
+    }
+
+    private fun findPostCountMapQuery(techBlogIds: List<Long>) = jpql {
+        selectNew<TechBlogStats>(
+            path(Post::techBlogId),
+            longLiteral(0L),
+            count(path(Post::id)),
+        )
+            .from(
+                entity(Post::class)
+            )
+            .where(
+                path(Post::techBlogId).`in`(techBlogIds)
+            )
+            .groupBy(
+                path(Post::techBlogId)
+            )
     }
 }

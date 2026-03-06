@@ -1,14 +1,18 @@
 package server.core.feature.post.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
+import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.PostStatsCache
 import server.core.infra.cache.WarmupCoordinator
+import server.core.support.query.createJdslQuery
 
 @Component
 class PostStatsReader(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val postStatsCache: PostStatsCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
@@ -20,7 +24,7 @@ class PostStatsReader(
         val missedIds = postIds.filter { cachedMap[it] == null }
 
         val dbMap = if (missedIds.isNotEmpty()) {
-            fetchPostStatsMap(missedIds)
+            queryPostStatsMap(missedIds)
         } else {
             emptyMap()
         }
@@ -41,31 +45,31 @@ class PostStatsReader(
         return result
     }
 
-    private fun fetchPostStatsMap(postIds: List<Long>): Map<Long, PostStats> {
+    private fun queryPostStatsMap(postIds: List<Long>): Map<Long, PostStats> {
         if (postIds.isEmpty()) return emptyMap()
 
-        val placeholders = postIds.indices.joinToString(",") { ":id$it" }
-
-        val sql = """
-            SELECT 
-                p.id AS post_id,
-                p.bookmark_count AS bookmark_count,
-                p.view_count AS view_count
-            FROM post p
-            WHERE p.id IN ($placeholders)
-        """.trimIndent()
-
-        val params = MapSqlParameterSource()
-        postIds.forEachIndexed { idx, id -> params.addValue("id$idx", id) }
-
-        val rows: List<PostStats> = jdbc.query(sql, params) { row, _ ->
-                PostStats(
-                    postId = row.getLong("post_id"),
-                    bookmarkCount = row.getLong("bookmark_count"),
-                    viewCount = row.getLong("view_count"),
+        val jpqlQuery = jpql {
+            selectNew<PostStats>(
+                path(Post::id),
+                path(Post::viewCount),
+                path(Post::bookmarkCount),
+            )
+                .from(
+                    entity(Post::class)
                 )
-            }
+                .where(
+                    path(Post::id).`in`(postIds)
+                )
+        }
 
-        return rows.associateBy { it.postId }
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = PostStats::class.java,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .associateBy { it.postId }
     }
 }

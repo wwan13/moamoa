@@ -34,7 +34,12 @@ fun createPostSummary(
     isBookmarked: Boolean = false,
     viewCount: Long = 0L,
     bookmarkCount: Long = 0L,
-    techBlog: TechBlogData = createTechBlogData()
+    techBlogId: Long = 1L,
+    techBlogTitle: String = "Blog",
+    techBlogIcon: String = "icon",
+    techBlogBlogUrl: String = "https://example.com",
+    techBlogKey: String = "key",
+    techBlogSubscriptionCount: Long = 0L,
 ): PostSummary = PostSummary(
     id = id,
     key = key,
@@ -46,7 +51,12 @@ fun createPostSummary(
     isBookmarked = isBookmarked,
     viewCount = viewCount,
     bookmarkCount = bookmarkCount,
-    techBlog = techBlog
+    techBlogId = techBlogId,
+    techBlogTitle = techBlogTitle,
+    techBlogIcon = techBlogIcon,
+    techBlogBlogUrl = techBlogBlogUrl,
+    techBlogKey = techBlogKey,
+    techBlogSubscriptionCount = techBlogSubscriptionCount,
 )
 
 fun createPostStats(

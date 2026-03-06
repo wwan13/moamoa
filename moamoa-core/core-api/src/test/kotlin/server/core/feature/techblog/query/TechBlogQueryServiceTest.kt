@@ -3,8 +3,8 @@ package server.core.feature.techblog.query
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.member.domain.MemberRole
 import server.core.feature.techblog.infra.TechBlogListCache
 import server.core.infra.cache.WarmupCoordinator
@@ -14,7 +14,7 @@ import test.UnitTest
 class TechBlogQueryServiceTest : UnitTest() {
     @Test
     fun `캐시된 기술 블로그를 통계 및 구독정보와 병합한다`() {
-        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val entityManager = mockk<EntityManager>(relaxed = true)
         val techBlogListCache = mockk<TechBlogListCache>()
         val techBlogStatsReader = mockk<TechBlogStatsReader>()
         val subscribedTechBlogReader = mockk<SubscribedTechBlogReader>()
@@ -33,7 +33,7 @@ class TechBlogQueryServiceTest : UnitTest() {
         )
 
         val service = TechBlogQueryService(
-            jdbc,
+            entityManager,
             techBlogListCache,
             techBlogStatsReader,
             subscribedTechBlogReader,

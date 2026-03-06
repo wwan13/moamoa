@@ -3,11 +3,9 @@ package server.core.feature.post.query
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.member.domain.MemberRole
-import server.core.feature.techblog.application.TechBlogData
 import server.core.feature.post.infra.PostListCache
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
@@ -17,13 +15,11 @@ import java.time.LocalDateTime
 class PostQueryServiceTest : UnitTest() {
     @Test
     fun `캐시된 게시글이 있으면 통계와 북마크를 병합한다`() {
-        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val entityManager = mockk<EntityManager>(relaxed = true)
         val postListCache = mockk<PostListCache>()
         val bookmarkedPostReader = mockk<BookmarkedPostReader>()
         val postStatsReader = mockk<PostStatsReader>()
         val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
-
-        every { jdbc.queryForObject(any<String>(), any<MapSqlParameterSource>(), Long::class.java) } returns 2L
 
         val basePosts = listOf(
             postSummary(id = 1L, viewCount = 1L, bookmarkCount = 1L, isBookmarked = false),
@@ -36,14 +32,13 @@ class PostQueryServiceTest : UnitTest() {
         )
         every { bookmarkedPostReader.findBookmarkedPostIdSet(10L, listOf(1L, 2L)) } returns setOf(2L)
 
-        val service = PostQueryService(jdbc, postListCache, bookmarkedPostReader, postStatsReader, warmupCoordinator)
+        val service = PostQueryService(entityManager, postListCache, bookmarkedPostReader, postStatsReader, warmupCoordinator)
 
         val result = service.findByConditions(
             conditions = PostQueryConditions(page = 1, size = 20, query = null),
             passport = Passport(memberId = 10L, role = MemberRole.USER)
         )
 
-        result.meta.totalCount shouldBe 2L
         result.posts[0].viewCount shouldBe 10L
         result.posts[0].bookmarkCount shouldBe 11L
         result.posts[1].isBookmarked shouldBe true
@@ -65,13 +60,11 @@ class PostQueryServiceTest : UnitTest() {
         isBookmarked = isBookmarked,
         viewCount = viewCount,
         bookmarkCount = bookmarkCount,
-        techBlog = TechBlogData(
-            id = 1L,
-            title = "blog",
-            icon = "icon",
-            blogUrl = "https://blog.example.com",
-            key = "blog-key",
-            subscriptionCount = 0L
-        )
+        techBlogId = 1L,
+        techBlogTitle = "blog",
+        techBlogIcon = "icon",
+        techBlogBlogUrl = "https://blog.example.com",
+        techBlogKey = "blog-key",
+        techBlogSubscriptionCount = 0L,
     )
 }

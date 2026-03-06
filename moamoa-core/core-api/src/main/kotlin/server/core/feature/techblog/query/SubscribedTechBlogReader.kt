@@ -1,13 +1,18 @@
 package server.core.feature.techblog.query
 
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
+import server.core.feature.subscription.domain.Subscription
 import server.core.feature.techblog.infra.SubscriptionCache
 import server.core.infra.cache.WarmupCoordinator
+import server.core.support.query.createJdslQuery
 
 @Component
 class SubscribedTechBlogReader(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
     private val subscriptionCache: SubscriptionCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
@@ -36,21 +41,7 @@ class SubscribedTechBlogReader(
     private fun loadAll(memberId: Long): List<SubscriptionInfo> {
         subscriptionCache.get(memberId)?.let { return it }
 
-        val sql = """
-                SELECT
-                    s.tech_blog_id AS tech_blog_id,
-                    COALESCE(s.notification_enabled, 0) AS notification_enabled
-                FROM subscription s
-                WHERE s.member_id = :memberId
-            """.trimIndent()
-
-        val subscriptions: List<SubscriptionInfo> = jdbc.query(sql, mapOf("memberId" to memberId)) { row, _ ->
-                SubscriptionInfo(
-                    techBlogId = row.getLong("tech_blog_id"),
-                    subscribed = true,
-                    notificationEnabled = row.getInt("notification_enabled") == 1,
-                )
-            }
+        val subscriptions = findSubscriptionInfoList(memberId)
 
         val warmupKey = subscriptionCache.versionKey(memberId)
         warmupCoordinator.launchIfAbsent(warmupKey) {
@@ -66,5 +57,30 @@ class SubscribedTechBlogReader(
     ): SubscriptionInfo? {
         val all = loadAll(memberId)
         return all.firstOrNull { it.techBlogId == techBlogId }
+    }
+
+    private fun findSubscriptionInfoList(memberId: Long): List<SubscriptionInfo> {
+        return entityManager
+            .createJdslQuery(
+                query = findSubscriptionInfoListQuery(memberId),
+                resultClass = SubscriptionInfo::class.java,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+    }
+
+    private fun findSubscriptionInfoListQuery(memberId: Long) = jpql {
+        selectNew<SubscriptionInfo>(
+            path(Subscription::techBlogId),
+            booleanLiteral(true),
+            path(Subscription::notificationEnabled),
+        )
+            .from(
+                entity(Subscription::class)
+            )
+            .where(
+                path(Subscription::memberId).equal(memberId)
+            )
     }
 }

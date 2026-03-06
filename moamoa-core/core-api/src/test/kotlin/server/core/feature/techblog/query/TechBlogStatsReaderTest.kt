@@ -3,8 +3,8 @@ package server.core.feature.techblog.query
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import server.core.feature.techblog.query.TechBlogStats
 import server.core.feature.techblog.query.TechBlogStatsReader
 import server.core.feature.techblog.query.TechBlogSummary
@@ -22,7 +22,7 @@ class TechBlogStatsReaderTest : UnitTest() {
         )
 
         val reader = TechBlogStatsReader(
-            jdbc = mockk<NamedParameterJdbcTemplate>(),
+            entityManager = mockk<EntityManager>(relaxed = true),
             techBlogSummaryCache = techBlogSummaryCache,
             warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
         )
