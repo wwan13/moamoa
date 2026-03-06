@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import jakarta.servlet.http.Cookie
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.mock.web.MockFilterChain
@@ -93,5 +94,22 @@ class TokenDecodeCacheFilterTest : UnitTest() {
         filter.doFilter(request, response, MockFilterChain())
 
         verify(exactly = 0) { tokenProvider.decodeToken(any()) }
+    }
+
+    @Test
+    fun `Authorization 헤더가 없어도 accessToken 쿠키가 있으면 decodeToken을 호출한다`() {
+        val tokenProvider = mockk<TokenProvider>()
+        val principal = AuthPrincipal(memberId = 11L, type = TokenType.ACCESS, role = "USER")
+        every { tokenProvider.decodeToken("cookie-token") } returns principal
+        val filter = TokenDecodeCacheFilter(tokenProvider)
+        val request = MockHttpServletRequest("GET", "/").apply {
+            setCookies(Cookie("accessToken", "cookie-token"))
+        }
+        val response = MockHttpServletResponse()
+
+        filter.doFilter(request, response, MockFilterChain())
+
+        verify(exactly = 1) { tokenProvider.decodeToken("cookie-token") }
+        request.getAttribute(TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR) shouldBe principal
     }
 }

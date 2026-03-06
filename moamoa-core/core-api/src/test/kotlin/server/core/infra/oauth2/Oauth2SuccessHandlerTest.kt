@@ -7,6 +7,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpHeaders
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.Authentication
@@ -42,7 +43,8 @@ class Oauth2SuccessHandlerTest : UnitTest() {
         handler.onAuthenticationSuccess(request, response, authentication)
 
         response.status shouldBe HttpStatus.FOUND.value()
-        response.redirectedUrl shouldBe "http://localhost:5173/oauth2?type=success&accessToken=access&refreshToken=refresh&isNew=false"
+        response.redirectedUrl shouldBe "http://localhost:5173/oauth2?type=success&isNew=false"
+        response.getHeaders(HttpHeaders.SET_COOKIE).size shouldBe 2
         verify(exactly = 1) { refreshTokenCache.set(10L, "refresh", 604_800_000L) }
     }
 

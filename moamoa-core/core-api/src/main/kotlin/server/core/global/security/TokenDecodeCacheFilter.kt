@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
-import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import server.global.logging.RequestLogContextHolder
@@ -24,14 +23,8 @@ class TokenDecodeCacheFilter(
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
-        val authorization = request.getHeader(HttpHeaders.AUTHORIZATION)
-        if (authorization.isNullOrBlank() || !authorization.startsWith("Bearer ", ignoreCase = true)) {
-            filterChain.doFilter(request, response)
-            return
-        }
-
-        val accessToken = authorization.substringAfter(' ', "").trim()
-        if (accessToken.isBlank()) {
+        val accessToken = request.resolveAccessToken()
+        if (accessToken.isNullOrBlank()) {
             filterChain.doFilter(request, response)
             return
         }

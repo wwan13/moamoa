@@ -9,6 +9,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component
 import server.core.feature.auth.application.AuthService
 import server.core.feature.auth.infra.RefreshTokenCache
+import server.core.global.security.appendAuthCookies
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -32,11 +33,10 @@ class Oauth2SuccessHandler(
             is Oauth2SocialUser.Authenticated -> {
                 val tokens = authService.issueTokens(authenticatedUser.memberId, authenticatedUser.role.toString())
                 refreshTokenCache.set(authenticatedUser.memberId, tokens.refreshToken, refreshTokenExpires)
+                response.appendAuthCookies(tokens.accessToken, tokens.refreshToken)
 
                 redirectUrl(
                     "type" to "success",
-                    "accessToken" to tokens.accessToken,
-                    "refreshToken" to tokens.refreshToken,
                     "isNew" to authenticatedUser.isNew.toString()
                 )
             }

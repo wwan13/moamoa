@@ -1,6 +1,8 @@
 package server.core.feature.auth.api
 
 import jakarta.validation.Valid
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -16,8 +18,13 @@ import server.core.feature.auth.application.EmailVerificationResult
 import server.core.feature.auth.application.LoginCommand
 import server.core.feature.auth.application.LoginSocialSessionCommand
 import server.core.feature.auth.application.LogoutResult
+import server.core.global.security.AuthCookieSupport
+import server.core.global.security.appendAuthCookies
+import server.core.global.security.expireAuthCookies
 import server.core.global.security.Passport
 import server.core.global.security.RequestPassport
+import server.core.global.security.resolveRefreshToken
+import server.core.global.security.UnauthorizedException
 
 @RestController
 @RequestMapping("/api/auth")
@@ -45,36 +52,49 @@ class AuthController(
 
     @PostMapping("/login")
     fun login(
-        @RequestBody @Valid command: LoginCommand
+        @RequestBody @Valid command: LoginCommand,
+        response: HttpServletResponse,
     ): ResponseEntity<AuthTokens> {
         val tokens = authService.login(command)
+        response.appendAuthCookies(tokens.accessToken, tokens.refreshToken)
 
         return ResponseEntity.ok(tokens)
     }
 
     @PostMapping("/reissue")
     fun reissue(
-        @RequestHeader("X-Refresh-Token") refreshToken: String
+        @RequestHeader(AuthCookieSupport.REFRESH_TOKEN_HEADER, required = false) refreshTokenHeader: String?,
+        request: HttpServletRequest,
+        response: HttpServletResponse,
     ): ResponseEntity<AuthTokens> {
+        val refreshToken = refreshTokenHeader
+            ?.takeIf { it.isNotBlank() }
+            ?: request.resolveRefreshToken()
+            ?: throw UnauthorizedException()
         val tokens = authService.reissue(refreshToken)
+        response.appendAuthCookies(tokens.accessToken, tokens.refreshToken)
 
         return ResponseEntity.ok(tokens)
     }
 
     @PostMapping("/logout")
     fun logout(
-        @RequestPassport passport: Passport
+        @RequestPassport passport: Passport,
+        httpResponse: HttpServletResponse,
     ): ResponseEntity<LogoutResult> {
-        val response = authService.logout(passport.memberId)
+        val result = authService.logout(passport.memberId)
+        httpResponse.expireAuthCookies()
 
-        return ResponseEntity.ok(response)
+        return ResponseEntity.ok(result)
     }
 
     @PostMapping("/login/social")
     fun loginSocialSession(
-        @RequestBody @Valid command: LoginSocialSessionCommand
+        @RequestBody @Valid command: LoginSocialSessionCommand,
+        response: HttpServletResponse,
     ): ResponseEntity<AuthTokens> {
         val tokens = authService.loginSocialSession(command)
+        response.appendAuthCookies(tokens.accessToken, tokens.refreshToken)
 
         return ResponseEntity.ok(tokens)
     }

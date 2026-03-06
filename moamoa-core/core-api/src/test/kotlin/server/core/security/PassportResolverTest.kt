@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import jakarta.servlet.http.Cookie
 import org.junit.jupiter.api.Test
 import org.springframework.core.DefaultParameterNameDiscoverer
 import org.springframework.core.MethodParameter
@@ -116,6 +117,26 @@ class PassportResolverTest : UnitTest() {
     }
 
     @Test
+    fun `Authorization 헤더가 없어도 accessToken 쿠키가 있으면 Passport를 반환한다`() {
+        val tokenProvider = mockk<TokenProvider>()
+        every { tokenProvider.decodeToken("cookie-access-token") } returns AuthPrincipal(
+            memberId = 33L,
+            type = TokenType.ACCESS,
+            role = "USER"
+        )
+        val resolver = PassportResolver(tokenProvider)
+        val webRequest = webRequest(accessTokenCookie = "cookie-access-token")
+
+        val result = resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
+
+        result shouldBe Passport(
+            memberId = 33L,
+            role = MemberRole.USER
+        )
+        verify(exactly = 1) { tokenProvider.decodeToken("cookie-access-token") }
+    }
+
+    @Test
     fun `캐시된 principal이 있으면 decodeToken을 호출하지 않는다`() {
         val tokenProvider = mockk<TokenProvider>()
         val resolver = PassportResolver(tokenProvider)
@@ -168,11 +189,17 @@ class PassportResolverTest : UnitTest() {
         verify(exactly = 1) { tokenProvider.decodeToken("access-token") }
     }
 
-    private fun webRequest(authorization: String? = null): ServletWebRequest {
+    private fun webRequest(
+        authorization: String? = null,
+        accessTokenCookie: String? = null,
+    ): ServletWebRequest {
         val request = MockHttpServletRequest()
         request.method = "GET"
         if (authorization != null) {
             request.addHeader(HttpHeaders.AUTHORIZATION, authorization)
+        }
+        if (accessTokenCookie != null) {
+            request.setCookies(Cookie("accessToken", accessTokenCookie))
         }
         return ServletWebRequest(request, MockHttpServletResponse())
     }
