@@ -71,11 +71,8 @@ const Oauth2EmailInputPage = () => {
                 const memberId = res?.member?.id
                 const token = res?.token
 
-                const loginRes = await loginSocialSessionMutation.mutateAsync({ memberId, token })
-                const accessToken = loginRes?.accessToken
-                const refreshToken = loginRes?.refreshToken
-
-                await socialLogin({ accessToken, refreshToken, isNew: true })
+                await loginSocialSessionMutation.mutateAsync({ memberId, token })
+                await socialLogin({ isNew: true })
                 navigate("/?welcome=true")
             } catch {
                 await showGlobalAlert("다시 시도해 주세요")

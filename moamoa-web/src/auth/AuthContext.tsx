@@ -1,15 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
-import {
-  setOnLogout,
-  showGlobalAlert,
-  showGlobalConfirm,
-  showToast,
-  authStorageKeys,
-} from "../api/client"
+import { setOnLogout, showGlobalAlert, showGlobalConfirm, showToast } from "../api/client"
 import type { AuthTokens } from "../api/auth.api"
+import { memberApi } from "../api/member.api"
 import {
   AuthContext,
   type AuthContextValue,
@@ -25,9 +20,7 @@ const newSessionKey = (): string => {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() =>
-    Boolean(localStorage.getItem(authStorageKeys.accessToken))
-  )
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
 
   const [sessionKey, setSessionKey] = useState<string | null>(() =>
     localStorage.getItem(SESSION_KEY)
@@ -41,20 +34,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginMutation = useLoginMutation()
   const logoutMutation = useLogoutMutation()
 
+  const startAuthenticatedSession = useCallback((): void => {
+    const savedSessionKey = localStorage.getItem(SESSION_KEY)
+    const currentSessionKey = savedSessionKey ?? newSessionKey()
+    if (!savedSessionKey) {
+      localStorage.setItem(SESSION_KEY, currentSessionKey)
+    }
+
+    setSessionKey(currentSessionKey)
+    setIsLoggedIn(true)
+  }, [])
+
   useEffect(() => {
     setOnLogout(async () => {
       await showGlobalAlert("다시 로그인해 주세요.")
       await qc.cancelQueries()
       qc.clear()
 
-      localStorage.removeItem(authStorageKeys.accessToken)
-      localStorage.removeItem(authStorageKeys.refreshToken)
       localStorage.removeItem(SESSION_KEY)
 
       setIsLoggedIn(false)
       setSessionKey(null)
     })
   }, [qc])
+
+  useEffect(() => {
+    const restoreSession = async (): Promise<void> => {
+      try {
+        await memberApi.summary()
+        startAuthenticatedSession()
+      } catch {
+        setIsLoggedIn(false)
+      }
+    }
+
+    restoreSession()
+  }, [startAuthenticatedSession])
 
   const openLogin = (): void => setAuthModal("login")
 
@@ -71,32 +86,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await qc.cancelQueries()
     qc.clear()
 
-    localStorage.setItem(authStorageKeys.accessToken, res.accessToken)
-    localStorage.setItem(authStorageKeys.refreshToken, res.refreshToken)
-
-    const sk = newSessionKey()
-    localStorage.setItem(SESSION_KEY, sk)
-    setSessionKey(sk)
-
-    setIsLoggedIn(true)
+    startAuthenticatedSession()
 
     showToast(isNew ? "환영합니다." : "로그인 되었습니다.")
     closeAuthModal()
     return res
   }
 
-  const socialLogin = async ({ accessToken, refreshToken, isNew = false }: SocialLoginParams): Promise<void> => {
+  const socialLogin = async ({ isNew = false }: SocialLoginParams): Promise<void> => {
     await qc.cancelQueries()
     qc.clear()
 
-    localStorage.setItem(authStorageKeys.accessToken, accessToken)
-    localStorage.setItem(authStorageKeys.refreshToken, refreshToken)
-
-    const sk = newSessionKey()
-    localStorage.setItem(SESSION_KEY, sk)
-    setSessionKey(sk)
-
-    setIsLoggedIn(true)
+    startAuthenticatedSession()
 
     showToast(isNew ? "환영합니다." : "로그인 되었습니다.")
   }
@@ -120,8 +121,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await qc.cancelQueries()
     qc.clear()
 
-    localStorage.removeItem(authStorageKeys.accessToken)
-    localStorage.removeItem(authStorageKeys.refreshToken)
     localStorage.removeItem(SESSION_KEY)
 
     setIsLoggedIn(false)
@@ -142,8 +141,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await qc.cancelQueries()
     qc.clear()
 
-    localStorage.removeItem(authStorageKeys.accessToken)
-    localStorage.removeItem(authStorageKeys.refreshToken)
     localStorage.removeItem(SESSION_KEY)
 
     setIsLoggedIn(false)

@@ -7,7 +7,7 @@ export type LoginParams = LoginCommand & {
   isNew?: boolean
 }
 
-export type SocialLoginParams = AuthTokens & {
+export type SocialLoginParams = {
   isNew?: boolean
 }
 

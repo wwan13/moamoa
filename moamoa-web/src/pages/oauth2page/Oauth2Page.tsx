@@ -14,12 +14,12 @@ const Oauth2Page = () => {
         const type = searchParams.get("type")
 
         if (type === "success") {
-            const accessToken = searchParams.get("accessToken")
-            const refreshToken = searchParams.get("refreshToken")
             const isNew = searchParams.get("isNew") === "true"
-
-            socialLogin({accessToken, refreshToken, isNew})
-            navigate(isNew ? "/?welcome=true" : "/")
+            const loginAction = async () => {
+                await socialLogin({ isNew })
+                navigate(isNew ? "/?welcome=true" : "/")
+            }
+            loginAction()
         } else if (type === "hasError") {
             const errorMessage = searchParams.get("errorMessage")
             const errorAction = async () => {

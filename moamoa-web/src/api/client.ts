@@ -1,13 +1,5 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
 
-const ACCESS_TOKEN_KEY = "accessToken"
-const REFRESH_TOKEN_KEY = "refreshToken"
-
-export const authStorageKeys = {
-  accessToken: ACCESS_TOKEN_KEY,
-  refreshToken: REFRESH_TOKEN_KEY,
-} as const
-
 export type ToastType = "default" | "success" | "error" | "warning" | "info"
 
 export type Toast = {
@@ -139,10 +131,6 @@ export const closeSearch = (): void => {
   onCloseSearch()
 }
 
-const getAccessToken = (): string | null => localStorage.getItem(ACCESS_TOKEN_KEY)
-const setAccessToken = (token: string): void => localStorage.setItem(ACCESS_TOKEN_KEY, token)
-const getRefreshToken = (): string | null => localStorage.getItem(REFRESH_TOKEN_KEY)
-
 const safeJson = async <T = unknown>(res: Response): Promise<T | null> => {
   const text = await res.text()
   if (!text) return null
@@ -175,27 +163,19 @@ let isRefreshing = false
 let refreshPromise: Promise<string> | null = null
 
 const reissueToken = async (baseUrl = ""): Promise<string> => {
-  const refreshToken = getRefreshToken()
-  if (!refreshToken) throw new Error("NO_REFRESH_TOKEN")
-
   try {
     const res = await fetch(`${baseUrl}/api/auth/reissue`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Refresh-Token": refreshToken,
       },
+      credentials: "include",
     })
 
     if (!res.ok) throw new Error("REISSUE_FAILED")
 
     const data = await safeJson<{ accessToken?: string; refreshToken?: string }>(res)
     if (!data?.accessToken) throw new Error("INVALID_REISSUE_RESPONSE")
-
-    setAccessToken(data.accessToken)
-    if (data.refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken)
-    }
 
     return data.accessToken
   } catch (error) {
@@ -240,13 +220,11 @@ export const apiRequest = async <T = unknown>(
     headers.set("Content-Type", "application/json")
   }
 
-  const token = getAccessToken()
-  if (token) headers.set("Authorization", `Bearer ${token}`)
-
   const res = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers,
     signal,
+    credentials: options.credentials ?? "include",
   })
 
   if (res.ok) return await safeJson<T>(res)
