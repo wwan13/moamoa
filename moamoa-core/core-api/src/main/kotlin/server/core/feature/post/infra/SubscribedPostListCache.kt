@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import server.cache.CacheMemory
 import server.cache.get
 import server.core.feature.post.query.PostSummary
+import server.core.support.domain.ListEntry
 
 @Component
 class SubscribedPostListCache(
@@ -17,14 +18,14 @@ class SubscribedPostListCache(
     fun key(memberId: Long, version: Long, page: Long) =
         "$prefix$memberId:V:${version}:PAGE:$page:"
 
-    fun get(memberId: Long, page: Long): List<PostSummary>? {
+    fun get(memberId: Long, page: Long): ListEntry<PostSummary>? {
         val ver = cacheMemory.get(versionKey(memberId)) ?: 1L
         return cacheMemory.get(key(memberId, ver, page))
     }
 
-    fun set(memberId: Long, page: Long, posts: List<PostSummary>) {
+    fun set(memberId: Long, page: Long, entry: ListEntry<PostSummary>) {
         val ver = cacheMemory.get(versionKey(memberId)) ?: 1L
-        cacheMemory.set(key(memberId,  ver, page), posts, ttlMillis)
+        cacheMemory.set(key(memberId, ver, page), entry, ttlMillis)
     }
 
     fun evictAll(memberId: Long) {

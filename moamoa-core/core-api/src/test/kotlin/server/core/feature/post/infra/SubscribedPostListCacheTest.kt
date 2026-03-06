@@ -9,6 +9,7 @@ import server.core.feature.post.query.PostSummary
 import server.core.feature.post.infra.SubscribedPostListCache
 import server.cache.CacheMemory
 import server.core.fixture.createPostSummary
+import server.core.support.domain.ListEntry
 import test.UnitTest
 
 class SubscribedPostListCacheTest : UnitTest() {
@@ -20,16 +21,19 @@ class SubscribedPostListCacheTest : UnitTest() {
         val page = 1L
         val versionKey = "POST:LIST:SUBSCRIBED:$memberId:VER"
         val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:1:PAGE:$page:"
-        val expected = listOf(createPostSummary())
+        val expected = ListEntry(
+            count = 2L,
+            list = listOf(createPostSummary())
+        )
 
         coEvery { cacheMemory.get(versionKey, any<TypeReference<Long>>()) } returns null
-        coEvery { cacheMemory.get(valueKey, any<TypeReference<List<PostSummary>>>()) } returns expected
+        coEvery { cacheMemory.get(valueKey, any<TypeReference<ListEntry<PostSummary>>>()) } returns expected
 
         val result = cache.get(memberId, page)
 
         result shouldBe expected
         coVerify(exactly = 1) { cacheMemory.get(versionKey, any<TypeReference<Long>>()) }
-        coVerify(exactly = 1) { cacheMemory.get(valueKey, any<TypeReference<List<PostSummary>>>()) }
+        coVerify(exactly = 1) { cacheMemory.get(valueKey, any<TypeReference<ListEntry<PostSummary>>>()) }
     }
 
     @Test
@@ -40,15 +44,18 @@ class SubscribedPostListCacheTest : UnitTest() {
         val page = 1L
         val versionKey = "POST:LIST:SUBSCRIBED:$memberId:VER"
         val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:5:PAGE:$page:"
-        val posts = listOf(createPostSummary())
+        val entry = ListEntry(
+            count = 2L,
+            list = listOf(createPostSummary())
+        )
 
         coEvery { cacheMemory.get(versionKey, any<TypeReference<Long>>()) } returns 5L
-        coEvery { cacheMemory.set(valueKey, posts, 60_000L) } just Runs
+        coEvery { cacheMemory.set(valueKey, entry, 60_000L) } just Runs
 
-        cache.set(memberId, page, posts)
+        cache.set(memberId, page, entry)
 
         coVerify(exactly = 1) { cacheMemory.get(versionKey, any<TypeReference<Long>>()) }
-        coVerify(exactly = 1) { cacheMemory.set(valueKey, posts, 60_000L) }
+        coVerify(exactly = 1) { cacheMemory.set(valueKey, entry, 60_000L) }
     }
 
     @Test

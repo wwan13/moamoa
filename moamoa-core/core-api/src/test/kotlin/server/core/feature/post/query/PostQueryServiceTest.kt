@@ -9,6 +9,7 @@ import server.core.feature.member.domain.MemberRole
 import server.core.feature.post.infra.PostListCache
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
+import server.core.support.domain.ListEntry
 import test.UnitTest
 import java.time.LocalDateTime
 
@@ -26,13 +27,22 @@ class PostQueryServiceTest : UnitTest() {
             postSummary(id = 2L, viewCount = 3L, bookmarkCount = 4L, isBookmarked = false)
         )
 
-        every { postListCache.get(1L, 20L) } returns basePosts
+        every { postListCache.get(1L, 20L) } returns ListEntry(
+            count = 2L,
+            list = basePosts
+        )
         every { postStatsReader.findPostStatsMap(listOf(1L, 2L)) } returns mapOf(
             1L to PostStats(postId = 1L, viewCount = 10L, bookmarkCount = 11L)
         )
         every { bookmarkedPostReader.findBookmarkedPostIdSet(10L, listOf(1L, 2L)) } returns setOf(2L)
 
-        val service = PostQueryService(entityManager, postListCache, bookmarkedPostReader, postStatsReader, warmupCoordinator)
+        val service = PostQueryService(
+            entityManager = entityManager,
+            postListCache = postListCache,
+            bookmarkedPostReader = bookmarkedPostReader,
+            postStatsReader = postStatsReader,
+            warmupCoordinator = warmupCoordinator
+        )
 
         val result = service.findByConditions(
             conditions = PostQueryConditions(page = 1, size = 20, query = null),

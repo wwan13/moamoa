@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import server.cache.CacheMemory
 import server.cache.get
 import server.core.feature.post.query.PostSummary
+import server.core.support.domain.ListEntry
 
 @Component
 class PostListCache(
@@ -16,15 +17,15 @@ class PostListCache(
     fun key(page: Long, size: Long) =
         "$prefix:PAGE:$page:SIZE:$size"
 
-    fun get(page: Long, size: Long): List<PostSummary>? {
+    fun get(page: Long, size: Long): ListEntry<PostSummary>? {
         return cacheMemory.get(key(page, size))
     }
 
     fun set(
         page: Long,
         size: Long,
-        posts: List<PostSummary>
+        entry: ListEntry<PostSummary>
     ) {
-        cacheMemory.set(key(page, size), posts, ttlMillis)
+        cacheMemory.set(key(page, size), entry, ttlMillis)
     }
 }

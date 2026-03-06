@@ -9,6 +9,7 @@ import server.core.feature.post.query.PostSummary
 import server.core.feature.post.infra.TechBlogPostListCache
 import server.cache.CacheMemory
 import server.core.fixture.createPostSummary
+import server.core.support.domain.ListEntry
 import test.UnitTest
 
 class TechBlogPostListCacheTest : UnitTest() {
@@ -17,14 +18,17 @@ class TechBlogPostListCacheTest : UnitTest() {
         val cacheMemory = mockk<CacheMemory>()
         val cache = TechBlogPostListCache(cacheMemory)
         val key = "POST:LIST:TECHBLOG:10:PAGE:1"
-        val expected = listOf(createPostSummary())
+        val expected = ListEntry(
+            count = 2L,
+            list = listOf(createPostSummary())
+        )
 
-        coEvery { cacheMemory.get(key, any<TypeReference<List<PostSummary>>>()) } returns expected
+        coEvery { cacheMemory.get(key, any<TypeReference<ListEntry<PostSummary>>>()) } returns expected
 
         val result = cache.get(10L, 1L)
 
         result shouldBe expected
-        coVerify(exactly = 1) { cacheMemory.get(key, any<TypeReference<List<PostSummary>>>()) }
+        coVerify(exactly = 1) { cacheMemory.get(key, any<TypeReference<ListEntry<PostSummary>>>()) }
     }
 
     @Test
@@ -32,12 +36,15 @@ class TechBlogPostListCacheTest : UnitTest() {
         val cacheMemory = mockk<CacheMemory>()
         val cache = TechBlogPostListCache(cacheMemory)
         val key = "POST:LIST:TECHBLOG:10:PAGE:1"
-        val posts = listOf(createPostSummary())
+        val entry = ListEntry(
+            count = 2L,
+            list = listOf(createPostSummary())
+        )
 
-        coEvery { cacheMemory.set(key, posts, 1_800_000L) } just Runs
+        coEvery { cacheMemory.set(key, entry, 1_800_000L) } just Runs
 
-        cache.set(10L, 1L, posts)
+        cache.set(10L, 1L, entry)
 
-        coVerify(exactly = 1) { cacheMemory.set(key, posts, 1_800_000L) }
+        coVerify(exactly = 1) { cacheMemory.set(key, entry, 1_800_000L) }
     }
 }

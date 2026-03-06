@@ -9,6 +9,7 @@ import server.core.feature.member.domain.MemberRole
 import server.core.feature.post.infra.TechBlogPostListCache
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
+import server.core.support.domain.ListEntry
 import test.UnitTest
 import java.time.LocalDateTime
 
@@ -21,9 +22,12 @@ class TechBlogPostQueryServiceTest : UnitTest() {
         val postStatsReader = mockk<PostStatsReader>()
         val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
 
-        every { techBlogPostListCache.get(1L, 1L) } returns listOf(
-            postSummary(1L, 1L, 1L),
-            postSummary(2L, 3L, 4L)
+        every { techBlogPostListCache.get(1L, 1L) } returns ListEntry(
+            count = 2L,
+            list = listOf(
+                postSummary(1L, 1L, 1L),
+                postSummary(2L, 3L, 4L)
+            )
         )
         every { postStatsReader.findPostStatsMap(listOf(1L, 2L)) } returns emptyMap()
         every { bookmarkedPostReader.findBookmarkedPostIdSet(10L, listOf(1L, 2L)) } returns setOf(2L)

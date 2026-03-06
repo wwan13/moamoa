@@ -10,6 +10,7 @@ import server.core.feature.post.infra.BookmarkedPostListCache
 import server.core.feature.techblog.domain.TechBlog
 import server.core.global.security.Passport
 import server.core.infra.cache.WarmupCoordinator
+import server.core.support.domain.ListEntry
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
 import server.core.support.query.createJdslQuery
@@ -33,8 +34,9 @@ class BookmarkedPostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCount = countBookmarkedPosts(memberId = passport.memberId)
-        val basePosts = loadPosts(memberId = passport.memberId, paging = paging)
+        val entry = loadEntry(memberId = passport.memberId, paging = paging)
+        val totalCount = entry.count
+        val basePosts = entry.list
 
         val meta = PostListMeta(
             page = paging.page,
@@ -60,20 +62,32 @@ class BookmarkedPostQueryService(
         return PostList(meta, posts)
     }
 
-    private fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
+    private fun loadEntry(memberId: Long, paging: Paging): ListEntry<PostSummary> {
         if (paging.page > 5) {
-            return fetchBookmarkedBasePosts(paging, memberId)
+            return fetchEntry(paging, memberId)
         }
 
         val cached = bookmarkedPostListCache.get(memberId, paging.page)
         if (cached != null) return cached
 
-        return fetchBookmarkedBasePosts(paging, memberId).also { posts ->
+        return fetchEntry(paging, memberId).also { entry ->
             val warmupKey = "${bookmarkedPostListCache.versionKey(memberId)}:PAGE:${paging.page}"
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                bookmarkedPostListCache.set(memberId, paging.page, posts)
+                bookmarkedPostListCache.set(memberId, paging.page, entry)
             }
         }
+    }
+
+    private fun fetchEntry(
+        paging: Paging,
+        memberId: Long,
+    ): ListEntry<PostSummary> {
+        val count = fetchCountBookmarkedPosts(memberId)
+        val list = fetchBookmarkedBasePosts(paging, memberId)
+        return ListEntry(
+            count = count,
+            list = list
+        )
     }
 
     private fun fetchBookmarkedBasePosts(
@@ -94,7 +108,7 @@ class BookmarkedPostQueryService(
             .resultList
     }
 
-    private fun countBookmarkedPosts(memberId: Long): Long {
+    private fun fetchCountBookmarkedPosts(memberId: Long): Long {
         val jpqlQuery = createCountBookmarkedPostsQuery(memberId)
 
         return entityManager

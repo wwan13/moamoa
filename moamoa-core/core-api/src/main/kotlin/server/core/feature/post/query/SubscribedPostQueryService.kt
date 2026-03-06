@@ -10,6 +10,7 @@ import server.core.feature.subscription.domain.Subscription
 import server.core.feature.techblog.domain.TechBlog
 import server.core.global.security.Passport
 import server.core.infra.cache.WarmupCoordinator
+import server.core.support.domain.ListEntry
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
 import server.core.support.query.createJdslQuery
@@ -34,8 +35,9 @@ class SubscribedPostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCount = countSubscribedPosts(memberId = passport.memberId)
-        val basePosts = loadPosts(memberId = passport.memberId, paging = paging)
+        val entry = loadEntry(memberId = passport.memberId, paging = paging)
+        val totalCount = entry.count
+        val basePosts = entry.list
 
         val meta = PostListMeta(
             page = paging.page,
@@ -65,20 +67,32 @@ class SubscribedPostQueryService(
         return PostList(meta, posts)
     }
 
-    private fun loadPosts(memberId: Long, paging: Paging): List<PostSummary> {
+    private fun loadEntry(memberId: Long, paging: Paging): ListEntry<PostSummary> {
         if (paging.page > 5) {
-            return fetchSubscribingBasePosts(paging, memberId)
+            return fetchEntry(paging, memberId)
         }
 
         val cached = subscribedPostListCache.get(memberId, paging.page)
         if (cached != null) return cached
 
-        return fetchSubscribingBasePosts(paging, memberId).also { posts ->
+        return fetchEntry(paging, memberId).also { entry ->
             val warmupKey = "${subscribedPostListCache.versionKey(memberId)}:PAGE:${paging.page}"
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                subscribedPostListCache.set(memberId, paging.page, posts)
+                subscribedPostListCache.set(memberId, paging.page, entry)
             }
         }
+    }
+
+    private fun fetchEntry(
+        paging: Paging,
+        memberId: Long,
+    ): ListEntry<PostSummary> {
+        val count = fetchCountSubscribedPosts(memberId)
+        val list = fetchSubscribingBasePosts(paging, memberId)
+        return ListEntry(
+            count = count,
+            list = list
+        )
     }
 
     private fun fetchSubscribingBasePosts(
@@ -99,7 +113,7 @@ class SubscribedPostQueryService(
             .resultList
     }
 
-    private fun countSubscribedPosts(memberId: Long): Long {
+    private fun fetchCountSubscribedPosts(memberId: Long): Long {
         val jpqlQuery = createCountSubscribedPostsQuery(memberId)
 
         return entityManager

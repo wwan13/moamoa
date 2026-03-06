@@ -11,6 +11,7 @@ import server.core.feature.tag.domain.Tag
 import server.core.feature.techblog.domain.TechBlog
 import server.core.global.security.Passport
 import server.core.infra.cache.WarmupCoordinator
+import server.core.support.domain.ListEntry
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
 import server.core.support.query.createJdslQuery
@@ -35,8 +36,9 @@ class PostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCount = countAllPosts(conditions.query)
-        val basePosts = loadPosts(paging, conditions.query)
+        val entry = loadEntry(paging, conditions.query)
+        val totalCount = entry.count
+        val basePosts = entry.list
 
         val meta = PostListMeta(
             page = paging.page,
@@ -67,23 +69,35 @@ class PostQueryService(
         return PostList(meta, posts)
     }
 
-    private fun loadPosts(
+    private fun loadEntry(
         paging: Paging,
         query: String?
-    ): List<PostSummary> {
+    ): ListEntry<PostSummary> {
         if (paging.page > 5 || !query.isNullOrBlank()) {
-            return fetchBasePosts(paging, query)
+            return fetchEntry(paging, query)
         }
 
         val cached = postListCache.get(paging.page, paging.size)
         if (cached != null) return cached
 
-        return fetchBasePosts(paging).also { posts ->
+        return fetchEntry(paging).also { entry ->
             val warmupKey = postListCache.key(paging.page, paging.size)
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                postListCache.set(paging.page, paging.size, posts)
+                postListCache.set(paging.page, paging.size, entry)
             }
         }
+    }
+
+    private fun fetchEntry(
+        paging: Paging,
+        query: String? = null
+    ): ListEntry<PostSummary> {
+        val count = fetchCountAllPosts(query)
+        val list = fetchBasePosts(paging, query)
+        return ListEntry(
+            count = count,
+            list = list
+        )
     }
 
     private fun fetchBasePosts(
@@ -106,7 +120,7 @@ class PostQueryService(
         return rows.distinctBy { it.id }
     }
 
-    private fun countAllPosts(query: String?): Long {
+    private fun fetchCountAllPosts(query: String?): Long {
         val jpqlQuery = createCountAllPostsQuery(query)
 
         return entityManager

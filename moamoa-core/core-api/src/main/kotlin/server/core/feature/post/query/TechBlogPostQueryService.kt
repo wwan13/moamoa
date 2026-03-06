@@ -9,6 +9,7 @@ import server.core.feature.post.infra.TechBlogPostListCache
 import server.core.feature.techblog.domain.TechBlog
 import server.core.global.security.Passport
 import server.core.infra.cache.WarmupCoordinator
+import server.core.support.domain.ListEntry
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
 import server.core.support.query.createJdslQuery
@@ -33,8 +34,9 @@ class TechBlogPostQueryService(
             page = conditions.page ?: 1
         )
 
-        val totalCount = countTechBlogPosts(conditions.techBlogId)
-        val basePosts = loadPosts(paging, conditions.techBlogId)
+        val entry = loadEntry(paging, conditions.techBlogId)
+        val totalCount = entry.count
+        val basePosts = entry.list
 
         val meta = PostListMeta(
             page = paging.page,
@@ -66,23 +68,35 @@ class TechBlogPostQueryService(
         return PostList(meta, posts)
     }
 
-    private fun loadPosts(
+    private fun loadEntry(
         paging: Paging,
         techBlogId: Long,
-    ): List<PostSummary> {
+    ): ListEntry<PostSummary> {
         if (paging.page > 5) {
-            return fetchBasePostsByTechBlogKey(paging, techBlogId)
+            return fetchEntry(paging, techBlogId)
         }
 
         val cached = techBlogPostListCache.get(techBlogId, paging.page)
         if (cached != null) return cached
 
-        return fetchBasePostsByTechBlogKey(paging, techBlogId).also { posts ->
+        return fetchEntry(paging, techBlogId).also { entry ->
             val warmupKey = techBlogPostListCache.key(techBlogId, paging.page)
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                techBlogPostListCache.set(techBlogId, paging.page, posts)
+                techBlogPostListCache.set(techBlogId, paging.page, entry)
             }
         }
+    }
+
+    private fun fetchEntry(
+        paging: Paging,
+        techBlogId: Long,
+    ): ListEntry<PostSummary> {
+        val count = fetchCountTechBlogPosts(techBlogId)
+        val list = fetchBasePostsByTechBlogKey(paging, techBlogId)
+        return ListEntry(
+            count = count,
+            list = list
+        )
     }
 
     private fun fetchBasePostsByTechBlogKey(
@@ -103,7 +117,7 @@ class TechBlogPostQueryService(
             .resultList
     }
 
-    private fun countTechBlogPosts(techBlogId: Long): Long {
+    private fun fetchCountTechBlogPosts(techBlogId: Long): Long {
         val jpqlQuery = createCountTechBlogPostsQuery(techBlogId)
 
         return entityManager

@@ -9,6 +9,7 @@ import server.core.feature.member.domain.MemberRole
 import server.core.feature.post.infra.BookmarkedPostListCache
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
+import server.core.support.domain.ListEntry
 import test.UnitTest
 import java.time.LocalDateTime
 
@@ -20,15 +21,23 @@ class BookmarkedPostQueryServiceTest : UnitTest() {
         val postStatsReader = mockk<PostStatsReader>()
         val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
 
-        every { bookmarkedPostListCache.get(10L, 1L) } returns listOf(
-            postSummary(id = 1L, viewCount = 1L, bookmarkCount = 1L),
-            postSummary(id = 2L, viewCount = 3L, bookmarkCount = 4L)
+        every { bookmarkedPostListCache.get(10L, 1L) } returns ListEntry(
+            count = 2L,
+            list = listOf(
+                postSummary(id = 1L, viewCount = 1L, bookmarkCount = 1L),
+                postSummary(id = 2L, viewCount = 3L, bookmarkCount = 4L)
+            )
         )
         every { postStatsReader.findPostStatsMap(listOf(1L, 2L)) } returns mapOf(
             1L to PostStats(postId = 1L, viewCount = 10L, bookmarkCount = 11L)
         )
 
-        val service = BookmarkedPostQueryService(entityManager, bookmarkedPostListCache, postStatsReader, warmupCoordinator)
+        val service = BookmarkedPostQueryService(
+            entityManager,
+            bookmarkedPostListCache,
+            postStatsReader,
+            warmupCoordinator
+        )
 
         val result = service.findAllByConditions(
             PostQueryConditions(page = 1, size = 20, query = null),
