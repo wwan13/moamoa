@@ -2,7 +2,6 @@ package server.admin.global.security
 
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter
-import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.support.WebDataBinderFactory
 import org.springframework.web.context.request.NativeWebRequest
@@ -41,10 +40,7 @@ class AdminPassportResolver(
         fun unauthorized(): Any? = if (isNullable) null else throw AdminUnauthorizedException()
 
         val request = webRequest.getNativeRequest(HttpServletRequest::class.java) ?: return unauthorized()
-        val bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION) ?: return unauthorized()
-        if (!bearerToken.startsWith("Bearer ", ignoreCase = true)) return unauthorized()
-
-        val accessToken = bearerToken.removePrefix("Bearer").trim()
+        val accessToken = request.resolveAdminAccessToken() ?: return unauthorized()
         val principal = tokenProvider.decodeToken(accessToken)
         if (principal.type != TokenType.ACCESS) return unauthorized()
 

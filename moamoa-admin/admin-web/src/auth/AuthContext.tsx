@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
-import { authStorageKeys, setOnLoginRequired, setOnLogout } from "../api/client"
+import { setOnLoginRequired, setOnLogout } from "../api/client"
+import { authApi } from "../api/auth.api"
 
 type LoginParams = {
     email: string
@@ -27,9 +28,7 @@ function newSessionKey() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [isLoggedIn, setIsLoggedIn] = useState(() =>
-        Boolean(localStorage.getItem(authStorageKeys.accessToken))
-    )
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
 
     const [sessionKey, setSessionKey] = useState(() =>
         localStorage.getItem(SESSION_KEY)
@@ -41,13 +40,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loginMutation = useLoginMutation()
     const logoutMutation = useLogoutMutation()
 
+    const startAuthenticatedSession = useCallback(() => {
+        const savedSessionKey = localStorage.getItem(SESSION_KEY)
+        const currentSessionKey = savedSessionKey ?? newSessionKey()
+        if (!savedSessionKey) {
+            localStorage.setItem(SESSION_KEY, currentSessionKey)
+        }
+        setSessionKey(currentSessionKey)
+        setIsLoggedIn(true)
+    }, [])
+
     useEffect(() => {
         const handleLogout = async () => {
             await qc.cancelQueries()
             qc.clear()
 
-            localStorage.removeItem(authStorageKeys.accessToken)
-            localStorage.removeItem(authStorageKeys.refreshToken)
             localStorage.removeItem(SESSION_KEY)
 
             setIsLoggedIn(false)
@@ -60,20 +67,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setOnLoginRequired(handleLogout)
     }, [qc, navigate])
 
+    useEffect(() => {
+        const restoreSession = async () => {
+            try {
+                const result = await authApi.session()
+                if (result.authenticated) {
+                    startAuthenticatedSession()
+                } else {
+                    setIsLoggedIn(false)
+                }
+            } catch {
+                setIsLoggedIn(false)
+            }
+        }
+
+        restoreSession()
+    }, [startAuthenticatedSession])
+
     const login = async ({ email, password }: LoginParams) => {
-        const res = await loginMutation.mutateAsync({ email, password })
+        await loginMutation.mutateAsync({ email, password })
 
         await qc.cancelQueries()
         qc.clear()
 
-        localStorage.setItem(authStorageKeys.accessToken, res.accessToken)
-        localStorage.setItem(authStorageKeys.refreshToken, res.refreshToken)
-
-        const sk = newSessionKey()
-        localStorage.setItem(SESSION_KEY, sk)
-        setSessionKey(sk)
-
-        setIsLoggedIn(true)
+        startAuthenticatedSession()
     }
 
     const logout = async () => {
@@ -83,8 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await qc.cancelQueries()
         qc.clear()
 
-        localStorage.removeItem(authStorageKeys.accessToken)
-        localStorage.removeItem(authStorageKeys.refreshToken)
         localStorage.removeItem(SESSION_KEY)
 
         setIsLoggedIn(false)
@@ -107,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             sessionKey,
             loginMutation.isPending,
             logoutMutation.isPending,
+            startAuthenticatedSession,
         ]
     )
 

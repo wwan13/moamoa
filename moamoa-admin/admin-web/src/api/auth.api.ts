@@ -14,6 +14,10 @@ export type AdminLogoutResult = {
     success: boolean
 }
 
+export type AdminSessionResult = {
+    authenticated: boolean
+}
+
 export const authApi = {
     login: async (command: AdminLoginCommand): Promise<AdminAuthTokens> => {
         const res = await http.post<AdminAuthTokens>("/api/admin/auth/login", command)
@@ -23,5 +27,9 @@ export const authApi = {
     logout: async (): Promise<AdminLogoutResult> => {
         const res = await http.post<AdminLogoutResult>("/api/admin/auth/logout", {})
         return res ?? { success: false }
+    },
+    session: async (): Promise<AdminSessionResult> => {
+        const res = await http.get<AdminSessionResult>("/api/admin/auth/session")
+        return res ?? { authenticated: false }
     },
 }
