@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
 import { setOnLoginRequired, setOnLogout } from "../api/client"
-import { authApi } from "../api/auth.api"
 
 type LoginParams = {
     email: string
@@ -28,11 +27,10 @@ function newSessionKey() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
-
     const [sessionKey, setSessionKey] = useState(() =>
         localStorage.getItem(SESSION_KEY)
     )
+    const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem(SESSION_KEY))
 
     const navigate = useNavigate()
     const qc = useQueryClient()
@@ -66,23 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setOnLogout(handleLogout)
         setOnLoginRequired(handleLogout)
     }, [qc, navigate])
-
-    useEffect(() => {
-        const restoreSession = async () => {
-            try {
-                const result = await authApi.session()
-                if (result.authenticated) {
-                    startAuthenticatedSession()
-                } else {
-                    setIsLoggedIn(false)
-                }
-            } catch {
-                setIsLoggedIn(false)
-            }
-        }
-
-        restoreSession()
-    }, [startAuthenticatedSession])
 
     const login = async ({ email, password }: LoginParams) => {
         await loginMutation.mutateAsync({ email, password })

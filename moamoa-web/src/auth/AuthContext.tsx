@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
 import { setOnLogout, showGlobalAlert, showGlobalConfirm, showToast } from "../api/client"
 import type { AuthTokens } from "../api/auth.api"
-import { memberApi } from "../api/member.api"
 import {
   AuthContext,
   type AuthContextValue,
@@ -20,11 +19,10 @@ const newSessionKey = (): string => {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
-
   const [sessionKey, setSessionKey] = useState<string | null>(() =>
     localStorage.getItem(SESSION_KEY)
   )
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!localStorage.getItem(SESSION_KEY))
 
   const [authModal, setAuthModal] = useState<AuthModalType>(null)
 
@@ -57,19 +55,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSessionKey(null)
     })
   }, [qc])
-
-  useEffect(() => {
-    const restoreSession = async (): Promise<void> => {
-      try {
-        await memberApi.summary()
-        startAuthenticatedSession()
-      } catch {
-        setIsLoggedIn(false)
-      }
-    }
-
-    restoreSession()
-  }, [startAuthenticatedSession])
 
   const openLogin = (): void => setAuthModal("login")
 
