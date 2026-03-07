@@ -108,7 +108,7 @@ const Search = ({ open, onClose }: SearchProps) => {
                         navigate("/")
                         onClose()
                     }}>
-                        <img alt="moamoa" src="https://i.imgur.com/CHYokw0.png"/>
+                        <img alt="moamoa" src="/moamoa_main_logo.png"/>
                     </div>
 
                     <button className={styles.cancelButton} onClick={onClose}>

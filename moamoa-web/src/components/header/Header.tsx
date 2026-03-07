@@ -16,7 +16,7 @@ const Header = () => {
                 aria-label="홈으로 이동"
             >
                 <img
-                    src="https://i.imgur.com/CHYokw0.png"
+                    src="/moamoa_main_logo.png"
                     alt="moamoa"
                     className={styles.logoImage}
                 />

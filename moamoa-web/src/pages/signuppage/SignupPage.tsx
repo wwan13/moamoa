@@ -135,7 +135,7 @@ const SignupPage = () => {
                 <div className={styles.titleWrap}>
                     <img
                         onClick={() => navigate("/")}
-                        src="https://i.imgur.com/l8hsGOD.png"
+                        src="/moamoa_sub_logo.png"
                         alt="moamoa"
                         className={styles.moamoaIcon}
                     />

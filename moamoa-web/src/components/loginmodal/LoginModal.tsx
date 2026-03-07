@@ -61,7 +61,7 @@ const LoginModal = ({
 
             <form className={styles.form} onSubmit={handleSubmit}>
                 <img
-                    src="https://i.imgur.com/CHYokw0.png"
+                    src="/moamoa_main_logo.png"
                     alt="moamoa"
                     className={styles.moamoaIcon}
                 />
