@@ -2,7 +2,13 @@ import { useCallback, useEffect, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
-import { setOnLogout, showGlobalAlert, showGlobalConfirm, showToast } from "../api/client"
+import {
+  setOnLoginRequired,
+  setOnLogout,
+  showGlobalAlert,
+  showGlobalConfirm,
+  showToast,
+} from "../api/client"
 import type { AuthTokens } from "../api/auth.api"
 import {
   AuthContext,
@@ -32,6 +38,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginMutation = useLoginMutation()
   const logoutMutation = useLogoutMutation()
 
+  const resetSessionState = useCallback((): void => {
+    localStorage.removeItem(SESSION_KEY)
+    setIsLoggedIn(false)
+    setSessionKey(null)
+  }, [])
+
   const startAuthenticatedSession = useCallback((): void => {
     const savedSessionKey = localStorage.getItem(SESSION_KEY)
     const currentSessionKey = savedSessionKey ?? newSessionKey()
@@ -44,17 +56,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   useEffect(() => {
+    setOnLoginRequired(() => {
+      qc.clear()
+      resetSessionState()
+    })
+
     setOnLogout(async () => {
       await showGlobalAlert("다시 로그인해 주세요.")
       await qc.cancelQueries()
       qc.clear()
 
-      localStorage.removeItem(SESSION_KEY)
-
-      setIsLoggedIn(false)
-      setSessionKey(null)
+      resetSessionState()
     })
-  }, [qc])
+  }, [qc, resetSessionState])
 
   const openLogin = (): void => setAuthModal("login")
 
@@ -106,10 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await qc.cancelQueries()
     qc.clear()
 
-    localStorage.removeItem(SESSION_KEY)
-
-    setIsLoggedIn(false)
-    setSessionKey(null)
+    resetSessionState()
 
     navigate("/")
     showToast("로그아웃 되었습니다.")
@@ -126,10 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await qc.cancelQueries()
     qc.clear()
 
-    localStorage.removeItem(SESSION_KEY)
-
-    setIsLoggedIn(false)
-    setSessionKey(null)
+    resetSessionState()
   }
 
   const authScope = isLoggedIn && sessionKey ? `auth:${sessionKey}` : null

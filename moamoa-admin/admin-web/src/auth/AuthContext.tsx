@@ -38,6 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loginMutation = useLoginMutation()
     const logoutMutation = useLogoutMutation()
 
+    const resetSessionState = useCallback(() => {
+        localStorage.removeItem(SESSION_KEY)
+        setIsLoggedIn(false)
+        setSessionKey(null)
+    }, [])
+
     const startAuthenticatedSession = useCallback(() => {
         const savedSessionKey = localStorage.getItem(SESSION_KEY)
         const currentSessionKey = savedSessionKey ?? newSessionKey()
@@ -53,17 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await qc.cancelQueries()
             qc.clear()
 
-            localStorage.removeItem(SESSION_KEY)
-
-            setIsLoggedIn(false)
-            setSessionKey(null)
+            resetSessionState()
 
             navigate("/login")
         }
 
         setOnLogout(handleLogout)
         setOnLoginRequired(handleLogout)
-    }, [qc, navigate])
+    }, [qc, navigate, resetSessionState])
 
     const login = async ({ email, password }: LoginParams) => {
         await loginMutation.mutateAsync({ email, password })
@@ -81,10 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await qc.cancelQueries()
         qc.clear()
 
-        localStorage.removeItem(SESSION_KEY)
-
-        setIsLoggedIn(false)
-        setSessionKey(null)
+        resetSessionState()
 
         navigate("/login")
     }
