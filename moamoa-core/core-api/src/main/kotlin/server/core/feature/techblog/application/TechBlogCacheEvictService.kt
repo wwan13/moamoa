@@ -7,6 +7,7 @@ import server.core.feature.techblog.infra.SubscriptionCache
 import server.core.feature.techblog.infra.TechBlogSummaryCache
 import server.messaging.EventHandler
 import server.messaging.SubscriptionDefinition
+import server.messaging.handleMessage
 
 @Service
 class TechBlogCacheEvictService(
@@ -17,14 +18,14 @@ class TechBlogCacheEvictService(
 
     @EventHandler
     fun subscriptionUpdatedTechBlogCacheEvict() =
-        _root_ide_package_.server.messaging.handleMessage<TechBlogSubscribeUpdatedEvent>(techBlogCacheHandlingStream) { event ->
+        handleMessage<TechBlogSubscribeUpdatedEvent>(techBlogCacheHandlingStream) { event ->
             techBlogSummaryCache.evict(event.techBlogId)
             subscriptionCache.evictAll(event.memberId)
         }
 
     @EventHandler
     fun notificationUpdatedTechBlogCacheEvict() =
-        _root_ide_package_.server.messaging.handleMessage<NotificationUpdatedEvent>(techBlogCacheHandlingStream) { event ->
+        handleMessage<NotificationUpdatedEvent>(techBlogCacheHandlingStream) { event ->
             techBlogSummaryCache.evict(event.techBlogId)
             subscriptionCache.evictAll(event.memberId)
         }

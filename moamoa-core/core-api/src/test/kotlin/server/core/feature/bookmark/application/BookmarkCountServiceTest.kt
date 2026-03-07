@@ -6,19 +6,20 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.feature.bookmark.application.BookmarkCountService
-import server.core.feature.post.domain.PostRepository
 import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
+import server.core.feature.post.domain.PostRepository
 import server.core.fixture.createPost
 import server.core.infra.db.transaction.TransactionScope
 import server.core.infra.db.transaction.Transactional
+import server.messaging.MessageChannel
+import server.messaging.SubscriptionDefinition
 import test.UnitTest
 
 class BookmarkCountServiceTest : UnitTest() {
     @Test
     fun `이벤트 핸들러는 스트림과 타입 정보를 포함한다`() {
-        val stream = _root_ide_package_.server.messaging.SubscriptionDefinition(
-            _root_ide_package_.server.messaging.MessageChannel("post-bookmark"), "post-bookmark-group"
+        val stream = SubscriptionDefinition(
+            MessageChannel("post-bookmark"), "post-bookmark-group"
         )
         val postRepository = mockk<PostRepository>(relaxed = true)
         val transactional = mockk<Transactional>(relaxed = true)
@@ -33,8 +34,8 @@ class BookmarkCountServiceTest : UnitTest() {
 
     @Test
     fun `북마크가 추가되면 카운트를 증가시킨다`() = runTest {
-        val stream = _root_ide_package_.server.messaging.SubscriptionDefinition(
-            _root_ide_package_.server.messaging.MessageChannel("post-bookmark"), "post-bookmark-group"
+        val stream = SubscriptionDefinition(
+            MessageChannel("post-bookmark"), "post-bookmark-group"
         )
         val postRepository = mockk<PostRepository>(relaxed = true)
         val transactional = mockk<Transactional>()
@@ -58,8 +59,8 @@ class BookmarkCountServiceTest : UnitTest() {
 
     @Test
     fun `북마크가 해제되면 카운트를 감소시킨다`() = runTest {
-        val stream = _root_ide_package_.server.messaging.SubscriptionDefinition(
-            _root_ide_package_.server.messaging.MessageChannel("post-bookmark"), "post-bookmark-group"
+        val stream = SubscriptionDefinition(
+            MessageChannel("post-bookmark"), "post-bookmark-group"
         )
         val postRepository = mockk<PostRepository>(relaxed = true)
         val transactional = mockk<Transactional>()

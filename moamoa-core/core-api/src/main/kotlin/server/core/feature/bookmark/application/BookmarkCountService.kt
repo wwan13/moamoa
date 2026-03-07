@@ -1,12 +1,13 @@
 package server.core.feature.bookmark.application
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
-import server.core.infra.db.transaction.Transactional
-import org.springframework.data.repository.findByIdOrNull
 import server.core.feature.post.domain.PostRepository
+import server.core.infra.db.transaction.Transactional
 import server.messaging.EventHandler
 import server.messaging.SubscriptionDefinition
+import server.messaging.handleMessage
 
 @Service
 class BookmarkCountService(
@@ -16,7 +17,7 @@ class BookmarkCountService(
 ) {
     @EventHandler
     fun bookmarkUpdatedCountCalculate() =
-        _root_ide_package_.server.messaging.handleMessage<BookmarkUpdatedEvent>(countProcessingStream) { event ->
+        handleMessage<BookmarkUpdatedEvent>(countProcessingStream) { event ->
             val delta = if (event.bookmarked) 1L else -1L
             transactional {
                 val post = postRepository.findByIdOrNull(event.postId) ?: return@transactional

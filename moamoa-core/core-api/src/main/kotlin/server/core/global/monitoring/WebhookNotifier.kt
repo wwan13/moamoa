@@ -7,6 +7,7 @@ import server.content.WebhookContent
 import server.core.feature.member.domain.MemberCreateEvent
 import server.core.feature.submission.domain.SubmissionCreateEvent
 import server.core.global.profile.isProd
+import server.messaging.handleMessage
 
 @Component
 class WebhookNotifier(
@@ -17,7 +18,7 @@ class WebhookNotifier(
 
     @server.messaging.EventHandler
     fun memberCreateWebhookNotify() =
-        _root_ide_package_.server.messaging.handleMessage<MemberCreateEvent>(monitoringStream) { event ->
+        handleMessage<MemberCreateEvent>(monitoringStream) { event ->
             if (!environment.isProd()) return@handleMessage
 
             val content = WebhookContent.Service(
@@ -33,7 +34,7 @@ class WebhookNotifier(
 
     @server.messaging.EventHandler
     fun submissionCreateWebhookNotify() =
-        _root_ide_package_.server.messaging.handleMessage<SubmissionCreateEvent>(monitoringStream) { event ->
+        handleMessage<SubmissionCreateEvent>(monitoringStream) { event ->
             if (!environment.isProd()) return@handleMessage
 
             val content = WebhookContent.Service(

@@ -6,18 +6,20 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.feature.techblog.domain.TechBlogRepository
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
+import server.core.feature.techblog.domain.TechBlogRepository
 import server.core.fixture.createTechBlog
 import server.core.infra.db.transaction.TransactionScope
 import server.core.infra.db.transaction.Transactional
+import server.messaging.MessageChannel
+import server.messaging.SubscriptionDefinition
 import test.UnitTest
 
 class SubscriptionCountServiceTest : UnitTest() {
     @Test
     fun `이벤트 핸들러는 스트림과 타입 정보를 포함한다`() {
-        val stream = _root_ide_package_.server.messaging.SubscriptionDefinition(
-            _root_ide_package_.server.messaging.MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group"
+        val stream = SubscriptionDefinition(
+            MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group"
         )
         val techBlogRepository = mockk<TechBlogRepository>(relaxed = true)
         val transactional = mockk<Transactional>(relaxed = true)
@@ -32,8 +34,8 @@ class SubscriptionCountServiceTest : UnitTest() {
 
     @Test
     fun `구독이 켜지면 카운트를 증가시킨다`() = runTest {
-        val stream = _root_ide_package_.server.messaging.SubscriptionDefinition(
-            _root_ide_package_.server.messaging.MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group"
+        val stream = SubscriptionDefinition(
+            MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group"
         )
         val techBlogRepository = mockk<TechBlogRepository>(relaxed = true)
         val transactional = mockk<Transactional>()
@@ -57,8 +59,8 @@ class SubscriptionCountServiceTest : UnitTest() {
 
     @Test
     fun `구독이 해제되면 카운트를 감소시킨다`() = runTest {
-        val stream = _root_ide_package_.server.messaging.SubscriptionDefinition(
-            _root_ide_package_.server.messaging.MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group"
+        val stream = SubscriptionDefinition(
+            MessageChannel("tech-blog-subscription"), "tech-blog-subscription-group"
         )
         val techBlogRepository = mockk<TechBlogRepository>(relaxed = true)
         val transactional = mockk<Transactional>()

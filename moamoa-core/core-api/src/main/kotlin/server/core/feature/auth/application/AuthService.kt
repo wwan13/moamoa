@@ -1,19 +1,20 @@
 package server.core.feature.auth.application
 
-import org.springframework.stereotype.Service
 import kotlinx.coroutines.runBlocking
 import org.springframework.data.repository.findByIdOrNull
-import server.core.feature.member.domain.MemberRepository
+import org.springframework.stereotype.Service
 import server.core.feature.auth.infra.EmailVerificationCache
 import server.core.feature.auth.infra.RefreshTokenCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
+import server.core.feature.member.domain.MemberRepository
 import server.core.global.security.UnauthorizedException
-import server.token.AuthPrincipal
-import server.token.TokenProvider
-import server.token.TokenType
+import server.mail.MailContent
 import server.password.PasswordEncoder
 import server.template.mail.MailTemplate
 import server.template.mail.toTemplateArgs
+import server.token.AuthPrincipal
+import server.token.TokenProvider
+import server.token.TokenType
 import java.security.SecureRandom
 
 @Service
@@ -41,7 +42,7 @@ class AuthService(
             homeUrl = "http://localhost:8080",
             verificationCode = verificationCode
         )
-        val mailContent = _root_ide_package_.server.mail.MailContent.Template(
+        val mailContent = MailContent.Template(
             to = command.email,
             subject = "이메일 인증 코드를 확인해주세요.",
             path = mailTemplate.path,
