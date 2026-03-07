@@ -26,7 +26,7 @@ class AuthCookieSupportTest : UnitTest() {
         cookies[0].contains("HttpOnly") shouldBe true
         cookies[0].contains("Secure") shouldBe true
         cookies[0].contains("SameSite=None") shouldBe true
-        cookies[0].contains("Max-Age=3600") shouldBe true
+        cookies[0].contains("Max-Age=604800") shouldBe true
         cookies[1].contains("refreshToken=refresh-token") shouldBe true
         cookies[1].contains("Max-Age=604800") shouldBe true
     }

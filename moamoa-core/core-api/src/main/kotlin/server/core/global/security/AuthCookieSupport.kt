@@ -9,7 +9,7 @@ object AuthCookieSupport {
     const val ACCESS_TOKEN_COOKIE = "accessToken"
     const val REFRESH_TOKEN_COOKIE = "refreshToken"
     const val REFRESH_TOKEN_HEADER = "X-Refresh-Token"
-    const val ACCESS_TOKEN_MAX_AGE_SECONDS = 3_600L
+    const val ACCESS_TOKEN_MAX_AGE_SECONDS = 604_800L
     const val REFRESH_TOKEN_MAX_AGE_SECONDS = 604_800L
 
 }
