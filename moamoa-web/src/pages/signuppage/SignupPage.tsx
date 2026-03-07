@@ -268,7 +268,7 @@ const SignupPage = () => {
                             >
                                 <img
                                     className={styles.socialImg}
-                                    src="https://i.imgur.com/xWcCM6A.png"
+                                    src="/social_google.png"
                                     alt="Google 계정으로 계속하기"
                                 />
                             </button>
@@ -282,7 +282,7 @@ const SignupPage = () => {
                             >
                                 <img
                                     className={styles.socialImg}
-                                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Font_Awesome_5_brands_github.svg/250px-Font_Awesome_5_brands_github.svg.png"
+                                    src="/social_github.png"
                                     alt="Github 계정으로 계속하기"
                                 />
                             </button>
