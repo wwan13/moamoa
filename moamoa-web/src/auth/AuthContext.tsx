@@ -56,7 +56,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   useEffect(() => {
-    setOnLoginRequired(() => {
+    setOnLoginRequired(async () => {
+      await showGlobalAlert("다시 로그인해 주세요.")
+      await qc.cancelQueries()
       qc.clear()
       resetSessionState()
     })

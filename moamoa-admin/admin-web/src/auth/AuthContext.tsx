@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
-import { setOnLoginRequired, setOnLogout } from "../api/client"
+import { setOnLoginRequired, setOnLogout, showGlobalAlert } from "../api/client"
 
 type LoginParams = {
     email: string
@@ -64,8 +64,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             navigate("/login")
         }
 
+        const handleLoginRequired = async () => {
+            await showGlobalAlert("다시 로그인해 주세요.")
+            await qc.cancelQueries()
+            qc.clear()
+
+            resetSessionState()
+
+            navigate("/login")
+        }
+
         setOnLogout(handleLogout)
-        setOnLoginRequired(handleLogout)
+        setOnLoginRequired(handleLoginRequired)
     }, [qc, navigate, resetSessionState])
 
     const login = async ({ email, password }: LoginParams) => {
