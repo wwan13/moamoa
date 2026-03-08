@@ -8,6 +8,7 @@ import server.core.feature.techblog.domain.TechBlogRepository
 import server.core.feature.subscription.domain.Subscription
 import server.core.feature.subscription.domain.SubscriptionRepository
 import server.core.infra.db.transaction.Transactional
+import server.global.logging.biz
 
 @Service
 class SubscriptionService(
@@ -37,9 +38,7 @@ class SubscriptionService(
                     ?.let { subscription ->
                         subscription.unsubscribe()
                         subscriptionRepository.delete(subscription)
-                        logger.info {
-                            "기술 블로그 구독 해제 이벤트를 등록했습니다"
-                        }
+                        logger.biz.info { "기술 블로그 구독을 해제합니다" }
 
                         SubscriptionToggleResult(false)
                     }
@@ -52,9 +51,7 @@ class SubscriptionService(
                         val saved = subscriptionRepository.save(subscription)
 
                         saved.subscribe()
-                        logger.info {
-                            "기술 블로그 구독 등록 이벤트를 등록했습니다"
-                        }
+                        logger.biz.info { "기술 블로그를 구독합니다" }
 
                         SubscriptionToggleResult(true)
                     }
@@ -76,9 +73,7 @@ class SubscriptionService(
 
                 subscription.toggleNotification()
                 subscriptionRepository.save(subscription)
-                logger.info {
-                    "기술 블로그 알림 설정 변경 이벤트를 등록했습니다"
-                }
+                logger.biz.info { "기술 블로그 알림 설정을 변경합니다" }
 
                 NotificationEnabledToggleResult(subscription.notificationEnabled)
             }

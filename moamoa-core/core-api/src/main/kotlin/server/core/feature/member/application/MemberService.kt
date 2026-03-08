@@ -11,6 +11,7 @@ import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.infra.db.transaction.Transactional
 import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException
+import server.global.logging.biz
 import server.password.PasswordEncoder
 import java.util.*
 
@@ -76,9 +77,7 @@ class MemberService(
         val saved = memberRepository.save(member)
 
         saved.created()
-        logger.info {
-            "회원 생성 이벤트를 등록했습니다"
-        }
+        logger.biz.info { "회원을 생성합니다" }
 
         MemberData(saved)
     }
@@ -106,6 +105,7 @@ class MemberService(
         command: ChangePasswordCommand,
         passport: Passport
     ): ChangePasswordResult {
+        logger.biz.info { "비밀번호를 변경합니다" }
         if (command.oldPassword == command.newPassword) {
             throw IllegalArgumentException("같은 비밀번호는 사용할 수 없습니다.")
         }

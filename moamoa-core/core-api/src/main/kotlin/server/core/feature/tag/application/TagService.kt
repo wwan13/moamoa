@@ -7,7 +7,6 @@ import server.core.feature.tag.domain.TagRepository
 class TagService(
     private val tagRepository: TagRepository
 ) {
-
     fun findAll(): List<TagData> {
         return tagRepository.findAllByOrderByTitleAsc().map(::TagData)
     }

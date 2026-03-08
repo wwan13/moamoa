@@ -8,6 +8,7 @@ import server.core.feature.post.domain.PostRepository
 import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.bookmark.domain.BookmarkRepository
 import server.core.infra.db.transaction.Transactional
+import server.global.logging.biz
 import server.lock.KeyedLock
 
 @Service
@@ -39,9 +40,7 @@ class BookmarkService(
                     ?.let { bookmark ->
                         bookmark.unbookmark()
                         bookmarkRepository.delete(bookmark)
-                        logger.info {
-                            "게시글 북마크 해제 이벤트를 등록했습니다"
-                        }
+                        logger.biz.info { "북마크를 해제합니다" }
 
                         BookmarkToggleResult(false)
                     }
@@ -54,9 +53,7 @@ class BookmarkService(
                         )
 
                         saved.bookmark()
-                        logger.info {
-                            "게시글 북마크 등록 이벤트를 등록했습니다"
-                        }
+                        logger.biz.info { "북마크를 등록합니다" }
 
                         BookmarkToggleResult(true)
                     }

@@ -7,7 +7,6 @@ import server.core.feature.post.infra.PostViewCountCache
 class PostService(
     private val postViewCountCache: PostViewCountCache
 ) {
-
     fun increaseViewCount(postId: Long): IncreaseViewCountResult {
         postViewCountCache.incr(postId)
         return IncreaseViewCountResult(true)

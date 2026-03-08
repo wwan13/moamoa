@@ -21,7 +21,6 @@ class SubscribedTechBlogQueryService(
     private val techBlogSummaryCache: TechBlogSummaryCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
-
     fun findSubscribingTechBlogs(passport: Passport): TechBlogList {
         val techBlogs = loadAll(passport.memberId)
         val meta = TechBlogListMeta(totalCount = techBlogs.size.toLong())

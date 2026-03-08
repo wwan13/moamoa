@@ -16,7 +16,6 @@ class MemberQueryService(
     private val subscriptionCache: SubscriptionCache,
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache
 ) {
-
     fun findById(memberId: Long): MemberSummary {
         val member = memberRepository.findByIdOrNull(memberId)
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")

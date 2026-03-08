@@ -25,12 +25,10 @@ class PostQueryService(
     private val postStatsReader: PostStatsReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
-
     fun findByConditions(
         conditions: PostQueryConditions,
         passport: Passport?
     ): PostList {
-
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1

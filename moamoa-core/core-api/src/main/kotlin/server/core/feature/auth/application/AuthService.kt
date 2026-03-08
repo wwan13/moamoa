@@ -27,7 +27,6 @@ class AuthService(
     private val refreshTokenCache: RefreshTokenCache,
     private val socialMemberSessionCache: SocialMemberSessionCache
 ) {
-
     private val accessTokenExpires = 3_600_000L
     private val refreshTokenExpires = 604_800_000L
 

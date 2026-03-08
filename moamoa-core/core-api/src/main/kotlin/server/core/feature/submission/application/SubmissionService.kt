@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import server.core.feature.submission.domain.Submission
 import server.core.feature.submission.domain.SubmissionRepository
 import server.core.infra.db.transaction.Transactional
+import server.global.logging.biz
 
 @Service
 class SubmissionService(
@@ -27,9 +28,7 @@ class SubmissionService(
         val saved = submissionRepository.save(submission)
 
         saved.created()
-        logger.info {
-            "제보 생성 이벤트를 등록했습니다"
-        }
+        logger.biz.info { "제보를 생성합니다" }
 
         SubmissionCreateResult(saved.id)
     }

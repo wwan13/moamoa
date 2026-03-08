@@ -20,7 +20,6 @@ class TechBlogQueryService(
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
-
     fun findAll(
         passport: Passport?,
         conditions: TechBlogQueryConditions

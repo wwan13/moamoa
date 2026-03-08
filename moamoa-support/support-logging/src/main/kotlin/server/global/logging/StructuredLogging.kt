@@ -8,6 +8,9 @@ import org.slf4j.MDC
 val KLogger.request: TypedLogger
     get() = TypedLogger(this, LogType.REQUEST)
 
+val KLogger.biz: TypedLogger
+    get() = TypedLogger(this, LogType.BIZ)
+
 val KLogger.redis: TypedLogger
     get() = TypedLogger(this, LogType.REDIS)
 
@@ -226,6 +229,15 @@ class EventTypedLogger internal constructor(
     }
 
     fun info(
+        event: Any,
+        vararg fields: Pair<String, Any?>,
+        message: () -> String,
+    ) {
+        val traceId = RequestLogContextHolder.current()?.traceId
+        typedLogger.infoWithTraceId(traceId, *eventFields(event, fields), message = message)
+    }
+
+    fun info(
         vararg fields: Pair<String, Any?>,
         message: () -> String,
     ) {
@@ -257,6 +269,15 @@ class EventTypedLogger internal constructor(
         typedLogger.infoWithTraceId(traceId, *eventFields(event)) { message() }
     }
 
+    fun infoWithTraceId(
+        traceId: String?,
+        event: Any,
+        vararg fields: Pair<String, Any?>,
+        message: () -> String,
+    ) {
+        typedLogger.infoWithTraceId(traceId, *eventFields(event, fields), message = message)
+    }
+
     private fun eventFields(event: Any): Array<out Pair<String, Any?>> {
         val map = objectMapper.convertValue(
             event,
@@ -264,6 +285,12 @@ class EventTypedLogger internal constructor(
         )
         return map.entries.map { it.key to it.value }.toTypedArray()
     }
+
+    private fun eventFields(
+        event: Any,
+        fields: Array<out Pair<String, Any?>>,
+    ): Array<out Pair<String, Any?>> =
+        arrayOf(*eventFields(event), *fields)
 
     private fun eventFields(
         eventName: String,
