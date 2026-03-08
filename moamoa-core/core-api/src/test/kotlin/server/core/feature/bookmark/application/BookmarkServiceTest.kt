@@ -17,9 +17,7 @@ import server.core.feature.member.domain.MemberRepository
 import server.core.feature.post.domain.PostRepository
 import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.bookmark.domain.BookmarkRepository
-import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
 import server.core.fixture.createPost
-import server.core.infra.db.transaction.TransactionScope
 import server.core.infra.db.transaction.Transactional
 import test.UnitTest
 
@@ -30,7 +28,6 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = BookmarkService(
             transactional,
@@ -51,8 +48,8 @@ class BookmarkServiceTest : UnitTest() {
             Bookmark(id = 101L, memberId = savedSlot.captured.memberId, postId = savedSlot.captured.postId)
         }
         coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> BookmarkToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> BookmarkToggleResult>()
+            block()
         }
 
         val result = service.toggle(command, memberId)
@@ -68,7 +65,6 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = BookmarkService(
             transactional,
@@ -89,22 +85,11 @@ class BookmarkServiceTest : UnitTest() {
             Bookmark(id = 101L, memberId = bookmark.memberId, postId = bookmark.postId)
         }
         coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> BookmarkToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> BookmarkToggleResult>()
+            block()
         }
 
         service.toggle(command, memberId)
-
-        coVerify(exactly = 1) {
-            transactionScope.registerEvent(
-                match {
-                    it is BookmarkUpdatedEvent &&
-                        it.memberId == memberId &&
-                        it.postId == command.postId &&
-                        it.bookmarked
-                }
-            )
-        }
     }
 
     @Test
@@ -113,7 +98,6 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = BookmarkService(
             transactional,
@@ -130,16 +114,16 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
-        coEvery { bookmarkRepository.deleteById(existing.id) } returns Unit
+        coEvery { bookmarkRepository.delete(existing) } returns Unit
         coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> BookmarkToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> BookmarkToggleResult>()
+            block()
         }
 
         val result = service.toggle(command, memberId)
 
         result.bookmarked shouldBe false
-        coVerify(exactly = 1) { bookmarkRepository.deleteById(existing.id) }
+        coVerify(exactly = 1) { bookmarkRepository.delete(existing) }
     }
 
     @Test
@@ -148,7 +132,6 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = BookmarkService(
             transactional,
@@ -165,24 +148,13 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
-        coEvery { bookmarkRepository.deleteById(existing.id) } returns Unit
+        coEvery { bookmarkRepository.delete(existing) } returns Unit
         coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> BookmarkToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> BookmarkToggleResult>()
+            block()
         }
 
         service.toggle(command, memberId)
-
-        coVerify(exactly = 1) {
-            transactionScope.registerEvent(
-                match {
-                    it is BookmarkUpdatedEvent &&
-                        it.memberId == memberId &&
-                        it.postId == command.postId &&
-                        !it.bookmarked
-                }
-            )
-        }
     }
 
     @Test
@@ -191,7 +163,6 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = BookmarkService(
             transactional,
@@ -206,8 +177,8 @@ class BookmarkServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns false
         coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> BookmarkToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> BookmarkToggleResult>()
+            block()
         }
 
         val exception = shouldThrow<IllegalArgumentException> {
@@ -225,7 +196,6 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = BookmarkService(
             transactional,
@@ -241,8 +211,8 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { postRepository.existsById(command.postId) } returns false
         coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> BookmarkToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> BookmarkToggleResult>()
+            block()
         }
 
         val exception = shouldThrow<IllegalArgumentException> {

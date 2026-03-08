@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.core.feature.techblog.domain.TechBlogRepository
 import server.core.fixture.createTechBlog
-import server.core.infra.db.transaction.TransactionScope
 import server.core.infra.db.transaction.Transactional
 import server.messaging.MessageChannel
 import server.messaging.SubscriptionDefinition
@@ -39,13 +38,12 @@ class SubscriptionCountServiceTest : UnitTest() {
         )
         val techBlogRepository = mockk<TechBlogRepository>(relaxed = true)
         val transactional = mockk<Transactional>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = SubscriptionCountService(stream, techBlogRepository, transactional)
         val techBlog = createTechBlog(id = 10L, subscriptionCount = 2L)
         every { techBlogRepository.findById(10L) } returns java.util.Optional.of(techBlog)
         every { transactional.invoke<Unit>(any(), any()) } answers {
-            val block = secondArg<TransactionScope.() -> Unit>()
-            block.invoke(transactionScope)
+            val block = secondArg<() -> Unit>()
+            block.invoke()
         }
 
         val handler = service.subscriptionUpdatedCountCalculate()
@@ -64,13 +62,12 @@ class SubscriptionCountServiceTest : UnitTest() {
         )
         val techBlogRepository = mockk<TechBlogRepository>(relaxed = true)
         val transactional = mockk<Transactional>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = SubscriptionCountService(stream, techBlogRepository, transactional)
         val techBlog = createTechBlog(id = 10L, subscriptionCount = 1L)
         every { techBlogRepository.findById(10L) } returns java.util.Optional.of(techBlog)
         every { transactional.invoke<Unit>(any(), any()) } answers {
-            val block = secondArg<TransactionScope.() -> Unit>()
-            block.invoke(transactionScope)
+            val block = secondArg<() -> Unit>()
+            block.invoke()
         }
 
         val handler = service.subscriptionUpdatedCountCalculate()

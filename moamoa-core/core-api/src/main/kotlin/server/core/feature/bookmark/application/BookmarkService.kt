@@ -8,7 +8,6 @@ import server.core.feature.post.domain.PostRepository
 import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.bookmark.domain.BookmarkRepository
 import server.core.infra.db.transaction.Transactional
-import server.global.logging.event
 import server.lock.KeyedLock
 
 @Service
@@ -38,12 +37,10 @@ class BookmarkService(
 
                 bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId)
                     ?.let { bookmark ->
-                        bookmarkRepository.deleteById(bookmark.id)
-
-                        val event = bookmark.unbookmark()
-                        registerEvent(event)
-                        logger.event.info(event) {
-                            "게시글 북마크 해제 이벤트를 발행했습니다"
+                        bookmark.unbookmark()
+                        bookmarkRepository.delete(bookmark)
+                        logger.info {
+                            "게시글 북마크 해제 이벤트를 등록했습니다"
                         }
 
                         BookmarkToggleResult(false)
@@ -56,10 +53,9 @@ class BookmarkService(
                             )
                         )
 
-                        val event = saved.bookmark()
-                        registerEvent(event)
-                        logger.event.info(event) {
-                            "게시글 북마크 등록 이벤트를 발행했습니다"
+                        saved.bookmark()
+                        logger.info {
+                            "게시글 북마크 등록 이벤트를 등록했습니다"
                         }
 
                         BookmarkToggleResult(true)

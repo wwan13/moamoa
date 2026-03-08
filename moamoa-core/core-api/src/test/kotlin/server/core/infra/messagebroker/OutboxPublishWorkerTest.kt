@@ -10,7 +10,6 @@ import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.global.logging.ExternalCallLogger
-import server.core.infra.db.transaction.TransactionScope
 import server.core.infra.db.transaction.Transactional
 import server.core.infra.db.outbox.EventOutbox
 import server.core.infra.db.outbox.EventOutboxRepository
@@ -107,10 +106,9 @@ class OutboxPublishWorkerTest : UnitTest() {
 
     private fun newTransactional(): Transactional {
         val transactional = mockk<Transactional>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         every { transactional.invoke<Unit>(any(), any()) } answers {
-            val block = secondArg<TransactionScope.() -> Unit>()
-            block.invoke(transactionScope)
+            val block = secondArg<() -> Unit>()
+            block.invoke()
         }
         return transactional
     }

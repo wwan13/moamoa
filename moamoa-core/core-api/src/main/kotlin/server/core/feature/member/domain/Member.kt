@@ -43,10 +43,14 @@ class Member(
         private set
 
 
-    fun created() = MemberCreateEvent(
-        memberId = id,
-        email = email,
-    )
+    fun created() {
+        registerEvent(
+            MemberCreateEvent(
+                memberId = id,
+                email = email,
+            )
+        )
+    }
 
     fun updatePassword(encodedPassword: String) {
         password = encodedPassword

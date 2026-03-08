@@ -38,24 +38,34 @@ class Subscription(
         private set
 
 
-    fun subscribe() = TechBlogSubscribeUpdatedEvent(
-        memberId = memberId,
-        techBlogId = techBlogId,
-        subscribed = true
-    )
+    fun subscribe() {
+        registerEvent(
+            TechBlogSubscribeUpdatedEvent(
+                memberId = memberId,
+                techBlogId = techBlogId,
+                subscribed = true
+            )
+        )
+    }
 
-    fun unsubscribe() = TechBlogSubscribeUpdatedEvent(
-        memberId = memberId,
-        techBlogId = techBlogId,
-        subscribed = false
-    )
+    fun unsubscribe() {
+        registerEvent(
+            TechBlogSubscribeUpdatedEvent(
+                memberId = memberId,
+                techBlogId = techBlogId,
+                subscribed = false
+            )
+        )
+    }
 
-    fun toggleNotification(): NotificationUpdatedEvent {
+    fun toggleNotification() {
         notificationEnabled = !notificationEnabled
-        return NotificationUpdatedEvent(
-            memberId = memberId,
-            techBlogId = techBlogId,
-            enabled = notificationEnabled
+        registerEvent(
+            NotificationUpdatedEvent(
+                memberId = memberId,
+                techBlogId = techBlogId,
+                enabled = notificationEnabled
+            )
         )
     }
 }

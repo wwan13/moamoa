@@ -16,13 +16,11 @@ import server.core.feature.member.application.EmailExistsCommand
 import server.core.feature.member.application.MemberData
 import server.core.feature.member.application.MemberService
 import server.core.feature.member.domain.Member
-import server.core.feature.member.domain.MemberCreateEvent
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.member.domain.Provider
 import server.core.fixture.createMember
 import server.core.feature.auth.infra.EmailVerificationCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
-import server.core.infra.db.transaction.TransactionScope
 import server.core.infra.db.transaction.Transactional
 import server.password.PasswordEncoder
 import server.core.global.security.Passport
@@ -66,7 +64,6 @@ class MemberServiceTest : UnitTest() {
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = MemberService(
             transactional,
             memberRepository,
@@ -83,8 +80,8 @@ class MemberServiceTest : UnitTest() {
         every { passwordEncoder.encode(command.password) } returns "encoded-password"
         coEvery { memberRepository.existsByEmail(command.email) } returns true
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> MemberData>()
-            block(transactionScope)
+            val block = secondArg<() -> MemberData>()
+            block()
         }
 
         val exception = shouldThrow<IllegalArgumentException> {
@@ -102,7 +99,6 @@ class MemberServiceTest : UnitTest() {
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = MemberService(
             transactional,
             memberRepository,
@@ -122,8 +118,8 @@ class MemberServiceTest : UnitTest() {
         coEvery { memberRepository.existsByEmail(command.email) } returns false
         coEvery { memberRepository.save(capture(savedSlot)) } returns savedMember
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> MemberData>()
-            block(transactionScope)
+            val block = secondArg<() -> MemberData>()
+            block()
         }
 
         val result = service.createInternalMember(command)
@@ -134,15 +130,6 @@ class MemberServiceTest : UnitTest() {
         savedSlot.captured.email shouldBe command.email
         savedSlot.captured.password shouldBe "encoded-password"
         savedSlot.captured.provider shouldBe Provider.INTERNAL
-        coVerify(exactly = 1) {
-            transactionScope.registerEvent(
-                match {
-                    it is MemberCreateEvent &&
-                        it.memberId == savedMember.id &&
-                        it.email == savedMember.email
-                }
-            )
-        }
     }
 
     @Test
@@ -152,7 +139,6 @@ class MemberServiceTest : UnitTest() {
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = MemberService(
             transactional,
             memberRepository,
@@ -167,8 +153,8 @@ class MemberServiceTest : UnitTest() {
         )
 
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> MemberData>()
-            block(transactionScope)
+            val block = secondArg<() -> MemberData>()
+            block()
         }
 
         val exception = shouldThrow<IllegalStateException> {
@@ -186,7 +172,6 @@ class MemberServiceTest : UnitTest() {
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = MemberService(
             transactional,
             memberRepository,
@@ -202,8 +187,8 @@ class MemberServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsByEmail(command.email) } returns true
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> MemberData>()
-            block(transactionScope)
+            val block = secondArg<() -> MemberData>()
+            block()
         }
 
         val exception = shouldThrow<IllegalArgumentException> {
@@ -221,7 +206,6 @@ class MemberServiceTest : UnitTest() {
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = MemberService(
             transactional,
             memberRepository,
@@ -246,8 +230,8 @@ class MemberServiceTest : UnitTest() {
         coEvery { memberRepository.existsByEmail(command.email) } returns false
         coEvery { memberRepository.save(capture(savedSlot)) } returns savedMember
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> MemberData>()
-            block(transactionScope)
+            val block = secondArg<() -> MemberData>()
+            block()
         }
 
         val result = service.createSocialMember(command)
@@ -258,15 +242,6 @@ class MemberServiceTest : UnitTest() {
         savedSlot.captured.email shouldBe command.email
         savedSlot.captured.provider shouldBe command.provider
         savedSlot.captured.providerKey shouldBe command.providerKey
-        coVerify(exactly = 1) {
-            transactionScope.registerEvent(
-                match {
-                    it is MemberCreateEvent &&
-                        it.memberId == savedMember.id &&
-                        it.email == savedMember.email
-                }
-            )
-        }
     }
 
     @Test
@@ -276,7 +251,6 @@ class MemberServiceTest : UnitTest() {
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = MemberService(
             transactional,
             memberRepository,
@@ -301,8 +275,8 @@ class MemberServiceTest : UnitTest() {
         coEvery { memberRepository.save(any()) } returns savedMember
         coEvery { socialMemberSessionCache.set(any(), any()) } returns Unit
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> MemberData>()
-            block(transactionScope)
+            val block = secondArg<() -> MemberData>()
+            block()
         }
 
         val result = service.createSocialMemberWithSession(command)
@@ -319,7 +293,6 @@ class MemberServiceTest : UnitTest() {
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val service = MemberService(
             transactional,
             memberRepository,
@@ -335,8 +308,8 @@ class MemberServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsByEmail(command.email) } returns true
         coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> MemberData>()
-            block(transactionScope)
+            val block = secondArg<() -> MemberData>()
+            block()
         }
 
         shouldThrow<IllegalArgumentException> {

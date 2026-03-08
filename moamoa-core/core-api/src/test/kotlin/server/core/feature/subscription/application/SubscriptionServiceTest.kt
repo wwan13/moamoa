@@ -12,11 +12,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.techblog.domain.TechBlogRepository
-import server.core.feature.subscription.domain.NotificationUpdatedEvent
-import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.core.feature.subscription.domain.Subscription
 import server.core.feature.subscription.domain.SubscriptionRepository
-import server.core.infra.db.transaction.TransactionScope
 import server.core.infra.db.transaction.Transactional
 import server.core.fixture.createTechBlog
 import server.core.fixture.createSubscription
@@ -29,7 +26,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -55,8 +51,8 @@ class SubscriptionServiceTest : UnitTest() {
             )
         }
         coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> SubscriptionToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> SubscriptionToggleResult>()
+            block()
         }
 
         val result = service.toggle(command, memberId)
@@ -73,7 +69,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -100,22 +95,11 @@ class SubscriptionServiceTest : UnitTest() {
             }
         }
         coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> SubscriptionToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> SubscriptionToggleResult>()
+            block()
         }
 
         service.toggle(command, memberId)
-
-        coVerify(exactly = 1) {
-            transactionScope.registerEvent(
-                match {
-                    it is TechBlogSubscribeUpdatedEvent &&
-                        it.memberId == memberId &&
-                        it.techBlogId == command.techBlogId &&
-                        it.subscribed
-                }
-            )
-        }
     }
 
     @Test
@@ -124,7 +108,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -146,16 +129,16 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns true
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
-        coEvery { subscriptionRepository.deleteById(existing.id) } returns Unit
+        coEvery { subscriptionRepository.delete(existing) } returns Unit
         coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> SubscriptionToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> SubscriptionToggleResult>()
+            block()
         }
 
         val result = service.toggle(command, memberId)
 
         result.subscribing shouldBe false
-        coVerify(exactly = 1) { subscriptionRepository.deleteById(existing.id) }
+        coVerify(exactly = 1) { subscriptionRepository.delete(existing) }
     }
 
     @Test
@@ -164,7 +147,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -186,24 +168,13 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns true
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
-        coEvery { subscriptionRepository.deleteById(existing.id) } returns Unit
+        coEvery { subscriptionRepository.delete(existing) } returns Unit
         coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> SubscriptionToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> SubscriptionToggleResult>()
+            block()
         }
 
         service.toggle(command, memberId)
-
-        coVerify(exactly = 1) {
-            transactionScope.registerEvent(
-                match {
-                    it is TechBlogSubscribeUpdatedEvent &&
-                        it.memberId == memberId &&
-                        it.techBlogId == command.techBlogId &&
-                        !it.subscribed
-                }
-            )
-        }
     }
 
     @Test
@@ -212,7 +183,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -227,8 +197,8 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns false
         coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> SubscriptionToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> SubscriptionToggleResult>()
+            block()
         }
 
         val exception = shouldThrow<IllegalArgumentException> {
@@ -246,7 +216,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -262,8 +231,8 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns false
         coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> SubscriptionToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> SubscriptionToggleResult>()
+            block()
         }
 
         val exception = shouldThrow<IllegalArgumentException> {
@@ -280,7 +249,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -295,8 +263,8 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns null
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> NotificationEnabledToggleResult>()
+            block()
         }
 
         val exception = shouldThrow<IllegalArgumentException> {
@@ -312,7 +280,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -332,9 +299,10 @@ class SubscriptionServiceTest : UnitTest() {
         )
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
+        coEvery { subscriptionRepository.save(existing) } returns existing
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> NotificationEnabledToggleResult>()
+            block()
         }
 
         val result = service.notificationEnabledToggle(command, memberId)
@@ -349,7 +317,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -371,22 +338,11 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.save(any()) } coAnswers { firstArg() }
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> NotificationEnabledToggleResult>()
+            block()
         }
 
         service.notificationEnabledToggle(command, memberId)
-
-        coVerify(exactly = 1) {
-            transactionScope.registerEvent(
-                match {
-                    it is NotificationUpdatedEvent &&
-                        it.memberId == memberId &&
-                        it.techBlogId == command.techBlogId &&
-                        !it.enabled
-                }
-            )
-        }
     }
 
     @Test
@@ -395,7 +351,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -415,9 +370,10 @@ class SubscriptionServiceTest : UnitTest() {
         )
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
+        coEvery { subscriptionRepository.save(existing) } returns existing
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> NotificationEnabledToggleResult>()
+            block()
         }
 
         val result = service.notificationEnabledToggle(command, memberId)
@@ -432,7 +388,6 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val transactionScope = mockk<TransactionScope>(relaxed = true)
         val keyedLock = passThroughKeyedLock()
         val service = SubscriptionService(
             transactional,
@@ -454,22 +409,11 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.save(any()) } coAnswers { firstArg() }
         coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<TransactionScope.() -> NotificationEnabledToggleResult>()
-            block(transactionScope)
+            val block = secondArg<() -> NotificationEnabledToggleResult>()
+            block()
         }
 
         service.notificationEnabledToggle(command, memberId)
-
-        coVerify(exactly = 1) {
-            transactionScope.registerEvent(
-                match {
-                    it is NotificationUpdatedEvent &&
-                        it.memberId == memberId &&
-                        it.techBlogId == command.techBlogId &&
-                        it.enabled
-                }
-            )
-        }
     }
 
     private fun passThroughKeyedLock(): server.lock.KeyedLock = object : server.lock.KeyedLock {

@@ -12,14 +12,13 @@ import java.util.concurrent.ConcurrentHashMap
 @Component
 class Transactional(
     private val txManager: PlatformTransactionManager,
-    private val transactionScope: TransactionScope,
 ) {
 
     private val templates = ConcurrentHashMap<Propagation, TransactionTemplate>()
 
     operator fun <T> invoke(
         propagation: Propagation = Propagation.REQUIRED,
-        block: TransactionScope.() -> T,
+        block: () -> T,
     ): T {
         val template = templates.computeIfAbsent(propagation) { p ->
             val def = DefaultTransactionDefinition().apply {
@@ -28,7 +27,7 @@ class Transactional(
             TransactionTemplate(txManager, def)
         }
 
-        return template.execute { _: TransactionStatus -> transactionScope.block() }
+        return template.execute { _: TransactionStatus -> block() }
             ?: throw IllegalStateException("Transactional returned null")
     }
 

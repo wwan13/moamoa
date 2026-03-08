@@ -11,7 +11,6 @@ import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.infra.db.transaction.Transactional
 import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException
-import server.global.logging.event
 import server.password.PasswordEncoder
 import java.util.*
 
@@ -76,10 +75,9 @@ class MemberService(
         }
         val saved = memberRepository.save(member)
 
-        val event = saved.created()
-        registerEvent(event)
-        logger.event.info(event) {
-            "회원 생성 이벤트를 발행했습니다"
+        saved.created()
+        logger.info {
+            "회원 생성 이벤트를 등록했습니다"
         }
 
         MemberData(saved)

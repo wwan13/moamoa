@@ -29,15 +29,23 @@ class Bookmark(
     val postId: Long
 ) : BaseEntity() {
 
-    fun bookmark() = BookmarkUpdatedEvent(
-        memberId = memberId,
-        postId = postId,
-        bookmarked = true
-    )
+    fun bookmark() {
+        registerEvent(
+            BookmarkUpdatedEvent(
+                memberId = memberId,
+                postId = postId,
+                bookmarked = true
+            )
+        )
+    }
 
-    fun unbookmark() = BookmarkUpdatedEvent(
-        memberId = memberId,
-        postId = postId,
-        bookmarked = false
-    )
+    fun unbookmark() {
+        registerEvent(
+            BookmarkUpdatedEvent(
+                memberId = memberId,
+                postId = postId,
+                bookmarked = false
+            )
+        )
+    }
 }

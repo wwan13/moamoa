@@ -32,9 +32,13 @@ class Submission(
     val memberId: Long
 ) : BaseEntity() {
 
-    fun created() = SubmissionCreateEvent(
-        submissionId = id,
-        blogTitle = blogTitle,
-        blogUrl = blogUrl
-    )
+    fun created() {
+        registerEvent(
+            SubmissionCreateEvent(
+                submissionId = id,
+                blogTitle = blogTitle,
+                blogUrl = blogUrl
+            )
+        )
+    }
 }
