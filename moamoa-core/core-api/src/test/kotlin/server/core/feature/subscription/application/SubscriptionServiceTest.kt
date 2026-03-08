@@ -14,7 +14,6 @@ import server.core.feature.member.domain.MemberRepository
 import server.core.feature.techblog.domain.TechBlogRepository
 import server.core.feature.subscription.domain.Subscription
 import server.core.feature.subscription.domain.SubscriptionRepository
-import server.core.infra.db.transaction.Transactional
 import server.core.fixture.createTechBlog
 import server.core.fixture.createSubscription
 import test.UnitTest
@@ -22,14 +21,11 @@ import test.UnitTest
 class SubscriptionServiceTest : UnitTest() {
     @Test
     fun `구독중이 아니면 구독을 생성한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -50,10 +46,6 @@ class SubscriptionServiceTest : UnitTest() {
                 techBlogId = savedSlot.captured.techBlogId,
             )
         }
-        coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> SubscriptionToggleResult>()
-            block()
-        }
 
         val result = service.toggle(command, memberId)
 
@@ -65,14 +57,11 @@ class SubscriptionServiceTest : UnitTest() {
 
     @Test
     fun `구독중이 아니면 구독 이벤트를 발행하고 subscribing은 true이다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -94,24 +83,17 @@ class SubscriptionServiceTest : UnitTest() {
                 )
             }
         }
-        coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> SubscriptionToggleResult>()
-            block()
-        }
 
         service.toggle(command, memberId)
     }
 
     @Test
     fun `구독중이면 구독을 해제한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -130,10 +112,6 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns true
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.delete(existing) } returns Unit
-        coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> SubscriptionToggleResult>()
-            block()
-        }
 
         val result = service.toggle(command, memberId)
 
@@ -143,14 +121,11 @@ class SubscriptionServiceTest : UnitTest() {
 
     @Test
     fun `구독중이면 구독 해제 이벤트를 발행하고 subscribing은 false이다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -169,24 +144,17 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns true
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.delete(existing) } returns Unit
-        coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> SubscriptionToggleResult>()
-            block()
-        }
 
         service.toggle(command, memberId)
     }
 
     @Test
     fun `존재하지 않는 사용자면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -196,10 +164,6 @@ class SubscriptionServiceTest : UnitTest() {
         val command = SubscriptionToggleCommand(techBlogId = 10L)
 
         coEvery { memberRepository.existsById(memberId) } returns false
-        coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> SubscriptionToggleResult>()
-            block()
-        }
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.toggle(command, memberId)
@@ -212,14 +176,11 @@ class SubscriptionServiceTest : UnitTest() {
 
     @Test
     fun `존재하지 않는 기술 블로그면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -230,10 +191,6 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns false
-        coEvery { transactional.invoke<SubscriptionToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> SubscriptionToggleResult>()
-            block()
-        }
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.toggle(command, memberId)
@@ -245,14 +202,11 @@ class SubscriptionServiceTest : UnitTest() {
 
     @Test
     fun `구독중이 아니면 구독 알림 토글 시 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -262,10 +216,6 @@ class SubscriptionServiceTest : UnitTest() {
         val command = NotificationEnabledToggleCommand(techBlogId = 10L)
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns null
-        coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> NotificationEnabledToggleResult>()
-            block()
-        }
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.notificationEnabledToggle(command, memberId)
@@ -276,14 +226,11 @@ class SubscriptionServiceTest : UnitTest() {
 
     @Test
     fun `구독 알림이 켜져 있으면 끄도록 토글한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -300,10 +247,6 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.save(existing) } returns existing
-        coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> NotificationEnabledToggleResult>()
-            block()
-        }
 
         val result = service.notificationEnabledToggle(command, memberId)
 
@@ -313,14 +256,11 @@ class SubscriptionServiceTest : UnitTest() {
 
     @Test
     fun `구독 알림이 켜져 있으면 끄는 이벤트를 발행한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -337,24 +277,17 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.save(any()) } coAnswers { firstArg() }
-        coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> NotificationEnabledToggleResult>()
-            block()
-        }
 
         service.notificationEnabledToggle(command, memberId)
     }
 
     @Test
     fun `구독 알림이 꺼져 있으면 켜도록 토글한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -371,10 +304,6 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.save(existing) } returns existing
-        coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> NotificationEnabledToggleResult>()
-            block()
-        }
 
         val result = service.notificationEnabledToggle(command, memberId)
 
@@ -384,14 +313,11 @@ class SubscriptionServiceTest : UnitTest() {
 
     @Test
     fun `구독 알림이 꺼져 있으면 켜는 이벤트를 발행한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(
-            transactional,
-            subscriptionRepository,
+        val service = SubscriptionService(            subscriptionRepository,
             techBlogRepository,
             memberRepository,
             keyedLock
@@ -408,10 +334,6 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.save(any()) } coAnswers { firstArg() }
-        coEvery { transactional.invoke<NotificationEnabledToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> NotificationEnabledToggleResult>()
-            block()
-        }
 
         service.notificationEnabledToggle(command, memberId)
     }

@@ -18,20 +18,16 @@ import server.core.feature.post.domain.PostRepository
 import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.bookmark.domain.BookmarkRepository
 import server.core.fixture.createPost
-import server.core.infra.db.transaction.Transactional
 import test.UnitTest
 
 class BookmarkServiceTest : UnitTest() {
     @Test
     fun `기존에 북마크 되어있지 않을 시 북마크를 생성한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = BookmarkService(
-            transactional,
-            bookmarkRepository,
+        val service = BookmarkService(            bookmarkRepository,
             postRepository,
             memberRepository,
             keyedLock
@@ -47,10 +43,6 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { bookmarkRepository.save(capture(savedSlot)) } coAnswers {
             Bookmark(id = 101L, memberId = savedSlot.captured.memberId, postId = savedSlot.captured.postId)
         }
-        coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> BookmarkToggleResult>()
-            block()
-        }
 
         val result = service.toggle(command, memberId)
 
@@ -61,14 +53,11 @@ class BookmarkServiceTest : UnitTest() {
 
     @Test
     fun `기존에 북마크 되어있지 않을 시 BookmarkUpdateEvent를 발행하고 bookmarked는 true이다`() = runTest {
-        val transactional = mockk<Transactional>()
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = BookmarkService(
-            transactional,
-            bookmarkRepository,
+        val service = BookmarkService(            bookmarkRepository,
             postRepository,
             memberRepository,
             keyedLock
@@ -84,24 +73,17 @@ class BookmarkServiceTest : UnitTest() {
             val bookmark = firstArg<Bookmark>()
             Bookmark(id = 101L, memberId = bookmark.memberId, postId = bookmark.postId)
         }
-        coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> BookmarkToggleResult>()
-            block()
-        }
 
         service.toggle(command, memberId)
     }
 
     @Test
     fun `기존에 북마크 되어 있을 시 북마크를 제거한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = BookmarkService(
-            transactional,
-            bookmarkRepository,
+        val service = BookmarkService(            bookmarkRepository,
             postRepository,
             memberRepository,
             keyedLock
@@ -115,10 +97,6 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
         coEvery { bookmarkRepository.delete(existing) } returns Unit
-        coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> BookmarkToggleResult>()
-            block()
-        }
 
         val result = service.toggle(command, memberId)
 
@@ -128,14 +106,11 @@ class BookmarkServiceTest : UnitTest() {
 
     @Test
     fun `기존에 북마크 되어 있을 시 BookmarkUpdateEvent를 발행하고 bookmarked는 false이다`() = runTest {
-        val transactional = mockk<Transactional>()
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = BookmarkService(
-            transactional,
-            bookmarkRepository,
+        val service = BookmarkService(            bookmarkRepository,
             postRepository,
             memberRepository,
             keyedLock
@@ -149,24 +124,17 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
         coEvery { bookmarkRepository.delete(existing) } returns Unit
-        coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> BookmarkToggleResult>()
-            block()
-        }
 
         service.toggle(command, memberId)
     }
 
     @Test
     fun `존재하지 않는 사용자면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = BookmarkService(
-            transactional,
-            bookmarkRepository,
+        val service = BookmarkService(            bookmarkRepository,
             postRepository,
             memberRepository,
             keyedLock
@@ -176,10 +144,6 @@ class BookmarkServiceTest : UnitTest() {
         val command = BookmarkToggleCommand(postId = 10L)
 
         coEvery { memberRepository.existsById(memberId) } returns false
-        coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> BookmarkToggleResult>()
-            block()
-        }
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.toggle(command, memberId)
@@ -192,14 +156,11 @@ class BookmarkServiceTest : UnitTest() {
 
     @Test
     fun `존재하지 않는 게시글이면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = BookmarkService(
-            transactional,
-            bookmarkRepository,
+        val service = BookmarkService(            bookmarkRepository,
             postRepository,
             memberRepository,
             keyedLock
@@ -210,10 +171,6 @@ class BookmarkServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { postRepository.existsById(command.postId) } returns false
-        coEvery { transactional.invoke<BookmarkToggleResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> BookmarkToggleResult>()
-            block()
-        }
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.toggle(command, memberId)
@@ -225,14 +182,11 @@ class BookmarkServiceTest : UnitTest() {
 
     @Test
     fun `북마크가 없으면 빈 결과를 반환한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = BookmarkService(
-            transactional,
-            bookmarkRepository,
+        val service = BookmarkService(            bookmarkRepository,
             postRepository,
             memberRepository,
             keyedLock
@@ -250,14 +204,11 @@ class BookmarkServiceTest : UnitTest() {
 
     @Test
     fun `북마크가 있으면 게시글을 조회하여 PostData로 변환한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
         val keyedLock = passThroughKeyedLock()
-        val service = BookmarkService(
-            transactional,
-            bookmarkRepository,
+        val service = BookmarkService(            bookmarkRepository,
             postRepository,
             memberRepository,
             keyedLock

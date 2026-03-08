@@ -2,6 +2,7 @@ package server.core.feature.member.query
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.bookmark.domain.BookmarkRepository
 import server.core.feature.subscription.domain.SubscriptionRepository
@@ -9,6 +10,7 @@ import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
 import server.core.feature.techblog.infra.SubscriptionCache
 
 @Service
+@Transactional(readOnly = true)
 class MemberQueryService(
     private val memberRepository: MemberRepository,
     private val subscriptionRepository: SubscriptionRepository,

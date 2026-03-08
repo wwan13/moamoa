@@ -14,7 +14,8 @@ class MemberTest : UnitTest() {
     fun `멤버 생성 이벤트는 멤버의 아이디와 이메일을 담는다`() {
         val member = createMember(id = 10L, email = "user@example.com")
 
-        val event = member.created()
+        member.created()
+        val event = extractSingleEvent(member) as MemberCreateEvent
 
         event shouldBe MemberCreateEvent(
             memberId = member.id,
@@ -60,5 +61,19 @@ class MemberTest : UnitTest() {
         member.provider shouldBe Provider.GITHUB
         member.providerKey shouldBe "github-key"
         member.password shouldBe ""
+    }
+
+    private fun extractSingleEvent(entity: Any): Any {
+        var type: Class<*>? = entity.javaClass
+        while (type != null) {
+            runCatching {
+                val field = type.getDeclaredField("domainEvents")
+                field.isAccessible = true
+                val events = field.get(entity) as MutableCollection<*>
+                return events.single()!!
+            }
+            type = type.superclass
+        }
+        error("domainEvents field not found")
     }
 }

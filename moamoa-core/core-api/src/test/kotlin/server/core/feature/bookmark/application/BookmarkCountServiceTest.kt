@@ -2,14 +2,18 @@ package server.core.feature.bookmark.application
 
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionStatus
 import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
 import server.core.feature.post.domain.PostRepository
 import server.core.fixture.createPost
-import server.core.infra.db.transaction.Transactional
+import server.core.infra.db.transaction.HandleTransactionEvent
 import server.messaging.MessageChannel
 import server.messaging.SubscriptionDefinition
 import test.UnitTest
@@ -21,8 +25,11 @@ class BookmarkCountServiceTest : UnitTest() {
             MessageChannel("post-bookmark"), "post-bookmark-group"
         )
         val postRepository = mockk<PostRepository>(relaxed = true)
-        val transactional = mockk<Transactional>(relaxed = true)
-        val service = BookmarkCountService(stream, postRepository, transactional)
+        val service = BookmarkCountService(
+            stream,
+            postRepository,
+            HandleTransactionEvent(newTxManager())
+        )
 
         val handler = service.bookmarkUpdatedCountCalculate()
 
@@ -37,14 +44,13 @@ class BookmarkCountServiceTest : UnitTest() {
             MessageChannel("post-bookmark"), "post-bookmark-group"
         )
         val postRepository = mockk<PostRepository>(relaxed = true)
-        val transactional = mockk<Transactional>()
-        val service = BookmarkCountService(stream, postRepository, transactional)
+        val service = BookmarkCountService(
+            stream,
+            postRepository,
+            HandleTransactionEvent(newTxManager())
+        )
         val post = createPost(id = 10L, bookmarkCount = 3L)
         every { postRepository.findById(10L) } returns java.util.Optional.of(post)
-        every { transactional.invoke<Unit>(any(), any()) } answers {
-            val block = secondArg<() -> Unit>()
-            block.invoke()
-        }
 
         val handler = service.bookmarkUpdatedCountCalculate()
         val event = BookmarkUpdatedEvent(memberId = 1L, postId = 10L, bookmarked = true)
@@ -61,14 +67,13 @@ class BookmarkCountServiceTest : UnitTest() {
             MessageChannel("post-bookmark"), "post-bookmark-group"
         )
         val postRepository = mockk<PostRepository>(relaxed = true)
-        val transactional = mockk<Transactional>()
-        val service = BookmarkCountService(stream, postRepository, transactional)
+        val service = BookmarkCountService(
+            stream,
+            postRepository,
+            HandleTransactionEvent(newTxManager())
+        )
         val post = createPost(id = 10L, bookmarkCount = 1L)
         every { postRepository.findById(10L) } returns java.util.Optional.of(post)
-        every { transactional.invoke<Unit>(any(), any()) } answers {
-            val block = secondArg<() -> Unit>()
-            block.invoke()
-        }
 
         val handler = service.bookmarkUpdatedCountCalculate()
         val event = BookmarkUpdatedEvent(memberId = 1L, postId = 10L, bookmarked = false)
@@ -77,5 +82,14 @@ class BookmarkCountServiceTest : UnitTest() {
 
         post.bookmarkCount shouldBe 0L
         verify(exactly = 1) { postRepository.findById(event.postId) }
+    }
+
+    private fun newTxManager(): PlatformTransactionManager {
+        val txManager = mockk<PlatformTransactionManager>()
+        val status = mockk<TransactionStatus>(relaxed = true)
+        every { txManager.getTransaction(any()) } returns status
+        every { txManager.commit(status) } just runs
+        every { txManager.rollback(status) } just runs
+        return txManager
     }
 }

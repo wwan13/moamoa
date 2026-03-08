@@ -14,7 +14,8 @@ class SubscriptionTest : UnitTest() {
             techBlogId = 20L
         )
 
-        val event = subscription.subscribe()
+        subscription.subscribe()
+        val event = extractSingleEvent(subscription) as TechBlogSubscribeUpdatedEvent
 
         event.memberId shouldBe 10L
         event.techBlogId shouldBe 20L
@@ -29,7 +30,8 @@ class SubscriptionTest : UnitTest() {
             techBlogId = 21L
         )
 
-        val event = subscription.unsubscribe()
+        subscription.unsubscribe()
+        val event = extractSingleEvent(subscription) as TechBlogSubscribeUpdatedEvent
 
         event.memberId shouldBe 11L
         event.techBlogId shouldBe 21L
@@ -44,11 +46,26 @@ class SubscriptionTest : UnitTest() {
             techBlogId = 22L
         )
 
-        val event = subscription.toggleNotification()
+        subscription.toggleNotification()
+        val event = extractSingleEvent(subscription) as NotificationUpdatedEvent
 
         subscription.notificationEnabled shouldBe false
         event.memberId shouldBe 12L
         event.techBlogId shouldBe 22L
         event.enabled shouldBe false
+    }
+
+    private fun extractSingleEvent(entity: Any): Any {
+        var type: Class<*>? = entity.javaClass
+        while (type != null) {
+            runCatching {
+                val field = type.getDeclaredField("domainEvents")
+                field.isAccessible = true
+                val events = field.get(entity) as MutableCollection<*>
+                return events.single()!!
+            }
+            type = type.superclass
+        }
+        error("domainEvents field not found")
     }
 }

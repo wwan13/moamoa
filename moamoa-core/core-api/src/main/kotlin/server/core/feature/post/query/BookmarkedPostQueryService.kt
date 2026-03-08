@@ -4,6 +4,7 @@ import com.linecorp.kotlinjdsl.dsl.jpql.*
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.BookmarkedPostListCache
@@ -16,6 +17,7 @@ import server.core.support.paging.calculateTotalPage
 import server.core.support.query.createJdslQuery
 
 @Service
+@Transactional(readOnly = true)
 class BookmarkedPostQueryService(
     @PersistenceContext
     private val entityManager: EntityManager,

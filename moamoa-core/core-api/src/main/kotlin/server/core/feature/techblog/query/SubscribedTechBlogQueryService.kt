@@ -4,6 +4,7 @@ import com.linecorp.kotlinjdsl.dsl.jpql.*
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import server.core.feature.post.domain.Post
 import server.core.feature.techblog.domain.TechBlog
 import server.core.feature.techblog.infra.TechBlogSummaryCache
@@ -14,6 +15,7 @@ import kotlin.collections.emptyMap
 import kotlin.collections.forEach
 
 @Service
+@Transactional(readOnly = true)
 class SubscribedTechBlogQueryService(
     @PersistenceContext
     private val entityManager: EntityManager,

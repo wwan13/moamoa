@@ -3,12 +3,12 @@ package server.core.feature.member.application
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import server.core.feature.member.domain.Member
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.member.domain.Provider
 import server.core.feature.auth.infra.EmailVerificationCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
-import server.core.infra.db.transaction.Transactional
 import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException
 import server.global.logging.biz
@@ -16,8 +16,8 @@ import server.password.PasswordEncoder
 import java.util.*
 
 @Service
+@Transactional
 class MemberService(
-    private val transactional: Transactional,
     private val memberRepository: MemberRepository,
     private val emailVerificationCache: EmailVerificationCache,
     private val passwordEncoder: PasswordEncoder,
@@ -35,13 +35,11 @@ class MemberService(
         }
         val encodedPassword = passwordEncoder.encode(command.password)
 
-        return transactional {
-            val member = Member.Companion.fromInternal(
-                email = command.email,
-                password = encodedPassword
-            )
-            createMember(member)
-        }
+        val member = Member.Companion.fromInternal(
+            email = command.email,
+            password = encodedPassword
+        )
+        return createMember(member)
     }
 
     fun createSocialMember(command: CreateSocialMemberCommand): MemberData {
@@ -50,27 +48,23 @@ class MemberService(
             provider = command.provider,
             providerKey = command.providerKey,
         )
-        return transactional {
-            createMember(member)
-        }
+        return createMember(member)
     }
 
     fun createSocialMemberWithSession(command: CreateSocialMemberCommand): CreateSocialMemberResult {
-        val member = transactional {
-            createMember(
-                Member.Companion.fromSocial(
-                    email = command.email,
-                    provider = command.provider,
-                    providerKey = command.providerKey,
-                )
+        val member = createMember(
+            Member.Companion.fromSocial(
+                email = command.email,
+                provider = command.provider,
+                providerKey = command.providerKey,
             )
-        }
+        )
         val sessionToken = UUID.randomUUID().toString()
         socialMemberSessionCache.set(sessionToken, member.id)
         return CreateSocialMemberResult(member, sessionToken)
     }
 
-    private fun createMember(member: Member): MemberData = transactional {
+    private fun createMember(member: Member): MemberData {
         if (memberRepository.existsByEmail(member.email)) {
             throw IllegalArgumentException("이미 가입된 이메일 입니다.")
         }
@@ -79,14 +73,16 @@ class MemberService(
         saved.created()
         logger.biz.info { "회원을 생성합니다" }
 
-        MemberData(saved)
+        return MemberData(saved)
     }
 
+    @Transactional(readOnly = true)
     fun findById(memberId: Long): MemberData? {
         return memberRepository.findByIdOrNull(memberId)?.let(::MemberData)
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
     }
 
+    @Transactional(readOnly = true)
     fun findSocialMember(provider: Provider, providerKey: String): MemberData {
         return memberRepository.findByProviderAndProviderKey(
             provider = provider,
@@ -96,6 +92,7 @@ class MemberService(
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
     }
 
+    @Transactional(readOnly = true)
     fun emailExists(command: EmailExistsCommand): EmailExistsResult {
         val exists = memberRepository.existsByEmail(command.email)
         return EmailExistsResult(exists)

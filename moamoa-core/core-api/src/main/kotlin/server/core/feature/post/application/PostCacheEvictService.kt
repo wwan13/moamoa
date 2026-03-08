@@ -1,6 +1,7 @@
 package server.core.feature.post.application
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
 import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
 import server.core.feature.post.infra.BookmarkedPostListCache

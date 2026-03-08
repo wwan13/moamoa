@@ -15,13 +15,13 @@ import server.messaging.MessageChannel
 class DomainEventOutboxListener(
     private val eventOutboxRepository: EventOutboxRepository,
     private val defaultTopic: MessageChannel,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
 
     private val logger = KotlinLogging.logger {}
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    fun handle(event: DomainEvent) {
+    fun handleEvent(event: DomainEvent) {
         logger.event.info(
             event,
             "topic" to defaultTopic.key,

@@ -21,7 +21,6 @@ import server.core.feature.member.domain.Provider
 import server.core.fixture.createMember
 import server.core.feature.auth.infra.EmailVerificationCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
-import server.core.infra.db.transaction.Transactional
 import server.password.PasswordEncoder
 import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException
@@ -31,14 +30,11 @@ import java.util.Optional
 class MemberServiceTest : UnitTest() {
     @Test
     fun `내부 회원가입 시 비밀번호가 다르면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -54,19 +50,15 @@ class MemberServiceTest : UnitTest() {
         }
 
         exception.message shouldBe "비밀번호가 일치하지 않습니다."
-        coVerify(exactly = 0) { transactional.invoke<MemberData>(any(), any()) }
     }
 
     @Test
     fun `내부 회원가입 시 이미 가입된 이메일이면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -79,10 +71,6 @@ class MemberServiceTest : UnitTest() {
 
         every { passwordEncoder.encode(command.password) } returns "encoded-password"
         coEvery { memberRepository.existsByEmail(command.email) } returns true
-        coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<() -> MemberData>()
-            block()
-        }
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.createInternalMember(command)
@@ -94,14 +82,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `내부 회원가입 시 회원을 저장하고 생성 이벤트를 등록한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -117,10 +102,6 @@ class MemberServiceTest : UnitTest() {
         every { passwordEncoder.encode(command.password) } returns "encoded-password"
         coEvery { memberRepository.existsByEmail(command.email) } returns false
         coEvery { memberRepository.save(capture(savedSlot)) } returns savedMember
-        coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<() -> MemberData>()
-            block()
-        }
 
         val result = service.createInternalMember(command)
 
@@ -134,14 +115,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `소셜 회원가입 시 provider가 INTERNAL이면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -151,11 +129,6 @@ class MemberServiceTest : UnitTest() {
             provider = Provider.INTERNAL,
             providerKey = "internal-key"
         )
-
-        coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<() -> MemberData>()
-            block()
-        }
 
         val exception = shouldThrow<IllegalStateException> {
             service.createSocialMember(command)
@@ -167,14 +140,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `소셜 회원가입 시 이미 가입된 이메일이면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -186,10 +156,6 @@ class MemberServiceTest : UnitTest() {
         )
 
         coEvery { memberRepository.existsByEmail(command.email) } returns true
-        coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<() -> MemberData>()
-            block()
-        }
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.createSocialMember(command)
@@ -201,14 +167,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `소셜 회원가입 시 회원을 저장하고 생성 이벤트를 등록한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -229,10 +192,6 @@ class MemberServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsByEmail(command.email) } returns false
         coEvery { memberRepository.save(capture(savedSlot)) } returns savedMember
-        coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<() -> MemberData>()
-            block()
-        }
 
         val result = service.createSocialMember(command)
 
@@ -246,14 +205,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `소셜 회원가입 세션 생성 시 토큰을 저장한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -274,10 +230,6 @@ class MemberServiceTest : UnitTest() {
         coEvery { memberRepository.existsByEmail(command.email) } returns false
         coEvery { memberRepository.save(any()) } returns savedMember
         coEvery { socialMemberSessionCache.set(any(), any()) } returns Unit
-        coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<() -> MemberData>()
-            block()
-        }
 
         val result = service.createSocialMemberWithSession(command)
 
@@ -288,14 +240,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `소셜 회원가입 세션 생성 시 회원가입 실패면 토큰을 저장하지 않는다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -307,10 +256,6 @@ class MemberServiceTest : UnitTest() {
         )
 
         coEvery { memberRepository.existsByEmail(command.email) } returns true
-        coEvery { transactional.invoke<MemberData>(any(), any()) } coAnswers {
-            val block = secondArg<() -> MemberData>()
-            block()
-        }
 
         shouldThrow<IllegalArgumentException> {
             service.createSocialMemberWithSession(command)
@@ -321,14 +266,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `회원 조회 시 존재하면 MemberData를 반환한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -347,14 +289,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `회원 조회 시 존재하지 않으면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -372,14 +311,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `소셜 회원 조회 시 존재하면 MemberData를 반환한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -405,14 +341,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `소셜 회원 조회 시 존재하지 않으면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -431,14 +364,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `이메일 존재 여부 조회 시 exists가 true이면 true를 반환한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -454,14 +384,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `이메일 존재 여부 조회 시 exists가 false이면 false를 반환한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -477,14 +404,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `비밀번호 변경 시 동일한 비밀번호이면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -505,14 +429,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `비밀번호 변경 시 비밀번호 확인이 다르면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -533,14 +454,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `비밀번호 변경 시 사용자가 없으면 인증 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -561,14 +479,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `비밀번호 변경 시 내부 회원이 아니면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -592,14 +507,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `비밀번호 변경 시 기존 비밀번호가 다르면 예외가 발생한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache
@@ -624,14 +536,11 @@ class MemberServiceTest : UnitTest() {
 
     @Test
     fun `비밀번호 변경 시 새 비밀번호로 저장한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val memberRepository = mockk<MemberRepository>()
         val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val service = MemberService(
-            transactional,
-            memberRepository,
+        val service = MemberService(            memberRepository,
             emailVerificationCache,
             passwordEncoder,
             socialMemberSessionCache

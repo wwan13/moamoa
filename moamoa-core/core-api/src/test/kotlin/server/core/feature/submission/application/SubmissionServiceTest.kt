@@ -12,16 +12,14 @@ import server.core.feature.submission.application.SubmissionCreateResult
 import server.core.feature.submission.application.SubmissionService
 import server.core.feature.submission.domain.Submission
 import server.core.feature.submission.domain.SubmissionRepository
-import server.core.infra.db.transaction.Transactional
 import server.core.fixture.createSubmission
 import test.UnitTest
 
 class SubmissionServiceTest : UnitTest() {
     @Test
     fun `제출 생성 시 저장한다`() = runTest {
-        val transactional = mockk<Transactional>()
         val submissionRepository = mockk<SubmissionRepository>()
-        val service = SubmissionService(transactional, submissionRepository)
+        val service = SubmissionService(submissionRepository)
 
         val command = SubmissionCreateCommand(
             blogTitle = "moamoa blog",
@@ -39,10 +37,6 @@ class SubmissionServiceTest : UnitTest() {
             notificationEnabled = command.notificationEnabled,
             memberId = memberId
         )
-        coEvery { transactional.invoke<SubmissionCreateResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> SubmissionCreateResult>()
-            block()
-        }
 
         val result = service.create(command, memberId)
 
@@ -56,9 +50,8 @@ class SubmissionServiceTest : UnitTest() {
 
     @Test
     fun `제출 생성 시 SubmissionCreateEvent 가 발행된다`() = runTest {
-        val transactional = mockk<Transactional>()
         val submissionRepository = mockk<SubmissionRepository>()
-        val service = SubmissionService(transactional, submissionRepository)
+        val service = SubmissionService(submissionRepository)
 
         val command = SubmissionCreateCommand(
             blogTitle = "moamoa blog",
@@ -76,10 +69,6 @@ class SubmissionServiceTest : UnitTest() {
             notificationEnabled = command.notificationEnabled,
             memberId = memberId
         )
-        coEvery { transactional.invoke<SubmissionCreateResult>(any(), any()) } coAnswers {
-            val block = secondArg<() -> SubmissionCreateResult>()
-            block()
-        }
 
         service.create(command, memberId)
     }

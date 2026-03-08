@@ -10,26 +10,20 @@ import org.junit.jupiter.api.Test
 import java.util.Optional
 import server.admin.feature.post.command.domain.AdminPostRepository
 import server.admin.fixture.createAdminPost
-import server.admin.infra.db.transaction.AdminTransactional
 import test.UnitTest
 
 class AdminPostServiceTest : UnitTest() {
 
     @Test
     fun `카테고리 업데이트 시 게시글의 categoryId를 변경하고 성공을 반환한다`() = runTest {
-        val transactional = mockk<AdminTransactional>()
         val postRepository = mockk<AdminPostRepository>()
-        val service = AdminPostService(transactional, postRepository)
+        val service = AdminPostService(postRepository)
 
         val postId = 10L
         val command = AdminUpdateCategoryCommand(categoryId = 200L)
         val post = createAdminPost(id = postId, categoryId = 100L)
 
         every { postRepository.findById(postId) } returns Optional.of(post)
-        every { transactional.invoke<AdminUpdateCategoryResult>(any(), any()) } answers {
-            val block = secondArg<() -> AdminUpdateCategoryResult>()
-            block.invoke()
-        }
 
         val result = service.updateCategory(postId, command)
 
@@ -39,18 +33,13 @@ class AdminPostServiceTest : UnitTest() {
 
     @Test
     fun `게시글이 존재하지 않으면 예외가 발생한다`() = runTest {
-        val transactional = mockk<AdminTransactional>()
         val postRepository = mockk<AdminPostRepository>()
-        val service = AdminPostService(transactional, postRepository)
+        val service = AdminPostService(postRepository)
 
         val postId = 10L
         val command = AdminUpdateCategoryCommand(categoryId = 200L)
 
         every { postRepository.findById(postId) } returns Optional.empty()
-        every { transactional.invoke<AdminUpdateCategoryResult>(any(), any()) } answers {
-            val block = secondArg<() -> AdminUpdateCategoryResult>()
-            block.invoke()
-        }
 
         val exception = shouldThrow<IllegalArgumentException> {
             service.updateCategory(postId, command)

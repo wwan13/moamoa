@@ -4,12 +4,14 @@ import com.linecorp.kotlinjdsl.dsl.jpql.*
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
 import server.core.infra.cache.WarmupCoordinator
 import server.core.support.query.createJdslQuery
 
 @Component
+@Transactional(readOnly = true)
 class BookmarkedPostReader(
     @PersistenceContext
     private val entityManager: EntityManager,

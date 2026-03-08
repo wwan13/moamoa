@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import server.admin.feature.category.domain.AdminCategory
 import server.admin.feature.post.command.domain.AdminPost
 import server.admin.feature.post.command.domain.AdminPostRepository
@@ -13,13 +14,11 @@ import server.admin.feature.tag.domain.AdminTag
 import server.admin.feature.tag.domain.AdminTagRepository
 import server.admin.feature.techblog.domain.AdminTechBlog
 import server.admin.feature.techblog.domain.AdminTechBlogRepository
-import server.admin.infra.db.transaction.AdminTransactional
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSources
 
 @Service
 internal class AdminTechBlogService(
-    private val transactional: AdminTransactional,
     private val techBlogRepository: AdminTechBlogRepository,
     private val techBlogSources: TechBlogSources,
     private val postRepository: AdminPostRepository,
@@ -27,7 +26,8 @@ internal class AdminTechBlogService(
     private val postTagRepository: AdminPostTagRepository,
 ) {
 
-    fun create(command: AdminCreateTechBlogCommand): AdminTechBlogData = transactional {
+    @Transactional
+    fun create(command: AdminCreateTechBlogCommand): AdminTechBlogData {
         validateTitle(command.title)
         val techBlog = AdminTechBlog(
             title = command.title,
@@ -36,15 +36,16 @@ internal class AdminTechBlogService(
             key = command.key,
         )
         techBlogSources.validateExists(techBlog.key)
-        AdminTechBlogData(techBlogRepository.save(techBlog))
+        return AdminTechBlogData(techBlogRepository.save(techBlog))
     }
 
-    fun update(id: Long, command: AdminUpdateTechBlogCommand): AdminTechBlogData = transactional {
+    @Transactional
+    fun update(id: Long, command: AdminUpdateTechBlogCommand): AdminTechBlogData {
         validateTitle(command.title)
         val techBlog = techBlogRepository.findByIdOrNull(id)
             ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
         techBlog.update(command.title, command.blogUrl, command.icon)
-        AdminTechBlogData(techBlog)
+        return AdminTechBlogData(techBlog)
     }
 
     private fun validateTitle(title: String) {
@@ -53,6 +54,7 @@ internal class AdminTechBlogService(
         }
     }
 
+    @Transactional
     fun initTechBlog(command: AdminInitTechBlogCommand): AdminInitTechBlogResult {
         if (postRepository.existsByTechBlogId(command.techBlogId)) {
             throw IllegalArgumentException("이미 초기화된 tech blog 입니다.")
@@ -65,16 +67,14 @@ internal class AdminTechBlogService(
             techBlogSources[techBlog.key].getPosts().toList()
         }
 
-        return transactional {
-            val categoriesByTitle = upsertTags(fetchedPosts)
-            val savedPosts = savePosts(techBlog, fetchedPosts)
-            savePostTags(savedPosts, fetchedPosts, categoriesByTitle)
+        val categoriesByTitle = upsertTags(fetchedPosts)
+        val savedPosts = savePosts(techBlog, fetchedPosts)
+        savePostTags(savedPosts, fetchedPosts, categoriesByTitle)
 
-            AdminInitTechBlogResult(
-                techBlog = AdminTechBlogData(techBlog),
-                newPostCount = savedPosts.size,
-            )
-        }
+        return AdminInitTechBlogResult(
+            techBlog = AdminTechBlogData(techBlog),
+            newPostCount = savedPosts.size,
+        )
     }
 
     private fun upsertTags(fetchedPosts: List<TechBlogPost>): Map<String, AdminTag> {

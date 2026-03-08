@@ -9,8 +9,9 @@ import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionStatus
 import server.core.global.logging.ExternalCallLogger
-import server.core.infra.db.transaction.Transactional
 import server.core.infra.db.outbox.EventOutbox
 import server.core.infra.db.outbox.EventOutboxRepository
 import server.core.infra.messagebroker.OutboxPublishWorker
@@ -23,13 +24,13 @@ class OutboxPublishWorkerTest : UnitTest() {
     fun `미발행 이벤트가 없으면 아무 작업도 하지 않는다`() = runTest {
         val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
-        val transactional = newTransactional()
+        val txManager = newTxManager()
         coEvery { eventOutboxRepository.findUnpublished(10) } returns emptyList()
         val healthStateManager = newHealthStateManager()
         val worker = OutboxPublishWorker(
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
-            transactional = transactional,
+            txManager = txManager,
             externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
@@ -44,7 +45,7 @@ class OutboxPublishWorkerTest : UnitTest() {
     fun `미발행 이벤트가 있으면 발행 후 published로 마킹한다`() = runTest {
         val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
-        val transactional = newTransactional()
+        val txManager = newTxManager()
         val rows = listOf(
             EventOutbox(id = 1L, topic = "topic-1", type = "type-1", payload = "payload-1"),
             EventOutbox(id = 2L, topic = "topic-2", type = "type-2", payload = "payload-2"),
@@ -57,7 +58,7 @@ class OutboxPublishWorkerTest : UnitTest() {
         val worker = OutboxPublishWorker(
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
-            transactional = transactional,
+            txManager = txManager,
             externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
@@ -76,7 +77,7 @@ class OutboxPublishWorkerTest : UnitTest() {
     fun `발행 실패한 이벤트는 마킹하지 않고 다음 이벤트를 처리한다`() = runTest {
         val eventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
-        val transactional = newTransactional()
+        val txManager = newTxManager()
         val rows = listOf(
             EventOutbox(id = 1L, topic = "topic-1", type = "type-1", payload = "payload-1"),
             EventOutbox(id = 2L, topic = "topic-2", type = "type-2", payload = "payload-2"),
@@ -89,7 +90,7 @@ class OutboxPublishWorkerTest : UnitTest() {
         val worker = OutboxPublishWorker(
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
-            transactional = transactional,
+            txManager = txManager,
             externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
@@ -104,13 +105,13 @@ class OutboxPublishWorkerTest : UnitTest() {
         verify(exactly = 1) { eventOutboxRepository.findById(2L) }
     }
 
-    private fun newTransactional(): Transactional {
-        val transactional = mockk<Transactional>()
-        every { transactional.invoke<Unit>(any(), any()) } answers {
-            val block = secondArg<() -> Unit>()
-            block.invoke()
-        }
-        return transactional
+    private fun newTxManager(): PlatformTransactionManager {
+        val txManager = mockk<PlatformTransactionManager>()
+        val status = mockk<TransactionStatus>(relaxed = true)
+        every { txManager.getTransaction(any()) } returns status
+        every { txManager.commit(status) } just runs
+        every { txManager.rollback(status) } just runs
+        return txManager
     }
 
     private fun newHealthStateManager(): RedisHealthStateManager {

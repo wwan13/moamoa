@@ -15,7 +15,8 @@ class BookmarkTest : UnitTest() {
             postId = 20L
         )
 
-        val result = bookmark.bookmark()
+        bookmark.bookmark()
+        val result = extractSingleEvent(bookmark) as BookmarkUpdatedEvent
 
         result shouldBe BookmarkUpdatedEvent(
             memberId = 10L,
@@ -32,12 +33,27 @@ class BookmarkTest : UnitTest() {
             postId = 20L
         )
 
-        val result = bookmark.unbookmark()
+        bookmark.unbookmark()
+        val result = extractSingleEvent(bookmark) as BookmarkUpdatedEvent
 
         result shouldBe BookmarkUpdatedEvent(
             memberId = 10L,
             postId = 20L,
             bookmarked = false
         )
+    }
+
+    private fun extractSingleEvent(entity: Any): Any {
+        var type: Class<*>? = entity.javaClass
+        while (type != null) {
+            runCatching {
+                val field = type.getDeclaredField("domainEvents")
+                field.isAccessible = true
+                val events = field.get(entity) as MutableCollection<*>
+                return events.single()!!
+            }
+            type = type.superclass
+        }
+        error("domainEvents field not found")
     }
 }

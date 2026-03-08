@@ -3,6 +3,7 @@ package server.core.feature.auth.application
 import kotlinx.coroutines.runBlocking
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import server.core.feature.auth.infra.EmailVerificationCache
 import server.core.feature.auth.infra.RefreshTokenCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
@@ -18,6 +19,7 @@ import server.token.TokenType
 import java.security.SecureRandom
 
 @Service
+@Transactional
 class AuthService(
     private val memberRepository: MemberRepository,
     private val emailVerificationCache: EmailVerificationCache,
@@ -30,6 +32,7 @@ class AuthService(
     private val accessTokenExpires = 3_600_000L
     private val refreshTokenExpires = 604_800_000L
 
+    @Transactional(readOnly = true)
     fun emailVerification(command: EmailVerificationCommand): EmailVerificationResult {
         if (memberRepository.existsByEmail(command.email)) {
             throw IllegalArgumentException("이미 존재하는 이메일 입니다.")
@@ -61,6 +64,7 @@ class AuthService(
         .toString()
         .padStart(6, '0')
 
+    @Transactional(readOnly = true)
     fun confirmEmail(command: ConfirmEmailCommand): ConfirmEmailResult {
         val registered = emailVerificationCache.getVerificationCode(command.email)
             ?: throw IllegalArgumentException("인증번호를 먼저 전송해 주세요.")
@@ -74,6 +78,7 @@ class AuthService(
         return ConfirmEmailResult(true)
     }
 
+    @Transactional(readOnly = true)
     fun login(command: LoginCommand): AuthTokens {
         val member = memberRepository.findByEmail(command.email)
             ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
@@ -88,6 +93,7 @@ class AuthService(
         return tokens
     }
 
+    @Transactional(readOnly = true)
     fun reissue(refreshToken: String): AuthTokens {
         val principal = tokenProvider.decodeToken(refreshToken)
 
@@ -108,6 +114,7 @@ class AuthService(
         return tokens
     }
 
+    @Transactional(readOnly = true)
     fun issueTokens(memberId: Long, role: String): AuthTokens {
         val accessTokenPrincipal = AuthPrincipal.accessToken(memberId, role)
         val accessToken = tokenProvider.encodeToken(accessTokenPrincipal, accessTokenExpires)
@@ -118,12 +125,14 @@ class AuthService(
         return AuthTokens(accessToken, refreshToken)
     }
 
+    @Transactional(readOnly = true)
     fun logout(memberId: Long): LogoutResult {
         refreshTokenCache.evict(memberId)
 
         return LogoutResult(true)
     }
 
+    @Transactional(readOnly = true)
     fun loginSocialSession(command: LoginSocialSessionCommand): AuthTokens {
         val memberId = socialMemberSessionCache.get(command.token)
             ?: throw UnauthorizedException()

@@ -18,12 +18,27 @@ class SubmissionTest : UnitTest() {
             memberId = 10L
         )
 
-        val result = submission.created()
+        submission.created()
+        val result = extractSingleEvent(submission) as SubmissionCreateEvent
 
         result shouldBe SubmissionCreateEvent(
             submissionId = 1L,
             blogTitle = "Awesome Blog",
             blogUrl = "https://example.com"
         )
+    }
+
+    private fun extractSingleEvent(entity: Any): Any {
+        var type: Class<*>? = entity.javaClass
+        while (type != null) {
+            runCatching {
+                val field = type.getDeclaredField("domainEvents")
+                field.isAccessible = true
+                val events = field.get(entity) as MutableCollection<*>
+                return events.single()!!
+            }
+            type = type.superclass
+        }
+        error("domainEvents field not found")
     }
 }
