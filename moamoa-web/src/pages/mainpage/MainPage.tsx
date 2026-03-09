@@ -116,26 +116,30 @@ const MainPage = () => {
     // ✅ 핸들러들: URL 업데이트만 함
     const onSelectType = (nextType: string) => {
         window.scrollTo({ top: 0, behavior: "smooth" })
-        setSearchParams((prev) => {
-            const p = new URLSearchParams(prev)
+        requestAnimationFrame(() => {
+            setSearchParams((prev) => {
+                const p = new URLSearchParams(prev)
 
-            if (nextType === TYPES.ALL) p.delete("type")
-            else p.set("type", nextType)
+                if (nextType === TYPES.ALL) p.delete("type")
+                else p.set("type", nextType)
 
-            p.delete("techBlogId")
-            p.delete("page")
-            return p
+                p.delete("techBlogId")
+                p.delete("page")
+                return p
+            })
         })
     }
 
     const onSelectBlog = (nextBlogId: string) => {
         window.scrollTo({ top: 0, behavior: "smooth" })
-        setSearchParams((prev) => {
-            const p = new URLSearchParams(prev)
-            p.set("type", TYPES.SUBSCRIBED)
-            p.set("techBlogId", nextBlogId)
-            p.delete("page")
-            return p
+        requestAnimationFrame(() => {
+            setSearchParams((prev) => {
+                const p = new URLSearchParams(prev)
+                p.set("type", TYPES.SUBSCRIBED)
+                p.set("techBlogId", nextBlogId)
+                p.delete("page")
+                return p
+            })
         })
     }
 

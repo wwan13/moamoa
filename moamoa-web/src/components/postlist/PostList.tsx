@@ -33,10 +33,12 @@ const PostList = ({
 
     const onChangePage = (nextPage: number) => {
         window.scrollTo({ top: 0, behavior: "smooth" })
-        setSearchParams((prev) => {
-            const p = new URLSearchParams(prev)
-            p.set("page", String(nextPage))
-            return p
+        requestAnimationFrame(() => {
+            setSearchParams((prev) => {
+                const p = new URLSearchParams(prev)
+                p.set("page", String(nextPage))
+                return p
+            })
         })
     }
 
