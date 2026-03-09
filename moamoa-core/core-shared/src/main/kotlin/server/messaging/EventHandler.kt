@@ -1,8 +1,9 @@
 package server.messaging
 
-import org.springframework.context.annotation.Bean
+import org.springframework.stereotype.Component
 
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-@Bean
-annotation class EventHandler
+@Component
+class EventHandler(
+) : AbstractEventHandler() {
+    override fun <T : Any> wrap(handler: (T) -> Unit): (T) -> Unit = handler
+}

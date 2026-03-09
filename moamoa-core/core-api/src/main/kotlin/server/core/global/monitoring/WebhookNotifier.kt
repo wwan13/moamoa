@@ -7,19 +7,20 @@ import server.content.WebhookContent
 import server.core.feature.member.domain.MemberCreateEvent
 import server.core.feature.submission.domain.SubmissionCreateEvent
 import server.core.global.profile.isProd
-import server.messaging.handleMessage
+import server.messaging.EventHandler
+import server.messaging.invoke
 
 @Component
 class WebhookNotifier(
     private val monitoringStream: server.messaging.SubscriptionDefinition,
+    private val eventHandler: EventHandler,
     private val webhookSender: WebhookSender,
     private val environment: Environment
 ) {
 
-    @server.messaging.EventHandler
     fun memberCreateWebhookNotify() =
-        handleMessage<MemberCreateEvent>(monitoringStream) { event ->
-            if (!environment.isProd()) return@handleMessage
+        eventHandler<MemberCreateEvent>(monitoringStream) { event ->
+            if (!environment.isProd()) return@eventHandler
 
             val content = WebhookContent.Service(
                 title = "회원가입",
@@ -32,10 +33,9 @@ class WebhookNotifier(
             webhookSender.sendAsync(content)
         }
 
-    @server.messaging.EventHandler
     fun submissionCreateWebhookNotify() =
-        handleMessage<SubmissionCreateEvent>(monitoringStream) { event ->
-            if (!environment.isProd()) return@handleMessage
+        eventHandler<SubmissionCreateEvent>(monitoringStream) { event ->
+            if (!environment.isProd()) return@eventHandler
 
             val content = WebhookContent.Service(
                 title = "블로그 추가 요청",
