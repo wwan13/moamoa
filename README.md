@@ -8,17 +8,8 @@
 
 ## 기술 스택
 
-- Spring
-- Kotlin
-- Jpa
-- Mysql
-- Redis
-
-<br/>
-
-- React
-- TypeScript
-- Vite
+- server : Kotlin, Spring, Jpa, Mysql, Redis
+- front : TypeScript, React, Vite
 
 ## 모듈 설명
 
