@@ -18,7 +18,6 @@ dependencies {
     implementation(project(":moamoa-infra:infra-tech-blog"))
     implementation(project(":moamoa-infra:infra-redis"))
     implementation(project(":moamoa-infra:infra-cache"))
-    implementation(project(":moamoa-infra:infra-lmstudio"))
     implementation(project(":moamoa-support:support-webhook"))
     implementation(project(":moamoa-support:support-logging"))
 
