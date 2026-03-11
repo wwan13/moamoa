@@ -123,7 +123,7 @@ const TechBlogDetailPage = () => {
         patchBoth(techBlogIdNum, (b) => ({
             ...b,
             subscribed: !wasSubscribed,
-            subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+            subscriptionCount: Math.max(0, (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1)),
             // ✅ 구독 해제면 알림 off / 구독이면 알림 on
             notificationEnabled: wasSubscribed ? false : true,
         }))
@@ -141,7 +141,7 @@ const TechBlogDetailPage = () => {
             patchBoth(techBlogIdNum, (b) => ({
                 ...b,
                 subscribed: wasSubscribed,
-                subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
+                subscriptionCount: Math.max(0, (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1)),
                 // notificationEnabled는 원래 값이 뭔지 모를 수 있어 안전하게 refetch에 맡김
             }))
 

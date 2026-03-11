@@ -60,7 +60,7 @@ const PostItem = ({ post, isBlogDetail = false, isLoading = false }: PostItemPro
 
         // ✅ optimistic update
         setBookmarked(next)
-        setBookmarkCount((c) => c + (next ? 1 : -1))
+        setBookmarkCount((c) => Math.max(0, c + (next ? 1 : -1)))
 
         try {
             const res = await bookmarkToggle.mutateAsync({postId})
@@ -73,7 +73,7 @@ const PostItem = ({ post, isBlogDetail = false, isLoading = false }: PostItemPro
         } catch {
             // rollback
             setBookmarked(!next)
-            setBookmarkCount((c) => c + (next ? -1 : 1))
+            setBookmarkCount((c) => Math.max(0, c + (next ? -1 : 1)))
         }
     }
 

@@ -85,7 +85,7 @@ const TechBlogsPage = () => {
         patchTechBlog(techBlogId, (b) => ({
             ...b,
             subscribed: !wasSubscribed,
-            subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+            subscriptionCount: Math.max(0, (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1)),
         }))
 
         try {
@@ -96,7 +96,7 @@ const TechBlogsPage = () => {
             patchTechBlog(techBlogId, (b) => ({
                 ...b,
                 subscribed: wasSubscribed,
-                subscriptionCount: (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
+                subscriptionCount: Math.max(0, (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1)),
             }))
             showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
         }
