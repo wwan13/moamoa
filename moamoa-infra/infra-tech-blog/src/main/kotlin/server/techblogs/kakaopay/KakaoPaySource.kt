@@ -27,7 +27,8 @@ internal class KakaoPaySource : TechBlogSource {
         val seenKeys = HashSet<String>(2048)
 
         val listFlow = fetchWithPaging(size, ::buildListUrl, timeoutMs = timeoutMs) { doc ->
-            val items = doc.select("li:has(a[href^=/post/])")
+            val items = doc.select("li[class*=_postListItem_]:has(a[href^=/post/])")
+                .ifEmpty { doc.select("li:has(a[href^=/post/])") }
             if (items.isEmpty()) throw PagingFinishedException()
 
             val parsed = items.mapNotNull { item ->
@@ -40,6 +41,7 @@ internal class KakaoPaySource : TechBlogSource {
                 if (url.isBlank()) return@mapNotNull null
 
                 val key = extractKeyFromHref(href)
+
                 if (key.isBlank()) return@mapNotNull null
 
                 val title = item.selectFirst("strong")
@@ -47,7 +49,9 @@ internal class KakaoPaySource : TechBlogSource {
                     ?.trim()
                     ?: return@mapNotNull null
 
-                val description = item.selectFirst("p")
+                val description = item.selectFirst("div[class*=_postInfo_] p")
+                    ?: item.selectFirst("p")
+                val normalizedDescription = description
                     ?.text()
                     ?.trim()
                     .orEmpty()
@@ -66,7 +70,7 @@ internal class KakaoPaySource : TechBlogSource {
                 TechBlogPost(
                     key = key,
                     title = title,
-                    description = description,
+                    description = normalizedDescription,
                     tags = emptyList(), // 상세에서 보강
                     thumbnail = thumbnail,
                     publishedAt = publishedAt,
