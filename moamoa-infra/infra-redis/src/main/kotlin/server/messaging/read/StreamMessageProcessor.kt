@@ -50,7 +50,7 @@ internal class StreamMessageProcessor(
 
         val messageHandler = handlers.find(stream, type)
         if (messageHandler == null) {
-            logger.warn {
+            logger.debug {
                 "No handler. channelKey=${stream.channel.key} consumerGroup=${stream.consumerGroup} type=$type"
             }
             ack(ops, stream, record.id)
