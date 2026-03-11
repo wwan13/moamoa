@@ -48,7 +48,7 @@ internal class StreamMessageProcessor(
             return
         }
 
-        val messageHandler = handlers.find<Any>(stream, type)
+        val messageHandler = handlers.find(stream, type)
         if (messageHandler == null) {
             logger.warn {
                 "No handler. channelKey=${stream.channel.key} consumerGroup=${stream.consumerGroup} type=$type"

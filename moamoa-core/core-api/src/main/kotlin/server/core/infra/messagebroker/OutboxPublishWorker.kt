@@ -5,7 +5,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import server.core.global.logging.ExternalCallLogger
 import server.core.infra.db.outbox.EventOutboxRepository
 import server.global.logging.errorType
 import server.messaging.EventPublisher
@@ -16,7 +15,6 @@ class OutboxPublishWorker(
     private val eventPublisher: EventPublisher,
     private val eventOutboxRepository: EventOutboxRepository,
     txManager: PlatformTransactionManager,
-    private val externalCallLogger: ExternalCallLogger,
     private val healthStateManager: RedisHealthStateManager,
 ) {
     private val logger = KotlinLogging.logger {}
@@ -34,20 +32,13 @@ class OutboxPublishWorker(
 
             for (row in rows) {
                 try {
-                    externalCallLogger.execute(
-                        call = "EventPublisher.publish",
-                        target = "MQ",
-                        retry = 0,
-                        timeout = false
-                    ) {
-                        val payloadJson = row.payload
-                        eventPublisher.publish(
-                            channel = row.topic,
-                            type = row.type,
-                            payloadJson = payloadJson,
-                            eventId = row.eventId,
-                        )
-                    }
+                    val payloadJson = row.payload
+                    eventPublisher.publish(
+                        channel = row.topic,
+                        type = row.type,
+                        payloadJson = payloadJson,
+                        eventId = row.eventId,
+                    )
                     transactionTemplate.execute {
                         val outbox = eventOutboxRepository.findByIdOrNull(row.id) ?: return@execute
                         if (!outbox.published) {

@@ -141,17 +141,11 @@ class StreamReaderTest {
     }
 
     private fun newConnection(redis: StringRedisTemplate): StreamReader {
-        val binding = MessageHandlerBinding(
-            stream = stream,
-            type = "dummy",
-            payloadClass = String::class.java,
-            handler = {}
-        )
         val context = mockk<ApplicationContext>()
         every { context.getBeanNamesForAnnotation(org.springframework.stereotype.Component::class.java) } returns emptyArray()
         val beanFactory = mockk<ConfigurableListableBeanFactory>()
+        every { beanFactory.beanDefinitionNames } returns emptyArray()
         val handlers = StreamEventHandlers(
-            handlers = listOf(binding),
             context = context,
             beanFactory = beanFactory,
             txManager = null,

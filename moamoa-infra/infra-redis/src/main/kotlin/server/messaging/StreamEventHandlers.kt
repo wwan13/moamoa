@@ -15,7 +15,6 @@ import server.messaging.definition.EventStream
 
 @Component
 internal class StreamEventHandlers(
-    private val handlers: List<MessageHandlerBinding<*>>,
     private val context: ApplicationContext,
     private val beanFactory: ConfigurableListableBeanFactory,
     txManager: PlatformTransactionManager?,
@@ -25,13 +24,11 @@ internal class StreamEventHandlers(
     private val logger = KotlinLogging.logger {}
     private val transactionTemplate: TransactionTemplate? = txManager?.let { TransactionTemplate(it) }
 
-    private val allHandlers: List<MessageHandlerBinding<*>> =
-        (handlers + discoverAnnotatedHandlers()).distinctBy(::toKey)
-    private val handlerMap: Map<Key, MessageHandlerBinding<*>> = allHandlers.associateBy(::toKey)
+    private val allHandlers: List<StreamMessageHandler> = discoverAnnotatedHandlers().distinctBy(::toKey)
+    private val handlerMap: Map<Key, StreamMessageHandler> = allHandlers.associateBy(::toKey)
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any> find(stream: EventStream, type: String): MessageHandlerBinding<T>? =
-        handlerMap[Key(stream.channel.key, stream.consumerGroup, type)] as? MessageHandlerBinding<T>
+    fun find(stream: EventStream, type: String): StreamMessageHandler? =
+        handlerMap[Key(stream.channel.key, stream.consumerGroup, type)]
 
     fun streams(): List<EventStream> =
         allHandlers
@@ -39,7 +36,7 @@ internal class StreamEventHandlers(
             .distinctBy { it.channel.key to it.consumerGroup }
             .toList()
 
-    private fun discoverAnnotatedHandlers(): List<MessageHandlerBinding<*>> =
+    private fun discoverAnnotatedHandlers(): List<StreamMessageHandler> =
         beanFactory.beanDefinitionNames
             .asSequence()
             .filterNot { it.startsWith("scopedTarget.") }
@@ -52,7 +49,7 @@ internal class StreamEventHandlers(
             .flatMap { (beanName, targetClass) -> resolveAnnotatedHandlers(beanName, targetClass).asSequence() }
             .toList()
 
-    private fun resolveAnnotatedHandlers(beanName: String, targetClass: Class<*>): List<MessageHandlerBinding<*>> {
+    private fun resolveAnnotatedHandlers(beanName: String, targetClass: Class<*>): List<StreamMessageHandler> {
         return targetClass.methods
             .asSequence()
             .mapNotNull { method ->
@@ -68,7 +65,7 @@ internal class StreamEventHandlers(
 
                 eventHandler ?: return@mapNotNull null
 
-                toBinding(
+                toHandler(
                     beanName = beanName,
                     method = method,
                     targetClass = targetClass,
@@ -82,7 +79,7 @@ internal class StreamEventHandlers(
             .toList()
     }
 
-    private fun toBinding(
+    private fun toHandler(
         beanName: String,
         method: java.lang.reflect.Method,
         targetClass: Class<*>,
@@ -91,7 +88,7 @@ internal class StreamEventHandlers(
         payloadClass: Class<out Any>,
         stream: EventStream,
         transactional: Boolean,
-    ): MessageHandlerBinding<*>? {
+    ): StreamMessageHandler? {
         if (!paramType.isAssignableFrom(payloadClass)) {
             logger.warn {
                 "Skip event handler method. parameter type mismatch: ${targetClass.name}.$methodName " +
@@ -113,7 +110,7 @@ internal class StreamEventHandlers(
             }
         }
 
-        return MessageHandlerBinding(
+        return StreamMessageHandler(
             stream = stream,
             type = payloadClass.simpleName,
             payloadClass = payloadClass,
@@ -121,7 +118,7 @@ internal class StreamEventHandlers(
         )
     }
 
-    private fun toKey(handler: MessageHandlerBinding<*>): Key =
+    private fun toKey(handler: StreamMessageHandler): Key =
         Key(handler.stream.channel.key, handler.stream.consumerGroup, handler.type)
 
     private fun invokeMethod(bean: Any, method: java.lang.reflect.Method, payload: Any) {

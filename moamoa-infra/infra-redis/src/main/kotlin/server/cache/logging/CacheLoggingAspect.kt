@@ -1,4 +1,4 @@
-package server.core.global.logging
+package server.cache.logging
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.aspectj.lang.ProceedingJoinPoint
@@ -13,7 +13,7 @@ import kotlin.time.TimeSource
 
 @Aspect
 @Component
-class CacheLoggingAspect {
+internal class CacheLoggingAspect {
     private val logger = KotlinLogging.logger {}
 
     @Around("bean(redisCacheMemory) && execution(* *(..))")

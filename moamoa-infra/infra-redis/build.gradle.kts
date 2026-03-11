@@ -2,6 +2,7 @@ dependencies {
     implementation(project(":moamoa-core:core-shared"))
     implementation(project(":moamoa-support:support-logging"))
 
+    implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.redisson:redisson:4.2.0")
 

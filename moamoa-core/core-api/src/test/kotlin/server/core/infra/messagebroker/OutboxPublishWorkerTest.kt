@@ -11,7 +11,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionStatus
-import server.core.global.logging.ExternalCallLogger
 import server.core.infra.db.outbox.EventOutbox
 import server.core.infra.db.outbox.EventOutboxRepository
 import server.core.infra.messagebroker.OutboxPublishWorker
@@ -31,7 +30,6 @@ class OutboxPublishWorkerTest : UnitTest() {
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
             txManager = txManager,
-            externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
 
@@ -59,7 +57,6 @@ class OutboxPublishWorkerTest : UnitTest() {
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
             txManager = txManager,
-            externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
 
@@ -91,7 +88,6 @@ class OutboxPublishWorkerTest : UnitTest() {
             eventPublisher = eventPublisher,
             eventOutboxRepository = eventOutboxRepository,
             txManager = txManager,
-            externalCallLogger = ExternalCallLogger(),
             healthStateManager = healthStateManager,
         )
 

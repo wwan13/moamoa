@@ -1,6 +1,5 @@
 package server.messaging
 
-import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.connection.stream.StreamRecords
 import org.springframework.data.redis.core.StringRedisTemplate
@@ -12,8 +11,6 @@ internal class StreamEventPublisher(
     @param:Qualifier("streamStringRedisTemplate")
     private val redis: StringRedisTemplate,
 ) : EventPublisher {
-    private val log = kLogger {}
-
     override fun publish(
         channel: String,
         type: String,
@@ -21,7 +18,6 @@ internal class StreamEventPublisher(
         eventId: String
     ) {
         if (eventId.isBlank()) {
-            log.warn { "Skip publish. eventId is blank: streamKey=$channel type=$type" }
             throw IllegalArgumentException("eventId must not be blank")
         }
 
@@ -36,12 +32,7 @@ internal class StreamEventPublisher(
             .mapBacked<String, String, String>(fields)
             .withStreamKey(channel)
 
-        try {
-            redis.opsForStream<String, String>().add(record)
-                ?: throw IllegalStateException("Redis XADD returned null")
-        } catch (e: Exception) {
-            log.warn(e) { "Redis XADD failed: streamKey=$channel type=$type eventId=$eventId" }
-            throw e
-        }
+        redis.opsForStream<String, String>().add(record)
+            ?: throw IllegalStateException("Redis XADD returned null")
     }
 }

@@ -1,4 +1,4 @@
-package server.core.infra.messagebroker
+package server.messaging.logging
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.aspectj.lang.ProceedingJoinPoint
@@ -10,7 +10,7 @@ import server.global.logging.event
 
 @Aspect
 @Component
-class MessageHandlerInvokerAspect {
+internal class MessageHandlerInvokerAspect {
     private val logger = KotlinLogging.logger {}
 
     @Around(

@@ -86,7 +86,7 @@ internal class StreamRetryProcessor(
                     continue
                 }
 
-                val messageHandler = eventHandlers.find<Any>(stream, type)
+                val messageHandler = eventHandlers.find(stream, type)
                 if (messageHandler == null) {
                     log.warn { "핸들러 없음. channelKey=$channelKey, consumerGroup=$consumerGroup, type=$type, id=$idValue" }
                     streamOps.acknowledge(channelKey, consumerGroup, record.id)
