@@ -4,15 +4,14 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.aop.support.AopUtils
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.context.ApplicationContext
+import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.util.ClassUtils
 import org.springframework.util.ReflectionUtils
-import server.global.logging.biz
 import server.messaging.annotation.EventHandler
-import server.messaging.annotation.EventStream
-import server.messaging.annotation.TransactionEventHandler
+import server.messaging.definition.EventStream
 
 @Component
 internal class StreamEventHandlers(
@@ -57,10 +56,9 @@ internal class StreamEventHandlers(
         return targetClass.methods
             .asSequence()
             .mapNotNull { method ->
+                val eventHandler = AnnotatedElementUtils.findMergedAnnotation(method, EventHandler::class.java)
                 if (method.parameterCount != 1) {
-                    if (method.getAnnotation(EventHandler::class.java) != null ||
-                        method.getAnnotation(TransactionEventHandler::class.java) != null
-                    ) {
+                    if (eventHandler != null) {
                         logger.warn {
                             "Skip event handler method. exactly one parameter is required: ${targetClass.name}.${method.name}"
                         }
@@ -68,35 +66,18 @@ internal class StreamEventHandlers(
                     return@mapNotNull null
                 }
 
-                val normal = method.getAnnotation(EventHandler::class.java)
-                if (normal != null) {
-                    return@mapNotNull toBinding(
-                        beanName = beanName,
-                        method = method,
-                        targetClass = targetClass,
-                        methodName = method.name,
-                        paramType = method.parameterTypes[0],
-                        payloadClass = normal.value.java,
-                        stream = normal.stream,
-                        transactional = false,
-                    )
-                }
+                eventHandler ?: return@mapNotNull null
 
-                val transactional = method.getAnnotation(TransactionEventHandler::class.java)
-                if (transactional != null) {
-                    return@mapNotNull toBinding(
-                        beanName = beanName,
-                        method = method,
-                        targetClass = targetClass,
-                        methodName = method.name,
-                        paramType = method.parameterTypes[0],
-                        payloadClass = transactional.value.java,
-                        stream = transactional.stream,
-                        transactional = true,
-                    )
-                }
-
-                null
+                toBinding(
+                    beanName = beanName,
+                    method = method,
+                    targetClass = targetClass,
+                    methodName = method.name,
+                    paramType = method.parameterTypes[0],
+                    payloadClass = eventHandler.value.java,
+                    stream = eventHandler.stream,
+                    transactional = eventHandler.transaction,
+                )
             }
             .toList()
     }

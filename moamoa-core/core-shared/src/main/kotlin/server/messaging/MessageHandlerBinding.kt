@@ -1,6 +1,6 @@
 package server.messaging
 
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 
 class MessageHandlerBinding<T : Any>(
     val stream: EventStream,

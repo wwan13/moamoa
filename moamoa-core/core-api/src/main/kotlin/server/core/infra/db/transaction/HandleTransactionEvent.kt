@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import server.messaging.MessageHandlerBinding
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 
 @Component
 class HandleTransactionEvent(

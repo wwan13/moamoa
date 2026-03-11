@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.connection.stream.ReadOffset
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 import java.util.concurrent.ConcurrentHashMap
 
 @Component

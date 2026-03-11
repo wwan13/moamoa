@@ -1,6 +1,6 @@
 package server.messaging
 
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 
 abstract class AbstractEventHandler{
 

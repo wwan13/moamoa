@@ -8,7 +8,7 @@ import server.core.feature.member.domain.MemberCreateEvent
 import server.core.feature.submission.domain.SubmissionCreateEvent
 import server.core.global.profile.isProd
 import server.messaging.annotation.EventHandler
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 
 @Component
 class WebhookNotifier(

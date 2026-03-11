@@ -11,7 +11,6 @@ import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
 import server.messaging.MessageHandlerInvoker
 import server.messaging.StreamEventHandlers
-import server.messaging.annotation.EventStream
 import server.messaging.health.RedisHealthStateManager
 
 class StreamRetryProcessorTest {

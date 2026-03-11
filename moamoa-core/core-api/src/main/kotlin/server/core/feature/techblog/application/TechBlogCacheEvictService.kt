@@ -6,7 +6,7 @@ import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.core.feature.techblog.infra.SubscriptionCache
 import server.core.feature.techblog.infra.TechBlogSummaryCache
 import server.messaging.annotation.EventHandler
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 
 @Service
 class TechBlogCacheEvictService(

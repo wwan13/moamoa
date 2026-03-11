@@ -4,7 +4,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.core.feature.techblog.domain.TechBlogRepository
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 import server.messaging.annotation.TransactionEventHandler
 
 @Service

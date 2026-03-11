@@ -22,7 +22,7 @@ import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
 import kotlinx.coroutines.runBlocking
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 import server.messaging.health.RedisHealthStateManager
 import server.messaging.health.RedisRecoveryAction
 import server.messaging.health.RedisRecoveryActionRunner

@@ -10,7 +10,7 @@ import org.springframework.data.redis.connection.stream.*
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 import server.messaging.health.RedisHealthStateManager
 import server.messaging.health.RedisRecoveryAction
 import java.time.Duration

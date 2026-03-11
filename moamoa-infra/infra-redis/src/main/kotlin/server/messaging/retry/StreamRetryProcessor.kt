@@ -6,10 +6,9 @@ import org.springframework.data.domain.Range
 import org.springframework.data.redis.connection.stream.StreamRecords
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.global.logging.biz
 import server.messaging.MessageHandlerInvoker
 import server.messaging.StreamEventHandlers
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 import server.messaging.health.RedisHealthStateManager
 import java.time.Duration
 import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger

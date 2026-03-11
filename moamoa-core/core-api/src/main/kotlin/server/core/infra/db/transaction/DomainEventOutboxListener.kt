@@ -10,7 +10,7 @@ import server.core.infra.db.outbox.EventOutboxRepository
 import server.global.logging.RequestLogContextHolder
 import server.global.logging.event
 import server.messaging.Event
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 import java.util.UUID
 
 @Component

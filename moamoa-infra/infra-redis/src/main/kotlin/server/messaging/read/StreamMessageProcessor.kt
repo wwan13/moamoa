@@ -10,7 +10,7 @@ import org.springframework.data.redis.core.StreamOperations
 import org.springframework.stereotype.Component
 import server.messaging.MessageHandlerInvoker
 import server.messaging.StreamEventHandlers
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 
 @Component
 internal class StreamMessageProcessor(

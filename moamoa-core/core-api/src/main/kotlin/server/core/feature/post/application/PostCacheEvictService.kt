@@ -8,7 +8,7 @@ import server.core.feature.post.infra.PostStatsCache
 import server.core.feature.post.infra.SubscribedPostListCache
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.messaging.annotation.EventHandler
-import server.messaging.annotation.EventStream
+import server.messaging.definition.EventStream
 
 @Service
 class PostCacheEvictService(

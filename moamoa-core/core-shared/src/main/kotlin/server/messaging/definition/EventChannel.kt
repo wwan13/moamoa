@@ -1,4 +1,4 @@
-package server.messaging.annotation
+package server.messaging.definition
 
 enum class EventChannel(
     val key: String,
