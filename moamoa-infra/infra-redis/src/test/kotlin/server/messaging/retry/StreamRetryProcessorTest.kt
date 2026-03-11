@@ -9,9 +9,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
+import server.messaging.MessageHandlerInvoker
 import server.messaging.StreamEventHandlers
+import server.messaging.annotation.EventStream
 import server.messaging.health.RedisHealthStateManager
-import server.shared.messaging.MessageChannel
 
 class StreamRetryProcessorTest {
 
@@ -23,7 +24,7 @@ class StreamRetryProcessorTest {
                 every { it.tryRecover() } returns false
             },
             eventHandlers = mockk<StreamEventHandlers>().also {
-                every { it.subscriptions() } returns emptyList()
+                every { it.streams() } returns emptyList()
             }
         )
 
@@ -40,7 +41,7 @@ class StreamRetryProcessorTest {
         val processor = newProcessor(
             healthStateManager = health,
             eventHandlers = mockk<StreamEventHandlers>().also {
-                every { it.subscriptions() } returns emptyList()
+                every { it.streams() } returns emptyList()
             }
         )
 
@@ -60,8 +61,8 @@ class StreamRetryProcessorTest {
 
         return StreamRetryProcessor(
             redisTemplate = redisTemplate,
-            defaultDlqTopic = MessageChannel("moamoa-default-dlq"),
             objectMapper = jacksonObjectMapper(),
+            messageHandlerInvoker = mockk<MessageHandlerInvoker>(relaxed = true),
             eventHandlers = eventHandlers,
             healthStateManager = healthStateManager,
         )

@@ -1,62 +1,151 @@
 package server.messaging
 
-import org.springframework.beans.factory.SmartInitializingSingleton
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.aop.support.AopUtils
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.context.ApplicationContext
-import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
+import org.springframework.util.ClassUtils
+import org.springframework.util.ReflectionUtils
+import server.global.logging.biz
+import server.messaging.annotation.EventHandler
+import server.messaging.annotation.EventStream
+import server.messaging.annotation.TransactionEventHandler
 
 @Component
 internal class StreamEventHandlers(
     private val handlers: List<MessageHandlerBinding<*>>,
     private val context: ApplicationContext,
     private val beanFactory: ConfigurableListableBeanFactory,
-) : SmartInitializingSingleton {
+    txManager: PlatformTransactionManager?,
+) {
     private data class Key(val channelKey: String, val consumerGroup: String, val type: String)
 
-    @Volatile
-    private var allHandlers: List<MessageHandlerBinding<*>> = handlers
+    private val logger = KotlinLogging.logger {}
+    private val transactionTemplate: TransactionTemplate? = txManager?.let { TransactionTemplate(it) }
 
-    @Volatile
-    private var handlerMap: Map<Key, MessageHandlerBinding<*>> = allHandlers.associateBy { toKey(it) }
-
-    override fun afterSingletonsInstantiated() {
-        val discoveredHandlers = discoverComponentHandlers()
-        allHandlers = (handlers + discoveredHandlers).distinctBy(::toKey)
-        handlerMap = allHandlers.associateBy(::toKey)
-    }
+    private val allHandlers: List<MessageHandlerBinding<*>> =
+        (handlers + discoverAnnotatedHandlers()).distinctBy(::toKey)
+    private val handlerMap: Map<Key, MessageHandlerBinding<*>> = allHandlers.associateBy(::toKey)
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> find(subscription: SubscriptionDefinition, type: String): MessageHandlerBinding<T>? =
-        handlerMap[Key(subscription.channel.key, subscription.consumerGroup, type)] as? MessageHandlerBinding<T>
+    fun <T : Any> find(stream: EventStream, type: String): MessageHandlerBinding<T>? =
+        handlerMap[Key(stream.channel.key, stream.consumerGroup, type)] as? MessageHandlerBinding<T>
 
-    fun subscriptions(): List<SubscriptionDefinition> =
+    fun streams(): List<EventStream> =
         allHandlers
-            .map { it.subscription }
-            .distinctBy { it.channel to it.consumerGroup }
+            .map { it.stream }
+            .distinctBy { it.channel.key to it.consumerGroup }
             .toList()
 
-    private fun discoverComponentHandlers(): List<MessageHandlerBinding<*>> =
-        context.getBeanNamesForAnnotation(Component::class.java)
+    private fun discoverAnnotatedHandlers(): List<MessageHandlerBinding<*>> =
+        beanFactory.beanDefinitionNames
             .asSequence()
             .filterNot { it.startsWith("scopedTarget.") }
             .filter { beanFactory.isSingleton(it) }
             .mapNotNull { beanName ->
-                context.getBean(beanName)
+                val rawClass = context.getType(beanName) ?: return@mapNotNull null
+                beanName to ClassUtils.getUserClass(rawClass)
             }
-            .filterNot { it === this }
-            .flatMap { bean ->
-                bean.javaClass.methods
-                    .asSequence()
-                    .filter { method ->
-                        method.parameterCount == 0 &&
-                            method.getAnnotation(Bean::class.java) == null &&
-                            MessageHandlerBinding::class.java.isAssignableFrom(method.returnType)
-                    }
-                    .mapNotNull { method -> method.invoke(bean) as? MessageHandlerBinding<*> }
-            }
+            .filterNot { (_, targetClass) -> targetClass == StreamEventHandlers::class.java }
+            .flatMap { (beanName, targetClass) -> resolveAnnotatedHandlers(beanName, targetClass).asSequence() }
             .toList()
 
+    private fun resolveAnnotatedHandlers(beanName: String, targetClass: Class<*>): List<MessageHandlerBinding<*>> {
+        return targetClass.methods
+            .asSequence()
+            .mapNotNull { method ->
+                if (method.parameterCount != 1) {
+                    if (method.getAnnotation(EventHandler::class.java) != null ||
+                        method.getAnnotation(TransactionEventHandler::class.java) != null
+                    ) {
+                        logger.warn {
+                            "Skip event handler method. exactly one parameter is required: ${targetClass.name}.${method.name}"
+                        }
+                    }
+                    return@mapNotNull null
+                }
+
+                val normal = method.getAnnotation(EventHandler::class.java)
+                if (normal != null) {
+                    return@mapNotNull toBinding(
+                        beanName = beanName,
+                        method = method,
+                        targetClass = targetClass,
+                        methodName = method.name,
+                        paramType = method.parameterTypes[0],
+                        payloadClass = normal.value.java,
+                        stream = normal.stream,
+                        transactional = false,
+                    )
+                }
+
+                val transactional = method.getAnnotation(TransactionEventHandler::class.java)
+                if (transactional != null) {
+                    return@mapNotNull toBinding(
+                        beanName = beanName,
+                        method = method,
+                        targetClass = targetClass,
+                        methodName = method.name,
+                        paramType = method.parameterTypes[0],
+                        payloadClass = transactional.value.java,
+                        stream = transactional.stream,
+                        transactional = true,
+                    )
+                }
+
+                null
+            }
+            .toList()
+    }
+
+    private fun toBinding(
+        beanName: String,
+        method: java.lang.reflect.Method,
+        targetClass: Class<*>,
+        methodName: String,
+        paramType: Class<*>,
+        payloadClass: Class<out Any>,
+        stream: EventStream,
+        transactional: Boolean,
+    ): MessageHandlerBinding<*>? {
+        if (!paramType.isAssignableFrom(payloadClass)) {
+            logger.warn {
+                "Skip event handler method. parameter type mismatch: ${targetClass.name}.$methodName " +
+                    "param=${paramType.name} event=${payloadClass.name}"
+            }
+            return null
+        }
+
+        val handler: (Any) -> Unit = { payload ->
+            val bean = context.getBean(beanName)
+
+            if (!transactional) {
+                invokeMethod(bean, method, payload)
+            } else {
+                val tx = requireNotNull(transactionTemplate) {
+                    "No PlatformTransactionManager for @TransactionEventHandler: ${targetClass.name}.$methodName"
+                }
+                tx.executeWithoutResult { invokeMethod(bean, method, payload) }
+            }
+        }
+
+        return MessageHandlerBinding(
+            stream = stream,
+            type = payloadClass.simpleName,
+            payloadClass = payloadClass,
+            handler = handler,
+        )
+    }
+
     private fun toKey(handler: MessageHandlerBinding<*>): Key =
-        Key(handler.subscription.channel.key, handler.subscription.consumerGroup, handler.type)
+        Key(handler.stream.channel.key, handler.stream.consumerGroup, handler.type)
+
+    private fun invokeMethod(bean: Any, method: java.lang.reflect.Method, payload: Any) {
+        val invocable = AopUtils.selectInvocableMethod(method, bean.javaClass)
+        ReflectionUtils.makeAccessible(invocable)
+        invocable.invoke(bean, payload)
+    }
 }

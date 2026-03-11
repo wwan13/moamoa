@@ -16,11 +16,10 @@ import test.UnitTest
 class WebhookNotifierTest : UnitTest() {
     @Test
     fun `운영 환경에서 웹훅을 전송한다`() = runTest {
-        val monitoringStream = mockk<server.messaging.SubscriptionDefinition>()
         val webhookSender = mockk<WebhookSender>(relaxed = true)
         val environment = mockk<Environment>()
         every { environment.activeProfiles } returns arrayOf("prod")
-        val notifier = WebhookNotifier(monitoringStream, webhookSender, environment)
+        val notifier = WebhookNotifier(webhookSender, environment)
         val event = MemberCreateEvent(memberId = 10L, email = "moamoa@test.com")
         val expected = WebhookContent.Service(
             title = "회원가입",
@@ -31,8 +30,7 @@ class WebhookNotifierTest : UnitTest() {
             )
         )
 
-        val handler = notifier.memberCreateWebhookNotify()
-        handler.handler(event)
+        notifier.memberCreateWebhookNotify(event)
 
         verify(exactly = 1) { webhookSender.sendAsync(expected) }
         expected shouldBe WebhookContent.Service(
@@ -47,15 +45,13 @@ class WebhookNotifierTest : UnitTest() {
 
     @Test
     fun `운영 환경이 아니면 웹훅을 전송하지 않는다`() = runTest {
-        val monitoringStream = mockk<server.messaging.SubscriptionDefinition>()
         val webhookSender = mockk<WebhookSender>(relaxed = true)
         val environment = mockk<Environment>()
         every { environment.activeProfiles } returns arrayOf("local")
-        val notifier = WebhookNotifier(monitoringStream, webhookSender, environment)
+        val notifier = WebhookNotifier(webhookSender, environment)
         val event = MemberCreateEvent(memberId = 10L, email = "moamoa@test.com")
 
-        val handler = notifier.memberCreateWebhookNotify()
-        handler.handler(event)
+        notifier.memberCreateWebhookNotify(event)
 
         verify { webhookSender wasNot Called }
     }

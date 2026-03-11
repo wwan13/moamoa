@@ -1,32 +1,33 @@
 package server.messaging
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.connection.stream.StreamRecords
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.messaging.EventPublisher
-import server.messaging.MessageChannel
 import java.time.Instant
-import java.util.UUID
 
 @Component
 internal class StreamEventPublisher(
     @param:Qualifier("streamStringRedisTemplate")
     private val redis: StringRedisTemplate,
-    private val objectMapper: ObjectMapper,
 ) : EventPublisher {
     private val log = kLogger {}
 
-    override fun publish(channel: MessageChannel, payload: Any) {
-        publish(channel.key, payload::class.simpleName!!, objectMapper.writeValueAsString(payload))
-    }
+    override fun publish(
+        channel: String,
+        type: String,
+        payloadJson: String,
+        eventId: String
+    ) {
+        if (eventId.isBlank()) {
+            log.warn { "Skip publish. eventId is blank: streamKey=$channel type=$type" }
+            throw IllegalArgumentException("eventId must not be blank")
+        }
 
-    override fun publish(channel: String, type: String, payloadJson: String) {
         val fields = mapOf(
             "type" to type,
-            "eventId" to UUID.randomUUID().toString(),
+            "eventId" to eventId,
             "occurredAt" to Instant.now().toString(),
             "payload" to payloadJson,
         )
@@ -36,12 +37,11 @@ internal class StreamEventPublisher(
             .withStreamKey(channel)
 
         try {
-            val recordId = redis.opsForStream<String, String>().add(record)
-            if (recordId == null) {
-                throw IllegalStateException("Redis XADD returned null")
-            }
+            redis.opsForStream<String, String>().add(record)
+                ?: throw IllegalStateException("Redis XADD returned null")
         } catch (e: Exception) {
-            log.warn("Redis XADD failed: streamKey={}", channel, e)
+            log.warn(e) { "Redis XADD failed: streamKey=$channel type=$type eventId=$eventId" }
+            throw e
         }
     }
 }

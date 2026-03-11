@@ -37,7 +37,7 @@ class OutboxPublishWorkerTest : UnitTest() {
 
         worker.runOnce(10)
 
-        verify(exactly = 0) { eventPublisher.publish(any<String>(), any<String>(), any<String>()) }
+        verify(exactly = 0) { eventPublisher.publish(any<String>(), any<String>(), any<String>(), any<String>()) }
         verify(exactly = 0) { eventOutboxRepository.findById(any()) }
     }
 
@@ -47,11 +47,11 @@ class OutboxPublishWorkerTest : UnitTest() {
         val eventOutboxRepository = mockk<EventOutboxRepository>()
         val txManager = newTxManager()
         val rows = listOf(
-            EventOutbox(id = 1L, topic = "topic-1", type = "type-1", payload = "payload-1"),
-            EventOutbox(id = 2L, topic = "topic-2", type = "type-2", payload = "payload-2"),
+            EventOutbox(id = 1L, topic = "topic-1", type = "type-1", eventId = "e1", payload = "payload-1"),
+            EventOutbox(id = 2L, topic = "topic-2", type = "type-2", eventId = "e2", payload = "payload-2"),
         )
         coEvery { eventOutboxRepository.findUnpublished(5) } returns rows
-        every { eventPublisher.publish(any<String>(), any<String>(), any<String>()) } just runs
+        every { eventPublisher.publish(any<String>(), any<String>(), any<String>(), any<String>()) } just runs
         every { eventOutboxRepository.findById(1L) } returns java.util.Optional.of(rows[0])
         every { eventOutboxRepository.findById(2L) } returns java.util.Optional.of(rows[1])
         val healthStateManager = newHealthStateManager()
@@ -65,8 +65,8 @@ class OutboxPublishWorkerTest : UnitTest() {
 
         worker.runOnce(5)
 
-        verify(exactly = 1) { eventPublisher.publish("topic-1", "type-1", "payload-1") }
-        verify(exactly = 1) { eventPublisher.publish("topic-2", "type-2", "payload-2") }
+        verify(exactly = 1) { eventPublisher.publish("topic-1", "type-1", "payload-1", "e1") }
+        verify(exactly = 1) { eventPublisher.publish("topic-2", "type-2", "payload-2", "e2") }
         rows[0].published shouldBe true
         rows[1].published shouldBe true
         verify(exactly = 1) { eventOutboxRepository.findById(1L) }
@@ -79,12 +79,12 @@ class OutboxPublishWorkerTest : UnitTest() {
         val eventOutboxRepository = mockk<EventOutboxRepository>()
         val txManager = newTxManager()
         val rows = listOf(
-            EventOutbox(id = 1L, topic = "topic-1", type = "type-1", payload = "payload-1"),
-            EventOutbox(id = 2L, topic = "topic-2", type = "type-2", payload = "payload-2"),
+            EventOutbox(id = 1L, topic = "topic-1", type = "type-1", eventId = "e1", payload = "payload-1"),
+            EventOutbox(id = 2L, topic = "topic-2", type = "type-2", eventId = "e2", payload = "payload-2"),
         )
         coEvery { eventOutboxRepository.findUnpublished(2) } returns rows
-        every { eventPublisher.publish("topic-1", "type-1", "payload-1") } throws RuntimeException("fail")
-        every { eventPublisher.publish("topic-2", "type-2", "payload-2") } just runs
+        every { eventPublisher.publish("topic-1", "type-1", "payload-1", "e1") } throws RuntimeException("fail")
+        every { eventPublisher.publish("topic-2", "type-2", "payload-2", "e2") } just runs
         every { eventOutboxRepository.findById(2L) } returns java.util.Optional.of(rows[1])
         val healthStateManager = newHealthStateManager()
         val worker = OutboxPublishWorker(
@@ -97,8 +97,8 @@ class OutboxPublishWorkerTest : UnitTest() {
 
         worker.runOnce(2)
 
-        verify(exactly = 1) { eventPublisher.publish("topic-1", "type-1", "payload-1") }
-        verify(exactly = 1) { eventPublisher.publish("topic-2", "type-2", "payload-2") }
+        verify(exactly = 1) { eventPublisher.publish("topic-1", "type-1", "payload-1", "e1") }
+        verify(exactly = 1) { eventPublisher.publish("topic-2", "type-2", "payload-2", "e2") }
         rows[0].published shouldBe false
         rows[1].published shouldBe true
         verify(exactly = 0) { eventOutboxRepository.findById(1L) }

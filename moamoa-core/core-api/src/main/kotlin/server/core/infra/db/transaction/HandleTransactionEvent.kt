@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import server.messaging.MessageHandlerBinding
-import server.messaging.SubscriptionDefinition
+import server.messaging.annotation.EventStream
 
 @Component
 class HandleTransactionEvent(
@@ -13,11 +13,11 @@ class HandleTransactionEvent(
     private val transactionTemplate = TransactionTemplate(txManager)
 
     operator fun <T : Any> invoke(
-        subscription: SubscriptionDefinition,
+        stream: EventStream,
         payloadClass: Class<T>,
         handler: (T) -> Unit,
     ): MessageHandlerBinding<T> = MessageHandlerBinding(
-        subscription = subscription,
+        stream = stream,
         type = payloadClass.simpleName,
         payloadClass = payloadClass,
     ) { event ->

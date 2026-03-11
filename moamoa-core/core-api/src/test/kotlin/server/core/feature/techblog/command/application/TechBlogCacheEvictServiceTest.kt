@@ -14,18 +14,15 @@ import test.UnitTest
 class TechBlogCacheEvictServiceTest : UnitTest() {
     @Test
     fun `구독 정보가 변경되면 기술 블로그 캐시를 무효화한다`() = runTest {
-        val techBlogCacheHandlingStream = mockk<server.messaging.SubscriptionDefinition>()
         val techBlogSummaryCache = mockk<TechBlogSummaryCache>(relaxed = true)
         val subscriptionCache = mockk<SubscriptionCache>(relaxed = true)
         val service = TechBlogCacheEvictService(
-            techBlogCacheHandlingStream,
             techBlogSummaryCache,
             subscriptionCache
         )
         val event = TechBlogSubscribeUpdatedEvent(memberId = 10L, techBlogId = 20L, subscribed = true)
 
-        val handler = service.subscriptionUpdatedTechBlogCacheEvict()
-        handler.handler(event)
+        service.subscriptionUpdatedTechBlogCacheEvict(event)
 
         coVerify(exactly = 1) { techBlogSummaryCache.evict(event.techBlogId) }
         coVerify(exactly = 1) { subscriptionCache.evictAll(event.memberId) }
@@ -33,18 +30,15 @@ class TechBlogCacheEvictServiceTest : UnitTest() {
 
     @Test
     fun `구독 알림 정보가 변경되면 기술 블로그 캐시를 무효화한다`() = runTest {
-        val techBlogCacheHandlingStream = mockk<server.messaging.SubscriptionDefinition>()
         val techBlogSummaryCache = mockk<TechBlogSummaryCache>(relaxed = true)
         val subscriptionCache = mockk<SubscriptionCache>(relaxed = true)
         val service = TechBlogCacheEvictService(
-            techBlogCacheHandlingStream,
             techBlogSummaryCache,
             subscriptionCache
         )
         val event = NotificationUpdatedEvent(memberId = 10L, techBlogId = 20L, enabled = true)
 
-        val handler = service.notificationUpdatedTechBlogCacheEvict()
-        handler.handler(event)
+        service.notificationUpdatedTechBlogCacheEvict(event)
 
         coVerify(exactly = 1) { techBlogSummaryCache.evict(event.techBlogId) }
         coVerify(exactly = 1) { subscriptionCache.evictAll(event.memberId) }

@@ -8,11 +8,12 @@ import org.springframework.transaction.support.TransactionTemplate
 import server.core.global.logging.ExternalCallLogger
 import server.core.infra.db.outbox.EventOutboxRepository
 import server.global.logging.errorType
+import server.messaging.EventPublisher
 import server.messaging.health.RedisHealthStateManager
 
 @Component
 class OutboxPublishWorker(
-    private val eventPublisher: server.messaging.EventPublisher,
+    private val eventPublisher: EventPublisher,
     private val eventOutboxRepository: EventOutboxRepository,
     txManager: PlatformTransactionManager,
     private val externalCallLogger: ExternalCallLogger,
@@ -39,7 +40,13 @@ class OutboxPublishWorker(
                         retry = 0,
                         timeout = false
                     ) {
-                        eventPublisher.publish(row.topic, row.type, row.payload)
+                        val payloadJson = row.payload
+                        eventPublisher.publish(
+                            channel = row.topic,
+                            type = row.type,
+                            payloadJson = payloadJson,
+                            eventId = row.eventId,
+                        )
                     }
                     transactionTemplate.execute {
                         val outbox = eventOutboxRepository.findByIdOrNull(row.id) ?: return@execute

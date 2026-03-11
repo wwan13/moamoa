@@ -1,9 +1,9 @@
 package server.core.feature.bookmark.domain
 
-import server.core.support.domain.DomainEvent
+import server.messaging.Event
 
 data class BookmarkUpdatedEvent(
     val memberId: Long,
     val postId: Long,
     val bookmarked: Boolean
-) : DomainEvent
+) : Event

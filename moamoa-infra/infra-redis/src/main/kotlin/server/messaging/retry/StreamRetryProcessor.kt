@@ -6,9 +6,10 @@ import org.springframework.data.domain.Range
 import org.springframework.data.redis.connection.stream.StreamRecords
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.messaging.MessageChannel
+import server.global.logging.biz
+import server.messaging.MessageHandlerInvoker
 import server.messaging.StreamEventHandlers
-import server.messaging.SubscriptionDefinition
+import server.messaging.annotation.EventStream
 import server.messaging.health.RedisHealthStateManager
 import java.time.Duration
 import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
@@ -17,9 +18,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 internal class StreamRetryProcessor(
     @param:Qualifier("streamStringRedisTemplate")
     private val redisTemplate: StringRedisTemplate,
-    @param:Qualifier("defaultDlqTopic")
-    private val defaultDlqTopic: MessageChannel,
     private val objectMapper: ObjectMapper,
+    private val messageHandlerInvoker: MessageHandlerInvoker,
     private val eventHandlers: StreamEventHandlers,
     private val healthStateManager: RedisHealthStateManager,
 ) {
@@ -38,17 +38,17 @@ internal class StreamRetryProcessor(
             if (!recovered) return false
         }
 
-        for (subscription in eventHandlers.subscriptions()) {
-            val executed = reclaimSubscription(subscription)
+        for (stream in eventHandlers.streams()) {
+            val executed = reclaimStream(stream)
             if (!executed) return false
             if (healthStateManager.isDegraded()) return false
         }
         return true
     }
 
-    private fun reclaimSubscription(subscription: SubscriptionDefinition): Boolean {
-        val channelKey = subscription.channel.key
-        val consumerGroup = subscription.consumerGroup
+    private fun reclaimStream(stream: EventStream): Boolean {
+        val channelKey = stream.channel.key
+        val consumerGroup = stream.consumerGroup
 
         val result = healthStateManager.runSafe {
             val pending = streamOps.pending(channelKey, consumerGroup, Range.unbounded<String>(), fetchCountPerSubscription)
@@ -72,6 +72,7 @@ internal class StreamRetryProcessor(
                 val idValue = id.value
                 val type = record.value["type"]
                 val payloadJson = record.value["payload"]
+                val eventId = record.value["eventId"]
                 val deliveryCount = deliveryCountById[id] ?: 0L
 
                 if (type.isNullOrBlank() || payloadJson.isNullOrBlank()) {
@@ -86,7 +87,7 @@ internal class StreamRetryProcessor(
                     continue
                 }
 
-                val messageHandler = eventHandlers.find<Any>(subscription, type)
+                val messageHandler = eventHandlers.find<Any>(stream, type)
                 if (messageHandler == null) {
                     log.warn { "핸들러 없음. channelKey=$channelKey, consumerGroup=$consumerGroup, type=$type, id=$idValue" }
                     streamOps.acknowledge(channelKey, consumerGroup, record.id)
@@ -95,7 +96,7 @@ internal class StreamRetryProcessor(
 
                 try {
                     val payload = objectMapper.readValue(payloadJson, messageHandler.payloadClass)
-                    messageHandler.handler(payload)
+                    messageHandlerInvoker.invoke(eventId, type, payload, messageHandler.handler)
                     streamOps.acknowledge(channelKey, consumerGroup, record.id)
                 } catch (e: Exception) {
                     log.warn(e) { "재처리 실패. channelKey=$channelKey, consumerGroup=$consumerGroup, type=$type, id=$idValue" }
@@ -125,21 +126,22 @@ internal class StreamRetryProcessor(
                     "deliveryCount" to deliveryCount.toString(),
                 ),
             )
-            .withStreamKey(defaultDlqTopic.key)
+            .withStreamKey(EventStream.DEFAULT_DLQ.channel.key)
 
         runCatching {
             streamOps.add(dlqRecord)
         }.onSuccess {
             log.warn {
-                "메시지를 DLQ로 이동. channelKey=$channelKey, consumerGroup=$consumerGroup, id=$sourceId, " +
-                    "deliveryCount=$deliveryCount, dlq=${defaultDlqTopic.key}"
+                    "메시지를 DLQ로 이동. channelKey=$channelKey, consumerGroup=$consumerGroup, id=$sourceId, " +
+                    "deliveryCount=$deliveryCount, dlq=${EventStream.DEFAULT_DLQ.channel.key}"
             }
         }.onFailure { e ->
             log.warn(e) {
                 "DLQ 이동 실패. channelKey=$channelKey, consumerGroup=$consumerGroup, id=$sourceId, " +
-                    "deliveryCount=$deliveryCount, dlq=${defaultDlqTopic.key}"
+                    "deliveryCount=$deliveryCount, dlq=${EventStream.DEFAULT_DLQ.channel.key}"
             }
             throw e
         }
     }
+
 }

@@ -1,15 +1,15 @@
 package server.core.feature.subscription.domain
 
-import server.core.support.domain.DomainEvent
+import server.messaging.Event
 
 data class TechBlogSubscribeUpdatedEvent(
     val memberId: Long,
     val techBlogId: Long,
     val subscribed: Boolean
-) : DomainEvent
+) : Event
 
 data class NotificationUpdatedEvent(
     val memberId: Long,
     val techBlogId: Long,
     val enabled: Boolean
-) : DomainEvent
+) : Event

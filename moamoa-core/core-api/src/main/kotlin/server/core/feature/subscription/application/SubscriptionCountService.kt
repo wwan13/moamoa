@@ -4,18 +4,16 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.core.feature.techblog.domain.TechBlogRepository
-import server.core.infra.messagebroker.TransactionalEventHandler
-import server.messaging.invoke
+import server.messaging.annotation.EventStream
+import server.messaging.annotation.TransactionEventHandler
 
 @Service
 class SubscriptionCountService(
-    private val countProcessingStream: server.messaging.SubscriptionDefinition,
     private val techBlogRepository: TechBlogRepository,
-    private val transactionalEventHandler: TransactionalEventHandler,
 ) {
-    fun subscriptionUpdatedCountCalculate() =
-        transactionalEventHandler<TechBlogSubscribeUpdatedEvent>(countProcessingStream) { event ->
-            val delta = if (event.subscribed) +1L else -1L
-            techBlogRepository.findByIdOrNull(event.techBlogId)?.updateSubscriptionCount(delta)
-        }
+    @TransactionEventHandler(TechBlogSubscribeUpdatedEvent::class, EventStream.COUNT_PROCESSING)
+    fun subscriptionUpdatedCountCalculate(event: TechBlogSubscribeUpdatedEvent) {
+        val delta = if (event.subscribed) +1L else -1L
+        techBlogRepository.findByIdOrNull(event.techBlogId)?.updateSubscriptionCount(delta)
+    }
 }

@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.connection.stream.ReadOffset
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.messaging.SubscriptionDefinition
+import server.messaging.annotation.EventStream
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
@@ -16,25 +16,25 @@ internal class StreamGroupEnsurer(
 
     private val ensured = ConcurrentHashMap.newKeySet<EnsureKey>()
 
-    fun ensure(subscription: SubscriptionDefinition) {
-        val ensureKey = EnsureKey(subscription.channel.key, subscription.consumerGroup)
-        ensureGroupOnce(subscription, ensureKey)
+    fun ensure(stream: EventStream) {
+        val ensureKey = EnsureKey(stream.channel.key, stream.consumerGroup)
+        ensureGroupOnce(stream, ensureKey)
     }
 
-    fun ensureForRecovery(subscription: SubscriptionDefinition) {
-        val ensureKey = EnsureKey(subscription.channel.key, subscription.consumerGroup)
+    fun ensureForRecovery(stream: EventStream) {
+        val ensureKey = EnsureKey(stream.channel.key, stream.consumerGroup)
         ensured.remove(ensureKey)
-        ensureGroupOnce(subscription, ensureKey)
+        ensureGroupOnce(stream, ensureKey)
     }
 
     private fun ensureGroupOnce(
-        subscription: SubscriptionDefinition,
+        stream: EventStream,
         ensureKey: EnsureKey,
     ) {
         if (!ensured.add(ensureKey)) return
         try {
             redis.opsForStream<String, String>()
-                .createGroup(subscription.channel.key, ReadOffset.from("0-0"), subscription.consumerGroup)
+                .createGroup(stream.channel.key, ReadOffset.from("0-0"), stream.consumerGroup)
         } catch (_: Exception) {
             // BUSYGROUP 등은 정상 취급
         }

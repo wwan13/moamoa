@@ -26,6 +26,9 @@ class EventOutbox(
     @Column(name = "type", length = 256, nullable = false)
     val type: String,
 
+    @Column(name = "event_id", length = 64, nullable = false)
+    val eventId: String,
+
     @Column(name = "payload", columnDefinition = "json", nullable = false)
     val payload: String,
 

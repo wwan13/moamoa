@@ -47,9 +47,9 @@ class SubscriptionService(
                         memberId = memberId,
                         techBlogId = command.techBlogId
                     )
-                    val saved = subscriptionRepository.save(subscription)
+                    subscription.subscribe()
 
-                    saved.subscribe()
+                    subscriptionRepository.save(subscription)
                     logger.biz.info { "기술 블로그를 구독합니다" }
 
                     SubscriptionToggleResult(true)

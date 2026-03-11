@@ -10,7 +10,7 @@ import org.springframework.data.redis.connection.stream.*
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import server.messaging.SubscriptionDefinition
+import server.messaging.annotation.EventStream
 import server.messaging.health.RedisHealthStateManager
 import server.messaging.health.RedisRecoveryAction
 import java.time.Duration
@@ -31,7 +31,7 @@ internal class StreamReader(
     private val jobs = ConcurrentHashMap<String, Job>()
 
     private data class ReadContext(
-        val subscription: SubscriptionDefinition,
+        val stream: EventStream,
         val ops: StreamOperations<String, String, String>,
         val consumer: Consumer,
         val options: StreamReadOptions,
@@ -40,9 +40,9 @@ internal class StreamReader(
     @PostConstruct
     fun initialize() {
         runBlocking {
-            messageProcessor.subscriptions().forEach { subscription ->
-                streamGroupEnsurer.ensure(subscription)
-                start(subscription)
+            messageProcessor.streams().forEach { stream ->
+                streamGroupEnsurer.ensure(stream)
+                start(stream)
             }
         }
     }
@@ -52,10 +52,10 @@ internal class StreamReader(
         stopAll()
     }
 
-    fun start(subscription: SubscriptionDefinition) {
-        val jobKey = "${subscription.channel}::${subscription.consumerGroup}"
+    fun start(stream: EventStream) {
+        val jobKey = "${stream.channel.key}::${stream.consumerGroup}"
         jobs.computeIfAbsent(jobKey) {
-            scope.launch { loopForSubscription(subscription) }
+            scope.launch { loopForSubscription(stream) }
         }
     }
 
@@ -65,8 +65,8 @@ internal class StreamReader(
         scope.cancel()
     }
 
-    private fun loopForSubscription(subscription: SubscriptionDefinition) {
-        val context = open(subscription)
+    private fun loopForSubscription(stream: EventStream) {
+        val context = open(stream)
         var skippedByHealth = false
 
         while (true) {
@@ -85,13 +85,13 @@ internal class StreamReader(
                 }
             } catch (e: Exception) {
                 if (isNoGroupException(e)) {
-                    streamGroupEnsurer.ensureForRecovery(context.subscription)
+                    streamGroupEnsurer.ensureForRecovery(context.stream)
                     Thread.sleep(10_000)
                     continue
                 }
 
                 logger.warn(e) {
-                    "read failed. channelKey=${subscription.channel} consumerGroup=${subscription.consumerGroup}"
+                    "read failed. channelKey=${stream.channel.key} consumerGroup=${stream.consumerGroup}"
                 }
                 Thread.sleep(500)
                 continue
@@ -104,24 +104,24 @@ internal class StreamReader(
             }
 
             if (skippedByHealth) {
-                streamGroupEnsurer.ensureForRecovery(context.subscription)
+                streamGroupEnsurer.ensureForRecovery(context.stream)
                 skippedByHealth = false
             }
 
-            messageProcessor.handleRecords(subscription, context.ops, records.getOrThrow(), scope)
+            messageProcessor.handleRecords(stream, context.ops, records.getOrThrow(), scope)
         }
     }
 
-    private fun open(subscription: SubscriptionDefinition): ReadContext {
+    private fun open(stream: EventStream): ReadContext {
         val ops = redis.opsForStream<String, String>()
-        val consumerName = "worker-${subscription.channel}-${subscription.consumerGroup}-${UUID.randomUUID()}"
-        val consumer = Consumer.from(subscription.consumerGroup, consumerName)
+        val consumerName = "worker-${stream.channel.key}-${stream.consumerGroup}-${UUID.randomUUID()}"
+        val consumer = Consumer.from(stream.consumerGroup, consumerName)
         val options = StreamReadOptions.empty()
             .block(Duration.ofSeconds(1))
-            .count(subscription.batchSize.coerceAtLeast(1).toLong())
+            .count(stream.batchSize.coerceAtLeast(1).toLong())
 
         return ReadContext(
-            subscription = subscription,
+            stream = stream,
             ops = ops,
             consumer = consumer,
             options = options,
@@ -132,7 +132,7 @@ internal class StreamReader(
         context.ops.read(
             context.consumer,
             context.options,
-            StreamOffset.create(context.subscription.channel.key, ReadOffset.lastConsumed())
+            StreamOffset.create(context.stream.channel.key, ReadOffset.lastConsumed())
         ) ?: emptyList()
 
     private fun isNoGroupException(exception: Exception): Boolean =
@@ -140,8 +140,8 @@ internal class StreamReader(
 
     @Bean
     fun streamReaderRecoveryAction(): RedisRecoveryAction = RedisRecoveryAction {
-        messageProcessor.subscriptions().forEach { subscription ->
-            streamGroupEnsurer.ensureForRecovery(subscription)
+        messageProcessor.streams().forEach { stream ->
+            streamGroupEnsurer.ensureForRecovery(stream)
         }
     }
 }

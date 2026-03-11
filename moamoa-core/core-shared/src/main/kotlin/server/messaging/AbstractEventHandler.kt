@@ -1,17 +1,21 @@
 package server.messaging
 
-abstract class AbstractEventHandler(
-) {
-    protected abstract fun <T : Any> wrap(handler: (T) -> Unit): (T) -> Unit
+import server.messaging.annotation.EventStream
 
-    open fun <T : Any> bind(
-        subscription: SubscriptionDefinition,
-        payloadClass: Class<T>,
-        handler: (T) -> Unit
-    ): MessageHandlerBinding<T> = MessageHandlerBinding(
-        subscription = subscription,
-        type = payloadClass.simpleName,
-        payloadClass = payloadClass,
-        handler = wrap(handler),
-    )
+abstract class AbstractEventHandler{
+
+    abstract fun <T : Any> wrap(handler: (T) -> Unit): (T) -> Unit
+
+    inline operator fun <reified T : Any> invoke(
+        stream: EventStream,
+        noinline handler: (T) -> Unit
+    ): MessageHandlerBinding<T> {
+        val payloadClass = T::class.java
+        return MessageHandlerBinding(
+            stream = stream,
+            type = payloadClass.simpleName,
+            payloadClass = payloadClass,
+            handler = wrap(handler),
+        )
+    }
 }

@@ -26,7 +26,7 @@ class OutboxEventPublisher(
                 val executed = runCatching {
                     eventOutboxPublishWorker.runOnce(batchSize = 200)
                 }.onFailure { e ->
-                    log.warn("outbox publish loop failed", e)
+                    log.warn { "outbox publish loop failed" }
                 }.getOrDefault(false)
 
                 if (!executed) {

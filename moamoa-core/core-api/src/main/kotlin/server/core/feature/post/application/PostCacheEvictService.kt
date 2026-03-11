@@ -7,28 +7,25 @@ import server.core.feature.post.infra.BookmarkedPostListCache
 import server.core.feature.post.infra.PostStatsCache
 import server.core.feature.post.infra.SubscribedPostListCache
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
-import server.messaging.EventHandler
-import server.messaging.SubscriptionDefinition
-import server.messaging.invoke
+import server.messaging.annotation.EventHandler
+import server.messaging.annotation.EventStream
 
 @Service
 class PostCacheEvictService(
-    private val postCacheHandlingStream: SubscriptionDefinition,
-    private val eventHandler: EventHandler,
     private val subscribedPostListCache: SubscribedPostListCache,
     private val bookmarkedPostListCache: BookmarkedPostListCache,
     private val postStatsCache: PostStatsCache,
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache
 ) {
-    fun subscriptionUpdatedPostCacheEvict() =
-        eventHandler<TechBlogSubscribeUpdatedEvent>(postCacheHandlingStream) { event ->
-            subscribedPostListCache.evictAll(event.memberId)
-        }
+    @EventHandler(TechBlogSubscribeUpdatedEvent::class, EventStream.POST_CACHE_HANDLING)
+    fun subscriptionUpdatedPostCacheEvict(event: TechBlogSubscribeUpdatedEvent) {
+        subscribedPostListCache.evictAll(event.memberId)
+    }
 
-    fun bookmarkUpdatedPostCacheEvict() =
-        eventHandler<BookmarkUpdatedEvent>(postCacheHandlingStream) { event ->
-            bookmarkedPostListCache.evictAll(event.memberId)
-            postStatsCache.evict(event.postId)
-            bookmarkedAllPostIdSetCache.evictAll(event.memberId)
-        }
+    @EventHandler(BookmarkUpdatedEvent::class, EventStream.POST_CACHE_HANDLING)
+    fun bookmarkUpdatedPostCacheEvict(event: BookmarkUpdatedEvent) {
+        bookmarkedPostListCache.evictAll(event.memberId)
+        postStatsCache.evict(event.postId)
+        bookmarkedAllPostIdSetCache.evictAll(event.memberId)
+    }
 }

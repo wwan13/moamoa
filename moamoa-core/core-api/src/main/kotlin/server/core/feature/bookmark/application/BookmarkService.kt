@@ -44,14 +44,12 @@ class BookmarkService(
                     BookmarkToggleResult(false)
                 }
                 ?: let {
-                    val saved = bookmarkRepository.save(
-                        Bookmark(
-                            memberId = memberId,
-                            postId = command.postId
-                        )
+                    val bookmark = Bookmark(
+                        memberId = memberId,
+                        postId = command.postId
                     )
-
-                    saved.bookmark()
+                    bookmark.bookmark()
+                    bookmarkRepository.save(bookmark)
                     logger.biz.info { "북마크를 등록합니다" }
 
                     BookmarkToggleResult(true)

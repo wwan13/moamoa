@@ -12,6 +12,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.slf4j.LoggerFactory
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
+import org.springframework.context.ApplicationContext
 import org.springframework.data.redis.RedisConnectionFailureException
 import org.springframework.data.redis.connection.stream.Consumer
 import org.springframework.data.redis.connection.stream.StreamOffset
@@ -20,6 +22,7 @@ import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
 import kotlinx.coroutines.runBlocking
+import server.messaging.annotation.EventStream
 import server.messaging.health.RedisHealthStateManager
 import server.messaging.health.RedisRecoveryAction
 import server.messaging.health.RedisRecoveryActionRunner
@@ -28,10 +31,7 @@ import server.messaging.read.StreamMessageProcessor
 import server.messaging.read.StreamReader
 
 class StreamReaderTest {
-    private val subscription = SubscriptionDefinition(
-        channel = MessageChannel("subscription-reader-test"),
-        consumerGroup = "subscription-reader-group",
-    )
+    private val stream = EventStream.DEFAULT
 
     @Test
     fun `Redis read 실패 시 cooldown 동안 read 재시도를 멈춘다`() {
@@ -46,7 +46,7 @@ class StreamReaderTest {
         every { redis.execute(any<RedisCallback<String>>()) } throws IllegalStateException("redis down")
         val reader = newConnection(redis)
         try {
-            reader.start(subscription)
+            reader.start(stream)
             Thread.sleep(120)
         } finally {
             reader.stopAll()
@@ -68,7 +68,7 @@ class StreamReaderTest {
 
         val reader = newConnection(redis)
         try {
-            reader.start(subscription)
+            reader.start(stream)
             Thread.sleep(100)
         } finally {
             reader.stopAll()
@@ -98,7 +98,7 @@ class StreamReaderTest {
 
         val reader = newConnection(redis)
         try {
-            reader.start(subscription)
+            reader.start(stream)
             Thread.sleep(10_500)
         } finally {
             reader.stopAll()
@@ -126,7 +126,7 @@ class StreamReaderTest {
 
         val reader = newConnection(redis)
         try {
-            reader.start(subscription)
+            reader.start(stream)
             Thread.sleep(120)
         } finally {
             reader.stopAll()
@@ -142,18 +142,30 @@ class StreamReaderTest {
 
     private fun newConnection(redis: StringRedisTemplate): StreamReader {
         val binding = MessageHandlerBinding(
-            subscription = subscription,
+            stream = stream,
             type = "dummy",
             payloadClass = String::class.java,
             handler = {}
         )
-        val handlers = StreamEventHandlers(listOf(binding))
-        val messageProcessor = StreamMessageProcessor(handlers, jacksonObjectMapper())
+        val context = mockk<ApplicationContext>()
+        every { context.getBeanNamesForAnnotation(org.springframework.stereotype.Component::class.java) } returns emptyArray()
+        val beanFactory = mockk<ConfigurableListableBeanFactory>()
+        val handlers = StreamEventHandlers(
+            handlers = listOf(binding),
+            context = context,
+            beanFactory = beanFactory,
+            txManager = null,
+        )
+        val messageProcessor = StreamMessageProcessor(
+            handlers = handlers,
+            objectMapper = jacksonObjectMapper(),
+            messageHandlerInvoker = mockk(relaxed = true),
+        )
         val streamGroupEnsurer = StreamGroupEnsurer(redis)
         val recoveryActions = listOf(
             RedisRecoveryAction {
-                handlers.subscriptions().forEach { sub ->
-                    streamGroupEnsurer.ensureForRecovery(sub)
+                handlers.streams().forEach { current ->
+                    streamGroupEnsurer.ensureForRecovery(current)
                 }
             }
         )
@@ -169,7 +181,7 @@ class StreamReaderTest {
             healthStateManager = healthStateManager,
             streamGroupEnsurer = streamGroupEnsurer,
         ).also {
-            runBlocking { streamGroupEnsurer.ensure(subscription) }
+            runBlocking { streamGroupEnsurer.ensure(stream) }
         }
     }
 }
