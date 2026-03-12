@@ -7,6 +7,7 @@ import PostsPage from "../pages/postspage/PostsPage.tsx";
 import FeedbackPage from "../pages/feedbackpage/FeedbackPage.tsx";
 import SubmissionPage from "../pages/submissionpage/SubmissionPage.tsx";
 import TechBlogPage from "../pages/techblogpage/TechBlogPage.tsx";
+import LogPage from "../pages/logpage/LogPage.tsx";
 
 const AppRoutes = () => {
     return (
@@ -18,6 +19,7 @@ const AppRoutes = () => {
                 <Route path="/blog" element={<TechBlogPage />} />
                 <Route path="/feedback" element={<FeedbackPage />} />
                 <Route path="/submission" element={<SubmissionPage />} />
+                <Route path="/log" element={<LogPage />} />
             </Route>
             <Route path="/login" element={<LoginPage />} />
         </Routes>

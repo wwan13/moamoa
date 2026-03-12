@@ -1,0 +1,107 @@
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filters {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.left,
+.right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.searchWrap {
+    width: 360px;
+}
+
+.statusRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    color: #667085;
+    font-size: 13px;
+}
+
+.refreshing {
+    color: #252525;
+    font-weight: 600;
+}
+
+.viewerWrap {
+    border: 1px solid #E6E6E6;
+    border-radius: 10px;
+    background: #FFFFFF;
+    overflow: hidden;
+}
+
+.viewerHeader {
+    padding: 14px 16px;
+    color: #252525;
+    font-size: 20px;
+    font-weight: 700;
+    border-bottom: 1px solid #E6E6E6;
+}
+
+.viewport {
+    height: 62vh;
+    min-height: 420px;
+    overflow-y: auto;
+    padding: 12px;
+    background: #FFFFFF;
+}
+
+.viewport::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.viewport::-webkit-scrollbar-track {
+    background: #F3F4F6;
+}
+
+.viewport::-webkit-scrollbar-thumb {
+    background: #D0D5DD;
+    border-radius: 999px;
+}
+
+.viewport {
+    scrollbar-width: thin;
+    scrollbar-color: #D0D5DD #F3F4F6;
+}
+
+.logBlock {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: #FAFAFA;
+    border: 1px solid #E6E6E6;
+}
+
+.logBlock + .logBlock {
+    margin-top: 8px;
+}
+
+.logPre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #344054;
+    font-size: 15px;
+    line-height: 1.45;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.empty {
+    color: #667085;
+    padding: 18px 6px;
+    font-size: 14px;
+}
