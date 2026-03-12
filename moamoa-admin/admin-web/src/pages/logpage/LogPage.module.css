@@ -31,6 +31,12 @@
     font-size: 13px;
 }
 
+.statusRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .refreshing {
     color: #252525;
     font-weight: 600;
@@ -104,4 +110,10 @@
     color: #667085;
     padding: 18px 6px;
     font-size: 14px;
+}
+
+.loadMore {
+    color: #667085;
+    font-size: 12px;
+    padding: 4px 4px 10px;
 }

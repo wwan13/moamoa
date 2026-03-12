@@ -1,17 +1,35 @@
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import {
     logApi,
     type AdminLogPage,
     type AdminLogQueryConditions,
 } from "../api/log.api"
 
-export const useLogsQuery = (
+type LogCursorPageParam = {
+    cursorTimestamp?: string
+    cursorId?: number
+}
+
+export const useInfiniteLogsQuery = (
     conditions: AdminLogQueryConditions,
     pollingMs: number
 ) => {
-    return useQuery<AdminLogPage>({
+    return useInfiniteQuery<AdminLogPage, Error, AdminLogPage, [string, AdminLogQueryConditions], LogCursorPageParam>({
         queryKey: ["admin-logs", conditions],
-        queryFn: () => logApi.findByConditions(conditions),
+        initialPageParam: {},
+        queryFn: ({ pageParam }) =>
+            logApi.findByConditions({
+                ...conditions,
+                cursorTimestamp: pageParam.cursorTimestamp,
+                cursorId: pageParam.cursorId,
+            }),
+        getNextPageParam: (lastPage) => {
+            if (!lastPage.hasNext || !lastPage.nextCursor) return undefined
+            return {
+                cursorTimestamp: lastPage.nextCursor.timestamp,
+                cursorId: lastPage.nextCursor.id,
+            }
+        },
         refetchInterval: pollingMs > 0 ? pollingMs : false,
     })
 }

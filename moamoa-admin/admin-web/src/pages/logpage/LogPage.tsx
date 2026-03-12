@@ -1,13 +1,14 @@
-import { useMemo, useState } from "react"
+import { type UIEvent, useEffect, useMemo, useRef, useState } from "react"
 import PageTitle from "../../components/pagetitle/PageTitle.tsx"
 import { Dropdown } from "../../components/ui/Dropdown.tsx"
 import { Search } from "../../components/ui/Search.tsx"
-import { useLogsQuery } from "../../queries/log.queries"
+import { useInfiniteLogsQuery } from "../../queries/log.queries"
 import type { AdminLogSummary } from "../../api/log.api"
+import Button from "../../components/ui/Button.tsx"
 import styles from "./LogPage.module.css"
 
 const logLevelOptions = [
-    { value: "ALL", label: "모든 레벨" },
+    { value: "ALL", label: "LOG LEVEL" },
     { value: "TRACE", label: "TRACE" },
     { value: "DEBUG", label: "DEBUG" },
     { value: "INFO", label: "INFO" },
@@ -16,7 +17,7 @@ const logLevelOptions = [
 ]
 
 const logTypeOptions = [
-    { value: "ALL", label: "모든 타입" },
+    { value: "ALL", label: "TYPE" },
     { value: "REQUEST", label: "REQUEST" },
     { value: "ERROR", label: "ERROR" },
     { value: "REQ", label: "REQ" },
@@ -29,16 +30,16 @@ const logTypeOptions = [
 ]
 
 const pollingOptions = [
-    { value: "5000", label: "5초 (기본)" },
-    { value: "10000", label: "10초" },
-    { value: "30000", label: "30초" },
-    { value: "60000", label: "60초" },
-    { value: "0", label: "폴링 끄기" },
+    { value: "5000", label: "5s" },
+    { value: "10000", label: "10s" },
+    { value: "30000", label: "30s" },
+    { value: "60000", label: "60s" },
+    { value: "0", label: "off" },
 ]
 
 const sizeOptions = [
-    { value: "50", label: "50개" },
-    { value: "100", label: "100개" },
+    { value: "50", label: "50" },
+    { value: "100", label: "100" },
 ]
 
 const normalizeFilterValue = (value: string): string | undefined => {
@@ -76,6 +77,9 @@ const LogPage = () => {
     const [logType, setLogType] = useState("ALL")
     const [pollingMs, setPollingMs] = useState("5000")
     const [size, setSize] = useState("100")
+    const viewportRef = useRef<HTMLDivElement | null>(null)
+    const hasInitialScrolledRef = useRef(false)
+    const topLoadingRef = useRef(false)
 
     const queryConditions = useMemo(
         () => ({
@@ -87,15 +91,73 @@ const LogPage = () => {
         [logLevel, logType, traceId, size]
     )
 
-    const { data, isLoading, isFetching } = useLogsQuery(
+    const {
+        data,
+        isLoading,
+        refetch,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useInfiniteLogsQuery(
         queryConditions,
         Number(pollingMs)
     )
 
     const logs = useMemo(() => {
-        const items = data?.items ?? []
-        return [...items].reverse()
-    }, [data?.items])
+        const pages = data?.pages ?? []
+        return [...pages]
+            .reverse()
+            .flatMap((page) => [...page.items].reverse())
+    }, [data?.pages])
+
+    const scrollToBottom = () => {
+        const viewport = viewportRef.current
+        if (!viewport) return
+        viewport.scrollTop = viewport.scrollHeight
+    }
+
+    const loadOlderLogs = async () => {
+        const viewport = viewportRef.current
+        if (!viewport) return
+        if (topLoadingRef.current) return
+        if (!hasNextPage || isFetchingNextPage) return
+
+        topLoadingRef.current = true
+        const previousScrollHeight = viewport.scrollHeight
+        const previousScrollTop = viewport.scrollTop
+
+        await fetchNextPage()
+
+        requestAnimationFrame(() => {
+            const currentViewport = viewportRef.current
+            if (!currentViewport) {
+                topLoadingRef.current = false
+                return
+            }
+
+            const addedHeight = currentViewport.scrollHeight - previousScrollHeight
+            currentViewport.scrollTop = previousScrollTop + addedHeight
+            topLoadingRef.current = false
+        })
+    }
+
+    const handleViewportScroll = (event: UIEvent<HTMLDivElement>) => {
+        const viewport = event.currentTarget
+        if (viewport.scrollTop > 16) return
+        void loadOlderLogs()
+    }
+
+    useEffect(() => {
+        if (hasInitialScrolledRef.current) return
+        if (logs.length === 0) return
+
+        scrollToBottom()
+        hasInitialScrolledRef.current = true
+    }, [logs])
+
+    useEffect(() => {
+        hasInitialScrolledRef.current = false
+    }, [queryConditions])
 
     return (
         <div className={styles.wrap}>
@@ -141,14 +203,30 @@ const LogPage = () => {
 
             <section className={styles.statusRow}>
                 <span>총 {logs.length}개 로그</span>
-                <span className={isFetching ? styles.refreshing : ""}>
-                    {isFetching ? "갱신 중..." : "최신 상태"}
-                </span>
+                <div className={styles.statusRight}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={async () => {
+                            await refetch()
+                            scrollToBottom()
+                        }}
+                    >
+                        refresh
+                    </Button>
+                </div>
             </section>
 
             <section className={styles.viewerWrap}>
                 <div className={styles.viewerHeader}>Log</div>
-                <div className={styles.viewport}>
+                <div
+                    ref={viewportRef}
+                    className={styles.viewport}
+                    onScroll={handleViewportScroll}
+                >
+                    {isFetchingNextPage && (
+                        <div className={styles.loadMore}>옛날 로그 불러오는 중...</div>
+                    )}
                     {isLoading && <div className={styles.empty}>불러오는 중...</div>}
                     {!isLoading && logs.length === 0 && (
                         <div className={styles.empty}>조회된 로그가 없습니다.</div>
