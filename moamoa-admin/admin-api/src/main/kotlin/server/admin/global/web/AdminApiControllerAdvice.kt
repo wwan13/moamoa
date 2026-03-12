@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.validation.BindException
 import org.springframework.web.HttpMediaTypeNotAcceptableException
 import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.HttpRequestMethodNotSupportedException
@@ -13,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.bind.support.WebExchangeBindException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import server.admin.global.security.AdminForbiddenException
 import server.admin.global.security.AdminUnauthorizedException
 import server.token.ExpiredTokenException
@@ -30,6 +32,12 @@ internal class AdminApiControllerAdvice {
 
     @ExceptionHandler(WebExchangeBindException::class, MethodArgumentNotValidException::class)
     fun handleValidation(request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        log.warn("[{}] 요청 값이 올바르지 않습니다", request.requestURI)
+        return badRequest("요청 값이 올바르지 않습니다")
+    }
+
+    @ExceptionHandler(BindException::class, MethodArgumentTypeMismatchException::class)
+    fun handleBinding(request: HttpServletRequest): ResponseEntity<ErrorResponse> {
         log.warn("[{}] 요청 값이 올바르지 않습니다", request.requestURI)
         return badRequest("요청 값이 올바르지 않습니다")
     }
