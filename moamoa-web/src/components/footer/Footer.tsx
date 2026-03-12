@@ -2,6 +2,9 @@ import styles from "./Footer.module.css"
 import {useNavigate} from "react-router-dom";
 import {showGlobalConfirm} from "../../api/client";
 import useAuth from "../../auth/useAuth";
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import {SvgIcon} from "@mui/material";
 
 const Footer = () => {
     const navigate = useNavigate()
@@ -26,87 +29,51 @@ const Footer = () => {
 
     return (
         <footer className={styles.footer}>
-            <div className={styles.moamoa}>
-                {/*<img*/}
-                {/*    src="https://i.imgur.com/Sjc8OID.png"*/}
-                {/*    alt="moamoa-grey"*/}
-                {/*    className={styles.moamoaIcon}*/}
-                {/*/>*/}
-                <p className={styles.copy}>© 2026 moamoa, All Rights Reserved.</p>
+            <div className={styles.footerContent}>
+                <div className={styles.contentTop}>
+                    <img src="/moamoa_main_logo.png" alt="모아모아" className={styles.topLogo}/>
+                    <div className={styles.topLink}>
+                        <button className={styles.link}>
+                            공지사항
+                        </button>
+                        <button className={`${styles.bold} ${styles.link}`}>
+                            개인정보 처리방침
+                        </button>
+                        <button
+                            className={styles.link}
+                            onClick={handleSubmissionButton}
+                        >
+                            블로그 추가 요청
+                        </button>
+                        <button className={styles.link}>
+                            문의 및 피드백
+                        </button>
+                    </div>
+                </div>
+                <div className={styles.divider} />
+                <div className={styles.contentBottom}>
+                    <p className={styles.bottomCopy}>Copyright ⓒ moamoa All Rights Reserved.</p>
+
+                    <div className={styles.bottomIcon}>
+                        <a href="https://www.linkedin.com/in/wwan13/"
+                           target="_blank" rel="noopener noreferrer"
+                           className={`${styles.bgLinkedIn} ${styles.icon}`}
+                        >
+                            <LinkedInIcon
+                                sx={{fontSize: 36, color: "#252525"}}
+                            />
+                        </a>
+                        <a href="https://github.com/wwan13"
+                           target="_blank" rel="noopener noreferrer"
+                           className={`${styles.bgGithub} ${styles.icon}`}
+                        >
+                            <GitHubIcon
+                                sx={{fontSize: 36, color: "#252525"}}
+                            />
+                        </a>
+                    </div>
+                </div>
             </div>
-            <a
-                href=""
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-            >
-                공지사항
-            </a>
-
-            <span>·</span>
-
-            <span
-                rel="noopener noreferrer"
-                className={styles.link}
-                onClick={handleSubmissionButton}
-            >
-                블로그 추가 요청
-            </span>
-
-            <span>·</span>
-
-            <a
-                href=""
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-            >
-                개인정보 처리방침
-            </a>
-
-            <span>·</span>
-
-            <a
-                href="https://github.com/wwan13/moamoa"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-            >
-                저장소
-            </a>
-
-            <span>·</span>
-
-            <a
-                href="https://github.com/wwan13"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-            >
-                깃허브
-            </a>
-
-            <span>·</span>
-
-            <a
-                href="https://www.linkedin.com/in/wwan13"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-            >
-                링크드인
-            </a>
-
-            <span>·</span>
-
-            <a
-                href="mailto:wwan13@naver.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.link}
-            >
-                문의
-            </a>
         </footer>
     )
 }

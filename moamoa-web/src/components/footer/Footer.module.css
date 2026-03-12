@@ -1,39 +1,102 @@
 .footer {
-    padding: 20px 0;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    border-top: 1px solid #DBDEE3;
+    padding: 40px 0 60px 0;
     display: flex;
-    align-items: center;
     justify-content: center;
-    margin-top: 40px;
-    gap: 10px;
 
-    color: #59636E;
+    margin-top: 100px;
     font-size: 12px;
     font-weight: 400;
 }
 
-.moamoa {
+.footerContent {
+    width: 1000px;
     display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-right: 12px;
+    flex-direction: column;
+    gap: 30px;
 }
 
-.moamoaIcon {
-    width: 20px;
-    height: 13px;
+.contentTop {
+    display: flex;
+    justify-content: space-between;
 }
 
-.copy {
-    font-size: 12px;
+.topLogo {
+    width: 122px;
+}
+
+.topLink {
+    display: flex;
+    gap: 32px;
 }
 
 .link {
-    color: #59636E;
-    display: inline-flex;
-    text-decoration: none;
-    transition: .2s;
+    font-size: 14px;
+    font-weight: 400;
+    color: #252525;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0;
+    cursor: pointer;
 }
 
-.link:hover {
-    text-decoration: underline;
+.bold {
+    font-weight: 600;
 }
+
+.divider {
+    width: 100%;
+    height: 1px;
+    background: #DBDEE3;
+}
+
+.contentBottom {
+    display: flex;
+    justify-content: space-between;
+}
+
+.bottomCopy {
+    font-size: 12px;
+    font-weight: 400;
+    color: #858585;
+    margin: 0;
+}
+
+.bottomIcon {
+    display: flex;
+    gap: 12px;
+}
+
+.icon {
+    width: 36px;
+    height: 36px;
+}
+
+.bgLinkedIn {
+    box-sizing: border-box;
+    border: 5px solid #252525;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.bgGithub {
+    box-sizing: border-box;
+    border-top: 3px solid #252525;
+    border-left: 3px solid #252525;
+    border-right: 3px solid #252525;
+    border-bottom: 2px solid rgba(1, 1, 1, 100%);
+    padding-bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+}
+
+/*.icon > svg > path {*/
+/*    background: #ffffff;*/
+/*}*/
