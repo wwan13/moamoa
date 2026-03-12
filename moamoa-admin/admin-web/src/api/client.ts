@@ -109,6 +109,21 @@ export function showGlobalConfirm({
     })
 }
 
+export async function clearAuthCookieBestEffort(baseUrl = BASE_URL): Promise<void> {
+    try {
+        await fetch(`${baseUrl}/api/admin/auth/logout`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({}),
+        })
+    } catch {
+        // Forced logout failure should not block local session cleanup.
+    }
+}
+
 async function safeJson<T = unknown>(res: Response): Promise<T | null> {
     const text = await res.text()
     if (!text) return null

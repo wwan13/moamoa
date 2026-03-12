@@ -1,8 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
-import { setOnLoginRequired, setOnLogout, showGlobalAlert } from "../api/client"
+import { clearAuthCookieBestEffort, setOnLoginRequired, setOnLogout, showGlobalAlert } from "../api/client"
 
 type LoginParams = {
     email: string
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const loginMutation = useLoginMutation()
     const logoutMutation = useLogoutMutation()
+    const isHandlingLoginRequiredRef = useRef(false)
 
     const resetSessionState = useCallback(() => {
         localStorage.removeItem(SESSION_KEY)
@@ -56,22 +57,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const handleLogout = async () => {
-            await qc.cancelQueries()
-            qc.clear()
+            if (isHandlingLoginRequiredRef.current) return
+            isHandlingLoginRequiredRef.current = true
 
-            resetSessionState()
+            try {
+                await clearAuthCookieBestEffort()
+                await qc.cancelQueries()
+                qc.clear()
 
-            navigate("/login")
+                resetSessionState()
+
+                navigate("/login")
+            } finally {
+                isHandlingLoginRequiredRef.current = false
+            }
         }
 
         const handleLoginRequired = async () => {
-            await showGlobalAlert("다시 로그인해 주세요.")
-            await qc.cancelQueries()
-            qc.clear()
+            if (isHandlingLoginRequiredRef.current) return
+            isHandlingLoginRequiredRef.current = true
 
-            resetSessionState()
+            try {
+                await clearAuthCookieBestEffort()
+                await showGlobalAlert("다시 로그인해 주세요.")
+                await qc.cancelQueries()
+                qc.clear()
 
-            navigate("/login")
+                resetSessionState()
+
+                navigate("/login")
+            } finally {
+                isHandlingLoginRequiredRef.current = false
+            }
         }
 
         setOnLogout(handleLogout)
