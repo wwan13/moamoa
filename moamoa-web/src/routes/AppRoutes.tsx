@@ -12,6 +12,7 @@ import Oauth2EmailInputPage from "../pages/oauth2emailinputpage/Oauth2EmailInput
 import BlogSubmissionPage from "../pages/blogsubmissionpage/BlogSubmissionPage";
 import PasswordChangePage from "../pages/passwordchangepage/PasswordChangePage";
 import {MemberUnjoinPage} from "../pages/memberunjoinpage/MemberUnjoinPage";
+import PrivacyPolicyPage from "../pages/privacypolicy/PrivacyPolicyPage.tsx";
 
 const AppRoutes = () => {
     return (
@@ -25,6 +26,8 @@ const AppRoutes = () => {
                 <Route path="/submission" element={<BlogSubmissionPage />} />
                 <Route path="/password" element={<PasswordChangePage />} />
                 <Route path="/unjoin" element={<MemberUnjoinPage />} />
+
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
                 <Route path="/oauth2" element={<Oauth2Page />} />
             </Route>

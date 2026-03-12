@@ -36,7 +36,10 @@ const Footer = () => {
                         <button className={styles.link}>
                             공지사항
                         </button>
-                        <button className={`${styles.bold} ${styles.link}`}>
+                        <button
+                            className={`${styles.bold} ${styles.link}`}
+                            onClick={() => {navigate("/privacy")}}
+                        >
                             개인정보 처리방침
                         </button>
                         <button

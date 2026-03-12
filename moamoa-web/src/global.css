@@ -28,3 +28,8 @@ html {
 body.modal-open {
     overflow: hidden;
 }
+
+.markdown { color: #252525 }
+.markdown h1 { font-size: 32px; }
+.markdown h2 { font-size: 24px; }
+.markdown ul { padding-left: 20px; }
