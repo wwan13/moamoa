@@ -31,7 +31,11 @@ const Footer = () => {
         <footer className={styles.footer}>
             <div className={styles.footerContent}>
                 <div className={styles.contentTop}>
-                    <img src="/moamoa_main_logo.png" alt="모아모아" className={styles.topLogo}/>
+                    <img
+                        src="/moamoa_main_logo.png"
+                        alt="모아모아" className={styles.topLogo}
+                        onClick={() => navigate("/")}
+                    />
                     <div className={styles.topLink}>
                         <button className={styles.link}>
                             공지사항
@@ -63,15 +67,15 @@ const Footer = () => {
                            className={`${styles.bgLinkedIn} ${styles.icon}`}
                         >
                             <LinkedInIcon
-                                sx={{fontSize: 36, color: "#252525"}}
+                                sx={{fontSize: 32, color: "#252525"}}
                             />
                         </a>
-                        <a href="https://github.com/wwan13"
+                        <a href="https://github.com/wwan13/moamoa"
                            target="_blank" rel="noopener noreferrer"
                            className={`${styles.bgGithub} ${styles.icon}`}
                         >
                             <GitHubIcon
-                                sx={{fontSize: 36, color: "#252525"}}
+                                sx={{fontSize: 32, color: "#252525"}}
                             />
                         </a>
                     </div>

@@ -25,6 +25,7 @@
 
 .topLogo {
     width: 122px;
+    cursor: pointer;
 }
 
 .topLink {
@@ -71,8 +72,8 @@
 }
 
 .icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
 }
 
 .bgLinkedIn {
@@ -81,7 +82,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: 6px;
 }
 
 .bgGithub {
