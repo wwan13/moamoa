@@ -131,6 +131,21 @@ export const closeSearch = (): void => {
   onCloseSearch()
 }
 
+export const clearAuthCookieBestEffort = async (baseUrl = BASE_URL): Promise<void> => {
+  try {
+    await fetch(`${baseUrl}/api/auth/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({}),
+    })
+  } catch {
+    // Network failure during forced logout should not block local session reset.
+  }
+}
+
 const safeJson = async <T = unknown>(res: Response): Promise<T | null> => {
   const text = await res.text()
   if (!text) return null

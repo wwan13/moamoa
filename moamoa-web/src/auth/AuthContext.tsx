@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
 import {
   setOnLoginRequired,
   setOnLogout,
+  clearAuthCookieBestEffort,
   showGlobalAlert,
   showGlobalConfirm,
   showToast,
@@ -37,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const loginMutation = useLoginMutation()
   const logoutMutation = useLogoutMutation()
+  const isHandlingLoginRequiredRef = useRef(false)
 
   const resetSessionState = useCallback((): void => {
     localStorage.removeItem(SESSION_KEY)
@@ -57,18 +59,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     setOnLoginRequired(async () => {
-      await showGlobalAlert("다시 로그인해 주세요.")
-      await qc.cancelQueries()
-      qc.clear()
-      resetSessionState()
+      if (isHandlingLoginRequiredRef.current) return
+      isHandlingLoginRequiredRef.current = true
+
+      try {
+        await clearAuthCookieBestEffort()
+        await showGlobalAlert("다시 로그인해 주세요.")
+        await qc.cancelQueries()
+        qc.clear()
+        resetSessionState()
+      } finally {
+        isHandlingLoginRequiredRef.current = false
+      }
     })
 
     setOnLogout(async () => {
-      await showGlobalAlert("다시 로그인해 주세요.")
-      await qc.cancelQueries()
-      qc.clear()
+      if (isHandlingLoginRequiredRef.current) return
+      isHandlingLoginRequiredRef.current = true
 
-      resetSessionState()
+      try {
+        await clearAuthCookieBestEffort()
+        await showGlobalAlert("다시 로그인해 주세요.")
+        await qc.cancelQueries()
+        qc.clear()
+
+        resetSessionState()
+      } finally {
+        isHandlingLoginRequiredRef.current = false
+      }
     })
   }, [qc, resetSessionState])
 
