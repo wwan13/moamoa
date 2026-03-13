@@ -19,7 +19,7 @@ class RequestBoundaryLogFilter : OncePerRequestFilter() {
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.requestURI
-        return path.startsWith("/admin")
+        return path.startsWith("/api/admin")
     }
 
     override fun doFilterInternal(
