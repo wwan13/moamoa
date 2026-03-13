@@ -16,8 +16,7 @@ dependencies {
     implementation(project(":moamoa-support:support-api-docs"))
     implementation(project(":moamoa-support:support-logging"))
 
-    implementation(project(":moamoa-core:core-tech-blog"))
-    implementation(project(":moamoa-infra:infra-tech-blog"))
+    implementation(project(":moamoa-crawler"))
     implementation(project(":moamoa-infra:token-jwt-starter"))
     implementation(project(":moamoa-infra:password-crypto-starter"))
     implementation(project(":moamoa-infra:cache-resilient-starter"))

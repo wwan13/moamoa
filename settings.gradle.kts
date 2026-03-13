@@ -3,10 +3,9 @@ rootProject.name = "moamoa"
 include("moamoa-core")
 include("moamoa-core:core-api")
 include("moamoa-core:core-batch")
-include("moamoa-core:core-tech-blog")
+include("moamoa-crawler")
 
 include("moamoa-infra")
-include("moamoa-infra:infra-tech-blog")
 include("moamoa-infra:cache-api")
 include("moamoa-infra:cache-redis")
 include("moamoa-infra:cache-caffeine")
