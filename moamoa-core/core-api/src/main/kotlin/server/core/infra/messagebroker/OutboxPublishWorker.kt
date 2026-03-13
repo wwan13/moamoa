@@ -8,14 +8,14 @@ import org.springframework.transaction.support.TransactionTemplate
 import server.core.infra.db.outbox.EventOutboxRepository
 import server.global.logging.errorType
 import server.messaging.EventPublisher
-import server.messaging.health.RedisHealthStateManager
+import server.messaging.health.MessagingHealthStateManager
 
 @Component
 class OutboxPublishWorker(
     private val eventPublisher: EventPublisher,
     private val eventOutboxRepository: EventOutboxRepository,
     txManager: PlatformTransactionManager,
-    private val healthStateManager: RedisHealthStateManager,
+    private val healthStateManager: MessagingHealthStateManager,
 ) {
     private val logger = KotlinLogging.logger {}
     private val transactionTemplate = TransactionTemplate(txManager)

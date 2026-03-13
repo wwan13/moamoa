@@ -19,7 +19,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
-    implementation(project(":moamoa-infra:messaging-redis"))
     implementation(project(":moamoa-infra:mail-mailgun-starter"))
     implementation(project(":moamoa-infra:cache-resilient-starter"))
     implementation(project(":moamoa-infra:set-redis-starter"))

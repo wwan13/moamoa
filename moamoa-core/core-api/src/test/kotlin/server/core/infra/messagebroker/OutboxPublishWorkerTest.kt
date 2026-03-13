@@ -14,8 +14,8 @@ import org.springframework.transaction.TransactionStatus
 import server.core.infra.db.outbox.EventOutbox
 import server.core.infra.db.outbox.EventOutboxRepository
 import server.core.infra.messagebroker.OutboxPublishWorker
-import server.messaging.health.RedisHealthStateManager
 import server.messaging.EventPublisher
+import server.messaging.health.MessagingHealthStateManager
 import test.UnitTest
 
 class OutboxPublishWorkerTest : UnitTest() {
@@ -110,11 +110,11 @@ class OutboxPublishWorkerTest : UnitTest() {
         return txManager
     }
 
-    private fun newHealthStateManager(): RedisHealthStateManager {
-        return mockk<RedisHealthStateManager>(relaxed = true).also { manager ->
+    private fun newHealthStateManager(): MessagingHealthStateManager {
+        return mockk<MessagingHealthStateManager>(relaxed = true).also { manager ->
             every { manager.isDegraded() } returns false
-            coEvery { manager.tryRecover() } returns true
-            coEvery { manager.runSafe<Unit>(any()) } coAnswers {
+            every { manager.tryRecover() } returns true
+            every { manager.runSafe<Unit>(any()) } answers {
                 firstArg<() -> Unit>().invoke()
                 Result.success(Unit)
             }

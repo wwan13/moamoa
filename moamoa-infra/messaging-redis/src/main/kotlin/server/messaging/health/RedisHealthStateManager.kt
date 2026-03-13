@@ -14,7 +14,7 @@ class RedisHealthStateManager(
     @param:Qualifier("streamStringRedisTemplate")
     private val redis: StringRedisTemplate,
     private val recoveryActionRunner: RedisRecoveryActionRunner,
-) {
+) : MessagingHealthStateManager {
     private val logger = KotlinLogging.logger {}
 
     private enum class State {
@@ -24,7 +24,7 @@ class RedisHealthStateManager(
 
     private val state = AtomicReference(State.ACTIVE)
 
-    fun <T> runSafe(block: () -> T): Result<T> {
+    override fun <T> runSafe(block: () -> T): Result<T> {
         if (isDegraded()) return Result.failure(IllegalStateException("redis is degraded"))
 
         return try {
@@ -39,11 +39,11 @@ class RedisHealthStateManager(
         }
     }
 
-    fun isDegraded(): Boolean = state.get() == State.DEGRADED
+    override fun isDegraded(): Boolean = state.get() == State.DEGRADED
 
-    fun isFailure(exception: Throwable): Boolean = isRedisFailure(exception)
+    override fun isFailure(exception: Throwable): Boolean = isRedisFailure(exception)
 
-    fun tryRecover(): Boolean {
+    override fun tryRecover(): Boolean {
         if (!isDegraded()) return true
 
         val recovered = runCatching { ping() }
