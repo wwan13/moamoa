@@ -36,3 +36,25 @@ internal data class AdminPostListMeta(
     val totalCount: Long,
     val totalPages: Long
 )
+
+internal data class AdminPostRow(
+    val postId: Long,
+    val key: String,
+    val title: String,
+    val description: String,
+    val thumbnail: String,
+    val url: String,
+    val publishedAt: LocalDateTime,
+    val categoryId: Long,
+    val techBlogId: Long,
+    val techBlogTitle: String,
+    val techBlogIcon: String,
+    val techBlogBlogUrl: String,
+    val techBlogKey: String,
+)
+
+internal data class AdminPostTagRow(
+    val postId: Long,
+    val tagId: Long,
+    val tagTitle: String,
+)

@@ -1,18 +1,23 @@
 package server.admin.feature.post.query
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import com.linecorp.kotlinjdsl.dsl.jpql.*
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import server.admin.feature.post.command.domain.AdminPost
+import server.admin.feature.posttag.domain.AdminPostTag
 import server.admin.feature.tag.domain.AdminTag
 import server.admin.feature.techblog.application.AdminTechBlogData
-import java.sql.ResultSet
-import java.time.LocalDateTime
+import server.admin.feature.techblog.domain.AdminTechBlog
+import server.admin.support.query.createJdslQuery
 
 @Service
+@Transactional(readOnly = true)
 internal class AdminPostQueryService(
-    private val jdbc: NamedParameterJdbcTemplate,
+    @PersistenceContext
+    private val entityManager: EntityManager,
 ) {
-
     fun findByConditions(conditions: AdminPostQueryConditions): AdminPostList {
         val size = conditions.size?.takeIf { it > 0 } ?: 20L
         val page = conditions.page?.takeIf { it > 0 } ?: 1L
@@ -24,28 +29,14 @@ internal class AdminPostQueryService(
             )
         }
 
-        val filter = buildFilter(conditions)
-        val totalCount = fetchTotalCount(filter)
+        val totalCount = fetchTotalCount(conditions)
         val totalPages = if (totalCount == 0L) 0L else (totalCount + size - 1L) / size
         val offset = (page - 1L) * size
 
-        val basePosts = fetchBasePosts(filter, size, offset)
+        val basePosts = fetchBasePosts(conditions, size, offset)
         val posts = if (basePosts.isEmpty()) emptyList() else {
             val tagsByPostId = fetchTagsByPostIds(basePosts.map { it.postId })
-            basePosts.map { base ->
-                AdminPostSummary(
-                    postId = base.postId,
-                    key = base.key,
-                    title = base.title,
-                    description = base.description,
-                    thumbnail = base.thumbnail,
-                    url = base.url,
-                    publishedAt = base.publishedAt,
-                    categoryId = base.categoryId,
-                    techBlog = base.techBlog,
-                    tags = tagsByPostId[base.postId].orEmpty(),
-                )
-            }
+            basePosts.map { it.toSummary(tagsByPostId[it.postId].orEmpty()) }
         }
 
         return AdminPostList(
@@ -54,137 +45,153 @@ internal class AdminPostQueryService(
         )
     }
 
-    private fun fetchBasePosts(filter: PostSearchFilter, size: Long, offset: Long): List<BasePost> {
-        val sql = """
-            SELECT
-                p.id            AS post_id,
-                p.post_key      AS post_key,
-                p.title         AS post_title,
-                p.description   AS post_description,
-                p.thumbnail     AS post_thumbnail,
-                p.url           AS post_url,
-                p.published_at  AS published_at,
-                p.category_id   AS category_id,
-                t.id            AS tech_blog_id,
-                t.title         AS tech_blog_title,
-                t.icon          AS tech_blog_icon,
-                t.blog_url      AS tech_blog_url,
-                t.tech_blog_key AS tech_blog_key
-            FROM post p
-            INNER JOIN tech_blog t ON t.id = p.tech_blog_id
-            ${filter.whereClause}
-            ORDER BY p.published_at DESC
-            LIMIT :limit OFFSET :offset
-        """.trimIndent()
+    private fun fetchBasePosts(
+        conditions: AdminPostQueryConditions,
+        size: Long,
+        offset: Long,
+    ): List<AdminPostRow> {
+        val jpqlQuery = createBasePostsQuery(conditions)
 
-        val params = MapSqlParameterSource(filter.params)
-            .addValue("limit", size)
-            .addValue("offset", offset)
-
-        return jdbc.query(sql, params) { rs, _ -> mapToBasePost(rs) }
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = AdminPostRow::class.java,
+                offset = offset.toInt(),
+                limit = size.toInt(),
+            )
+            .resultList
     }
 
-    private fun fetchTotalCount(filter: PostSearchFilter): Long {
-        val sql = """
-            SELECT COUNT(*) AS total_count
-            FROM post p
-            ${filter.whereClause}
-        """.trimIndent()
+    private fun fetchTotalCount(conditions: AdminPostQueryConditions): Long {
+        val jpqlQuery = createCountPostsQuery(conditions)
 
-        return jdbc.queryForObject(sql, MapSqlParameterSource(filter.params), Long::class.java) ?: 0L
+        return entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = Long::class.javaObjectType,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
+            .firstOrNull()
+            ?: 0L
     }
 
     private fun fetchTagsByPostIds(postIds: List<Long>): Map<Long, List<AdminTag>> {
         if (postIds.isEmpty()) return emptyMap()
 
-        val sql = """
-            SELECT
-                pt.post_id AS post_id,
-                tg.id      AS tag_id,
-                tg.title   AS tag_title
-            FROM post_tag pt
-            INNER JOIN tag tg ON tg.id = pt.tag_id
-            WHERE pt.post_id IN (:postIds)
-            ORDER BY pt.post_id ASC, tg.title ASC
-        """.trimIndent()
-
-        val rows = jdbc.query(sql, mapOf("postIds" to postIds)) { rs, _ ->
-            rs.getLong("post_id") to AdminTag(
-                id = rs.getLong("tag_id"),
-                title = rs.getString("tag_title") ?: "",
+        val jpqlQuery = jpql {
+            selectNew<AdminPostTagRow>(
+                path(AdminPostTag::postId),
+                path(AdminTag::id),
+                path(AdminTag::title),
             )
-        }
-
-        return rows.groupBy({ it.first }, { it.second })
-    }
-
-    private fun buildFilter(conditions: AdminPostQueryConditions): PostSearchFilter {
-        val whereClauses = mutableListOf<String>()
-        val params = linkedMapOf<String, Any>()
-
-        conditions.query?.takeIf { it.isNotBlank() }?.let { keyword ->
-            whereClauses += """
-                (
-                    p.title LIKE :keyword
-                    OR p.description LIKE :keyword
-                    OR EXISTS (
-                        SELECT 1
-                        FROM post_tag pt
-                        INNER JOIN tag tg ON tg.id = pt.tag_id
-                        WHERE pt.post_id = p.id
-                          AND tg.title LIKE :keyword
-                    )
+                .from(
+                    entity(AdminPostTag::class),
+                    join(AdminTag::class).on(path(AdminTag::id).equal(path(AdminPostTag::tagId))),
                 )
-            """.trimIndent()
-            params["keyword"] = "%$keyword%"
+                .where(path(AdminPostTag::postId).`in`(postIds))
+                .orderBy(
+                    path(AdminPostTag::postId).asc(),
+                    path(AdminTag::title).asc(),
+                )
         }
 
-        conditions.categoryId?.let {
-            whereClauses += "p.category_id = :categoryId"
-            params["categoryId"] = it
-        }
+        val rows = entityManager
+            .createJdslQuery(
+                query = jpqlQuery,
+                resultClass = AdminPostTagRow::class.java,
+                offset = 0,
+                limit = Int.MAX_VALUE,
+            )
+            .resultList
 
-        conditions.techBlogIds?.takeIf { it.isNotEmpty() }?.let {
-            whereClauses += "p.tech_blog_id IN (:techBlogIds)"
-            params["techBlogIds"] = it
-        }
-
-        val where = if (whereClauses.isEmpty()) "" else "WHERE ${whereClauses.joinToString(" AND ")}"
-        return PostSearchFilter(whereClause = where, params = params)
+        return rows.groupBy(
+            keySelector = { it.postId },
+            valueTransform = { AdminTag(id = it.tagId, title = it.tagTitle) },
+        )
     }
 
-    private fun mapToBasePost(rs: ResultSet): BasePost = BasePost(
-        postId = rs.getLong("post_id"),
-        key = rs.getString("post_key") ?: "",
-        title = rs.getString("post_title") ?: "",
-        description = rs.getString("post_description") ?: "",
-        thumbnail = rs.getString("post_thumbnail") ?: "",
-        url = rs.getString("post_url") ?: "",
-        publishedAt = rs.getObject("published_at", LocalDateTime::class.java) ?: LocalDateTime.MIN,
-        categoryId = rs.getLong("category_id"),
+    private fun createBasePostsQuery(conditions: AdminPostQueryConditions) = jpql {
+        val keyword = conditions.query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
+
+        selectBaseAdminPostRow()
+            .from(
+                entity(AdminPost::class),
+                join(AdminTechBlog::class).on(path(AdminTechBlog::id).equal(path(AdminPost::techBlogId))),
+            )
+            .whereAnd(
+                keyword?.let {
+                    or(
+                        path(AdminPost::title).like(it),
+                        path(AdminPost::description).like(it),
+                        exists(
+                            jpql {
+                                select(path(AdminPostTag::id))
+                                    .from(
+                                        entity(AdminPostTag::class),
+                                        join(AdminTag::class).on(path(AdminTag::id).equal(path(AdminPostTag::tagId))),
+                                    )
+                                    .whereAnd(
+                                        path(AdminPostTag::postId).equal(path(AdminPost::id)),
+                                        path(AdminTag::title).like(it),
+                                    )
+                            }.asSubquery()
+                        ),
+                    )
+                },
+                conditions.categoryId?.let { path(AdminPost::categoryId).equal(it) },
+                conditions.techBlogIds?.takeIf { it.isNotEmpty() }?.let { path(AdminPost::techBlogId).`in`(it) },
+            )
+            .orderBy(path(AdminPost::publishedAt).desc())
+    }
+
+    private fun createCountPostsQuery(conditions: AdminPostQueryConditions) = jpql {
+        val keyword = conditions.query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
+
+        select(countDistinct(AdminPost::id))
+            .from(entity(AdminPost::class))
+            .whereAnd(
+                keyword?.let {
+                    or(
+                        path(AdminPost::title).like(it),
+                        path(AdminPost::description).like(it),
+                        exists(
+                            jpql {
+                                select(path(AdminPostTag::id))
+                                    .from(
+                                        entity(AdminPostTag::class),
+                                        join(AdminTag::class).on(path(AdminTag::id).equal(path(AdminPostTag::tagId))),
+                                    )
+                                    .whereAnd(
+                                        path(AdminPostTag::postId).equal(path(AdminPost::id)),
+                                        path(AdminTag::title).like(it),
+                                    )
+                            }.asSubquery()
+                        ),
+                    )
+                },
+                conditions.categoryId?.let { path(AdminPost::categoryId).equal(it) },
+                conditions.techBlogIds?.takeIf { it.isNotEmpty() }?.let { path(AdminPost::techBlogId).`in`(it) },
+            )
+    }
+
+    private fun AdminPostRow.toSummary(tags: List<AdminTag>) = AdminPostSummary(
+        postId = postId,
+        key = key,
+        title = title,
+        description = description,
+        thumbnail = thumbnail,
+        url = url,
+        publishedAt = publishedAt,
+        categoryId = categoryId,
         techBlog = AdminTechBlogData(
-            id = rs.getLong("tech_blog_id"),
-            title = rs.getString("tech_blog_title") ?: "",
-            icon = rs.getString("tech_blog_icon") ?: "",
-            blogUrl = rs.getString("tech_blog_url") ?: "",
-            key = rs.getString("tech_blog_key") ?: "",
+            id = techBlogId,
+            title = techBlogTitle,
+            icon = techBlogIcon,
+            blogUrl = techBlogBlogUrl,
+            key = techBlogKey,
         ),
-    )
-
-    private data class BasePost(
-        val postId: Long,
-        val key: String,
-        val title: String,
-        val description: String,
-        val thumbnail: String,
-        val url: String,
-        val publishedAt: LocalDateTime,
-        val categoryId: Long,
-        val techBlog: AdminTechBlogData,
-    )
-
-    private data class PostSearchFilter(
-        val whereClause: String,
-        val params: Map<String, Any>,
+        tags = tags,
     )
 }
