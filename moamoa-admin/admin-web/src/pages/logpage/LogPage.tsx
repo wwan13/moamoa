@@ -27,6 +27,12 @@ const logTypeOptions = [
     { value: "EVENT", label: "EVENT" },
 ]
 
+const traceIdModeOptions = [
+    { value: "ALL", label: "TRACE" },
+    { value: "SYSTEM", label: "SYSTEM" },
+    { value: "REQUEST", label: "REQUEST" },
+]
+
 const logPeriodOptions = [
     { value: "10m", label: "10분" },
     { value: "30m", label: "30분" },
@@ -147,6 +153,7 @@ const LogPage = () => {
 
     const [searchInput, setSearchInput] = useState("")
     const [traceId, setTraceId] = useState("")
+    const [traceIdMode, setTraceIdMode] = useState("ALL")
     const [logLevel, setLogLevel] = useState("ALL")
     const [logType, setLogType] = useState("ALL")
     const [logPeriod, setLogPeriod] = useState<LogPeriodOptionValue>("10m")
@@ -166,11 +173,12 @@ const LogPage = () => {
             logLevel: normalizeFilterValue(logLevel),
             type: normalizeFilterValue(logType),
             traceId: traceId || undefined,
+            traceIdMode: normalizeFilterValue(traceIdMode),
             fromTimestamp,
             toTimestamp,
             size: Number(size),
         }),
-        [fromTimestamp, logLevel, logType, size, toTimestamp, traceId]
+        [fromTimestamp, logLevel, logType, size, toTimestamp, traceId, traceIdMode]
     )
 
     const {
@@ -277,12 +285,31 @@ const LogPage = () => {
                             value={searchInput}
                             width={160}
                             placeholder="traceId 검색"
-                            onChange={setSearchInput}
+                            onChange={(value) => {
+                                setSearchInput(value)
+                                if (value.trim()) {
+                                    setTraceIdMode("ALL")
+                                }
+                            }}
                             onSearch={(value) => {
-                                setTraceId(value.trim())
+                                const trimmedTraceId = value.trim()
+                                setTraceId(trimmedTraceId)
+                                if (trimmedTraceId) {
+                                    setTraceIdMode("ALL")
+                                }
                             }}
                         />
                     </div>
+                    <Dropdown
+                        options={traceIdModeOptions}
+                        width={100}
+                        value={traceIdMode}
+                        onChange={(value) => {
+                            setTraceIdMode(value)
+                            setTraceId("")
+                            setSearchInput("")
+                        }}
+                    />
                     <Dropdown
                         options={logLevelOptions}
                         width={120}
@@ -291,7 +318,7 @@ const LogPage = () => {
                     />
                     <Dropdown
                         options={logTypeOptions}
-                        width={110}
+                        width={100}
                         value={logType}
                         onChange={(value) => setLogType(value)}
                     />
