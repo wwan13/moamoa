@@ -15,9 +15,16 @@
 
 - `moamoa-core/core-api`: 모아모아 메인 API 서버
 - `moamoa-core/core-batch`: 모아모아 배치 작업 서버
-- `moamoa-core/core-tech-blog`: 기술 블로그 도메인 공통 모델입
-- `moamoa-core/core-shared`: 코어 공통 계약(인터페이스/타입)모듈
-- `moamoa-infra/*`: 외부 연동 구현(Redis, JWT, Mailgun, Tech Blog 수집 등)
+- `moamoa-core/core-tech-blog`: 기술 블로그 도메인 공통 모델
+- `moamoa-infra/cache-*`: cache 계약/구현(redis, caffeine, resilient)/starter
+- `moamoa-infra/queue-*`: queue 계약/redis 구현/starter
+- `moamoa-infra/set-*`: set 계약/redis 구현/starter
+- `moamoa-infra/lock-*`: lock 계약/redisson·local·resilient 구현/starter
+- `moamoa-infra/messaging-*`: messaging 계약/redis 구현/starter
+- `moamoa-infra/token-*`: token 계약/jwt 구현/starter
+- `moamoa-infra/password-*`: password 계약/crypto 구현/starter
+- `moamoa-infra/mail-*`: mail 계약/mailgun 구현/starter
+- `moamoa-infra/infra-tech-blog`: Tech Blog 수집 구현
 - `moamoa-support/*`: 공통 지원 모듈(API 문서, 로깅, 템플릿, 테스트 등)
 - `moamoa-web`: 사용자 웹 프론트엔드
 - `moamoa-admin/admin-api`: 관리자 API 서버
