@@ -97,6 +97,7 @@ class AdminLogControllerTest : UnitTest() {
             param("logLevel", "INFO")
             param("type", "API")
             param("traceId", "trace")
+            param("traceIdMode", "REQUEST")
             param("size", "10")
         }.andExpect {
             status { isOk() }
@@ -113,6 +114,7 @@ class AdminLogControllerTest : UnitTest() {
                     logLevel = "INFO",
                     type = "API",
                     traceId = "trace",
+                    traceIdMode = "REQUEST",
                     fromTimestamp = null,
                     toTimestamp = null,
                     size = 10L,
@@ -120,6 +122,28 @@ class AdminLogControllerTest : UnitTest() {
                     cursorId = null,
                 )
             )
+        }
+    }
+
+    @Test
+    fun `traceId와 traceIdMode를 함께 보내면 400을 반환한다`() {
+        val service = mockk<AdminLogQueryService>()
+        val controller = AdminLogController(service)
+        val mockMvc = MockMvcBuilders
+            .standaloneSetup(controller)
+            .setControllerAdvice(AdminApiControllerAdvice())
+            .setCustomArgumentResolvers(FixedPassportResolver(AdminPassport(1L, AdminMemberRole.ADMIN)))
+            .build()
+
+        every { service.findByConditions(any()) } throws IllegalArgumentException("traceId와 traceIdMode는 동시에 사용할 수 없습니다.")
+
+        mockMvc.get("/api/admin/log") {
+            contentType = MediaType.APPLICATION_JSON
+            param("traceId", "trace")
+            param("traceIdMode", "REQUEST")
+        }.andExpect {
+            status { isBadRequest() }
+            jsonPath("$.message") { value("traceId와 traceIdMode는 동시에 사용할 수 없습니다.") }
         }
     }
 

@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
+import server.global.logging.RequestLogContextHolder
 import java.time.LocalDateTime
 
 @Service
@@ -16,6 +17,7 @@ internal class AdminLogQueryService(
 ) {
 
     fun findByConditions(conditions: AdminLogQueryConditions): AdminLogPage {
+        validateTraceFilters(conditions)
         val size = conditions.size?.takeIf { it > 0 }?.coerceAtMost(MAX_SIZE) ?: DEFAULT_SIZE
         val timeRange = resolveTimeRange(conditions)
         val filter = buildFilter(conditions, timeRange)
@@ -79,6 +81,18 @@ internal class AdminLogQueryService(
             whereClauses += "l.trace_id LIKE :traceId"
             params["traceId"] = "%$it%"
         }
+        when (conditions.traceIdMode?.trim()?.uppercase()) {
+            null, "ALL" -> Unit
+            "SYSTEM" -> {
+                whereClauses += "l.trace_id = :systemTraceId"
+                params["systemTraceId"] = RequestLogContextHolder.SYSTEM_TRACE_ID
+            }
+            "REQUEST" -> {
+                whereClauses += "l.trace_id <> :systemTraceId"
+                params["systemTraceId"] = RequestLogContextHolder.SYSTEM_TRACE_ID
+            }
+            else -> throw IllegalArgumentException("traceIdMode는 ALL, SYSTEM, REQUEST 중 하나여야 합니다.")
+        }
 
         if (conditions.cursorTimestamp != null && conditions.cursorId != null) {
             whereClauses += "(l.timestamp < :cursorTimestamp OR (l.timestamp = :cursorTimestamp AND l.id < :cursorId))"
@@ -88,6 +102,16 @@ internal class AdminLogQueryService(
 
         val where = if (whereClauses.isEmpty()) "" else "WHERE ${whereClauses.joinToString(" AND ")}"
         return LogFilter(whereClause = where, params = params)
+    }
+
+    private fun validateTraceFilters(conditions: AdminLogQueryConditions) {
+        val hasTraceId = !conditions.traceId.isNullOrBlank()
+        val normalizedMode = conditions.traceIdMode?.trim()?.uppercase()
+        val hasExclusiveTraceMode = normalizedMode != null && normalizedMode != "ALL"
+
+        if (hasTraceId && hasExclusiveTraceMode) {
+            throw IllegalArgumentException("traceId와 traceIdMode는 동시에 사용할 수 없습니다.")
+        }
     }
 
     private fun resolveTimeRange(conditions: AdminLogQueryConditions): TimeRange {

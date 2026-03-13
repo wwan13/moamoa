@@ -32,6 +32,7 @@ class AdminLogQueryServiceTest : UnitTest() {
                 logLevel = null,
                 type = null,
                 traceId = null,
+                traceIdMode = null,
                 fromTimestamp = null,
                 toTimestamp = null,
                 size = null,
@@ -73,6 +74,7 @@ class AdminLogQueryServiceTest : UnitTest() {
                 logLevel = "INFO",
                 type = "API",
                 traceId = "abc",
+                traceIdMode = null,
                 fromTimestamp = fromTimestamp,
                 toTimestamp = toTimestamp,
                 size = 50L,
@@ -116,6 +118,7 @@ class AdminLogQueryServiceTest : UnitTest() {
                 logLevel = null,
                 type = null,
                 traceId = null,
+                traceIdMode = null,
                 fromTimestamp = now.minusMinutes(10),
                 toTimestamp = now,
                 size = 2L,
@@ -144,6 +147,7 @@ class AdminLogQueryServiceTest : UnitTest() {
                 logLevel = null,
                 type = null,
                 traceId = null,
+                traceIdMode = null,
                 fromTimestamp = LocalDateTime.of(2026, 3, 12, 22, 0, 0),
                 toTimestamp = LocalDateTime.of(2026, 3, 12, 23, 0, 0),
                 size = 500L,
@@ -165,12 +169,13 @@ class AdminLogQueryServiceTest : UnitTest() {
         val throwable = runCatching {
             service.findByConditions(
                 AdminLogQueryConditions(
-                    logLevel = null,
-                    type = null,
-                    traceId = null,
-                    fromTimestamp = now.toLocalDate().minusDays(8).atTime(23, 59, 59),
-                    toTimestamp = now,
-                    size = 10L,
+                logLevel = null,
+                type = null,
+                traceId = null,
+                traceIdMode = null,
+                fromTimestamp = now.toLocalDate().minusDays(8).atTime(23, 59, 59),
+                toTimestamp = now,
+                size = 10L,
                     cursorTimestamp = null,
                     cursorId = null,
                 )
@@ -190,12 +195,13 @@ class AdminLogQueryServiceTest : UnitTest() {
         val throwable = runCatching {
             service.findByConditions(
                 AdminLogQueryConditions(
-                    logLevel = null,
-                    type = null,
-                    traceId = null,
-                    fromTimestamp = now.minusMinutes(10),
-                    toTimestamp = now.plusMinutes(1),
-                    size = 10L,
+                logLevel = null,
+                type = null,
+                traceId = null,
+                traceIdMode = null,
+                fromTimestamp = now.minusMinutes(10),
+                toTimestamp = now.plusMinutes(1),
+                size = 10L,
                     cursorTimestamp = null,
                     cursorId = null,
                 )
@@ -204,6 +210,143 @@ class AdminLogQueryServiceTest : UnitTest() {
 
         (throwable is IllegalArgumentException) shouldBe true
         throwable?.message shouldBe "toTimestamp는 현재 시각 이후일 수 없습니다."
+    }
+
+    @Test
+    fun `traceIdMode가 SYSTEM이면 SYSTEM traceId만 조회한다`() {
+        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val service = AdminLogQueryService(jdbc)
+        val sqlSlot = slot<String>()
+        val paramsSlot = slot<MapSqlParameterSource>()
+
+        every {
+            jdbc.query(capture(sqlSlot), capture(paramsSlot), any<DataClassRowMapper<AdminLogSummary>>())
+        } returns emptyList()
+
+        service.findByConditions(
+            AdminLogQueryConditions(
+                logLevel = null,
+                type = null,
+                traceId = null,
+                traceIdMode = "SYSTEM",
+                fromTimestamp = LocalDateTime.of(2026, 3, 12, 22, 0, 0),
+                toTimestamp = LocalDateTime.of(2026, 3, 12, 23, 0, 0),
+                size = 10L,
+                cursorTimestamp = null,
+                cursorId = null,
+            )
+        )
+
+        sqlSlot.captured shouldContain "l.trace_id = :systemTraceId"
+        paramsSlot.captured.getValue("systemTraceId") shouldBe "SYSTEM"
+    }
+
+    @Test
+    fun `traceIdMode가 REQUEST면 SYSTEM이 아닌 traceId만 조회한다`() {
+        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val service = AdminLogQueryService(jdbc)
+        val sqlSlot = slot<String>()
+        val paramsSlot = slot<MapSqlParameterSource>()
+
+        every {
+            jdbc.query(capture(sqlSlot), capture(paramsSlot), any<DataClassRowMapper<AdminLogSummary>>())
+        } returns emptyList()
+
+        service.findByConditions(
+            AdminLogQueryConditions(
+                logLevel = null,
+                type = null,
+                traceId = null,
+                traceIdMode = "REQUEST",
+                fromTimestamp = LocalDateTime.of(2026, 3, 12, 22, 0, 0),
+                toTimestamp = LocalDateTime.of(2026, 3, 12, 23, 0, 0),
+                size = 10L,
+                cursorTimestamp = null,
+                cursorId = null,
+            )
+        )
+
+        sqlSlot.captured shouldContain "l.trace_id <> :systemTraceId"
+        paramsSlot.captured.getValue("systemTraceId") shouldBe "SYSTEM"
+    }
+
+    @Test
+    fun `traceIdMode 값이 유효하지 않으면 예외를 던진다`() {
+        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val service = AdminLogQueryService(jdbc)
+
+        val throwable = runCatching {
+            service.findByConditions(
+                AdminLogQueryConditions(
+                    logLevel = null,
+                    type = null,
+                    traceId = null,
+                    traceIdMode = "INVALID",
+                    fromTimestamp = LocalDateTime.of(2026, 3, 12, 22, 0, 0),
+                    toTimestamp = LocalDateTime.of(2026, 3, 12, 23, 0, 0),
+                    size = 10L,
+                    cursorTimestamp = null,
+                    cursorId = null,
+                )
+            )
+        }.exceptionOrNull()
+
+        (throwable is IllegalArgumentException) shouldBe true
+        throwable?.message shouldBe "traceIdMode는 ALL, SYSTEM, REQUEST 중 하나여야 합니다."
+    }
+
+    @Test
+    fun `traceId와 traceIdMode를 함께 요청하면 예외를 던진다`() {
+        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val service = AdminLogQueryService(jdbc)
+
+        val throwable = runCatching {
+            service.findByConditions(
+                AdminLogQueryConditions(
+                    logLevel = null,
+                    type = null,
+                    traceId = "trace-1",
+                    traceIdMode = "REQUEST",
+                    fromTimestamp = LocalDateTime.of(2026, 3, 12, 22, 0, 0),
+                    toTimestamp = LocalDateTime.of(2026, 3, 12, 23, 0, 0),
+                    size = 10L,
+                    cursorTimestamp = null,
+                    cursorId = null,
+                )
+            )
+        }.exceptionOrNull()
+
+        (throwable is IllegalArgumentException) shouldBe true
+        throwable?.message shouldBe "traceId와 traceIdMode는 동시에 사용할 수 없습니다."
+    }
+
+    @Test
+    fun `traceId와 traceIdMode ALL을 함께 요청하면 허용한다`() {
+        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val service = AdminLogQueryService(jdbc)
+        val sqlSlot = slot<String>()
+        val paramsSlot = slot<MapSqlParameterSource>()
+
+        every {
+            jdbc.query(capture(sqlSlot), capture(paramsSlot), any<DataClassRowMapper<AdminLogSummary>>())
+        } returns emptyList()
+
+        service.findByConditions(
+            AdminLogQueryConditions(
+                logLevel = null,
+                type = null,
+                traceId = "trace-1",
+                traceIdMode = "ALL",
+                fromTimestamp = LocalDateTime.of(2026, 3, 12, 22, 0, 0),
+                toTimestamp = LocalDateTime.of(2026, 3, 12, 23, 0, 0),
+                size = 10L,
+                cursorTimestamp = null,
+                cursorId = null,
+            )
+        )
+
+        sqlSlot.captured shouldContain "l.trace_id LIKE :traceId"
+        paramsSlot.captured.getValue("traceId") shouldBe "%trace-1%"
     }
 
     private fun createRow(id: Long, timestamp: LocalDateTime): AdminLogSummary = AdminLogSummary(

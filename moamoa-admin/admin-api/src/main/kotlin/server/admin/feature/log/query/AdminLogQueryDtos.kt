@@ -6,6 +6,7 @@ internal data class AdminLogQueryConditions(
     val logLevel: String?,
     val type: String?,
     val traceId: String?,
+    val traceIdMode: String?,
     val fromTimestamp: LocalDateTime?,
     val toTimestamp: LocalDateTime?,
     val size: Long?,
