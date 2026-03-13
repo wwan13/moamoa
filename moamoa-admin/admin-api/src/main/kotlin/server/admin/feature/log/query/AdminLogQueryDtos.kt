@@ -27,7 +27,6 @@ internal data class AdminLogSummary(
     val message: String,
     val type: String,
     val data: String,
-    val service: String,
 )
 
 internal data class AdminLogCursor(

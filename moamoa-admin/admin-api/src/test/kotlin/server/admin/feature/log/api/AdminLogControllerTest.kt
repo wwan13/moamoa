@@ -84,7 +84,6 @@ class AdminLogControllerTest : UnitTest() {
                     message = "message",
                     type = "API",
                     data = "{}",
-                    service = "core-api",
                 )
             ),
             nextCursor = AdminLogCursor(timestamp = now, id = 100L),

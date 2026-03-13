@@ -144,6 +144,5 @@ class AdminLogQueryServiceTest : UnitTest() {
         message = "message",
         type = "API",
         data = "{}",
-        service = "core-api",
     )
 }
