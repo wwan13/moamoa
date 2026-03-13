@@ -20,13 +20,10 @@ const logTypeOptions = [
     { value: "ALL", label: "TYPE" },
     { value: "REQUEST", label: "REQUEST" },
     { value: "ERROR", label: "ERROR" },
-    { value: "REQ", label: "REQ" },
     { value: "BIZ", label: "BIZ" },
     { value: "DB", label: "DB" },
     { value: "REDIS", label: "REDIS" },
-    { value: "API", label: "API" },
-    { value: "REQ_ERROR", label: "REQ_ERROR" },
-    { value: "WORKER", label: "WORKER" },
+    { value: "EVENT", label: "EVENT" },
 ]
 
 const pollingOptions = [
@@ -64,7 +61,6 @@ const toPrettyLogBlock = (log: AdminLogSummary): string => {
         logger: log.loggerName,
         message: log.message,
         data: parseLogData(log.data),
-        service: log.service,
     }
 
     return JSON.stringify(payload, null, 2)
@@ -75,7 +71,7 @@ const LogPage = () => {
     const [traceId, setTraceId] = useState("")
     const [logLevel, setLogLevel] = useState("ALL")
     const [logType, setLogType] = useState("ALL")
-    const [pollingMs, setPollingMs] = useState("5000")
+    const [pollingMs, setPollingMs] = useState("0")
     const [size, setSize] = useState("100")
     const viewportRef = useRef<HTMLDivElement | null>(null)
     const hasInitialScrolledRef = useRef(false)

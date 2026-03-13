@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { type InfiniteData, useInfiniteQuery } from "@tanstack/react-query"
 import {
     logApi,
     type AdminLogPage,
@@ -14,7 +14,13 @@ export const useInfiniteLogsQuery = (
     conditions: AdminLogQueryConditions,
     pollingMs: number
 ) => {
-    return useInfiniteQuery<AdminLogPage, Error, AdminLogPage, [string, AdminLogQueryConditions], LogCursorPageParam>({
+    return useInfiniteQuery<
+        AdminLogPage,
+        Error,
+        InfiniteData<AdminLogPage>,
+        [string, AdminLogQueryConditions],
+        LogCursorPageParam
+    >({
         queryKey: ["admin-logs", conditions],
         initialPageParam: {},
         queryFn: ({ pageParam }) =>

@@ -18,7 +18,6 @@ export type AdminLogSummary = {
     message: string
     type: string
     data: string
-    service: string
 }
 
 type AdminLogCursor = {
