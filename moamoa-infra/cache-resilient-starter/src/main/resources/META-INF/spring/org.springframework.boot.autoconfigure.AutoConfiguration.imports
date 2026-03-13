@@ -1,0 +1,3 @@
+server.cache.redis.autoconfigure.CacheRedisAutoConfiguration
+server.cache.caffeine.autoconfigure.CacheCaffeineAutoConfiguration
+server.cache.resilient.autoconfigure.CacheResilientAutoConfiguration

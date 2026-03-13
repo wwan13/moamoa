@@ -1,0 +1,3 @@
+server.lock.redisson.autoconfigure.LockRedissonAutoConfiguration
+server.lock.local.autoconfigure.LockLocalAutoConfiguration
+server.lock.resilient.autoconfigure.LockResilientAutoConfiguration

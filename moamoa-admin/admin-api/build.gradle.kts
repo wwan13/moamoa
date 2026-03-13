@@ -13,16 +13,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     runtimeOnly("com.mysql:mysql-connector-j")
 
-    implementation(project(":moamoa-core:core-shared"))
     implementation(project(":moamoa-support:support-api-docs"))
     implementation(project(":moamoa-support:support-logging"))
 
     implementation(project(":moamoa-core:core-tech-blog"))
     implementation(project(":moamoa-infra:infra-tech-blog"))
-    implementation(project(":moamoa-infra:infra-jwt"))
-    implementation(project(":moamoa-infra:infra-crypto"))
-    implementation(project(":moamoa-infra:infra-redis"))
-    implementation(project(":moamoa-infra:infra-cache"))
+    implementation(project(":moamoa-infra:token-jwt-starter"))
+    implementation(project(":moamoa-infra:password-crypto-starter"))
+    implementation(project(":moamoa-infra:cache-resilient-starter"))
 
     testImplementation(project(":moamoa-support:support-test"))
 }

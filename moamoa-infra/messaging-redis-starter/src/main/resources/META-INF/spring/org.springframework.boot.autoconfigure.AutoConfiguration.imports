@@ -1,0 +1,1 @@
+server.messaging.redis.autoconfigure.MessagingRedisAutoConfiguration

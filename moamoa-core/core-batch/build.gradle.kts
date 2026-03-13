@@ -13,11 +13,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     runtimeOnly("com.mysql:mysql-connector-j")
 
-    implementation(project(":moamoa-core:core-shared"))
     implementation(project(":moamoa-core:core-tech-blog"))
     implementation(project(":moamoa-infra:infra-tech-blog"))
-    implementation(project(":moamoa-infra:infra-redis"))
-    implementation(project(":moamoa-infra:infra-cache"))
+    implementation(project(":moamoa-infra:cache-resilient-starter"))
+    implementation(project(":moamoa-infra:set-redis-starter"))
+    implementation(project(":moamoa-infra:queue-redis-starter"))
     implementation(project(":moamoa-support:support-webhook"))
     implementation(project(":moamoa-support:support-logging"))
 

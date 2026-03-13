@@ -1,0 +1,20 @@
+spring:
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+  timeout: 3s
+  database: ${REDIS_DATABASE}
+  username: ${REDIS_USERNAME:default}
+  password: ${REDIS_PASSWORD:}
+
+messaging:
+  redis-health:
+    pause-on-failure-ms: ${REDIS_HEALTH_PAUSE_ON_FAILURE_MS:30000}
+    recovery-probe-interval-ms: ${REDIS_HEALTH_RECOVERY_PROBE_INTERVAL_MS:30000}
+  stream-retry:
+    interval-ms: ${STREAM_RETRY_INTERVAL_MS:60000}
