@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 internal class AdminLogQueryService(
@@ -16,7 +17,8 @@ internal class AdminLogQueryService(
 
     fun findByConditions(conditions: AdminLogQueryConditions): AdminLogPage {
         val size = conditions.size?.takeIf { it > 0 }?.coerceAtMost(MAX_SIZE) ?: DEFAULT_SIZE
-        val filter = buildFilter(conditions)
+        val timeRange = resolveTimeRange(conditions)
+        val filter = buildFilter(conditions, timeRange)
 
         val sql = """
             SELECT
@@ -56,9 +58,14 @@ internal class AdminLogQueryService(
         )
     }
 
-    private fun buildFilter(conditions: AdminLogQueryConditions): LogFilter {
+    private fun buildFilter(conditions: AdminLogQueryConditions, timeRange: TimeRange): LogFilter {
         val whereClauses = mutableListOf<String>()
         val params = linkedMapOf<String, Any>()
+
+        whereClauses += "l.timestamp >= :fromTimestamp"
+        params["fromTimestamp"] = timeRange.fromTimestamp
+        whereClauses += "l.timestamp <= :toTimestamp"
+        params["toTimestamp"] = timeRange.toTimestamp
 
         conditions.logLevel?.let {
             whereClauses += "l.level = :logLevel"
@@ -83,13 +90,42 @@ internal class AdminLogQueryService(
         return LogFilter(whereClause = where, params = params)
     }
 
+    private fun resolveTimeRange(conditions: AdminLogQueryConditions): TimeRange {
+        val now = LocalDateTime.now()
+        val maxLookbackStart = now.toLocalDate().minusDays(MAX_LOOKBACK_DAYS).atStartOfDay()
+        val toTimestamp = conditions.toTimestamp ?: now
+        val fromTimestamp = conditions.fromTimestamp ?: toTimestamp.minusMinutes(DEFAULT_LOOKBACK_MINUTES)
+
+        if (toTimestamp.isAfter(now)) {
+            throw IllegalArgumentException("toTimestamp는 현재 시각 이후일 수 없습니다.")
+        }
+        if (fromTimestamp.isAfter(toTimestamp)) {
+            throw IllegalArgumentException("fromTimestamp는 toTimestamp보다 이후일 수 없습니다.")
+        }
+        if (fromTimestamp.isBefore(maxLookbackStart)) {
+            throw IllegalArgumentException("오늘 기준 7일보다 오래된 로그는 조회할 수 없습니다.")
+        }
+
+        return TimeRange(
+            fromTimestamp = fromTimestamp,
+            toTimestamp = toTimestamp,
+        )
+    }
+
     private data class LogFilter(
         val whereClause: String,
         val params: Map<String, Any>,
     )
 
+    private data class TimeRange(
+        val fromTimestamp: LocalDateTime,
+        val toTimestamp: LocalDateTime,
+    )
+
     private companion object {
         const val DEFAULT_SIZE = 100L
         const val MAX_SIZE = 100L
+        const val DEFAULT_LOOKBACK_MINUTES = 10L
+        const val MAX_LOOKBACK_DAYS = 7L
     }
 }

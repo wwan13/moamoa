@@ -1,6 +1,7 @@
 package server.admin.feature.log.query
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -9,6 +10,7 @@ import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import test.UnitTest
+import java.time.Duration
 import java.time.LocalDateTime
 
 class AdminLogQueryServiceTest : UnitTest() {
@@ -30,6 +32,8 @@ class AdminLogQueryServiceTest : UnitTest() {
                 logLevel = null,
                 type = null,
                 traceId = null,
+                fromTimestamp = null,
+                toTimestamp = null,
                 size = null,
                 cursorTimestamp = null,
                 cursorId = null,
@@ -38,7 +42,12 @@ class AdminLogQueryServiceTest : UnitTest() {
 
         sqlSlot.captured.contains("FROM log l") shouldBe true
         sqlSlot.captured.contains("ORDER BY l.timestamp DESC, l.id DESC") shouldBe true
+        sqlSlot.captured shouldContain "l.timestamp >= :fromTimestamp"
+        sqlSlot.captured shouldContain "l.timestamp <= :toTimestamp"
         paramsSlot.captured.getValue("limit") shouldBe 101L
+        val fromTimestamp = paramsSlot.captured.getValue("fromTimestamp") as LocalDateTime
+        val toTimestamp = paramsSlot.captured.getValue("toTimestamp") as LocalDateTime
+        Duration.between(fromTimestamp, toTimestamp).toMinutes() shouldBe 10L
         result.size shouldBe 100L
         result.hasNext shouldBe false
         result.nextCursor shouldBe null
@@ -52,6 +61,8 @@ class AdminLogQueryServiceTest : UnitTest() {
         val sqlSlot = slot<String>()
         val paramsSlot = slot<MapSqlParameterSource>()
         val cursorTs = LocalDateTime.of(2026, 3, 12, 21, 0, 0)
+        val fromTimestamp = LocalDateTime.of(2026, 3, 12, 20, 0, 0)
+        val toTimestamp = LocalDateTime.of(2026, 3, 12, 23, 0, 0)
 
         every {
             jdbc.query(capture(sqlSlot), capture(paramsSlot), any<DataClassRowMapper<AdminLogSummary>>())
@@ -62,6 +73,8 @@ class AdminLogQueryServiceTest : UnitTest() {
                 logLevel = "INFO",
                 type = "API",
                 traceId = "abc",
+                fromTimestamp = fromTimestamp,
+                toTimestamp = toTimestamp,
                 size = 50L,
                 cursorTimestamp = cursorTs,
                 cursorId = 123L,
@@ -71,10 +84,14 @@ class AdminLogQueryServiceTest : UnitTest() {
         sqlSlot.captured.contains("l.level = :logLevel") shouldBe true
         sqlSlot.captured.contains("l.type = :type") shouldBe true
         sqlSlot.captured.contains("l.trace_id LIKE :traceId") shouldBe true
+        sqlSlot.captured shouldContain "l.timestamp >= :fromTimestamp"
+        sqlSlot.captured shouldContain "l.timestamp <= :toTimestamp"
         sqlSlot.captured.contains("(l.timestamp < :cursorTimestamp OR (l.timestamp = :cursorTimestamp AND l.id < :cursorId))") shouldBe true
         paramsSlot.captured.getValue("logLevel") shouldBe "INFO"
         paramsSlot.captured.getValue("type") shouldBe "API"
         paramsSlot.captured.getValue("traceId") shouldBe "%abc%"
+        paramsSlot.captured.getValue("fromTimestamp") shouldBe fromTimestamp
+        paramsSlot.captured.getValue("toTimestamp") shouldBe toTimestamp
         paramsSlot.captured.getValue("cursorTimestamp") shouldBe cursorTs
         paramsSlot.captured.getValue("cursorId") shouldBe 123L
         paramsSlot.captured.getValue("limit") shouldBe 51L
@@ -99,6 +116,8 @@ class AdminLogQueryServiceTest : UnitTest() {
                 logLevel = null,
                 type = null,
                 traceId = null,
+                fromTimestamp = now.minusMinutes(10),
+                toTimestamp = now,
                 size = 2L,
                 cursorTimestamp = null,
                 cursorId = null,
@@ -125,6 +144,8 @@ class AdminLogQueryServiceTest : UnitTest() {
                 logLevel = null,
                 type = null,
                 traceId = null,
+                fromTimestamp = LocalDateTime.of(2026, 3, 12, 22, 0, 0),
+                toTimestamp = LocalDateTime.of(2026, 3, 12, 23, 0, 0),
                 size = 500L,
                 cursorTimestamp = null,
                 cursorId = null,
@@ -133,6 +154,56 @@ class AdminLogQueryServiceTest : UnitTest() {
 
         result.size shouldBe 100L
         paramsSlot.captured.getValue("limit") shouldBe 101L
+    }
+
+    @Test
+    fun `fromTimestamp가 오늘 기준 7일보다 과거면 예외를 던진다`() {
+        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val service = AdminLogQueryService(jdbc)
+
+        val now = LocalDateTime.now()
+        val throwable = runCatching {
+            service.findByConditions(
+                AdminLogQueryConditions(
+                    logLevel = null,
+                    type = null,
+                    traceId = null,
+                    fromTimestamp = now.toLocalDate().minusDays(8).atTime(23, 59, 59),
+                    toTimestamp = now,
+                    size = 10L,
+                    cursorTimestamp = null,
+                    cursorId = null,
+                )
+            )
+        }.exceptionOrNull()
+
+        (throwable is IllegalArgumentException) shouldBe true
+        throwable?.message shouldBe "오늘 기준 7일보다 오래된 로그는 조회할 수 없습니다."
+    }
+
+    @Test
+    fun `toTimestamp가 미래면 예외를 던진다`() {
+        val jdbc = mockk<NamedParameterJdbcTemplate>()
+        val service = AdminLogQueryService(jdbc)
+
+        val now = LocalDateTime.now()
+        val throwable = runCatching {
+            service.findByConditions(
+                AdminLogQueryConditions(
+                    logLevel = null,
+                    type = null,
+                    traceId = null,
+                    fromTimestamp = now.minusMinutes(10),
+                    toTimestamp = now.plusMinutes(1),
+                    size = 10L,
+                    cursorTimestamp = null,
+                    cursorId = null,
+                )
+            )
+        }.exceptionOrNull()
+
+        (throwable is IllegalArgumentException) shouldBe true
+        throwable?.message shouldBe "toTimestamp는 현재 시각 이후일 수 없습니다."
     }
 
     private fun createRow(id: Long, timestamp: LocalDateTime): AdminLogSummary = AdminLogSummary(

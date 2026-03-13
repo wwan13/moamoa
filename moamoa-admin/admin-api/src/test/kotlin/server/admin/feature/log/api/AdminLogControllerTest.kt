@@ -113,6 +113,8 @@ class AdminLogControllerTest : UnitTest() {
                     logLevel = "INFO",
                     type = "API",
                     traceId = "trace",
+                    fromTimestamp = null,
+                    toTimestamp = null,
                     size = 10L,
                     cursorTimestamp = null,
                     cursorId = null,
