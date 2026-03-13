@@ -50,6 +50,7 @@ spring:
       - webhook
       - logging
       - monitoring
+      - admin
 
 server:
   forward-headers-strategy: framework

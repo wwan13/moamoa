@@ -1,6 +1,5 @@
 admin:
   datasource:
-    enabled: ${ADMIN_DB_ENABLED:false}
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${LOG_DB_SCHEMA}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}

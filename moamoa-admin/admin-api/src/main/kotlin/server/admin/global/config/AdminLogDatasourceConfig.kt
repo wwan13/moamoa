@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Lazy
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -15,14 +16,17 @@ import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
 @EnableConfigurationProperties(AdminLogDatasourceProperties::class)
-@ConditionalOnProperty(prefix = "admin.datasource", name = ["enabled"], havingValue = "true")
-internal class AdminLogDatasourceConfig {
+@ConditionalOnProperty(prefix = "admin.datasource", name = ["url"])
+internal class AdminLogDatasourceConfig(
+    private val properties: AdminLogDatasourceProperties,
+) {
 
-    @Bean("adminLogDataSource")
-    fun adminLogDataSource(properties: AdminLogDatasourceProperties): DataSource {
-        val url = requireNotNull(properties.url) { "admin.datasource.url must be set when admin datasource is enabled." }
-        val username = requireNotNull(properties.username) { "admin.datasource.username must be set when admin datasource is enabled." }
-        val password = requireNotNull(properties.password) { "admin.datasource.password must be set when admin datasource is enabled." }
+    @Bean(name = ["adminLogDataSource"], autowireCandidate = false)
+    @Lazy
+    fun adminLogDataSource(): DataSource {
+        val url = requireNotNull(properties.url) { "admin.datasource.url must be set." }
+        val username = requireNotNull(properties.username) { "admin.datasource.username must be set." }
+        val password = requireNotNull(properties.password) { "admin.datasource.password must be set." }
 
         val hikariConfig = HikariConfig().apply {
             jdbcUrl = url
@@ -41,15 +45,18 @@ internal class AdminLogDatasourceConfig {
     }
 
     @Bean("adminLogJdbcTemplate")
-    fun adminLogJdbcTemplate(adminLogDataSource: DataSource): JdbcTemplate = JdbcTemplate(adminLogDataSource)
+    @Lazy
+    fun adminLogJdbcTemplate(): JdbcTemplate = JdbcTemplate(adminLogDataSource())
 
     @Bean("adminLogNamedParameterJdbcTemplate")
-    fun adminLogNamedParameterJdbcTemplate(adminLogDataSource: DataSource): NamedParameterJdbcTemplate {
-        return NamedParameterJdbcTemplate(adminLogDataSource)
+    @Lazy
+    fun adminLogNamedParameterJdbcTemplate(): NamedParameterJdbcTemplate {
+        return NamedParameterJdbcTemplate(adminLogDataSource())
     }
 
-    @Bean("adminLogTransactionManager")
-    fun adminLogTransactionManager(adminLogDataSource: DataSource): PlatformTransactionManager {
-        return DataSourceTransactionManager(adminLogDataSource)
+    @Bean(name = ["adminLogTransactionManager"], autowireCandidate = false)
+    @Lazy
+    fun adminLogTransactionManager(): PlatformTransactionManager {
+        return DataSourceTransactionManager(adminLogDataSource())
     }
 }

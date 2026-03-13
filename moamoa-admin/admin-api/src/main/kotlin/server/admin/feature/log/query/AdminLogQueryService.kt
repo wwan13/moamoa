@@ -4,11 +4,13 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 @Service
 internal class AdminLogQueryService(
     @param:Qualifier("adminLogNamedParameterJdbcTemplate")
+    @param:Lazy
     private val jdbc: NamedParameterJdbcTemplate,
 ) {
 
@@ -25,8 +27,7 @@ internal class AdminLogQueryService(
                 l.logger_name AS loggerName,
                 l.message AS message,
                 l.type AS type,
-                l.data AS data,
-                l.service AS service
+                l.data AS data
             FROM log l
             ${filter.whereClause}
             ORDER BY l.timestamp DESC, l.id DESC

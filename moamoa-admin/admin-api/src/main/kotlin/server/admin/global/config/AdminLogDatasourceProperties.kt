@@ -4,7 +4,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "admin.datasource")
 internal data class AdminLogDatasourceProperties(
-    val enabled: Boolean = false,
     val url: String? = null,
     val username: String? = null,
     val password: String? = null,
