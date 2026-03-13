@@ -7,12 +7,13 @@
     color: #fff;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .base:disabled {
-    opacity: 0.5;
+    opacity: 1;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 .primary {
@@ -23,4 +24,16 @@
     background: #fff;
     color: #000000;
     border: 1px solid #000000;
+}
+
+.primary:disabled {
+    background: #D0D5DD;
+    color: #FFFFFF;
+    border-color: #D0D5DD;
+}
+
+.outline:disabled {
+    background: #F2F4F7;
+    color: #98A2B3;
+    border-color: #D0D5DD;
 }

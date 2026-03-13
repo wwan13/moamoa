@@ -1,5 +1,6 @@
 import { useState } from "react"
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined"
+import type { CSSProperties } from "react"
 import styles from "./Search.module.css"
 
 type SearchProps = {
@@ -7,6 +8,7 @@ type SearchProps = {
     defaultValue?: string
     placeholder?: string
     disabled?: boolean
+    width?: number | string
     onChange?: (value: string) => void
     onSearch?: (value: string) => void
 }
@@ -16,6 +18,7 @@ export function Search({
     defaultValue,
     placeholder = "검색어를 입력하세요",
     disabled = false,
+    width,
     onChange,
     onSearch,
 }: SearchProps) {
@@ -33,8 +36,16 @@ export function Search({
         onSearch?.(currentValue)
     }
 
+    const rootStyle: CSSProperties | undefined =
+        width === undefined
+            ? undefined
+            : {
+                  width: typeof width === "number" ? `${width}px` : width,
+                  minWidth: typeof width === "number" ? `${width}px` : width,
+              }
+
     return (
-        <div className={styles.root}>
+        <div className={styles.root} style={rootStyle}>
             <input
                 type="text"
                 className={styles.input}
@@ -63,4 +74,3 @@ export function Search({
 }
 
 export type { SearchProps }
-

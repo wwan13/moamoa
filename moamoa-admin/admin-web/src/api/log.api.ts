@@ -4,6 +4,8 @@ export type AdminLogQueryConditions = {
     logLevel?: string
     type?: string
     traceId?: string
+    fromTimestamp?: string
+    toTimestamp?: string
     size?: number
     cursorTimestamp?: string
     cursorId?: number
@@ -38,6 +40,12 @@ const buildLogQueryString = (conditions: AdminLogQueryConditions): string => {
     if (conditions.logLevel) params.set("logLevel", conditions.logLevel)
     if (conditions.type) params.set("type", conditions.type)
     if (conditions.traceId) params.set("traceId", conditions.traceId)
+    if (conditions.fromTimestamp) {
+        params.set("fromTimestamp", conditions.fromTimestamp)
+    }
+    if (conditions.toTimestamp) {
+        params.set("toTimestamp", conditions.toTimestamp)
+    }
     if (conditions.size !== undefined) params.set("size", String(conditions.size))
     if (conditions.cursorTimestamp) {
         params.set("cursorTimestamp", conditions.cursorTimestamp)

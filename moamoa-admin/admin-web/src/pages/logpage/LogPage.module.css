@@ -6,40 +6,55 @@
 
 .filters {
     display: flex;
-    justify-content: space-between;
-    gap: 12px;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filterTop {
+    display: flex;
+    justify-content: flex-start;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
-.left,
+.filterBottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
 .right {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.searchWrap {
-    width: 360px;
-}
-
-.statusRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    color: #667085;
-    font-size: 13px;
-}
-
-.statusRight {
+.filterBottomRight {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.refreshing {
-    color: #252525;
-    font-weight: 600;
+.lastFetchedAt {
+    color: #667085;
+    font-size: 13px;
+}
+
+.searchWrap {
+    width: 160px;
+}
+
+.customRangeWrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rangeDivider {
+    color: #667085;
+    font-size: 12px;
 }
 
 .viewerWrap {
@@ -49,20 +64,14 @@
     overflow: hidden;
 }
 
-.viewerHeader {
-    padding: 14px 16px;
-    color: #252525;
-    font-size: 20px;
-    font-weight: 700;
-    border-bottom: 1px solid #E6E6E6;
-}
-
 .viewport {
-    height: 62vh;
-    min-height: 420px;
+    height: 66vh;
+    min-height: 500px;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 12px;
     background: #FFFFFF;
+    box-sizing: border-box;
 }
 
 .viewport::-webkit-scrollbar {
@@ -100,6 +109,7 @@
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
+    overflow-wrap: anywhere;
     color: #344054;
     font-size: 15px;
     line-height: 1.45;

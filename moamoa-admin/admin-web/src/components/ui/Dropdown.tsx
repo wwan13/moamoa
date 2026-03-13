@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import KeyboardArrowUpOutlinedIcon from "@mui/icons-material/KeyboardArrowUpOutlined"
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined"
+import type { CSSProperties } from "react"
 import styles from "./Dropdown.module.css"
 
 type DropdownOption = {
@@ -15,6 +16,7 @@ type DropdownProps = {
     defaultValue?: string
     placeholder?: string
     disabled?: boolean
+    width?: number | string
     onChange?: (value: string, option: DropdownOption) => void
 }
 
@@ -24,6 +26,7 @@ export function Dropdown({
     defaultValue,
     placeholder = "Select",
     disabled = false,
+    width,
     onChange,
 }: DropdownProps) {
     const isControlled = value !== undefined
@@ -80,8 +83,16 @@ export function Dropdown({
         }
     }
 
+    const rootStyle: CSSProperties | undefined =
+        width === undefined
+            ? undefined
+            : {
+                  width: typeof width === "number" ? `${width}px` : width,
+                  minWidth: typeof width === "number" ? `${width}px` : width,
+              }
+
     return (
-        <div ref={rootRef} className={`${styles.root}`}>
+        <div ref={rootRef} className={`${styles.root}`} style={rootStyle}>
             <button
                 type="button"
                 disabled={disabled}
