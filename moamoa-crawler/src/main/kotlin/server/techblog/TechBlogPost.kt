@@ -9,5 +9,6 @@ data class TechBlogPost(
     val tags: List<String>,
     val thumbnail: String,
     val publishedAt: LocalDateTime,
-    val url: String
+    val url: String,
+    val category: TechBlogPostCategory = TechBlogPostCategory.UNDEFINED
 )
