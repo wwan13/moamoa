@@ -1,20 +1,31 @@
 import { http, type ApiRequestConfig } from "./client"
 
 const DEFAULT_PAGE_SIZE = 20
+const CATEGORY_ID_BY_KEY = {
+  engineering: 10,
+  product: 20,
+  design: 30,
+  etc: 40,
+} as const
+
+export type PostCategoryKey = "all" | keyof typeof CATEGORY_ID_BY_KEY
 
 export type PostListConditions = {
   page?: number
   size?: number
   query?: string
+  category?: PostCategoryKey | number | string
 }
 
 export type TechBlogPostConditions = {
   page?: number
   techBlogId?: string | number
+  category?: PostCategoryKey | number | string
 }
 
 export type PostPagingConditions = {
   page?: number
+  category?: PostCategoryKey | number | string
 }
 
 export type IncreasePostViewCountCommand = {
@@ -72,6 +83,16 @@ const emptyPostList = (page = 1, size = DEFAULT_PAGE_SIZE): PostList => ({
   posts: [],
 })
 
+const resolveCategoryId = (category?: PostCategoryKey | number | string): number | undefined => {
+  if (category === undefined || category === null || category === "") return undefined
+  if (typeof category === "number") return category > 0 ? category : undefined
+
+  const normalized = String(category).trim().toLowerCase()
+  if (!normalized || normalized === "all") return undefined
+  const id = CATEGORY_ID_BY_KEY[normalized as keyof typeof CATEGORY_ID_BY_KEY]
+  return id
+}
+
 export const postsApi = {
   list: async (conditions: PostListConditions = {}, config?: ApiRequestConfig): Promise<PostList> => {
     const page = conditions.page
@@ -80,6 +101,7 @@ export const postsApi = {
       page: page && page > 1 ? page : undefined,
       size,
       query: conditions.query || undefined,
+      category: resolveCategoryId(conditions.category),
     })
 
     const res = await http.get<PostList>(`/api/post${q}`, config)
@@ -94,6 +116,7 @@ export const postsApi = {
       page: page && page > 1 ? page : undefined,
       size: DEFAULT_PAGE_SIZE,
       techBlogId: conditions.techBlogId,
+      category: resolveCategoryId(conditions.category),
     })
 
     const res = await http.get<PostList>(`/api/post/tech-blog${q}`, config)
@@ -104,7 +127,11 @@ export const postsApi = {
     config?: ApiRequestConfig
   ): Promise<PostList> => {
     const page = conditions.page
-    const q = buildQuery({ page: page && page > 1 ? page : undefined, size: DEFAULT_PAGE_SIZE })
+    const q = buildQuery({
+      page: page && page > 1 ? page : undefined,
+      size: DEFAULT_PAGE_SIZE,
+      category: resolveCategoryId(conditions.category),
+    })
     const res = await http.get<PostList>(`/api/post/subscribed${q}`, config)
     return res ?? emptyPostList(page ?? 1, DEFAULT_PAGE_SIZE)
   },
@@ -113,7 +140,11 @@ export const postsApi = {
     config?: ApiRequestConfig
   ): Promise<PostList> => {
     const page = conditions.page
-    const q = buildQuery({ page: page && page > 1 ? page : undefined, size: DEFAULT_PAGE_SIZE })
+    const q = buildQuery({
+      page: page && page > 1 ? page : undefined,
+      size: DEFAULT_PAGE_SIZE,
+      category: resolveCategoryId(conditions.category),
+    })
     const res = await http.get<PostList>(`/api/post/bookmarked${q}`, config)
     return res ?? emptyPostList(page ?? 1, DEFAULT_PAGE_SIZE)
   },

@@ -30,9 +30,13 @@ export const usePostsQuery = (
       page: resolvedPage,
       size: resolvedSize,
       query: hasQuery ? conditions.query : undefined,
+      category: conditions.category,
     }],
     queryFn: ({ signal }) =>
-      postsApi.list({ page: resolvedPage, size: resolvedSize, query: conditions.query }, { signal }),
+      postsApi.list(
+        { page: resolvedPage, size: resolvedSize, query: conditions.query, category: conditions.category },
+        { signal }
+      ),
     enabled: options.enabled ?? true,
     staleTime: hasQuery ? 0 : 1000 * 30,
     gcTime: hasQuery ? 0 : 1000 * 60 * 5,
@@ -47,7 +51,11 @@ export const usePostsByTechBlogIdQuery = (
   const scope = authScope ?? publicScope
 
   return useQuery<PostList>({
-    queryKey: ["posts", scope, "techBlog", { techBlogId: conditions.techBlogId, page: conditions.page ?? 1 }],
+    queryKey: ["posts", scope, "techBlog", {
+      techBlogId: conditions.techBlogId,
+      page: conditions.page ?? 1,
+      category: conditions.category,
+    }],
     queryFn: ({ signal }) => postsApi.listByTechBlogId(conditions, { signal }),
     enabled: (options.enabled ?? true) && !!conditions.techBlogId,
   })
@@ -60,7 +68,7 @@ export const usePostsBySubscriptionQuery = (
   const { authScope } = useAuth()
 
   return useQuery<PostList>({
-    queryKey: ["posts", authScope, "subscribed", { page: conditions.page ?? 1 }],
+    queryKey: ["posts", authScope, "subscribed", { page: conditions.page ?? 1, category: conditions.category }],
     queryFn: ({ signal }) => postsApi.listBySubscription(conditions, { signal }),
     enabled: (options.enabled ?? true) && !!authScope,
   })
@@ -73,7 +81,7 @@ export const usePostsByBookmarkQuery = (
   const { authScope } = useAuth()
 
   return useQuery<PostList>({
-    queryKey: ["posts", authScope, "bookmarked", { page: conditions.page ?? 1 }],
+    queryKey: ["posts", authScope, "bookmarked", { page: conditions.page ?? 1, category: conditions.category }],
     queryFn: ({ signal }) => postsApi.listByBookmark(conditions, { signal }),
     enabled: (options.enabled ?? true) && !!authScope,
   })

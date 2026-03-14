@@ -3,10 +3,18 @@ import styles from "./PostList.module.css"
 import PostItem from "../postitem/PostItem"
 import CategoryTabs from "../categorytab/CategoryTabs"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import type { PostSummary } from "../../api/post.api"
+import type { PostCategoryKey, PostSummary } from "../../api/post.api"
 
 const SKELETON_COUNT = 8
-const CATEGORY_ITEMS = [{ id: 0, key: "ALL", title: "전체" }]
+const CATEGORY_ITEMS = [
+    { id: 0, key: "all", title: "전체" },
+    { id: 10, key: "engineering", title: "엔지니어링" },
+    { id: 20, key: "product", title: "프로덕트" },
+    { id: 30, key: "design", title: "디자인" },
+    { id: 40, key: "etc", title: "기타" },
+]
+const VALID_CATEGORY_IDS = new Set(CATEGORY_ITEMS.map((item) => item.id))
+const VALID_CATEGORY_KEYS = new Set(CATEGORY_ITEMS.map((item) => item.key))
 
 type PostListProps = {
     posts?: PostSummary[]
@@ -27,8 +35,9 @@ const PostList = ({
 }: PostListProps) => {
     const [searchParams, setSearchParams] = useSearchParams()
     const page = Number(searchParams.get("page") ?? 1)
-
-    const selected = 0
+    const rawCategory = (searchParams.get("category") ?? "all").toLowerCase()
+    const selectedCategory = VALID_CATEGORY_KEYS.has(rawCategory) ? rawCategory : "all"
+    const selected = CATEGORY_ITEMS.find((it) => it.key === selectedCategory)?.id ?? 0
     const navigate = useNavigate()
 
     const onChangePage = (nextPage: number) => {
@@ -36,7 +45,22 @@ const PostList = ({
         requestAnimationFrame(() => {
             setSearchParams((prev) => {
                 const p = new URLSearchParams(prev)
-                p.set("page", String(nextPage))
+                if (nextPage <= 1) p.delete("page")
+                else p.set("page", String(nextPage))
+                return p
+            })
+        })
+    }
+    const onChangeCategory = (nextCategoryId: number) => {
+        if (!VALID_CATEGORY_IDS.has(nextCategoryId)) return
+        window.scrollTo({ top: 0, behavior: "smooth" })
+        requestAnimationFrame(() => {
+            setSearchParams((prev) => {
+                const p = new URLSearchParams(prev)
+                const nextCategory = CATEGORY_ITEMS.find((it) => it.id === nextCategoryId)?.key ?? "all"
+                if (nextCategory === "all") p.delete("category")
+                else p.set("category", nextCategory)
+                p.delete("page")
                 return p
             })
         })
@@ -49,7 +73,7 @@ const PostList = ({
             <CategoryTabs
                 items={CATEGORY_ITEMS}
                 id={selected}
-                onChange={() => {}}
+                onChange={onChangeCategory}
                 isSubscribing={type === "subscribed"}
                 onClickSubscriptions={() => navigate("/subscription")}
                 isLoading={false}

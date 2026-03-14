@@ -14,6 +14,7 @@ import {
 } from "../../queries/post.queries"
 import { useSubscribingTechBlogsQuery } from "../../queries/techBlog.queries"
 import Banner from "../../components/banner/Banner"
+import type { PostCategoryKey } from "../../api/post.api"
 
 const TYPES = {
     ALL: "all",
@@ -35,6 +36,14 @@ const MainPage = () => {
             : TYPES.ALL
     const techBlogId = searchParams.get("techBlogId") ?? null
     const page = Number(searchParams.get("page") ?? 1)
+    const rawCategory = (searchParams.get("category") ?? "all").toLowerCase()
+    const category: PostCategoryKey =
+        rawCategory === "engineering"
+        || rawCategory === "product"
+        || rawCategory === "design"
+        || rawCategory === "etc"
+            ? rawCategory
+            : "all"
     const isWelcome = searchParams.get("welcome")
 
     // ✅ 로그인 안 했는데 구독/북마크 진입 시 URL 정리
@@ -65,22 +74,22 @@ const MainPage = () => {
 
     // ✅ posts 쿼리: type/blogKey에 따라 1개만 활성화
     const allPostsQuery = usePostsQuery(
-        { page },
+        { page, category },
         { enabled: type === TYPES.ALL }
     )
 
     const subscribingPostsQuery = usePostsBySubscriptionQuery(
-        { page },
+        { page, category },
         { enabled: type === TYPES.SUBSCRIBED && !techBlogId && isLoggedIn }
     )
 
     const techBlogPostsQuery = usePostsByTechBlogIdQuery(
-        { page, techBlogId },
+        { page, techBlogId, category },
         { enabled: type === TYPES.SUBSCRIBED && !!techBlogId }
     )
 
     const bookmarkedPostsQuery = usePostsByBookmarkQuery(
-        { page },
+        { page, category },
         { enabled: type === TYPES.BOOKMARKED && isLoggedIn }
     )
 

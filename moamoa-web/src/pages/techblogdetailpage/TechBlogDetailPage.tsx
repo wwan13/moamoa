@@ -1,7 +1,7 @@
 import styles from "./TechBlogDetailPage.module.css"
 import useAuth from "../../auth/useAuth"
 import { useEffect, useMemo } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { showGlobalAlert, showGlobalConfirm, showToast } from "../../api/client"
 import PostList from "../../components/postlist/PostList"
 import { usePagingQuery } from "../../hooks/usePagingQuery"
@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 import { useTechBlogByIdQuery } from "../../queries/techBlog.queries"
 import { usePostsByTechBlogIdQuery } from "../../queries/post.queries"
+import type { PostCategoryKey } from "../../api/post.api"
 import {
     useNotificationToggleMutation,
     useSubscriptionToggleMutation,
@@ -23,12 +24,21 @@ const TechBlogDetailPage = () => {
 
     const navigate = useNavigate()
     const { techBlogId } = useParams()
+    const [searchParams] = useSearchParams()
     const qc = useQueryClient()
     const { page } = usePagingQuery()
+    const rawCategory = (searchParams.get("category") ?? "all").toLowerCase()
+    const category: PostCategoryKey =
+        rawCategory === "engineering"
+        || rawCategory === "product"
+        || rawCategory === "design"
+        || rawCategory === "etc"
+            ? rawCategory
+            : "all"
 
     // ✅ queries
     const techBlogQuery = useTechBlogByIdQuery({ techBlogId })
-    const postsQuery = usePostsByTechBlogIdQuery({ page, techBlogId })
+    const postsQuery = usePostsByTechBlogIdQuery({ page, techBlogId, category })
 
     // ✅ mutations
     const subToggle = useSubscriptionToggleMutation()
