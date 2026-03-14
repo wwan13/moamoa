@@ -32,11 +32,4 @@ internal class PostScheduler(
         batchQueue.enqueue(updatePostViewCountJob, params)
     }
 
-    @Scheduled(cron = "0 0 5 * * *", zone = "Asia/Seoul")
-    fun launchCategorizingPostJob() = batchScope.launch {
-        val params = JobParametersBuilder()
-            .addLong("run.id", System.currentTimeMillis())
-            .toJobParameters()
-        batchQueue.enqueue(syncBookmarkCountJob, params)
-    }
 }

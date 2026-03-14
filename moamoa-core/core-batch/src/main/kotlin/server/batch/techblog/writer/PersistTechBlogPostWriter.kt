@@ -101,7 +101,7 @@ internal class PersistTechBlogPostWriter(
                 "url" to it.url,
                 "publishedAt" to it.publishedAt,
                 "techBlogId" to it.techBlogId,
-                "categoryId" to 999
+                "categoryId" to it.categoryId
             )
         }
 

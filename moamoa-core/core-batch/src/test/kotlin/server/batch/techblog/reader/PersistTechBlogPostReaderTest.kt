@@ -63,6 +63,7 @@ class PersistTechBlogPostReaderTest : UnitTest() {
         thumbnail = "thumbnail",
         publishedAt = LocalDateTime.of(2026, 1, 1, 0, 0),
         url = "https://example.com/$key",
+        categoryId = 10L,
         techBlogId = 1L
     )
 }

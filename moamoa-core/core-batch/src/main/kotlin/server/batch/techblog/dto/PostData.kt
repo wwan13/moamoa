@@ -10,5 +10,6 @@ internal data class PostData(
     val thumbnail: String,
     val publishedAt: LocalDateTime,
     val url: String,
+    val categoryId: Long,
     val techBlogId: Long
 )

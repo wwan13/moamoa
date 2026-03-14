@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test
 import kotlinx.coroutines.flow.flowOf
 import server.batch.techblog.dto.TechBlogKey
 import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
+import server.techblog.TechBlogPostCategory
+import server.techblog.TechBlogPostCatetorizer
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
 import server.techblog.TechBlogSources
@@ -20,9 +22,10 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
     @Test
     fun `source 게시글을 PostData로 변환한다`() {
         val sources = mockk<TechBlogSources>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, monitorStore, 100L, 10L)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 100L, 10L)
         val techBlogKey = TechBlogKey(id = 7L, techBlogKey = "wanted", title = "Wanted")
         val post = TechBlogPost(
             key = "p1",
@@ -35,6 +38,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         )
 
         every { sources["wanted"] } returns source
+        every { categorizer.categorize(post) } returns post.copy(category = TechBlogPostCategory.ENGINEERING)
         coEvery { source.getPosts(10) } returns flowOf(post)
         coEvery { monitorStore.recordFetchSuccess(100L, techBlogKey, 1) } returns Unit
 
@@ -42,6 +46,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
 
         result?.size shouldBe 1
         result?.first()?.key shouldBe "p1"
+        result?.first()?.categoryId shouldBe 10L
         result?.first()?.techBlogId shouldBe 7L
         coVerify(exactly = 1) { monitorStore.recordFetchSuccess(100L, techBlogKey, 1) }
     }
@@ -49,9 +54,10 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
     @Test
     fun `post limit이 없으면 null을 전달한다`() {
         val sources = mockk<TechBlogSources>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, monitorStore, 101L, null)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 101L, null)
         val techBlogKey = TechBlogKey(id = 8L, techBlogKey = "kakao", title = "Kakao")
 
         every { sources["kakao"] } returns source
@@ -67,9 +73,10 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
     @Test
     fun `source fetch 실패 시 예외를 삼키고 실패를 기록한다`() {
         val sources = mockk<TechBlogSources>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, monitorStore, 102L, 5L)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 102L, 5L)
         val techBlogKey = TechBlogKey(id = 9L, techBlogKey = "bad", title = "Bad")
         val throwable = IllegalStateException("boom")
 
@@ -86,9 +93,10 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
     @Test
     fun `모니터링 저장 실패가 나도 source fetch 성공 결과는 반환한다`() {
         val sources = mockk<TechBlogSources>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, monitorStore, 103L, 10L)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 103L, 10L)
         val techBlogKey = TechBlogKey(id = 10L, techBlogKey = "ok", title = "OK")
         val post = TechBlogPost(
             key = "p2",
@@ -101,6 +109,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         )
 
         every { sources["ok"] } returns source
+        every { categorizer.categorize(post) } returns post.copy(category = TechBlogPostCategory.ENGINEERING)
         coEvery { source.getPosts(10) } returns flowOf(post)
         coEvery { monitorStore.recordFetchSuccess(103L, techBlogKey, 1) } throws IllegalStateException("redis down")
 
@@ -108,5 +117,34 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
 
         result?.size shouldBe 1
         result?.first()?.key shouldBe "p2"
+    }
+
+    @Test
+    fun `카테고리 매칭 실패 시 999로 저장한다`() {
+        val sources = mockk<TechBlogSources>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
+        val source = mockk<TechBlogSource>()
+        val monitorStore = mockk<TechBlogCollectMonitorStore>()
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 104L, 10L)
+        val techBlogKey = TechBlogKey(id = 11L, techBlogKey = "none", title = "None")
+        val post = TechBlogPost(
+            key = "p3",
+            title = "title-3",
+            description = "desc-3",
+            tags = listOf("unknown"),
+            thumbnail = "thumb-3",
+            publishedAt = LocalDateTime.of(2026, 1, 1, 12, 0),
+            url = "https://example.com/p3"
+        )
+
+        every { sources["none"] } returns source
+        every { categorizer.categorize(post) } returns post.copy(category = TechBlogPostCategory.UNDEFINED)
+        coEvery { source.getPosts(10) } returns flowOf(post)
+        coEvery { monitorStore.recordFetchSuccess(104L, techBlogKey, 1) } returns Unit
+
+        val result = sut.process(techBlogKey)
+
+        result?.size shouldBe 1
+        result?.first()?.categoryId shouldBe 999L
     }
 }

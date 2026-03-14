@@ -11,12 +11,15 @@ import org.springframework.stereotype.Component
 import server.batch.techblog.dto.PostData
 import server.batch.techblog.dto.TechBlogKey
 import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
+import server.techblog.TechBlogPostCategory
+import server.techblog.TechBlogPostCatetorizer
 import server.techblog.TechBlogSources
 
 @StepScope
 @Component
 internal class FetchTechBlogPostProcessor(
     private val techBlogSources: TechBlogSources,
+    private val techBlogCategorizer: TechBlogPostCatetorizer,
     private val monitorStore: TechBlogCollectMonitorStore,
     @field:Value("#{jobParameters['run.id']}") private val runId: Long?,
     @field:Value("#{jobParameters['postLimit']}") private val postLimit: Long?,
@@ -29,14 +32,16 @@ internal class FetchTechBlogPostProcessor(
             val source = techBlogSources[item.techBlogKey]
             source.getPosts(postLimit?.toInt())
                 .map {
+                    val categorized = techBlogCategorizer.categorize(it)
                     PostData(
-                        key = it.key,
-                        title = it.title,
-                        description = it.description,
-                        tags = it.tags,
-                        thumbnail = it.thumbnail,
-                        publishedAt = it.publishedAt,
-                        url = it.url,
+                        key = categorized.key,
+                        title = categorized.title,
+                        description = categorized.description,
+                        tags = categorized.tags,
+                        thumbnail = categorized.thumbnail,
+                        publishedAt = categorized.publishedAt,
+                        url = categorized.url,
+                        categoryId = categorized.category.categoryId,
                         techBlogId = item.id
                     )
                 }
