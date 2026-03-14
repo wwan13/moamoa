@@ -43,6 +43,7 @@ const PostsPage = () => {
                 thumbnail: post.thumbnail,
                 url: post.url,
                 categoryId: post.categoryId,
+                tags: post.tags.map((tag) => tag.title),
                 techBlogId: post.techBlog.id,
                 techBlogIcon: post.techBlog.icon,
                 techBlogTitle: post.techBlog.title,

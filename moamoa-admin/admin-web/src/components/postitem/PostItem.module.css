@@ -44,6 +44,12 @@
 
 .detail {
     display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.detailTop {
+    display: flex;
     gap: 14px;
     align-items: flex-start;
 }
@@ -68,6 +74,23 @@
     font-size: 14px;
     color: #475467;
     line-height: 1.5;
+}
+
+.tagsWrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #EEF4FF;
+    color: #3538CD;
+    font-size: 12px;
+    line-height: 1.4;
 }
 
 .link {

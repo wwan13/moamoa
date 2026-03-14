@@ -10,6 +10,7 @@ export type Post = {
     thumbnail: string
     url: string
     categoryId: number
+    tags: string[]
 
     techBlogId: number
     techBlogIcon: string
@@ -116,22 +117,33 @@ const PostItem = ({
             onOpenChange={onOpenChange}
         >
             <article className={styles.detail}>
-                <img
-                    src={post.thumbnail}
-                    alt={post.title}
-                    className={styles.thumbnail}
-                />
-                <div className={styles.content}>
-                    <p className={styles.description}>{post.description}</p>
-                    <a
-                        href={post.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={styles.link}
-                    >
-                        원문 보기
-                    </a>
+                <div className={styles.detailTop}>
+                    <img
+                        src={post.thumbnail}
+                        alt={post.title}
+                        className={styles.thumbnail}
+                    />
+                    <div className={styles.content}>
+                        <p className={styles.description}>{post.description}</p>
+                        <a
+                            href={post.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={styles.link}
+                        >
+                            원문 보기
+                        </a>
+                    </div>
                 </div>
+                {post.tags.length > 0 && (
+                    <div className={styles.tagsWrap}>
+                        {post.tags.map((tag) => (
+                            <span key={tag} className={styles.tag}>
+                                #{tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </article>
         </ListItem>
     )
