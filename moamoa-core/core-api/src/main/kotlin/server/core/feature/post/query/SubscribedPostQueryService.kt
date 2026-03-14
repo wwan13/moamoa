@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import server.core.feature.category.domain.Category
 import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.SubscribedPostListCache
 import server.core.feature.subscription.domain.Subscription
@@ -34,8 +35,11 @@ class SubscribedPostQueryService(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
+        val categoryId = conditions.category?.let {
+            Category.fromId(it)?.id ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
+        }
 
-        val entry = loadEntry(memberId = passport.memberId, paging = paging)
+        val entry = loadEntry(memberId = passport.memberId, paging = paging, categoryId = categoryId)
         val totalCount = entry.count
         val basePosts = entry.list
 
@@ -67,18 +71,18 @@ class SubscribedPostQueryService(
         return PostList(meta, posts)
     }
 
-    private fun loadEntry(memberId: Long, paging: Paging): ListEntry<PostSummary> {
+    private fun loadEntry(memberId: Long, paging: Paging, categoryId: Long?): ListEntry<PostSummary> {
         if (paging.page > 5) {
-            return fetchEntry(paging, memberId)
+            return fetchEntry(paging, memberId, categoryId)
         }
 
-        val cached = subscribedPostListCache.get(memberId, paging.page)
+        val cached = subscribedPostListCache.get(memberId, paging.page, categoryId)
         if (cached != null) return cached
 
-        return fetchEntry(paging, memberId).also { entry ->
-            val warmupKey = "${subscribedPostListCache.versionKey(memberId)}:PAGE:${paging.page}"
+        return fetchEntry(paging, memberId, categoryId).also { entry ->
+            val warmupKey = "${subscribedPostListCache.versionKey(memberId)}:CATEGORY:${categoryId ?: 0L}:PAGE:${paging.page}"
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                subscribedPostListCache.set(memberId, paging.page, entry)
+                subscribedPostListCache.set(memberId, paging.page, categoryId, entry)
             }
         }
     }
@@ -86,9 +90,10 @@ class SubscribedPostQueryService(
     private fun fetchEntry(
         paging: Paging,
         memberId: Long,
+        categoryId: Long?,
     ): ListEntry<PostSummary> {
-        val count = fetchCountSubscribedPosts(memberId)
-        val list = fetchSubscribingBasePosts(paging, memberId)
+        val count = fetchCountSubscribedPosts(memberId, categoryId)
+        val list = fetchSubscribingBasePosts(paging, memberId, categoryId)
         return ListEntry(
             count = count,
             list = list
@@ -98,10 +103,11 @@ class SubscribedPostQueryService(
     private fun fetchSubscribingBasePosts(
         paging: Paging,
         memberId: Long,
+        categoryId: Long?,
     ): List<PostSummary> {
         val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
-        val jpqlQuery = createSubscribedBasePostsQuery(memberId)
+        val jpqlQuery = createSubscribedBasePostsQuery(memberId, categoryId)
 
         return entityManager
             .createJdslQuery(
@@ -113,8 +119,8 @@ class SubscribedPostQueryService(
             .resultList
     }
 
-    private fun fetchCountSubscribedPosts(memberId: Long): Long {
-        val jpqlQuery = createCountSubscribedPostsQuery(memberId)
+    private fun fetchCountSubscribedPosts(memberId: Long, categoryId: Long?): Long {
+        val jpqlQuery = createCountSubscribedPostsQuery(memberId, categoryId)
 
         return entityManager
             .createJdslQuery(
@@ -128,27 +134,30 @@ class SubscribedPostQueryService(
             ?: 0L
     }
 
-    private fun createSubscribedBasePostsQuery(memberId: Long) = jpql {
+    private fun createSubscribedBasePostsQuery(memberId: Long, categoryId: Long?) = jpql {
         selectBasePostSummary(isBookmarked = false)
             .from(
                 entity(Subscription::class),
                 join(TechBlog::class).on(path(Subscription::techBlogId).equal(path(TechBlog::id))),
                 join(Post::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
             )
-            .where(
-                path(Subscription::memberId).equal(memberId)
+            .whereAnd(
+                path(Subscription::memberId).equal(memberId),
+                categoryId?.let { path(Post::categoryId).equal(it) }
             )
             .orderBy(path(Post::publishedAt).desc())
     }
 
-    private fun createCountSubscribedPostsQuery(memberId: Long) = jpql {
+    private fun createCountSubscribedPostsQuery(memberId: Long, categoryId: Long?) = jpql {
         select(count(path(Post::id)))
             .from(
                 entity(Subscription::class),
                 join(Post::class).on(path(Post::techBlogId).equal(path(Subscription::techBlogId))),
             )
-            .where(
-                path(Subscription::memberId).equal(memberId)
+            .whereAnd(
+                path(Subscription::memberId).equal(memberId),
+                categoryId?.let { path(Post::categoryId).equal(it) }
             )
     }
+
 }

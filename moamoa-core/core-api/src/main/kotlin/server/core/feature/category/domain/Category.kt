@@ -15,8 +15,7 @@ enum class Category(
         val validCategories: List<Category>
             get() = entries.filter { it != UNDEFINED }
 
-        fun fromId(id: Long) = validCategories.firstOrNull { it.id == id }
-            ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
+        fun fromId(id: Long): Category? = validCategories.firstOrNull { it.id == id }
 
         fun fromName(name: String) = validCategories.firstOrNull { it.name == name }
             ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")

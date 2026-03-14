@@ -1,8 +1,10 @@
 package server.core.feature.post.query
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.MemberRole
@@ -22,7 +24,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
         val postStatsReader = mockk<PostStatsReader>()
         val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
 
-        every { techBlogPostListCache.get(1L, 1L) } returns ListEntry(
+        every { techBlogPostListCache.get(1L, 1L, 20L) } returns ListEntry(
             count = 2L,
             list = listOf(
                 postSummary(1L, 1L, 1L),
@@ -41,11 +43,30 @@ class TechBlogPostQueryServiceTest : UnitTest() {
         )
 
         val result = service.findAllByConditions(
-            TechBlogPostQueryConditions(techBlogId = 1L, page = 1, size = 20),
+            TechBlogPostQueryConditions(techBlogId = 1L, page = 1, size = 20, category = 20L),
             Passport(10L, MemberRole.USER)
         )
 
         result.posts[1].isBookmarked shouldBe true
+        verify(exactly = 1) { techBlogPostListCache.get(1L, 1L, 20L) }
+    }
+
+    @Test
+    fun `유효하지 않은 카테고리면 예외가 발생한다`() {
+        val service = TechBlogPostQueryService(
+            mockk(relaxed = true),
+            mockk(),
+            mockk(),
+            mockk(),
+            mockk(relaxed = true)
+        )
+
+        shouldThrow<IllegalArgumentException> {
+            service.findAllByConditions(
+                TechBlogPostQueryConditions(techBlogId = 1L, page = 1, size = 20, category = 999L),
+                Passport(10L, MemberRole.USER)
+            )
+        }
     }
 
     private fun postSummary(id: Long, viewCount: Long, bookmarkCount: Long) = PostSummary(

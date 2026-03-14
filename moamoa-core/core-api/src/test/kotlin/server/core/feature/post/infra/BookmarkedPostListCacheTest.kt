@@ -24,7 +24,7 @@ class BookmarkedPostListCacheTest : UnitTest() {
         val memberId = 1L
         val page = 2L
         val versionKey = "POST:LIST:BOOKMARKED:$memberId:VER"
-        val valueKey = "POST:LIST:BOOKMARKED:$memberId:V:1:PAGE:$page:"
+        val valueKey = "POST:LIST:BOOKMARKED:$memberId:V:1:CATEGORY:0:PAGE:$page:"
         val expected = ListEntry(
             count = 2L,
             list = listOf(createPostSummary())
@@ -33,7 +33,7 @@ class BookmarkedPostListCacheTest : UnitTest() {
         coEvery { cacheMemory.get(versionKey, any<TypeReference<Long>>()) } returns null
         coEvery { cacheMemory.get(valueKey, any<TypeReference<ListEntry<PostSummary>>>()) } returns expected
 
-        val result = cache.get(memberId, page)
+        val result = cache.get(memberId, page, null)
 
         result shouldBe expected
         coVerify(exactly = 1) { cacheMemory.get(versionKey, any<TypeReference<Long>>()) }
@@ -47,7 +47,7 @@ class BookmarkedPostListCacheTest : UnitTest() {
         val memberId = 1L
         val page = 2L
         val versionKey = "POST:LIST:BOOKMARKED:$memberId:VER"
-        val valueKey = "POST:LIST:BOOKMARKED:$memberId:V:7:PAGE:$page:"
+        val valueKey = "POST:LIST:BOOKMARKED:$memberId:V:7:CATEGORY:30:PAGE:$page:"
         val entry = ListEntry(
             count = 2L,
             list = listOf(createPostSummary())
@@ -56,7 +56,7 @@ class BookmarkedPostListCacheTest : UnitTest() {
         coEvery { cacheMemory.get(versionKey, any<TypeReference<Long>>()) } returns 7L
         coEvery { cacheMemory.set(valueKey, entry, 60_000L) } just Runs
 
-        cache.set(memberId, page, entry)
+        cache.set(memberId, page, 30L, entry)
 
         coVerify(exactly = 1) { cacheMemory.get(versionKey, any<TypeReference<Long>>()) }
         coVerify(exactly = 1) { cacheMemory.set(valueKey, entry, 60_000L) }

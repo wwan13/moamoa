@@ -1,8 +1,10 @@
 package server.core.feature.post.query
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.MemberRole
@@ -27,7 +29,7 @@ class PostQueryServiceTest : UnitTest() {
             postSummary(id = 2L, viewCount = 3L, bookmarkCount = 4L, isBookmarked = false)
         )
 
-        every { postListCache.get(1L, 20L) } returns ListEntry(
+        every { postListCache.get(1L, 20L, 10L) } returns ListEntry(
             count = 2L,
             list = basePosts
         )
@@ -45,13 +47,32 @@ class PostQueryServiceTest : UnitTest() {
         )
 
         val result = service.findByConditions(
-            conditions = PostQueryConditions(page = 1, size = 20, query = null),
+            conditions = PostQueryConditions(page = 1, size = 20, query = null, category = 10L),
             passport = Passport(memberId = 10L, role = MemberRole.USER)
         )
 
         result.posts[0].viewCount shouldBe 10L
         result.posts[0].bookmarkCount shouldBe 11L
         result.posts[1].isBookmarked shouldBe true
+        verify(exactly = 1) { postListCache.get(1L, 20L, 10L) }
+    }
+
+    @Test
+    fun `유효하지 않은 카테고리면 예외가 발생한다`() {
+        val service = PostQueryService(
+            entityManager = mockk(relaxed = true),
+            postListCache = mockk(),
+            bookmarkedPostReader = mockk(),
+            postStatsReader = mockk(),
+            warmupCoordinator = mockk(relaxed = true),
+        )
+
+        shouldThrow<IllegalArgumentException> {
+            service.findByConditions(
+                conditions = PostQueryConditions(page = 1, size = 20, query = null, category = 999L),
+                passport = null
+            )
+        }
     }
 
     private fun postSummary(

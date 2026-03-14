@@ -22,10 +22,10 @@ class CategoryTest : UnitTest() {
     }
 
     @Test
-    fun `존재하지 않는 id면 예외가 발생한다`() {
-        shouldThrow<IllegalArgumentException> {
-            Category.fromId(9999L)
-        }
+    fun `존재하지 않는 id면 null을 반환한다`() {
+        val result = Category.fromId(9999L)
+
+        result shouldBe null
     }
 
     @Test

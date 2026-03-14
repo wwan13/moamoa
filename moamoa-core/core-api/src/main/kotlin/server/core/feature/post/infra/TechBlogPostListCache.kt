@@ -13,13 +13,15 @@ class TechBlogPostListCache(
     private val prefix = "POST:LIST:TECHBLOG:"
     private val thirtyMinutes: Long = 1_800_000L
 
-    fun key(techBlogId: Long, page: Long) =
-        "$prefix$techBlogId:PAGE:$page"
+    fun key(techBlogId: Long, page: Long, category: Long?) =
+        "$prefix$techBlogId:CATEGORY:${categoryToken(category)}:PAGE:$page"
 
-    fun get(techBlogId: Long, page: Long): ListEntry<PostSummary>? =
-        cacheMemory.get(key(techBlogId, page))
+    fun get(techBlogId: Long, page: Long, category: Long?): ListEntry<PostSummary>? =
+        cacheMemory.get(key(techBlogId, page, category))
 
-    fun set(techBlogId: Long, page: Long, entry: ListEntry<PostSummary>) {
-        cacheMemory.set(key(techBlogId, page), entry, thirtyMinutes)
+    fun set(techBlogId: Long, page: Long, category: Long?, entry: ListEntry<PostSummary>) {
+        cacheMemory.set(key(techBlogId, page, category), entry, thirtyMinutes)
     }
+
+    private fun categoryToken(category: Long?): Long = category ?: 0L
 }

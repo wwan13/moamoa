@@ -20,7 +20,7 @@ class SubscribedPostListCacheTest : UnitTest() {
         val memberId = 3L
         val page = 1L
         val versionKey = "POST:LIST:SUBSCRIBED:$memberId:VER"
-        val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:1:PAGE:$page:"
+        val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:1:CATEGORY:0:PAGE:$page:"
         val expected = ListEntry(
             count = 2L,
             list = listOf(createPostSummary())
@@ -29,7 +29,7 @@ class SubscribedPostListCacheTest : UnitTest() {
         coEvery { cacheMemory.get(versionKey, any<TypeReference<Long>>()) } returns null
         coEvery { cacheMemory.get(valueKey, any<TypeReference<ListEntry<PostSummary>>>()) } returns expected
 
-        val result = cache.get(memberId, page)
+        val result = cache.get(memberId, page, null)
 
         result shouldBe expected
         coVerify(exactly = 1) { cacheMemory.get(versionKey, any<TypeReference<Long>>()) }
@@ -43,7 +43,7 @@ class SubscribedPostListCacheTest : UnitTest() {
         val memberId = 3L
         val page = 1L
         val versionKey = "POST:LIST:SUBSCRIBED:$memberId:VER"
-        val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:5:PAGE:$page:"
+        val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:5:CATEGORY:20:PAGE:$page:"
         val entry = ListEntry(
             count = 2L,
             list = listOf(createPostSummary())
@@ -52,7 +52,7 @@ class SubscribedPostListCacheTest : UnitTest() {
         coEvery { cacheMemory.get(versionKey, any<TypeReference<Long>>()) } returns 5L
         coEvery { cacheMemory.set(valueKey, entry, 60_000L) } just Runs
 
-        cache.set(memberId, page, entry)
+        cache.set(memberId, page, 20L, entry)
 
         coVerify(exactly = 1) { cacheMemory.get(versionKey, any<TypeReference<Long>>()) }
         coVerify(exactly = 1) { cacheMemory.set(valueKey, entry, 60_000L) }

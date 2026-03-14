@@ -17,7 +17,7 @@ class TechBlogPostListCacheTest : UnitTest() {
     fun `기술 블로그 게시글 목록을 조회한다`() = runTest {
         val cacheMemory = mockk<CacheMemory>()
         val cache = TechBlogPostListCache(cacheMemory)
-        val key = "POST:LIST:TECHBLOG:10:PAGE:1"
+        val key = "POST:LIST:TECHBLOG:10:CATEGORY:0:PAGE:1"
         val expected = ListEntry(
             count = 2L,
             list = listOf(createPostSummary())
@@ -25,7 +25,7 @@ class TechBlogPostListCacheTest : UnitTest() {
 
         coEvery { cacheMemory.get(key, any<TypeReference<ListEntry<PostSummary>>>()) } returns expected
 
-        val result = cache.get(10L, 1L)
+        val result = cache.get(10L, 1L, null)
 
         result shouldBe expected
         coVerify(exactly = 1) { cacheMemory.get(key, any<TypeReference<ListEntry<PostSummary>>>()) }
@@ -35,7 +35,7 @@ class TechBlogPostListCacheTest : UnitTest() {
     fun `기술 블로그 게시글 목록을 저장한다`() = runTest {
         val cacheMemory = mockk<CacheMemory>()
         val cache = TechBlogPostListCache(cacheMemory)
-        val key = "POST:LIST:TECHBLOG:10:PAGE:1"
+        val key = "POST:LIST:TECHBLOG:10:CATEGORY:40:PAGE:1"
         val entry = ListEntry(
             count = 2L,
             list = listOf(createPostSummary())
@@ -43,7 +43,7 @@ class TechBlogPostListCacheTest : UnitTest() {
 
         coEvery { cacheMemory.set(key, entry, 1_800_000L) } just Runs
 
-        cache.set(10L, 1L, entry)
+        cache.set(10L, 1L, 40L, entry)
 
         coVerify(exactly = 1) { cacheMemory.set(key, entry, 1_800_000L) }
     }

@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import server.core.feature.category.domain.Category
 import server.core.feature.post.domain.Post
 import server.core.feature.post.domain.PostTag
 import server.core.feature.post.infra.PostListCache
@@ -35,8 +36,11 @@ class PostQueryService(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
+        val categoryId = conditions.category?.let {
+            Category.fromId(it)?.id ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
+        }
 
-        val entry = loadEntry(paging, conditions.query)
+        val entry = loadEntry(paging, conditions.query, categoryId)
         val totalCount = entry.count
         val basePosts = entry.list
 
@@ -71,29 +75,31 @@ class PostQueryService(
 
     private fun loadEntry(
         paging: Paging,
-        query: String?
+        query: String?,
+        categoryId: Long?,
     ): ListEntry<PostSummary> {
         if (paging.page > 5 || !query.isNullOrBlank()) {
-            return fetchEntry(paging, query)
+            return fetchEntry(paging, query, categoryId)
         }
 
-        val cached = postListCache.get(paging.page, paging.size)
+        val cached = postListCache.get(paging.page, paging.size, categoryId)
         if (cached != null) return cached
 
-        return fetchEntry(paging).also { entry ->
-            val warmupKey = postListCache.key(paging.page, paging.size)
+        return fetchEntry(paging, categoryId = categoryId).also { entry ->
+            val warmupKey = postListCache.key(paging.page, paging.size, categoryId)
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                postListCache.set(paging.page, paging.size, entry)
+                postListCache.set(paging.page, paging.size, categoryId, entry)
             }
         }
     }
 
     private fun fetchEntry(
         paging: Paging,
-        query: String? = null
+        query: String? = null,
+        categoryId: Long? = null,
     ): ListEntry<PostSummary> {
-        val count = fetchCountAllPosts(query)
-        val list = fetchBasePosts(paging, query)
+        val count = fetchCountAllPosts(query, categoryId)
+        val list = fetchBasePosts(paging, query, categoryId)
         return ListEntry(
             count = count,
             list = list
@@ -102,11 +108,12 @@ class PostQueryService(
 
     private fun fetchBasePosts(
         paging: Paging,
-        query: String? = null
+        query: String? = null,
+        categoryId: Long? = null,
     ): List<PostSummary> {
         val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
-        val jpqlQuery = createBasePostsQuery(query)
+        val jpqlQuery = createBasePostsQuery(query, categoryId)
 
         val rows = entityManager
             .createJdslQuery(
@@ -120,8 +127,8 @@ class PostQueryService(
         return rows.distinctBy { it.id }
     }
 
-    private fun fetchCountAllPosts(query: String?): Long {
-        val jpqlQuery = createCountAllPostsQuery(query)
+    private fun fetchCountAllPosts(query: String?, categoryId: Long?): Long {
+        val jpqlQuery = createCountAllPostsQuery(query, categoryId)
 
         return entityManager
             .createJdslQuery(
@@ -135,7 +142,7 @@ class PostQueryService(
             ?: 0L
     }
 
-    private fun createBasePostsQuery(query: String?) = jpql {
+    private fun createBasePostsQuery(query: String?, categoryId: Long?) = jpql {
         val keyword = query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
 
         selectBasePostSummary(isBookmarked = false)
@@ -146,6 +153,7 @@ class PostQueryService(
                 leftJoin(Tag::class).on(path(PostTag::tagId).equal(path(Tag::id))),
             )
             .whereAnd(
+                categoryId?.let { path(Post::categoryId).equal(it) },
                 keyword?.let {
                     or(
                         path(Post::title).like(it),
@@ -157,13 +165,14 @@ class PostQueryService(
             .orderBy(path(Post::publishedAt).desc())
     }
 
-    private fun createCountAllPostsQuery(query: String?) = jpql {
+    private fun createCountAllPostsQuery(query: String?, categoryId: Long?) = jpql {
         val keyword = query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
         select(count(path(Post::id)))
             .from(
                 entity(Post::class)
             )
             .whereAnd(
+                categoryId?.let { path(Post::categoryId).equal(it) },
                 keyword?.let {
                     or(
                         path(Post::title).like(it),
@@ -172,4 +181,5 @@ class PostQueryService(
                 }
             )
     }
+
 }

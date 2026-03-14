@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import server.core.feature.category.domain.Category
 import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.TechBlogPostListCache
 import server.core.feature.techblog.domain.TechBlog
@@ -33,8 +34,11 @@ class TechBlogPostQueryService(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
         )
+        val categoryId = conditions.category?.let {
+            Category.fromId(it)?.id ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
+        }
 
-        val entry = loadEntry(paging, conditions.techBlogId)
+        val entry = loadEntry(paging, conditions.techBlogId, categoryId)
         val totalCount = entry.count
         val basePosts = entry.list
 
@@ -71,18 +75,19 @@ class TechBlogPostQueryService(
     private fun loadEntry(
         paging: Paging,
         techBlogId: Long,
+        categoryId: Long?,
     ): ListEntry<PostSummary> {
         if (paging.page > 5) {
-            return fetchEntry(paging, techBlogId)
+            return fetchEntry(paging, techBlogId, categoryId)
         }
 
-        val cached = techBlogPostListCache.get(techBlogId, paging.page)
+        val cached = techBlogPostListCache.get(techBlogId, paging.page, categoryId)
         if (cached != null) return cached
 
-        return fetchEntry(paging, techBlogId).also { entry ->
-            val warmupKey = techBlogPostListCache.key(techBlogId, paging.page)
+        return fetchEntry(paging, techBlogId, categoryId).also { entry ->
+            val warmupKey = techBlogPostListCache.key(techBlogId, paging.page, categoryId)
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                techBlogPostListCache.set(techBlogId, paging.page, entry)
+                techBlogPostListCache.set(techBlogId, paging.page, categoryId, entry)
             }
         }
     }
@@ -90,9 +95,10 @@ class TechBlogPostQueryService(
     private fun fetchEntry(
         paging: Paging,
         techBlogId: Long,
+        categoryId: Long?,
     ): ListEntry<PostSummary> {
-        val count = fetchCountTechBlogPosts(techBlogId)
-        val list = fetchBasePostsByTechBlogKey(paging, techBlogId)
+        val count = fetchCountTechBlogPosts(techBlogId, categoryId)
+        val list = fetchBasePostsByTechBlogKey(paging, techBlogId, categoryId)
         return ListEntry(
             count = count,
             list = list
@@ -102,10 +108,11 @@ class TechBlogPostQueryService(
     private fun fetchBasePostsByTechBlogKey(
         paging: Paging,
         techBlogId: Long,
+        categoryId: Long?,
     ): List<PostSummary> {
         val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
-        val jpqlQuery = createTechBlogBasePostsQuery(techBlogId)
+        val jpqlQuery = createTechBlogBasePostsQuery(techBlogId, categoryId)
 
         return entityManager
             .createJdslQuery(
@@ -117,8 +124,8 @@ class TechBlogPostQueryService(
             .resultList
     }
 
-    private fun fetchCountTechBlogPosts(techBlogId: Long): Long {
-        val jpqlQuery = createCountTechBlogPostsQuery(techBlogId)
+    private fun fetchCountTechBlogPosts(techBlogId: Long, categoryId: Long?): Long {
+        val jpqlQuery = createCountTechBlogPostsQuery(techBlogId, categoryId)
 
         return entityManager
             .createJdslQuery(
@@ -132,25 +139,28 @@ class TechBlogPostQueryService(
             ?: 0L
     }
 
-    private fun createTechBlogBasePostsQuery(techBlogId: Long) = jpql {
+    private fun createTechBlogBasePostsQuery(techBlogId: Long, categoryId: Long?) = jpql {
         selectBasePostSummary(isBookmarked = false)
             .from(
                 entity(Post::class),
                 join(TechBlog::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
             )
-            .where(
-                path(TechBlog::id).equal(techBlogId)
+            .whereAnd(
+                path(TechBlog::id).equal(techBlogId),
+                categoryId?.let { path(Post::categoryId).equal(it) }
             )
             .orderBy(path(Post::publishedAt).desc())
     }
 
-    private fun createCountTechBlogPostsQuery(techBlogId: Long) = jpql {
+    private fun createCountTechBlogPostsQuery(techBlogId: Long, categoryId: Long?) = jpql {
         select(count(path(Post::id)))
             .from(
                 entity(Post::class)
             )
-            .where(
-                path(Post::techBlogId).equal(techBlogId)
+            .whereAnd(
+                path(Post::techBlogId).equal(techBlogId),
+                categoryId?.let { path(Post::categoryId).equal(it) }
             )
     }
+
 }
