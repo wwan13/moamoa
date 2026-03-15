@@ -24,7 +24,7 @@ import server.token.ExpiredTokenException
 import server.token.InvalidTokenException
 import server.core.global.profile.isProd
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = ["server.core"])
 class ApiControllerAdvice(
     private val environment: Environment,
     private val webhookSender: WebhookSender,

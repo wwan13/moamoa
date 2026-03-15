@@ -20,7 +20,7 @@ import server.admin.global.security.AdminUnauthorizedException
 import server.token.ExpiredTokenException
 import server.token.InvalidTokenException
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = ["server.admin"])
 internal class AdminApiControllerAdvice {
 
     private val log = kLogger {}
