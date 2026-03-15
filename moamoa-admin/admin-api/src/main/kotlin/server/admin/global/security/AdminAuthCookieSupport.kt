@@ -6,8 +6,8 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
 
 object AdminAuthCookieSupport {
-    const val ACCESS_TOKEN_COOKIE = "accessToken"
-    const val REFRESH_TOKEN_COOKIE = "refreshToken"
+    const val ACCESS_TOKEN_COOKIE = "adminAccessToken"
+    const val REFRESH_TOKEN_COOKIE = "adminRefreshToken"
     const val REFRESH_TOKEN_HEADER = "X-Refresh-Token"
     const val ACCESS_TOKEN_MAX_AGE_SECONDS = 604_800L
     const val REFRESH_TOKEN_MAX_AGE_SECONDS = 604_800L

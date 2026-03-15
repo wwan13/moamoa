@@ -21,12 +21,12 @@ class AdminAuthCookieSupportTest : UnitTest() {
 
         val cookies = response.getHeaders(HttpHeaders.SET_COOKIE)
         cookies.size shouldBe 2
-        cookies[0].contains("accessToken=access-token") shouldBe true
+        cookies[0].contains("adminAccessToken=access-token") shouldBe true
         cookies[0].contains("HttpOnly") shouldBe true
         cookies[0].contains("Secure") shouldBe true
         cookies[0].contains("SameSite=None") shouldBe true
         cookies[0].contains("Max-Age=604800") shouldBe true
-        cookies[1].contains("refreshToken=refresh-token") shouldBe true
+        cookies[1].contains("adminRefreshToken=refresh-token") shouldBe true
         cookies[1].contains("Max-Age=604800") shouldBe true
     }
 
@@ -38,9 +38,9 @@ class AdminAuthCookieSupportTest : UnitTest() {
 
         val cookies = response.getHeaders(HttpHeaders.SET_COOKIE)
         cookies.size shouldBe 2
-        cookies[0].contains("accessToken=") shouldBe true
+        cookies[0].contains("adminAccessToken=") shouldBe true
         cookies[0].contains("Max-Age=0") shouldBe true
-        cookies[1].contains("refreshToken=") shouldBe true
+        cookies[1].contains("adminRefreshToken=") shouldBe true
         cookies[1].contains("Max-Age=0") shouldBe true
     }
 
@@ -48,7 +48,7 @@ class AdminAuthCookieSupportTest : UnitTest() {
     fun `accessToken은 Authorization 헤더를 우선 사용한다`() {
         val request = MockHttpServletRequest().apply {
             addHeader(HttpHeaders.AUTHORIZATION, "Bearer header-token")
-            setCookies(Cookie("accessToken", "cookie-token"))
+            setCookies(Cookie("adminAccessToken", "cookie-token"))
         }
 
         request.resolveAdminAccessToken() shouldBe "header-token"
@@ -57,7 +57,7 @@ class AdminAuthCookieSupportTest : UnitTest() {
     @Test
     fun `refreshToken은 헤더가 없으면 쿠키를 사용한다`() {
         val request = MockHttpServletRequest().apply {
-            setCookies(Cookie("refreshToken", "cookie-refresh-token"))
+            setCookies(Cookie("adminRefreshToken", "cookie-refresh-token"))
         }
 
         request.resolveAdminRefreshToken() shouldBe "cookie-refresh-token"
