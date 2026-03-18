@@ -80,6 +80,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
         isBookmarked = false,
         viewCount = viewCount,
         bookmarkCount = bookmarkCount,
+        categoryId = 20L,
         techBlogId = 1L,
         techBlogTitle = "blog",
         techBlogIcon = "icon",

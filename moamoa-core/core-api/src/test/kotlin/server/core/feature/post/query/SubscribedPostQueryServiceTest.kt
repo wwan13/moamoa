@@ -83,6 +83,7 @@ class SubscribedPostQueryServiceTest : UnitTest() {
         isBookmarked = false,
         viewCount = viewCount,
         bookmarkCount = bookmarkCount,
+        categoryId = 10L,
         techBlogId = 1L,
         techBlogTitle = "blog",
         techBlogIcon = "icon",

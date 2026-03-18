@@ -15,6 +15,7 @@ internal fun Jpql.selectBasePostSummary(isBookmarked: Boolean) = selectNew<PostS
     booleanLiteral(isBookmarked),
     path(Post::viewCount),
     path(Post::bookmarkCount),
+    path(Post::categoryId),
     path(TechBlog::id),
     path(TechBlog::title),
     path(TechBlog::icon),

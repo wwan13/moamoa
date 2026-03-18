@@ -32,6 +32,7 @@ data class PostSummary(
     val isBookmarked: Boolean,
     val viewCount: Long,
     val bookmarkCount: Long,
+    val categoryId: Long,
     val techBlogId: Long,
     val techBlogTitle: String,
     val techBlogIcon: String,
