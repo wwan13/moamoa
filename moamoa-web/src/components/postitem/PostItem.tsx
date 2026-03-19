@@ -159,14 +159,14 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
                         <span className={styles.dot}>·</span>
 
                         <span className={styles.stat}>
-                            <BookmarkBorderIcon fontSize="inherit"/>
+                            <BookmarkBorderIcon sx={{fontSize: 14}} />
                             {bookmarkCount}
                         </span>
 
                         <span className={styles.dot}>·</span>
 
                         <span className={styles.stat}>
-                            <VisibilityIcon fontSize="inherit"/>
+                            <VisibilityIcon sx={{fontSize: 14}} />
                             {viewCount}
                         </span>
                     </div>

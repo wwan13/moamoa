@@ -7,6 +7,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    min-width: 1000px;
 }
 
 .content {
@@ -127,28 +128,4 @@
     font-weight: 700;
     color: #F8F8F8;
     margin: 0;
-}
-
-@keyframes blink {
-    50% { opacity: 0; }
-}
-
-@media (max-width: 900px) {
-    .ornamentBlue {
-        width: 42px;
-        height: 42px;
-    }
-
-    .ornamentRed,
-    .ornamentTeal,
-    .ornamentGreen {
-        height: 28px;
-        font-size: 12px;
-        padding: 0 14px;
-    }
-
-    .ornamentYellow {
-        width: 38px;
-        height: 38px;
-    }
 }
