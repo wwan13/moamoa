@@ -41,6 +41,7 @@ export type PostSummary = {
   key: string
   title: string
   description: string
+  categoryId: number
   thumbnail: string
   url: string
   publishedAt: string
