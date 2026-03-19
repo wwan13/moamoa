@@ -95,8 +95,8 @@ export const postApi = {
         postId: number,
         command: AdminUpdateCategoryCommand
     ): Promise<AdminUpdateCategoryResult> => {
-        const res = await http.patch<AdminUpdateCategoryResult>(
-            `/api/admin/post/${postId}`,
+        const res = await http.post<AdminUpdateCategoryResult>(
+            `/api/admin/post/category/${postId}`,
             command
         )
         return res ?? { success: false }

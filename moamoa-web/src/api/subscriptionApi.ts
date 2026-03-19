@@ -33,7 +33,7 @@ export const subscriptionApi = {
     command: NotificationEnabledToggleCommand,
     config?: ApiRequestConfig
   ): Promise<NotificationEnabledToggleResult> => {
-    const res = await http.patch<NotificationEnabledToggleResult>(
+    const res = await http.post<NotificationEnabledToggleResult>(
       "/api/subscription/notification-enabled",
       command,
       config

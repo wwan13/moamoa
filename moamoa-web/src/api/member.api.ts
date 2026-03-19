@@ -57,7 +57,7 @@ export const memberApi = {
     command: ChangePasswordCommand,
     config?: ApiRequestConfig
   ): Promise<ChangePasswordResult> => {
-    const res = await http.patch<ChangePasswordResult>("/api/member/password", command, config)
+    const res = await http.post<ChangePasswordResult>("/api/member/password", command, config)
     return res ?? { success: false }
   },
   unjoin: async (config?: ApiRequestConfig): Promise<MemberUnjoinResult> => {
