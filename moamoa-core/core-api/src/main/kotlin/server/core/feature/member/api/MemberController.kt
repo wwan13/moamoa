@@ -63,7 +63,7 @@ class MemberController(
         return ResponseEntity.ok(response)
     }
 
-    @PatchMapping("/password")
+    @PostMapping("/password")
     fun changePassword(
         @RequestBody @Valid command: ChangePasswordCommand,
         @RequestPassport passport: Passport
