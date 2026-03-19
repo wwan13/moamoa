@@ -213,8 +213,46 @@
     width: 60%;
 }
 
+.skeletonLineLong {
+    height: 14px;
+    width: 80%;
+}
+
 .skeletonCircle {
     width: 28px;
     height: 28px;
     border-radius: 999px;
+}
+
+.skeletonCircleSmall {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.skeletonTop {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.skeletonSourceLine {
+    height: 14px;
+    width: 92px;
+}
+
+.skeletonCategory {
+    width: 56px;
+    height: 24px;
+    border-radius: 8px;
+}
+
+.skeletonMeta {
+    width: 56px;
+    height: 14px;
+}
+
+.skeletonThumb {
+    border-radius: 10px;
 }

@@ -83,27 +83,35 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
     if (isLoading) {
         return (
             <article className={`${styles.card} ${styles.skeletonCard}`} aria-busy="true">
-                <div className={styles.thumbnailWrap}>
-                    <div className={`${styles.thumbnailImage} ${styles.skeleton}`}/>
-                    <div className={`${styles.bookmarkButton} ${styles.skeleton} ${styles.skeletonCircle}`}/>
-                </div>
-
                 <div className={styles.postInfo}>
-                    <div>
-                        <div className={`${styles.title} ${styles.skeleton} ${styles.skeletonLine}`}/>
-                        <div className={`${styles.summary} ${styles.skeleton}  ${styles.skeletonLine}`}/>
-                        <div className={`${styles.summary} ${styles.skeleton} ${styles.skeletonLineShort}`}/>
+                    <div className={styles.top}>
+                        <div className={styles.skeletonTop}>
+                            <div className={`${styles.skeleton} ${styles.skeletonCircleSmall}`}/>
+                            <div className={`${styles.skeleton} ${styles.skeletonSourceLine}`}/>
+                        </div>
+                        <div className={`${styles.skeleton} ${styles.skeletonCategory}`}/>
                     </div>
 
-                    <div className={`${styles.metaRow} ${styles.skeleton} ${styles.skeletonLineShort}`}>
-                        <div className={`${styles.source}`}>
-                            <div className={`${styles.skeletonLineShort}`}/>
+                    <div className={styles.bottom}>
+                        <div className={styles.contents}>
+                            <div className={`${styles.title} ${styles.skeleton} ${styles.skeletonLine}`}/>
+                            <div className={`${styles.summary} ${styles.skeleton} ${styles.skeletonLine}`}/>
+                            <div className={`${styles.summary} ${styles.skeleton} ${styles.skeletonLineLong}`}/>
                         </div>
-                        <div className={styles.stats}>
-                            <div className={`${styles.skeletonLineShort}`}/>
+
+                        <div className={styles.metaRow}>
+                            <div className={`${styles.skeleton} ${styles.skeletonMeta}`}/>
+                            <div className={`${styles.skeleton} ${styles.skeletonMeta}`}/>
+                            <div className={`${styles.skeleton} ${styles.skeletonMeta}`}/>
                         </div>
                     </div>
                 </div>
+
+                <div className={styles.thumbnailWrap}>
+                    <div className={`${styles.thumbnailImage} ${styles.skeleton} ${styles.skeletonThumb}`}/>
+                </div>
+
+                <div className={`${styles.bookmarkButton} ${styles.skeleton} ${styles.skeletonCircle}`}/>
             </article>
         )
     }
