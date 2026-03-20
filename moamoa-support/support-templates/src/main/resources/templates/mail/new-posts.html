@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>모아모아 새 게시글</title>
+
+    <style>
+        @font-face {
+            font-family: 'Pretendard';
+            font-style: normal;
+            font-weight: 400;
+            src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2'),
+            url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/woff/Pretendard-Regular.woff') format('woff');
+        }
+
+        @font-face {
+            font-family: 'Pretendard';
+            font-style: normal;
+            font-weight: 700;
+            src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/woff2/Pretendard-Bold.woff2') format('woff2'),
+            url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/woff/Pretendard-Bold.woff') format('woff');
+        }
+
+        body, table, td, div, p, span, a {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+        }
+    </style>
+</head>
+<body style="margin:0; padding:0; background-color:#ffffff; color:#252525;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0; padding:40px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="620" style="width:620px; max-width:620px; background-color:#ffffff;">
+                <!-- Header -->
+                <tr>
+                    <td align="center" style="padding-bottom:22px;">
+                        <a href="https://moamoa.dev" style="text-decoration:none;">
+                            <img
+                                    src="https://i.imgur.com/CHYokw0.png"
+                                    alt="moamoa logo"
+                                    width="337"
+                                    height="44"
+                                    style="display:block; width:337px; height:44px; border:0;"
+                            >
+                        </a>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td align="center" style="padding-bottom:22px;">
+                        <div th:text="${date}" style="font-size:14px; color:#1D2027;">2026.03.16</div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td align="center" style="padding-bottom:22px;">
+                        <div style="font-size:20px; line-height:1.4; font-weight:600; color:#252525;">
+                            구독하신 블로그의 새 글을 확인해 보세요!
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Summary box -->
+                <tr>
+                    <td style="padding-bottom:22px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F3F6FB; border-radius:12px; padding-bottom: 10px">
+                            <tr>
+                                <td style="padding:20px 20px 10px 20px; font-size:14px; color:#252525;">
+                                    총 <span th:text="${count}" style="font-weight:600;">10</span>개의 글이 새롭게 등록되었습니다.
+                                </td>
+                            </tr>
+
+                            <tr th:each="item, stat : ${postSummaries}">
+                                <td style="padding: 0 20px 10px 20px">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                        <tr>
+                                            <td style="padding-right:10px; vertical-align:middle;">
+                                                <img
+                                                        th:src="${item.techBlogIcon}"
+                                                        alt="logo"
+                                                        width="20"
+                                                        height="20"
+                                                        style="width:20px; height:20px; border-radius:10px; vertical-align:middle; display:inline-block; border:0;"
+                                                >
+                                                <span
+                                                        th:text="${item.techBlogName}"
+                                                        style="font-size:14px; font-weight:600; color:#000000; padding-left:4px; vertical-align:middle; display:inline-block;"
+                                                >
+                                                    기술 블로그 이름
+                                                </span>
+                                                <span
+                                                        th:text="${item.title}"
+                                                        style="font-size:14px; color:#1D2027; padding-left:10px; vertical-align:middle; display:inline-block;"
+                                                >
+                                                    게시글 제목
+                                                </span>
+                                            </td>
+
+                                            <td align="right" style="white-space:nowrap; vertical-align:middle;">
+                                                <a th:href="${item.url}"
+                                                   style="font-size:14px; color:#0E4BBC; text-decoration:underline;">
+                                                    웹에서 보기
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+
+
+                </tr>
+
+                <tr>
+                    <td style="padding:8px 20px 20px 20px;" align="center">
+                        <a href="https://moamoa.dev"
+                           style="display:inline-block; background-color:#0E4BBC; color:#ffffff; text-decoration:none; font-size:14px; font-weight:600; padding:5px 20px; line-height:21px; border-radius:6px;">
+                            모아모아에서 보기
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Divider -->
+                <tr>
+                    <td style="padding-bottom:40px;">
+                        <div style="height:2px; background-color:#0E4BBC;"></div>
+                    </td>
+                </tr>
+
+                <!-- Detail section -->
+                <th:block th:each="techBlogPost : ${techBlogPosts}">
+                    <tr>
+                        <td style="padding-bottom:22px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <!-- 블로그 정보 -->
+                                <tr>
+                                    <td style="vertical-align:middle; padding-bottom:20px;">
+                                        <a th:href="@{'https://moamoa.dev/blog/' + ${techBlogPost.techBlogId}}"
+                                           style="display:block; text-decoration:none; color:inherit;">
+                                            <img
+                                                    th:src="${techBlogPost.techBlogIcon}"
+                                                    alt="logo"
+                                                    width="20"
+                                                    height="20"
+                                                    style="width:20px; height:20px; border-radius:10px; vertical-align:middle; display:inline-block; border:0;"
+                                            >
+
+                                            <span
+                                                    th:text="${techBlogPost.techBlogName}"
+                                                    style="font-size:16px; font-weight:600; color:#000000; padding-left:10px; vertical-align:middle; display:inline-block;"
+                                            >
+                                                기술 블로그 이름
+                                            </span>
+                                        </a>
+                                    </td>
+                                </tr>
+
+                                <!-- 게시글 목록 -->
+                                <tr th:each="post, postStat : ${techBlogPost.posts}">
+                                    <td th:style="${postStat.last} ? 'padding:0 0 0 0;' : 'padding:0 0 22px 0;'">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr>
+                                                <!-- 텍스트 영역 -->
+                                                <td
+                                                        valign="top"
+                                                        style="vertical-align:top; padding-right:16px;"
+                                                        th:attr="colspan=${#strings.isEmpty(post.thumbnail) ? 2 : 1}"
+                                                >
+                                                    <a th:href="${post.url}"
+                                                       style="display:block; text-decoration:none; color:inherit;">
+                                                        <div style="font-size:16px; font-weight:600; color:#252525; margin-bottom:10px; line-height:1.5;">
+                                                            <span th:text="${post.title}">
+                                                                게시글 제목
+                                                            </span>
+                                                        </div>
+
+                                                        <div th:text="${post.description}"
+                                                             style="font-size:13px; line-height:1.7; color:#858585;">
+                                                            게시글 설명
+                                                        </div>
+                                                    </a>
+                                                </td>
+
+                                                <!-- 썸네일 -->
+                                                <td
+                                                        th:if="${!#strings.isEmpty(post.thumbnail)}"
+                                                        valign="top"
+                                                        width="178"
+                                                        style="width:178px; vertical-align:top;"
+                                                >
+                                                    <a th:href="${post.url}">
+                                                        <img th:src="${post.thumbnail}"
+                                                             alt="thumbnail"
+                                                             width="178"
+                                                             height="100"
+                                                             style="display:block; width:178px; height:100px; border-radius:10px; border:0; background-color:#F3F6FB;"/>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <tr th:if="${!postStat.last}">
+                                    <td colspan="2" style="padding-top:22px;">
+                                        <div style="border-bottom:1px dashed #0E4BBC;"></div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </th:block>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="padding:18px 0 22px 0;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#E7EDF8; border-radius:8px;">
+                            <tr>
+                                <td align="center" style="padding:40px 20px 10px 20px; font-size:12px; line-height:1.6; color:#858585;">
+                                    모아모아가 스팸으로 분류되지 않도록
+                                    <span style="color:#0E4BBC; font-weight:600; text-decoration:underline;">noreply@moamoa.dev</span>
+                                    를 주소록에 추가해 주세요.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td align="center" style="padding:0 20px 10px 20px; font-size:12px; color:#858585;">
+                                    그래도 이메일이 보이지 않으신가요?
+                                    <a href="https://moamoa.dev/inquiry" style="color:#858585; font-weight:500; text-decoration:underline;">
+                                        문의하기
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td align="center" style="padding:0 20px 10px 20px; font-size:12px; color:#858585;">
+                                    <a href="https://moamoa.dev/subscription" style="color:#858585; text-decoration:none;">
+                                        구독 관리하기
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td align="center" style="padding:32px 20px;">
+                                    <a href="https://moamoa.dev" style="text-decoration:none;">
+                                        <img
+                                                src="https://i.imgur.com/CHYokw0.png"
+                                                alt="moamoa logo"
+                                                width="122"
+                                                height="16"
+                                                style="display:block; width:122px; height:16px; border:0;"
+                                        >
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td align="center" style="padding:0 20px 40px 20px; font-size:12px; color:#858585;">
+                                    Copyright © moamoa All Rights Reserved.
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
