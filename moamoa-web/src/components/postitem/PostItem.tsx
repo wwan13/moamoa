@@ -168,7 +168,7 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
                 </div>
             </div>
 
-            {!post.thumbnail.startsWith("https://i.imgur.com/") &&
+            {post.thumbnail.length !== 0 &&
                 <div className={styles.thumbnailWrap}>
                     <img
                         src={post.thumbnail}
