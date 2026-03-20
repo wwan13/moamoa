@@ -9,6 +9,7 @@ import BlankLayout from "../layouts/BlankLayout";
 import SignupPage from "../pages/signuppage/SignupPage";
 import Oauth2Page from "../pages/oauth2page/Oauth2Page";
 import Oauth2EmailInputPage from "../pages/oauth2emailinputpage/Oauth2EmailInputPage";
+import PostRedirectPage from "../pages/postredirectpage/PostRedirectPage";
 import BlogSubmissionPage from "../pages/blogsubmissionpage/BlogSubmissionPage";
 import PasswordChangePage from "../pages/passwordchangepage/PasswordChangePage";
 import {MemberUnjoinPage} from "../pages/memberunjoinpage/MemberUnjoinPage";
@@ -35,6 +36,7 @@ const AppRoutes = () => {
             <Route element={<BlankLayout />}>
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/oauth2/email" element={<Oauth2EmailInputPage />} />
+                <Route path="/post/:postId" element={<PostRedirectPage />} />
             </Route>
         </Routes>
     )

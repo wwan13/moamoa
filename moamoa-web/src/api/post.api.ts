@@ -28,12 +28,21 @@ export type PostPagingConditions = {
   category?: PostCategoryKey | number | string
 }
 
-export type IncreasePostViewCountCommand = {
+export type ViewPostCommand = {
   postId: number | string
 }
 
-export type IncreaseViewCountResult = {
-  success: boolean
+export type ViewedPostResult = {
+  id: number
+  key: string
+  title: string
+  description: string
+  thumbnail: string
+  url: string
+  publishedAt: string
+  viewCount: number
+  bookmarkCount: number
+  techBlogId: number
 }
 
 export type PostSummary = {
@@ -149,11 +158,10 @@ export const postsApi = {
     const res = await http.get<PostList>(`/api/post/bookmarked${q}`, config)
     return res ?? emptyPostList(page ?? 1, DEFAULT_PAGE_SIZE)
   },
-  increaseViewCount: async (
-    command: IncreasePostViewCountCommand,
+  viewPost: async (
+    command: ViewPostCommand,
     config?: ApiRequestConfig
-  ): Promise<IncreaseViewCountResult> => {
-    const res = await http.post<IncreaseViewCountResult>(`/api/post/${command.postId}/view`, {}, config)
-    return res ?? { success: false }
+  ): Promise<ViewedPostResult | null> => {
+    return await http.post<ViewedPostResult>(`/api/post/${command.postId}`, {}, config)
   },
 }

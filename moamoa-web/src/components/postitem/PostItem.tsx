@@ -8,9 +8,8 @@ import useAuth from "../../auth/useAuth"
 import {useNavigate} from "react-router-dom"
 import {showGlobalConfirm, showToast} from "../../api/client"
 import {useBookmarkToggleMutation} from "../../queries/bookmark.queries"
-import {useIncreasePostViewCountMutation} from "../../queries/post.queries"
 import type {PostSummary} from "../../api/post.api"
-import { usePostCategory } from "../../hooks/usePostCategory"
+import {usePostCategory} from "../../hooks/usePostCategory"
 
 type PostItemProps = {
     post?: PostSummary
@@ -23,7 +22,6 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
     const {isLoggedIn, openLogin} = useAuth()
 
     const bookmarkToggle = useBookmarkToggleMutation({invalidateOnSuccess: false})
-    const increaseView = useIncreasePostViewCountMutation()
 
     const [bookmarked, setBookmarked] = useState(post?.isBookmarked ?? false)
     const [bookmarkCount, setBookmarkCount] = useState(post?.bookmarkCount ?? 0)
@@ -35,11 +33,8 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
         e.stopPropagation()
     }
 
-    const onOpenPost = (postId: number, postUrl: string) => {
-        window.open(postUrl, "_blank", "noopener,noreferrer")
-
-        // ✅ 조회수는 mutation으로 "조용히" 전송
-        increaseView.mutate({postId})
+    const onOpenPost = (postId: number) => {
+        window.open(`/post/${postId}`, "_blank", "noopener,noreferrer")
         setViewCount((v) => v + 1)
     }
 
@@ -121,10 +116,10 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
     return (
         <article
             className={styles.card}
-            onClick={() => onOpenPost(post.id, post.url)}
+            onClick={() => onOpenPost(post.id)}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && onOpenPost(post.id, post.url)}
+            onKeyDown={(e) => e.key === "Enter" && onOpenPost(post.id)}
         >
             <div className={styles.postInfo}>
                 <div className={styles.top}>
@@ -142,7 +137,7 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
                         />
                         <span className={styles.sourceName}>{post.techBlogTitle || ""}</span>
                     </div>
-                    { category.id != 999 &&
+                    {category.id != 999 &&
                         <div className={styles.category}>{category.title}</div>
                     }
                 </div>
@@ -159,21 +154,21 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
                         <span className={styles.dot}>·</span>
 
                         <span className={styles.stat}>
-                            <BookmarkBorderIcon sx={{fontSize: 14}} />
+                            <BookmarkBorderIcon sx={{fontSize: 14}}/>
                             {bookmarkCount}
                         </span>
 
                         <span className={styles.dot}>·</span>
 
                         <span className={styles.stat}>
-                            <VisibilityIcon sx={{fontSize: 14}} />
+                            <VisibilityIcon sx={{fontSize: 14}}/>
                             {viewCount}
                         </span>
                     </div>
                 </div>
             </div>
 
-            { !post.thumbnail.startsWith("https://i.imgur.com/") &&
+            {!post.thumbnail.startsWith("https://i.imgur.com/") &&
                 <div className={styles.thumbnailWrap}>
                     <img
                         src={post.thumbnail}

@@ -1,12 +1,12 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query"
 import {
   postsApi,
-  type IncreasePostViewCountCommand,
-  type IncreaseViewCountResult,
   type PostList,
   type PostListConditions,
   type PostPagingConditions,
   type TechBlogPostConditions,
+  type ViewedPostResult,
+  type ViewPostCommand,
 } from "../api/post.api"
 import useAuth from "../auth/useAuth"
 
@@ -117,8 +117,8 @@ export const useInfinitePostsQuery = (
   })
 }
 
-export const useIncreasePostViewCountMutation = () => {
-  return useMutation<IncreaseViewCountResult, Error, IncreasePostViewCountCommand>({
-    mutationFn: (command) => postsApi.increaseViewCount(command),
+export const useViewPostMutation = () => {
+  return useMutation<ViewedPostResult | null, Error, ViewPostCommand>({
+    mutationFn: (command) => postsApi.viewPost(command),
   })
 }
