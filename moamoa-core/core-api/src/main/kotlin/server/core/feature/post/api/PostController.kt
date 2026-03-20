@@ -2,15 +2,9 @@ package server.core.feature.post.api
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import server.core.feature.post.application.IncreaseViewCountResult
+import server.core.feature.post.application.PostData
 import server.core.feature.post.application.PostService
-import server.core.feature.post.query.BookmarkedPostQueryService
-import server.core.feature.post.query.PostList
-import server.core.feature.post.query.PostQueryConditions
-import server.core.feature.post.query.PostQueryService
-import server.core.feature.post.query.SubscribedPostQueryService
-import server.core.feature.post.query.TechBlogPostQueryConditions
-import server.core.feature.post.query.TechBlogPostQueryService
+import server.core.feature.post.query.*
 import server.core.global.security.Passport
 import server.core.global.security.RequestPassport
 
@@ -24,11 +18,11 @@ class PostController(
     private val bookmarkedPostQueryService: BookmarkedPostQueryService,
 ) {
 
-    @PostMapping("/{postId}/view")
-    fun increaseViewCount(
+    @PostMapping("/{postId}")
+    fun findById(
         @PathVariable postId: Long
-    ): ResponseEntity<IncreaseViewCountResult> {
-        val response = postService.increaseViewCount(postId)
+    ): ResponseEntity<PostData> {
+        val response = postService.findById(postId)
 
         return ResponseEntity.ok(response)
     }

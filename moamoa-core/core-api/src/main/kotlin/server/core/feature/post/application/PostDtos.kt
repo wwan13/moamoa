@@ -3,10 +3,6 @@ package server.core.feature.post.application
 import server.core.feature.post.domain.Post
 import java.time.LocalDateTime
 
-data class IncreaseViewCountResult(
-    val success: Boolean
-)
-
 data class PostData(
     val id: Long,
     val key: String,
