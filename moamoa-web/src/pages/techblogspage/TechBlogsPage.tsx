@@ -189,7 +189,7 @@ const TechBlogsPage = () => {
                             <article
                                 key={blog.id}
                                 className={styles.card}
-                                onClick={() => navigate(`/${blog.id}`)}
+                                onClick={() => navigate(`/blog/${blog.id}`)}
                             >
                                 <div className={styles.logoWrap}>
                                     <img src={blog.icon} alt="thumbnail" className={styles.logo} />

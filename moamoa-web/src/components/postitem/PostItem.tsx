@@ -132,7 +132,7 @@ const PostItem = ({post, isBlogDetail = false, isLoading = false}: PostItemProps
                         className={styles.sourceLink}
                         onClick={(e) => {
                             stop(e)
-                            navigate(`/${post.techBlogId}`)
+                            navigate(`/blog/${post.techBlogId}`)
                         }}
                     >
                         <img

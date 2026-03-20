@@ -20,7 +20,7 @@ const AppRoutes = () => {
             <Route element={<DefaultLayout />}>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/blogs" element={<TechBlogsPage />} />
-                <Route path="/:techBlogId" element={<TechBlogDetailPage />} />
+                <Route path="/blog/:techBlogId" element={<TechBlogDetailPage />} />
                 <Route path="/subscription" element={<MySubscriptionPage />} />
                 <Route path="/my" element={<MyPage />} />
                 <Route path="/submission" element={<BlogSubmissionPage />} />
