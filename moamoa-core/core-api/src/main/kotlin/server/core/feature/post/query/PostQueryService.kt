@@ -149,8 +149,6 @@ class PostQueryService(
             .from(
                 entity(Post::class),
                 join(TechBlog::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
-                leftJoin(PostTag::class).on(path(PostTag::postId).equal(path(Post::id))),
-                leftJoin(Tag::class).on(path(PostTag::tagId).equal(path(Tag::id))),
             )
             .whereAnd(
                 categoryId?.let { path(Post::categoryId).equal(it) },
@@ -158,7 +156,19 @@ class PostQueryService(
                     or(
                         path(Post::title).like(it),
                         path(Post::description).like(it),
-                        path(Tag::title).like(it),
+                        exists(
+                            jpql {
+                                select(path(PostTag::id))
+                                    .from(
+                                        entity(PostTag::class),
+                                        join(Tag::class).on(path(PostTag::tagId).equal(path(Tag::id))),
+                                    )
+                                    .whereAnd(
+                                        path(PostTag::postId).equal(path(Post::id)),
+                                        path(Tag::title).like(it),
+                                    )
+                            }.asSubquery()
+                        ),
                     )
                 }
             )
@@ -167,7 +177,7 @@ class PostQueryService(
 
     private fun createCountAllPostsQuery(query: String?, categoryId: Long?) = jpql {
         val keyword = query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
-        select(count(path(Post::id)))
+        select(countDistinct(Post::id))
             .from(
                 entity(Post::class)
             )
@@ -177,6 +187,19 @@ class PostQueryService(
                     or(
                         path(Post::title).like(it),
                         path(Post::description).like(it),
+                        exists(
+                            jpql {
+                                select(path(PostTag::id))
+                                    .from(
+                                        entity(PostTag::class),
+                                        join(Tag::class).on(path(PostTag::tagId).equal(path(Tag::id))),
+                                    )
+                                    .whereAnd(
+                                        path(PostTag::postId).equal(path(Post::id)),
+                                        path(Tag::title).like(it),
+                                    )
+                            }.asSubquery()
+                        ),
                     )
                 }
             )
