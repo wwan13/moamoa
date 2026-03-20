@@ -46,7 +46,7 @@ internal class TossSource(
                     title = it.title,
                     description = it.subtitle,
                     tags = listOf(it.category),
-                    thumbnail = it.thumbnailConfig.imageUrl ?: "https://i.imgur.com/DrBOmL0.png",
+                    thumbnail = it.thumbnailConfig.imageUrl ?: "",
                     publishedAt = ZonedDateTime.parse(it.publishedTime).toLocalDateTime(),
                     url = postBaseUrl + it.id
                 )

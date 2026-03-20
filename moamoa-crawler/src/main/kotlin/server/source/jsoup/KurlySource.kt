@@ -17,7 +17,7 @@ internal class KurlySource : TechBlogSource {
 
     private val baseUrl = "https://helloworld.kurly.com"
     private val timeoutMs = 10_000
-    private val fixedThumbnail = "https://i.imgur.com/qEmALiB.png"
+    private val fixedThumbnail = ""
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getPosts(size: Int?): Flow<TechBlogPost> {

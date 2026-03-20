@@ -143,7 +143,7 @@ internal class SaraminSource : TechBlogSource {
                 ?.trim()
                 ?.takeIf { it.isNotBlank() }
 
-        return image?.let { resolveUrl(it) } ?: "https://i.imgur.com/CvjQExf.png"
+        return image?.let { resolveUrl(it) } ?: ""
     }
 
     private fun extractPublishedAt(doc: Document, url: String): LocalDateTime {

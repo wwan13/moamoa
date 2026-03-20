@@ -114,6 +114,6 @@ internal class KakaoMobilitySource(
         private const val BLOG_KEY = "kakaoMobility"
         private const val FEED_URL = "https://developers.kakaomobility.com/techblogs.xml"
         private const val PAGE_SIZE = 50
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/6taXho0.png"
+        private const val DEFAULT_THUMBNAIL = ""
     }
 }

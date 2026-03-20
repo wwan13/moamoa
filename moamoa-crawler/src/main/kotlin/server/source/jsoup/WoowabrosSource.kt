@@ -54,7 +54,7 @@ internal class WoowabrosSource : TechBlogSource {
                     tags = emptyList(),
                     publishedAt = publishedAt,
                     url = url,
-                    thumbnail = "https://i.imgur.com/xyE7Tom.png"
+                    thumbnail = ""
                 )
             }
         }

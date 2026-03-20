@@ -86,6 +86,6 @@ internal class GabiaSource(
             .trim()
 
     companion object {
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/LZiefd9.png"
+        private const val DEFAULT_THUMBNAIL = ""
     }
 }

@@ -45,7 +45,7 @@ internal class PostypeSource(
                 val title = requireField(item.title, "title", url)
 
                 val thumbnail = item.thumbnails?.firstOrNull()?.imagePath
-                    ?: "https://i.imgur.com/4kBg9Fl.png"
+                    ?: ""
 
                 val publishedAt = item.publishedAt
                     ?.let { Instant.ofEpochSecond(it).atZone(ZoneOffset.UTC).toLocalDateTime() }

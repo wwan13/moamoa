@@ -115,6 +115,6 @@ internal class SamsungSource : TechBlogSource {
 
     companion object {
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/Qm5FpnX.png"
+        private const val DEFAULT_THUMBNAIL = ""
     }
 }

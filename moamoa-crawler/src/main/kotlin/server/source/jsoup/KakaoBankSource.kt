@@ -53,7 +53,7 @@ internal class KakaoBankSource : TechBlogSource {
                     tags = categories,
                     publishedAt = publishedAt,
                     url = url,
-                    thumbnail = "https://i.imgur.com/80OkMX7.png"
+                    thumbnail = ""
                 )
             }
         }

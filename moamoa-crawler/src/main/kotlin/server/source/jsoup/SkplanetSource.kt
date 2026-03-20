@@ -69,7 +69,7 @@ internal class SkplanetSource : TechBlogSource {
                     tags = tags,
                     publishedAt = publishedAt,
                     url = url,
-                    thumbnail = "https://i.imgur.com/yNgdwDC.png"
+                    thumbnail = ""
                 )
             )
         }

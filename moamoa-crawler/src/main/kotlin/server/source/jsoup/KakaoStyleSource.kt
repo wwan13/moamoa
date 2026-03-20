@@ -75,7 +75,7 @@ internal class KakaoStyleSource : TechBlogSource {
                     title = title,
                     description = description,
                     tags = emptyList(),
-                    thumbnail = "https://i.imgur.com/du8S5Vo.png",
+                    thumbnail = "",
                     publishedAt = publishedAt,
                     url = url
                 )

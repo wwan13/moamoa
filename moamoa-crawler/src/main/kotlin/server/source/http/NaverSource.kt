@@ -155,6 +155,6 @@ internal class NaverSource(
     }
 
     companion object {
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/FOrickO.png"
+        private const val DEFAULT_THUMBNAIL = ""
     }
 }

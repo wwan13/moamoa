@@ -121,6 +121,6 @@ internal class KakaoPaySource : TechBlogSource {
 
     companion object {
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy. M. d")
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/80OkMX7.png"
+        private const val DEFAULT_THUMBNAIL = ""
     }
 }

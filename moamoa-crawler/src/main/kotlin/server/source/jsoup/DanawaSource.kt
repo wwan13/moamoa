@@ -84,7 +84,7 @@ internal class DanawaSource : TechBlogSource {
                     title = title,
                     description = description,
                     tags = listOf(tag.name),
-                    thumbnail = "https://i.imgur.com/KxL8Fxu.png",
+                    thumbnail = "",
                     publishedAt = parseDate(publishedAtRaw),
                     url = url
                 )

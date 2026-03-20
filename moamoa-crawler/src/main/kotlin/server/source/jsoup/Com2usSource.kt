@@ -142,6 +142,6 @@ internal class Com2usSource : TechBlogSource {
     )
 
     companion object {
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/xyE7Tom.png"
+        private const val DEFAULT_THUMBNAIL = ""
     }
 }

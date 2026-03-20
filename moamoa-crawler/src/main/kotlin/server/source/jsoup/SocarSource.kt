@@ -88,6 +88,6 @@ internal class SocarSource : TechBlogSource {
 
     companion object {
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/4cjgXEL.png"
+        private const val DEFAULT_THUMBNAIL = ""
     }
 }

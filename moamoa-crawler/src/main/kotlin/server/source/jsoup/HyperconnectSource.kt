@@ -138,7 +138,7 @@ internal class HyperconnectSource : TechBlogSource {
         private const val BLOG_KEY = "hyperconnect"
         private const val BASE_URL = "https://hyperconnect.github.io"
         private const val TIMEOUT_MS = 10_000
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/wYfXo58.png"
+        private const val DEFAULT_THUMBNAIL = ""
 
         private val DATE_REGEX = Regex("\\d{4}[./-]\\d{1,2}[./-]\\d{1,2}|[A-Za-z]{3,}\\s+\\d{1,2},\\s+\\d{4}")
 

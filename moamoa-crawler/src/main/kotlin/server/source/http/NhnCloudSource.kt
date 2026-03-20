@@ -56,7 +56,7 @@ internal class NhnCloudSource(
 
                 val thumbnail = lang.repImageUrl?.trim()
                     ?.takeIf { it.isNotBlank() }
-                    ?: "https://i.imgur.com/p6VD51o.png"
+                    ?: ""
 
                 val publishedAt = parseDateTime(p.publishTime ?: p.regTime)
 

@@ -95,7 +95,7 @@ internal class NdsSource : TechBlogSource {
     companion object {
         private const val BLOG_KEY = "nds"
         private const val BASE_URL = "https://tech.cloud.nongshim.co.kr"
-        private const val DEFAULT_THUMBNAIL = "https://i.imgur.com/wzCJPPY.png"
+        private const val DEFAULT_THUMBNAIL = ""
         private const val ELLIPSIS = "…"
         private const val TIMEOUT_MS = 10_000
         private val DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE
