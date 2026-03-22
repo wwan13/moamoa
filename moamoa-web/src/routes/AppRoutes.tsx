@@ -14,6 +14,7 @@ import BlogSubmissionPage from "../pages/blogsubmissionpage/BlogSubmissionPage";
 import PasswordChangePage from "../pages/passwordchangepage/PasswordChangePage";
 import {MemberUnjoinPage} from "../pages/memberunjoinpage/MemberUnjoinPage";
 import PrivacyPolicyPage from "../pages/privacypolicy/PrivacyPolicyPage.tsx";
+import NoticeListPage from "../pages/noticelistpage/NoticeListPage.tsx";
 
 const AppRoutes = () => {
     return (
@@ -27,6 +28,7 @@ const AppRoutes = () => {
                 <Route path="/submission" element={<BlogSubmissionPage />} />
                 <Route path="/password" element={<PasswordChangePage />} />
                 <Route path="/unjoin" element={<MemberUnjoinPage />} />
+                <Route path="/notice" element={<NoticeListPage />} />
 
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
 

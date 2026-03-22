@@ -37,7 +37,10 @@ const Footer = () => {
                         onClick={() => navigate("/")}
                     />
                     <div className={styles.topLink}>
-                        <button className={styles.link}>
+                        <button
+                            className={styles.link}
+                            onClick={() => navigate("/notice")}
+                        >
                             공지사항
                         </button>
                         <button
