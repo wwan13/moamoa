@@ -37,12 +37,12 @@
 }
 
 .tabItem:hover {
-    color: #252525;
+    color: #0E4BBC;
     font-weight: 600;
 }
 
 .active {
-    color: #252525;
+    color: #0E4BBC;
     font-weight: 600;
 }
 
@@ -53,7 +53,7 @@
     right: 0;
     bottom: -1px; /* ✅ 밑줄이 border-bottom 위에 딱 붙게 */
     height: 2px;
-    background: #252525;
+    background: #0E4BBC;
     border-radius: 2px;
 }
 
