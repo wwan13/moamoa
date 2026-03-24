@@ -18,11 +18,15 @@ import server.mail.MailSender
 import server.queue.QueueMemory
 import server.template.mail.MailTemplate
 import test.UnitTest
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class SendAlarmEmailTaskletTest : UnitTest() {
     @Test
     fun `MailTemplate NewPosts 생성자에서 길이 초과 텍스트를 말줄임 처리한다`() {
         val summary = MailTemplate.NewPosts.PostSummary(
+            techBlogId = 1L,
             techBlogIcon = "https://example.com/icon.png",
             techBlogName = "1234567890",
             title = "t".repeat(40),
@@ -49,7 +53,7 @@ class SendAlarmEmailTaskletTest : UnitTest() {
     fun `큐가 비어 있으면 메일을 발송하지 않는다`() {
         val queueMemory = mockk<QueueMemory>()
         val mailSender = mockk<MailSender>(relaxed = true)
-        val sut = SendAlarmEmailTasklet(queueMemory, mailSender, 1_742_454_400_000L)
+        val sut = SendAlarmEmailTasklet(queueMemory, mailSender)
 
         coEvery { queueMemory.drain("ALARM_CONTENTS", AlarmContent::class.java, 200) } returns emptyList()
 
@@ -67,10 +71,13 @@ class SendAlarmEmailTaskletTest : UnitTest() {
     fun `알람 컨텐츠를 템플릿 메일로 매핑해 발송한다`() {
         val queueMemory = mockk<QueueMemory>()
         val mailSender = mockk<MailSender>()
-        val runId = 1_773_932_400_000L // 2026-03-20 00:00:00 KST
-        val sut = SendAlarmEmailTasklet(queueMemory, mailSender, runId)
+        val sut = SendAlarmEmailTasklet(queueMemory, mailSender)
         val alarm = alarmContent(memberId = 10L, email = "member@example.com")
         val sent = mutableListOf<MailContent.Template>()
+        val expectedDate = Instant.ofEpochMilli(System.currentTimeMillis())
+            .atZone(ZoneId.of("Asia/Seoul"))
+            .toLocalDate()
+            .format(DateTimeFormatter.ofPattern("yy.MM.dd"))
 
         coEvery {
             queueMemory.drain("ALARM_CONTENTS", AlarmContent::class.java, 200)
@@ -88,9 +95,9 @@ class SendAlarmEmailTaskletTest : UnitTest() {
 
         val template = sent.single()
         template.to shouldBe "member@example.com"
-        template.subject shouldBe "모아모아 새 게시글 알림"
+        template.subject shouldBe "[모아모아] 구독하신 블로그의 새 글이 도착했습니다!"
         template.path shouldBe "new-posts"
-        template.args["date"] shouldBe "26.03.20"
+        template.args["date"] shouldBe expectedDate
         template.args["count"] shouldBe 2L
 
         val postSummaries = template.args["postSummaries"] as List<*>
@@ -112,7 +119,7 @@ class SendAlarmEmailTaskletTest : UnitTest() {
     fun `개별 발송 실패가 발생해도 다음 메일 발송을 계속한다`() {
         val queueMemory = mockk<QueueMemory>()
         val mailSender = mockk<MailSender>()
-        val sut = SendAlarmEmailTasklet(queueMemory, mailSender, 1_773_932_400_000L)
+        val sut = SendAlarmEmailTasklet(queueMemory, mailSender)
         val first = alarmContent(memberId = 11L, email = "first@example.com")
         val second = alarmContent(memberId = 12L, email = "second@example.com")
 
