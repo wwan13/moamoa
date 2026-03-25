@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react"
 import styles from "./Subscriptions.module.css"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
 
 type SubscriptionItem = {
     id: number | string
@@ -14,8 +13,6 @@ type SubscriptionsProps = {
     items?: SubscriptionItem[]
     maxVisible?: number
     onClickItem?: (item: SubscriptionItem) => void
-    onClickHeader?: () => void
-    headerActive?: boolean
     activeBlogKey?: number | string | null
     isLoading?: boolean
 }
@@ -24,8 +21,6 @@ const Subscriptions = ({
     items,
     maxVisible = 5,
     onClickItem,
-    onClickHeader,
-    headerActive = false,
     activeBlogKey = null,
     isLoading = false,
 }: SubscriptionsProps) => {
@@ -45,16 +40,6 @@ const Subscriptions = ({
     if (isLoading) {
         return (
             <div className={styles.wrap} aria-busy="true">
-                <button
-                    type="button"
-                    className={`${styles.header} ${headerActive ? styles.active : ""}`}
-                    onClick={onClickHeader}
-                    disabled
-                >
-                    <span className={styles.title}>구독</span>
-                    <ArrowForwardIosIcon sx={{ fontSize: 14, color: "#252525" }} />
-                </button>
-
                 <ul className={styles.list}>
                     {Array.from({ length: maxVisible }).map((_, i) => (
                         <li key={`s-${i}`}>
@@ -74,15 +59,6 @@ const Subscriptions = ({
     if (safeItems.length === 0) {
         return (
             <div className={styles.wrap}>
-                <button
-                    type="button"
-                    className={`${styles.header} ${headerActive ? styles.active : ""}`}
-                    onClick={onClickHeader}
-                >
-                    <span className={styles.title}>구독</span>
-                    <ArrowForwardIosIcon sx={{ fontSize: 14, color: "#252525" }} />
-                </button>
-
                 <div className={styles.empty}>
                     구독중인 기술 블로그가 <br /> 없습니다
                 </div>
@@ -92,15 +68,6 @@ const Subscriptions = ({
 
     return (
         <div className={styles.wrap}>
-            <button
-                type="button"
-                className={`${styles.header} ${headerActive ? styles.active : ""}`}
-                onClick={onClickHeader}
-            >
-                <span className={styles.title}>구독</span>
-                <ArrowForwardIosIcon sx={{ fontSize: 14, color: "#252525" }} />
-            </button>
-
             <ul className={styles.list}>
                 {visibleItems.map((it) => {
                     const isActiveItem = !!activeBlogKey && activeBlogKey.toString() === it.id.toString()

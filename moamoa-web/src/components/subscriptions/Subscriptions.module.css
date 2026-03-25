@@ -126,6 +126,9 @@
 .more {
     width: 100%;
     margin-top: 6px;
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
 
     display: flex;
     align-items: center;
@@ -135,7 +138,7 @@
     line-height: 1;
     border-radius: 8px;
     border: none;
-    background: transparent;
+    background: #fff;
     cursor: pointer;
 
     color: #252525;
