@@ -35,6 +35,7 @@ sealed interface MailTemplate {
         }
 
         data class TechBlogPosts(
+            val techBlogId: Long,
             val techBlogIcon: String,
             val techBlogName: String,
             val posts: List<PostDetail>
@@ -44,6 +45,7 @@ sealed interface MailTemplate {
                 var description: String,
                 val thumbnail: String,
                 val url: String,
+
             ) {
                 init {
                     title = title.truncateWithEllipsis(DETAIL_TITLE_MAX_LENGTH)

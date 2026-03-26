@@ -106,12 +106,13 @@ class SendAlarmEmailTaskletTest : UnitTest() {
         firstSummary.shouldNotBeNull()
         firstSummary.techBlogName shouldBe "가비아"
         firstSummary.title shouldBe "첫번째 글"
-        firstSummary.url shouldBe "https://example.com/post-1"
+        firstSummary.url shouldBe "https://moamoa.dev/post/101"
 
         val techBlogPosts = template.args["techBlogPosts"] as List<*>
         techBlogPosts.size shouldBe 1
         val firstTechBlog = techBlogPosts.first() as? MailTemplate.NewPosts.TechBlogPosts
         firstTechBlog.shouldNotBeNull()
+        firstTechBlog.techBlogId shouldBe 1L
         firstTechBlog.techBlogName shouldBe "가비아"
     }
 

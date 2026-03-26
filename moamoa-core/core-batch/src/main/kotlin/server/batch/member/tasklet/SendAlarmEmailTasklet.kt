@@ -85,6 +85,7 @@ internal class SendAlarmEmailTasklet(
             },
             techBlogPosts = techBlog.map { techBlog ->
                 MailTemplate.NewPosts.TechBlogPosts(
+                    techBlogId = techBlog.techBlogId,
                     techBlogIcon = techBlog.techBlogIcon,
                     techBlogName = techBlog.techBlogTitle,
                     posts = techBlog.posts.map { post ->
