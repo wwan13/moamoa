@@ -1,7 +1,7 @@
 import styles from "./SignupPage.module.css"
 import InputText from "../../components/ui/InputText"
 import Button from "../../components/ui/Button"
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import {useNavigate} from "react-router-dom";
 import {useSignupMutation} from "../../queries/auth.queries";
 import useAuth from "../../auth/useAuth";
@@ -38,6 +38,10 @@ const SignupPage = () => {
     const [isLoading, setIsLoading] = useState(false)
 
     const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
 
     const validateEmail = (value) => {
         if (value === registeredEmail) return emailAlreadyRegisteredErrorMessage

@@ -7,8 +7,9 @@ const MainPage = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
         navigate("/dashboard")
-    }, []);
+    }, [navigate]);
 
     return <div>
         <PageTitle value={"모아모아 관리자"} />

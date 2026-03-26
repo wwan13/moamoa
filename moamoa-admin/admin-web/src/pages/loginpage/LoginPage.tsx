@@ -1,7 +1,7 @@
 import styles from './LoginPage.module.css'
 import TextInput from "../../components/ui/TextInput.tsx"
 import SubmitButton from "../../components/ui/SubmitButton.tsx"
-import {type SyntheticEvent, useState} from "react"
+import {type SyntheticEvent, useEffect, useState} from "react"
 import useAuth from "../../auth/AuthContext.tsx"
 import {showGlobalAlert} from "../../api/client.ts";
 import GlobalSpinner from "../../components/spinner/GlobalSpinner.tsx";
@@ -13,6 +13,10 @@ const LoginPage = () => {
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
     const navigate = useNavigate()
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
 
     const handleSubmit = async (e: SyntheticEvent) => {
         e.preventDefault()

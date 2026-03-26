@@ -21,6 +21,10 @@ const BlogSubmissionPage = () => {
 
     const createSubmissionsMutation = useCreateSubmissionMutation()
 
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
+
     const validateTitle = () => {
         if (title.length === 0) {
             setTitleError("기술 블로그 이름을 입력해 주세요")

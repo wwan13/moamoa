@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent } from "react"
+import { useEffect, useMemo, useState, type MouseEvent } from "react"
 import styles from "./TechBlogsPage.module.css"
 import { useCountUp } from "../../hooks/useCountUp"
 import useAuth from "../../auth/useAuth"
@@ -19,6 +19,10 @@ const TechBlogsPage = () => {
     const qc = useQueryClient()
 
     const [search, setSearch] = useState("")
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
 
     // ✅ tech blogs list (query)
     const techBlogsQuery = useTechBlogsQuery()

@@ -2,7 +2,7 @@ import styles from "./Oauth2EmailInputPage.module.css"
 import GlobalSpinner from "../../components/globalspinner/GlobalSpinner"
 import InputText from "../../components/ui/InputText"
 import Button from "../../components/ui/Button"
-import { useMemo, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useState, type FormEvent } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useCreateSocialMemberMutation } from "../../queries/member.queries"
 import { useLoginSocialSessionMutation } from "../../queries/auth.queries"
@@ -36,6 +36,10 @@ const Oauth2EmailInputPage = () => {
 
     const { socialLogin } = useAuth()
     const navigate = useNavigate()
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
 
     const validateEmail = (value: string): string => {
         if (value === registeredEmail) return emailAlreadyRegisteredErrorMessage

@@ -46,6 +46,10 @@ const MainPage = () => {
             : "all"
     const isWelcome = searchParams.get("welcome")
 
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
+
     // ✅ 로그인 안 했는데 구독/북마크 진입 시 URL 정리
     useEffect(() => {
         if (isWelcome) {

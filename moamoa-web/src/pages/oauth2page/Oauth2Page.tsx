@@ -11,6 +11,8 @@ const Oauth2Page = () => {
     const { socialLogin } = useAuth()
 
     useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+
         const type = searchParams.get("type")
 
         if (type === "success") {

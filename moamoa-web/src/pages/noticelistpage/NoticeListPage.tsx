@@ -1,8 +1,13 @@
 import styles from "./NoticeListPage.module.css"
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import Pagination from "@mui/material/Pagination";
+import {useEffect} from "react";
 
 const NoticeListPage = () => {
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
+
     return (
         <div className={styles.wrap}>
             <div className={styles.titleWrap}>

@@ -10,6 +10,8 @@ const PostRedirectPage = () => {
   const requestedRef = useRef(false)
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+
     if (requestedRef.current) return
     requestedRef.current = true
 

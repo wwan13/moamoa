@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Pagination from "@mui/material/Pagination"
 import styles from './PostPage.module.css'
 import PageTitle from "../../components/pagetitle/PageTitle.tsx"
@@ -24,6 +24,10 @@ const PostsPage = () => {
     const [categoryValue, setCategoryValue] = useState("0")
     const [page, setPage] = useState(1)
     const size = 20
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
 
     const categoryId = categoryValue === "0" ? undefined : Number(categoryValue)
     const { data, isLoading } = usePostsQuery({

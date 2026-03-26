@@ -168,6 +168,10 @@ const LogPage = () => {
     const hasInitialScrolledRef = useRef(false)
     const topLoadingRef = useRef(false)
 
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }, [])
+
     const queryConditions = useMemo(
         () => ({
             logLevel: normalizeFilterValue(logLevel),
