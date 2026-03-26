@@ -15,6 +15,7 @@ import {
 import { useSubscribingTechBlogsQuery } from "../../queries/techBlog.queries"
 import Banner from "../../components/banner/Banner"
 import type { PostCategoryKey } from "../../api/post.api"
+import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
 
 const TYPES = {
     ALL: "all",
@@ -204,6 +205,7 @@ const MainPage = () => {
                     />
                 </section>
             )}
+            <ScrollTopButton />
         </>
     )
 }

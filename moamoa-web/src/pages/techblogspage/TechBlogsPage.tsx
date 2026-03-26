@@ -10,6 +10,7 @@ import type { TechBlogSummary, TechBlogList } from "../../api/techBlog.api"
 
 import { useTechBlogsQuery } from "../../queries/techBlog.queries"
 import { useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries"
+import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
 
 const SKELETON_COUNT = 12
 
@@ -129,8 +130,9 @@ const TechBlogsPage = () => {
     }
 
     return (
-        <div className={styles.wrap}>
-            <section className={styles.info}>
+        <>
+            <div className={styles.wrap}>
+                <section className={styles.info}>
                 <div className={styles.infoInner}>
                     <div className={styles.textSection}>
                         <h1 className={styles.title}>
@@ -226,8 +228,10 @@ const TechBlogsPage = () => {
                         ))}
                     </div>
                 )}
-            </section>
-        </div>
+                </section>
+            </div>
+            <ScrollTopButton />
+        </>
     )
 }
 

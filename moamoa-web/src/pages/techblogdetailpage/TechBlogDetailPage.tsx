@@ -17,6 +17,7 @@ import {
 import NotificationsOffOutlinedIcon from "@mui/icons-material/NotificationsOffOutlined"
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
 import type { TechBlogList, TechBlogSummary } from "../../api/techBlog.api"
+import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
 
 const TechBlogDetailPage = () => {
     const { isLoggedIn, openLogin, authScope, publicScope } = useAuth()
@@ -279,6 +280,7 @@ const TechBlogDetailPage = () => {
                     />
                 </div>
             </div>
+            <ScrollTopButton />
         </>
     )
 }

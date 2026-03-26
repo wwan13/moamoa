@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 
 import { useSubscribingTechBlogsQuery } from "../../queries/techBlog.queries"
 import TechBlogItem from "../../components/techblogitem/TechBlogItem"
+import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
 
 const SKELETON_COUNT = 8
 
@@ -41,10 +42,13 @@ const MySubscriptionPage = () => {
     }, [techBlogsQuery.isPending, techBlogs, navigate])
 
     return (
-        <div className={styles.wrap}>
-            <p className={styles.title}>모든 구독 블로그</p>
-            <div className={styles.itemsWrap}>{list}</div>
-        </div>
+        <>
+            <div className={styles.wrap}>
+                <p className={styles.title}>모든 구독 블로그</p>
+                <div className={styles.itemsWrap}>{list}</div>
+            </div>
+            <ScrollTopButton />
+        </>
     )
 }
 export default MySubscriptionPage
