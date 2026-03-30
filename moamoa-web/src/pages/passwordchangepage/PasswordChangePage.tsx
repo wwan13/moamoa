@@ -140,7 +140,7 @@ const PasswordChangePage = () => {
                             hasError={oldPasswordError !== ""}
                         />
                         {oldPasswordError !== "" && (
-                            <span className={styles.error}>✕ {oldPasswordError}</span>
+                            <span className={styles.error}>{oldPasswordError}</span>
                         )}
                     </div>
 
@@ -206,7 +206,7 @@ const PasswordChangePage = () => {
                             hasError={passwordConfirmError !== ""}
                         />
                         {passwordConfirmError !== "" && (
-                            <span className={styles.error}>✕ {passwordConfirmError}</span>
+                            <span className={styles.error}>{passwordConfirmError}</span>
                         )}
                     </div>
                 </div>

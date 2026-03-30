@@ -166,7 +166,7 @@ const SignupPage = () => {
                                 hasError={emailError !== ""}
                             />
                             {emailError !== "" && (
-                                <span className={styles.error}>✕ {emailError}</span>
+                                <span className={styles.error}>{emailError}</span>
                             )}
                         </div>
 
@@ -228,7 +228,7 @@ const SignupPage = () => {
                                 hasError={passwordConfirmError !== ""}
                             />
                             {passwordConfirmError !== "" && (
-                                <span className={styles.error}>✕ {passwordNotMatchErrorMessage}</span>
+                                <span className={styles.error}>{passwordNotMatchErrorMessage}</span>
                             )}
                         </div>
                     </div>
@@ -250,7 +250,7 @@ const SignupPage = () => {
                     {
                         totalError !== "" && (
                             <div className={styles.totalError}>
-                                <span className={styles.error}>✕ {totalError}</span>
+                                <span className={styles.error}>{totalError}</span>
                             </div>
                         )
                     }
