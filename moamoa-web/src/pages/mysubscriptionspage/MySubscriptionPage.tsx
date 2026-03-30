@@ -36,7 +36,7 @@ const MySubscriptionPage = () => {
 
         return techBlogs.map((techBlog) => (
             <TechBlogItem key={techBlog.id} techBlog={techBlog} onItemClick={() => {
-                navigate(`/${techBlog.id}`)
+                navigate(`/blog/${techBlog.id}`)
             }} />
         ))
     }, [techBlogsQuery.isPending, techBlogs, navigate])

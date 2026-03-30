@@ -146,7 +146,7 @@ const Search = ({ open, onClose }: SearchProps) => {
                                     {(techBlogs ?? []).map((techBlog) => (
                                         <TechBlogItem key={techBlog.id} techBlog={techBlog} onItemClick={() => {
                                             onClose()
-                                            navigate(`/${techBlog.id}`)
+                                            navigate(`/blog/${techBlog.id}`)
                                         }} />
                                     ))}
                                 </div>
