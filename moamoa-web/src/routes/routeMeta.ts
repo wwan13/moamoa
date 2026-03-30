@@ -2,7 +2,7 @@ import { matchPath } from "react-router-dom"
 
 const SITE_URL = "https://moamoa.dev"
 const SITE_NAME = "moamoa"
-const DEFAULT_OG_IMAGE = `${SITE_URL}/moamoa_main_logo.png`
+const DEFAULT_OG_IMAGE = `https://i.imgur.com/8n3jdl6.png`
 
 type MetaRule = {
   path: string
