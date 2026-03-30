@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Auth/callback/private paths
+Disallow: /my
+Disallow: /subscription
+Disallow: /submission
+Disallow: /password
+Disallow: /unjoin
+Disallow: /signup
+Disallow: /find/password
+Disallow: /oauth2
+Disallow: /oauth2/email
+
+Sitemap: https://moamoa.dev/sitemap.xml
