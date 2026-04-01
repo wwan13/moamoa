@@ -13,7 +13,7 @@ type GlobalConfirmModalProps = {
 
 const GlobalConfirmModal = ({
   open,
-  title = "확인",
+  title,
   message,
   confirmText = "확인",
   cancelText = "취소",
@@ -25,7 +25,7 @@ const GlobalConfirmModal = ({
   return (
     <div className={styles.backdrop}>
       <div className={styles.panel} role="alertdialog" aria-modal="true">
-        <h3 className={styles.title}>{title}</h3>
+        {title && <h3 className={styles.title}>{title}</h3>}
         <p className={styles.message}>{message}</p>
 
         <div className={styles.actions}>

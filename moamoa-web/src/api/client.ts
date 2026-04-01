@@ -105,7 +105,7 @@ export const setOnGlobalConfirm = (
 
 export const showGlobalConfirm = ({
   message,
-  title = "확인",
+  title,
   confirmText = "확인",
   cancelText = "취소",
 }: GlobalConfirmOptions = {}): Promise<boolean> => {

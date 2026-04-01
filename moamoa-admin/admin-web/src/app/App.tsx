@@ -12,7 +12,7 @@ import {
 } from "../api/client"
 
 type ConfirmState = {
-  title: string
+  title?: string
   message: string
   confirmText: string
   cancelText: string
@@ -32,7 +32,6 @@ function App() {
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmState, setConfirmState] = useState<ConfirmState>({
-    title: "확인",
     message: "",
     confirmText: "확인",
     cancelText: "취소",
@@ -63,12 +62,12 @@ function App() {
     setOnGlobalConfirm(
       ({ title, message, confirmText, cancelText, onConfirm, onCancel }) => {
         setConfirmState({
-          title: title ?? "확인",
+          title,
           message: message ?? "계속 진행할까요?",
           confirmText: confirmText ?? "확인",
           cancelText: cancelText ?? "취소",
-          onConfirm,
-          onCancel,
+          onConfirm: onConfirm ?? (() => {}),
+          onCancel: onCancel ?? (() => {}),
         })
         setConfirmOpen(true)
       },

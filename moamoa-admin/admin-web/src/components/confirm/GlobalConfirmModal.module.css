@@ -11,7 +11,7 @@
 }
 
 .panel {
-  width: 360px;
+  min-width: 300px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow:

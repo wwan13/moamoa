@@ -36,15 +36,9 @@ const App = () => {
   // ✅ confirm 상태
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmState, setConfirmState] = useState<
-    Required<
-      Pick<
-        GlobalConfirmParams,
-        "title" | "message" | "confirmText" | "cancelText"
-      >
-    > &
-      Pick<GlobalConfirmParams, "onConfirm" | "onCancel">
+    Pick<GlobalConfirmParams, "title" | "message" | "confirmText" | "cancelText"> &
+      Required<Pick<GlobalConfirmParams, "onConfirm" | "onCancel">>
   >({
-    title: "확인",
     message: "",
     confirmText: "확인",
     cancelText: "취소",
@@ -81,11 +75,11 @@ const App = () => {
       ({ title, message, confirmText, cancelText, onConfirm, onCancel }) => {
         setConfirmState({
           title,
-          message,
-          confirmText,
-          cancelText,
-          onConfirm,
-          onCancel,
+          message: message ?? "",
+          confirmText: confirmText ?? "확인",
+          cancelText: cancelText ?? "취소",
+          onConfirm: onConfirm ?? (() => {}),
+          onCancel: onCancel ?? (() => {}),
         })
         setConfirmOpen(true)
       },
