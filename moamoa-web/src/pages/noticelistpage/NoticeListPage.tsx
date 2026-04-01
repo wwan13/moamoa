@@ -8,7 +8,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { formatDate } from "../../utils/date"
 import { useNoticesQuery } from "../../queries/notice.queries"
 
@@ -25,6 +25,7 @@ const NoticeListPage = () => {
     return Number.isFinite(rawPage) && rawPage >= 1 ? rawPage : 1
   }, [searchParams])
   const noticesQuery = useNoticesQuery({ page, size: PAGE_SIZE, query })
+  const navigate = useNavigate()
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
@@ -166,9 +167,15 @@ const NoticeListPage = () => {
 
           {!noticesQuery.isPending &&
             notices.map((notice) => (
-              <div key={notice.id} className={styles.noticeItem}>
+              <div
+                key={notice.id}
+                className={styles.noticeItem}
+                onClick={() => navigate(`/notice/${notice.id}`)}
+              >
                 <div className={styles.noticeItemTop}>
-                  <div className={styles.noticeChip}>{notice.chip}</div>
+                  {notice.chip.length > 0 && (
+                    <div className={styles.noticeChip}>{notice.chip}</div>
+                  )}
                   <span className={styles.noticeTitle}>{notice.title}</span>
                 </div>
                 <span className={styles.publishedAt}>

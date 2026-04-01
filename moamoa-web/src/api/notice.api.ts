@@ -26,6 +26,14 @@ export type NoticeList = {
   notices: NoticeSummary[]
 }
 
+export type NoticeDetail = {
+  id: number
+  title: string
+  chip: string
+  content: string
+  publishedAt: string
+}
+
 const buildQuery = (paramsObj: Record<string, unknown> = {}): string => {
   const params = new URLSearchParams()
   Object.entries(paramsObj).forEach(([key, value]) => {
@@ -57,5 +65,12 @@ export const noticeApi = {
         notices: [],
       }
     )
+  },
+  detail: async (
+    noticeId: number,
+    config?: ApiRequestConfig,
+  ): Promise<NoticeDetail | null> => {
+    if (!Number.isFinite(noticeId) || noticeId <= 0) return null
+    return await http.get<NoticeDetail>(`/api/notice/${noticeId}`, config)
   },
 }
