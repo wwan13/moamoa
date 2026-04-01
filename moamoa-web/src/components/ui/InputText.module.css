@@ -29,6 +29,7 @@
 .error {
   border-color: #ef4444;
   color: #ef4444;
+  background: #fff5f5;
 }
 
 .error:focus {

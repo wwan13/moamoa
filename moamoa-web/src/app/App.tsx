@@ -36,7 +36,10 @@ const App = () => {
   // ✅ confirm 상태
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmState, setConfirmState] = useState<
-    Pick<GlobalConfirmParams, "title" | "message" | "confirmText" | "cancelText"> &
+    Pick<
+      GlobalConfirmParams,
+      "title" | "message" | "confirmText" | "cancelText"
+    > &
       Required<Pick<GlobalConfirmParams, "onConfirm" | "onCancel">>
   >({
     message: "",
