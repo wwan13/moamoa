@@ -15,9 +15,11 @@ import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal"
 import useAuth from "../auth/useAuth"
 import LoginModal from "../components/loginmodal/LoginModal"
 import Search from "../components/search/Search" // 경로 맞춰
+import RouteMetaTags from "../routes/RouteMetaTags"
 
 import { useEffect, useState } from "react"
 import type { GlobalConfirmParams, Toast } from "../api/client"
+import {useNavigate} from "react-router-dom";
 
 const App = () => {
     // ✅ alert 상태
@@ -25,6 +27,7 @@ const App = () => {
     const [alertTitle, setAlertTitle] = useState("오류")
     const [alertMessage, setAlertMessage] = useState("")
     const [alertOnClose, setAlertOnClose] = useState(() => () => setAlertOpen(false))
+    const navigate = useNavigate()
 
     const [toast, setToast] = useState<Toast | null>(null)
 
@@ -83,6 +86,8 @@ const App = () => {
 
     return (
         <div>
+            <RouteMetaTags />
+
             <GlobalAlertModal
                 open={alertOpen}
                 title={alertTitle}
@@ -112,7 +117,10 @@ const App = () => {
                 open={authModal === "login"}
                 onClose={closeAuthModal}
                 onClickSignup={openSignup}
-                onClickPasswordFind={() => {}}
+                onClickPasswordFind={() => {
+                    closeAuthModal()
+                    navigate("/find/password")
+                }}
             />
 
             {/* ✅ Search 모달 렌더링 (추가) */}

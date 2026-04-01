@@ -15,6 +15,7 @@ import PasswordChangePage from "../pages/passwordchangepage/PasswordChangePage";
 import {MemberUnjoinPage} from "../pages/memberunjoinpage/MemberUnjoinPage";
 import PrivacyPolicyPage from "../pages/privacypolicy/PrivacyPolicyPage.tsx";
 import NoticeListPage from "../pages/noticelistpage/NoticeListPage.tsx";
+import FindPasswordPage from "../pages/findpasswordpage/FindPasswordPage.tsx";
 
 const AppRoutes = () => {
     return (
@@ -37,6 +38,7 @@ const AppRoutes = () => {
 
             <Route element={<BlankLayout />}>
                 <Route path="/signup" element={<SignupPage />} />
+                <Route path="/find/password" element={<FindPasswordPage />} />
                 <Route path="/oauth2/email" element={<Oauth2EmailInputPage />} />
                 <Route path="/post/:postId" element={<PostRedirectPage />} />
             </Route>
