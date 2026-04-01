@@ -87,7 +87,7 @@
 .noticeItemTop {
     display: flex;
     gap: 20px;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .noticeChip {
@@ -105,7 +105,11 @@
     font-size: 20px;
     font-weight: 600;
     transition: .2s ease;
-    line-height: 1.5;
+    line-height: 1.2;
+}
+
+.noticeItem:hover .noticeTitle {
+    color: #0E4BBC;
 }
 
 .publishedAt {
