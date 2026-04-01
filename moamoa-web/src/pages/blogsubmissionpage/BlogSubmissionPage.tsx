@@ -100,7 +100,7 @@ const BlogSubmissionPage = () => {
               hasError={titleError !== ""}
             />
             {titleError !== "" && (
-              <span className={styles.error}>✕ {titleError}</span>
+              <span className={styles.error}>{titleError}</span>
             )}
           </div>
 
@@ -117,7 +117,7 @@ const BlogSubmissionPage = () => {
               hasError={urlError !== ""}
             />
             {urlError !== "" && (
-              <span className={styles.error}>✕ {urlError}</span>
+              <span className={styles.error}>{urlError}</span>
             )}
           </div>
         </div>
