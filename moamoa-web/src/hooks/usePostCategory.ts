@@ -1,6 +1,11 @@
 import { useMemo } from "react"
 
-export type PostCategoryName = "ENGINEERING" | "PRODUCT" | "DESIGN" | "ETC" | "UNDEFINED"
+export type PostCategoryName =
+  | "ENGINEERING"
+  | "PRODUCT"
+  | "DESIGN"
+  | "ETC"
+  | "UNDEFINED"
 
 export type PostCategory = {
   id: number
@@ -21,8 +26,12 @@ const VALID_CATEGORIES: PostCategory[] = [
   { id: 40, name: "ETC", title: "기타" },
 ]
 
-const CATEGORY_BY_ID = new Map<number, PostCategory>(VALID_CATEGORIES.map((category) => [category.id, category]))
-const CATEGORY_BY_NAME = new Map<string, PostCategory>(VALID_CATEGORIES.map((category) => [category.name, category]))
+const CATEGORY_BY_ID = new Map<number, PostCategory>(
+  VALID_CATEGORIES.map((category) => [category.id, category]),
+)
+const CATEGORY_BY_NAME = new Map<string, PostCategory>(
+  VALID_CATEGORIES.map((category) => [category.name, category]),
+)
 
 export const postCategory = {
   validCategories: VALID_CATEGORIES,
@@ -41,7 +50,10 @@ export const postCategory = {
 }
 
 export const usePostCategory = (categoryId?: number | null): PostCategory => {
-  return useMemo(() => postCategory.fromId(categoryId) ?? postCategory.undefined, [categoryId])
+  return useMemo(
+    () => postCategory.fromId(categoryId) ?? postCategory.undefined,
+    [categoryId],
+  )
 }
 
 export default usePostCategory

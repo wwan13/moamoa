@@ -1,146 +1,143 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLoginMutation, useLogoutMutation } from "../queries/auth.queries"
-import { clearAuthCookieBestEffort, setOnLoginRequired, setOnLogout, showGlobalAlert } from "../api/client"
-
-type LoginParams = {
-    email: string
-    password: string
-}
-
-type AuthContextValue = {
-    isLoggedIn: boolean
-    sessionKey: string | null
-    login: (params: LoginParams) => Promise<void>
-    logout: () => Promise<void>
-    isLoginLoading: boolean
-    isLogoutLoading: boolean
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null)
+import {
+  clearAuthCookieBestEffort,
+  setOnLoginRequired,
+  setOnLogout,
+  showGlobalAlert,
+} from "../api/client"
+import { AuthContext, type AuthContextValue, type LoginParams } from "./context"
 
 const SESSION_KEY = "sessionKey"
 
 function newSessionKey() {
-    return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-    const [sessionKey, setSessionKey] = useState(() =>
-        localStorage.getItem(SESSION_KEY)
-    )
-    const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem(SESSION_KEY))
+const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [sessionKey, setSessionKey] = useState(() =>
+    localStorage.getItem(SESSION_KEY),
+  )
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => !!localStorage.getItem(SESSION_KEY),
+  )
 
-    const navigate = useNavigate()
-    const qc = useQueryClient()
+  const navigate = useNavigate()
+  const qc = useQueryClient()
 
-    const loginMutation = useLoginMutation()
-    const logoutMutation = useLogoutMutation()
-    const isHandlingLoginRequiredRef = useRef(false)
+  const loginMutation = useLoginMutation()
+  const logoutMutation = useLogoutMutation()
+  const isHandlingLoginRequiredRef = useRef(false)
 
-    const resetSessionState = useCallback(() => {
-        localStorage.removeItem(SESSION_KEY)
-        setIsLoggedIn(false)
-        setSessionKey(null)
-    }, [])
+  const resetSessionState = useCallback(() => {
+    localStorage.removeItem(SESSION_KEY)
+    setIsLoggedIn(false)
+    setSessionKey(null)
+  }, [])
 
-    const startAuthenticatedSession = useCallback(() => {
-        const savedSessionKey = localStorage.getItem(SESSION_KEY)
-        const currentSessionKey = savedSessionKey ?? newSessionKey()
-        if (!savedSessionKey) {
-            localStorage.setItem(SESSION_KEY, currentSessionKey)
-        }
-        setSessionKey(currentSessionKey)
-        setIsLoggedIn(true)
-    }, [])
-
-    useEffect(() => {
-        const handleLogout = async () => {
-            if (isHandlingLoginRequiredRef.current) return
-            isHandlingLoginRequiredRef.current = true
-
-            try {
-                await clearAuthCookieBestEffort()
-                await qc.cancelQueries()
-                qc.clear()
-
-                resetSessionState()
-
-                navigate("/login")
-            } finally {
-                isHandlingLoginRequiredRef.current = false
-            }
-        }
-
-        const handleLoginRequired = async () => {
-            if (isHandlingLoginRequiredRef.current) return
-            isHandlingLoginRequiredRef.current = true
-
-            try {
-                await clearAuthCookieBestEffort()
-                await showGlobalAlert("다시 로그인해 주세요.")
-                await qc.cancelQueries()
-                qc.clear()
-
-                resetSessionState()
-
-                navigate("/login")
-            } finally {
-                isHandlingLoginRequiredRef.current = false
-            }
-        }
-
-        setOnLogout(handleLogout)
-        setOnLoginRequired(handleLoginRequired)
-    }, [qc, navigate, resetSessionState])
-
-    const login = async ({ email, password }: LoginParams) => {
-        await loginMutation.mutateAsync({ email, password })
-
-        await qc.cancelQueries()
-        qc.clear()
-
-        startAuthenticatedSession()
+  const startAuthenticatedSession = useCallback(() => {
+    const savedSessionKey = localStorage.getItem(SESSION_KEY)
+    const currentSessionKey = savedSessionKey ?? newSessionKey()
+    if (!savedSessionKey) {
+      localStorage.setItem(SESSION_KEY, currentSessionKey)
     }
+    setSessionKey(currentSessionKey)
+    setIsLoggedIn(true)
+  }, [])
 
-    const logout = async () => {
-        const res = await logoutMutation.mutateAsync()
-        if (!res?.success) return
+  useEffect(() => {
+    const handleLogout = async () => {
+      if (isHandlingLoginRequiredRef.current) return
+      isHandlingLoginRequiredRef.current = true
 
+      try {
+        await clearAuthCookieBestEffort()
         await qc.cancelQueries()
         qc.clear()
 
         resetSessionState()
 
         navigate("/login")
+      } finally {
+        isHandlingLoginRequiredRef.current = false
+      }
     }
 
-    const value = useMemo(
-        () => ({
-            isLoggedIn,
-            sessionKey,
-            login,
-            logout,
-            isLoginLoading: loginMutation.isPending,
-            isLogoutLoading: logoutMutation.isPending,
-        }),
-        [
-            isLoggedIn,
-            sessionKey,
-            loginMutation.isPending,
-            logoutMutation.isPending,
-            startAuthenticatedSession,
-        ]
-    )
+    const handleLoginRequired = async () => {
+      if (isHandlingLoginRequiredRef.current) return
+      isHandlingLoginRequiredRef.current = true
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+      try {
+        await clearAuthCookieBestEffort()
+        await showGlobalAlert("다시 로그인해 주세요.")
+        await qc.cancelQueries()
+        qc.clear()
+
+        resetSessionState()
+
+        navigate("/login")
+      } finally {
+        isHandlingLoginRequiredRef.current = false
+      }
+    }
+
+    setOnLogout(handleLogout)
+    setOnLoginRequired(handleLoginRequired)
+  }, [qc, navigate, resetSessionState])
+
+  const login = useCallback(
+    async ({ email, password }: LoginParams) => {
+      await loginMutation.mutateAsync({ email, password })
+
+      await qc.cancelQueries()
+      qc.clear()
+
+      startAuthenticatedSession()
+    },
+    [loginMutation, qc, startAuthenticatedSession],
+  )
+
+  const logout = useCallback(async () => {
+    const res = await logoutMutation.mutateAsync()
+    if (!res?.success) return
+
+    await qc.cancelQueries()
+    qc.clear()
+
+    resetSessionState()
+
+    navigate("/login")
+  }, [logoutMutation, navigate, qc, resetSessionState])
+
+  const value: AuthContextValue = useMemo(
+    () => ({
+      isLoggedIn,
+      sessionKey,
+      login,
+      logout,
+      isLoginLoading: loginMutation.isPending,
+      isLogoutLoading: logoutMutation.isPending,
+    }),
+    [
+      isLoggedIn,
+      sessionKey,
+      login,
+      logout,
+      loginMutation.isPending,
+      logoutMutation.isPending,
+    ],
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-const useAuth = () => {
-    const ctx = useContext(AuthContext)
-    if (!ctx) throw new Error("useAuth must be used within AuthProvider")
-    return ctx
-}
-
-export default useAuth
+export default AuthProvider

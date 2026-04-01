@@ -13,9 +13,13 @@ export type SubmissionCreateResult = {
 export const submissionApi = {
   create: async (
     command: SubmissionCreateCommand,
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<SubmissionCreateResult> => {
-    const res = await http.post<SubmissionCreateResult>("/api/submission", command, config)
+    const res = await http.post<SubmissionCreateResult>(
+      "/api/submission",
+      command,
+      config,
+    )
     if (!res) throw new Error("EMPTY_SUBMISSION_RESPONSE")
     return res
   },

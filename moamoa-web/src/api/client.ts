@@ -47,7 +47,9 @@ export const setOnLoginRequired = (handler: () => void): void => {
 }
 
 let onServerError: (params: ServerErrorParams) => void = () => {}
-export const setOnServerError = (handler: (params: ServerErrorParams) => void): void => {
+export const setOnServerError = (
+  handler: (params: ServerErrorParams) => void,
+): void => {
   onServerError = typeof handler === "function" ? handler : () => {}
 }
 
@@ -61,7 +63,10 @@ export const setOnToast = (handler: (toast: Toast) => void): void => {
   onToast = typeof handler === "function" ? handler : () => {}
 }
 
-export const showToast = (message: string, options: ToastOptions = {}): void => {
+export const showToast = (
+  message: string,
+  options: ToastOptions = {},
+): void => {
   onToast({
     message,
     type: options.type ?? "default",
@@ -70,15 +75,17 @@ export const showToast = (message: string, options: ToastOptions = {}): void => 
 }
 
 let onGlobalAlert: (params: GlobalAlertParams) => void = () => {}
-export const setOnGlobalAlert = (handler: (params: GlobalAlertParams) => void): void => {
+export const setOnGlobalAlert = (
+  handler: (params: GlobalAlertParams) => void,
+): void => {
   onGlobalAlert = typeof handler === "function" ? handler : () => {}
 }
 
 export const showGlobalAlert = (
-  params: string | Omit<GlobalAlertParams, "onClose">
+  params: string | Omit<GlobalAlertParams, "onClose">,
 ): Promise<void> => {
   const { message, title = "오류" } =
-    typeof params === "string" ? { message: params } : params ?? {}
+    typeof params === "string" ? { message: params } : (params ?? {})
 
   return new Promise<void>((resolve) => {
     onGlobalAlert({
@@ -90,7 +97,9 @@ export const showGlobalAlert = (
 }
 
 let onGlobalConfirm: (params: GlobalConfirmParams) => void = () => {}
-export const setOnGlobalConfirm = (handler: (params: GlobalConfirmParams) => void): void => {
+export const setOnGlobalConfirm = (
+  handler: (params: GlobalConfirmParams) => void,
+): void => {
   onGlobalConfirm = typeof handler === "function" ? handler : () => {}
 }
 
@@ -131,7 +140,9 @@ export const closeSearch = (): void => {
   onCloseSearch()
 }
 
-export const clearAuthCookieBestEffort = async (baseUrl = BASE_URL): Promise<void> => {
+export const clearAuthCookieBestEffort = async (
+  baseUrl = BASE_URL,
+): Promise<void> => {
   try {
     await fetch(`${baseUrl}/api/auth/logout`, {
       method: "POST",
@@ -161,7 +172,15 @@ export class ApiError extends Error {
   status: number
   body: unknown
 
-  constructor({ status, message, body }: { status: number; message: string; body: unknown }) {
+  constructor({
+    status,
+    message,
+    body,
+  }: {
+    status: number
+    message: string
+    body: unknown
+  }) {
     super(message)
     this.name = "ApiError"
     this.status = status
@@ -189,7 +208,10 @@ const reissueToken = async (baseUrl = ""): Promise<string> => {
 
     if (!res.ok) throw new Error("REISSUE_FAILED")
 
-    const data = await safeJson<{ accessToken?: string; refreshToken?: string }>(res)
+    const data = await safeJson<{
+      accessToken?: string
+      refreshToken?: string
+    }>(res)
     if (!data?.accessToken) throw new Error("INVALID_REISSUE_RESPONSE")
 
     return data.accessToken
@@ -224,14 +246,18 @@ export type ApiRequestConfig = {
 export const apiRequest = async <T = unknown>(
   path: string,
   options: RequestInit = {},
-  config: ApiRequestConfig = {}
+  config: ApiRequestConfig = {},
 ): Promise<T | null> => {
   const { baseUrl = BASE_URL, retry = true, signal } = config
 
   const headers = new Headers(options.headers || {})
   headers.set("Accept", "application/json")
 
-  if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
+  if (
+    options.body &&
+    !(options.body instanceof FormData) &&
+    !headers.has("Content-Type")
+  ) {
     headers.set("Content-Type", "application/json")
   }
 
@@ -244,7 +270,10 @@ export const apiRequest = async <T = unknown>(
 
   if (res.ok) return await safeJson<T>(res)
 
-  const errBody = (await safeJson<ErrorBody>(res)) ?? { status: res.status, message: "UNKNOWN" }
+  const errBody = (await safeJson<ErrorBody>(res)) ?? {
+    status: res.status,
+    message: "UNKNOWN",
+  }
   const status = errBody.status ?? res.status
   const message = errBody.message ?? "UNKNOWN"
 
@@ -271,14 +300,51 @@ export const apiRequest = async <T = unknown>(
 }
 
 export const http = {
-  get: <T = unknown>(path: string, config: ApiRequestConfig = {}): Promise<T | null> =>
-    apiRequest<T>(path, { method: "GET" }, config),
-  post: <T = unknown>(path: string, body: unknown, config: ApiRequestConfig = {}): Promise<T | null> =>
-    apiRequest<T>(path, { method: "POST", body: body instanceof FormData ? body : JSON.stringify(body) }, config),
-  put: <T = unknown>(path: string, body: unknown, config: ApiRequestConfig = {}): Promise<T | null> =>
-    apiRequest<T>(path, { method: "PUT", body: body instanceof FormData ? body : JSON.stringify(body) }, config),
-  patch: <T = unknown>(path: string, body: unknown, config: ApiRequestConfig = {}): Promise<T | null> =>
-    apiRequest<T>(path, { method: "PATCH", body: body instanceof FormData ? body : JSON.stringify(body) }, config),
-  del: <T = unknown>(path: string, config: ApiRequestConfig = {}): Promise<T | null> =>
-    apiRequest<T>(path, { method: "DELETE" }, config),
+  get: <T = unknown>(
+    path: string,
+    config: ApiRequestConfig = {},
+  ): Promise<T | null> => apiRequest<T>(path, { method: "GET" }, config),
+  post: <T = unknown>(
+    path: string,
+    body: unknown,
+    config: ApiRequestConfig = {},
+  ): Promise<T | null> =>
+    apiRequest<T>(
+      path,
+      {
+        method: "POST",
+        body: body instanceof FormData ? body : JSON.stringify(body),
+      },
+      config,
+    ),
+  put: <T = unknown>(
+    path: string,
+    body: unknown,
+    config: ApiRequestConfig = {},
+  ): Promise<T | null> =>
+    apiRequest<T>(
+      path,
+      {
+        method: "PUT",
+        body: body instanceof FormData ? body : JSON.stringify(body),
+      },
+      config,
+    ),
+  patch: <T = unknown>(
+    path: string,
+    body: unknown,
+    config: ApiRequestConfig = {},
+  ): Promise<T | null> =>
+    apiRequest<T>(
+      path,
+      {
+        method: "PATCH",
+        body: body instanceof FormData ? body : JSON.stringify(body),
+      },
+      config,
+    ),
+  del: <T = unknown>(
+    path: string,
+    config: ApiRequestConfig = {},
+  ): Promise<T | null> => apiRequest<T>(path, { method: "DELETE" }, config),
 }

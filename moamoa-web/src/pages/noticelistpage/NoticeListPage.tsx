@@ -1,7 +1,13 @@
 import styles from "./NoticeListPage.module.css"
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined"
 import Pagination from "@mui/material/Pagination"
-import { useEffect, useMemo, useState, type ChangeEvent, type KeyboardEvent } from "react"
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from "react"
 import { useSearchParams } from "react-router-dom"
 import { formatDate } from "../../utils/date"
 import { useNoticesQuery } from "../../queries/notice.queries"
@@ -35,17 +41,20 @@ const NoticeListPage = () => {
     if (!noticesQuery.data) return
     if (totalPages <= 0) return
     if (page > totalPages) {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev)
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
 
-        if (totalPages === 1) {
-          next.delete("page")
-        } else {
-          next.set("page", String(totalPages))
-        }
+          if (totalPages === 1) {
+            next.delete("page")
+          } else {
+            next.set("page", String(totalPages))
+          }
 
-        return next
-      }, { replace: true })
+          return next
+        },
+        { replace: true },
+      )
     }
   }, [page, totalPages, setSearchParams, noticesQuery.data])
 
@@ -56,18 +65,21 @@ const NoticeListPage = () => {
   const onSearch = () => {
     const nextQuery = inputQuery.trim()
 
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
 
-      if (nextQuery.trim()) {
-        next.set("query", nextQuery)
-      } else {
-        next.delete("query")
-      }
+        if (nextQuery.trim()) {
+          next.set("query", nextQuery)
+        } else {
+          next.delete("query")
+        }
 
-      next.delete("page")
-      return next
-    }, { replace: true })
+        next.delete("page")
+        return next
+      },
+      { replace: true },
+    )
   }
 
   const onSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -76,24 +88,29 @@ const NoticeListPage = () => {
   }
 
   const onPageChange = (_: React.ChangeEvent<unknown>, nextPage: number) => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
 
-      if (nextPage <= 1) {
-        next.delete("page")
-      } else {
-        next.set("page", String(nextPage))
-      }
+        if (nextPage <= 1) {
+          next.delete("page")
+        } else {
+          next.set("page", String(nextPage))
+        }
 
-      return next
-    }, { replace: true })
+        return next
+      },
+      { replace: true },
+    )
   }
 
   return (
     <div className={styles.wrap}>
       <div className={styles.titleWrap}>
         <span className={styles.title}>공지사항</span>
-        <span className={styles.titleDescription}>모아모아의 서비스 개선 및 서비스 점검에 대한 소식을 전해드립니다</span>
+        <span className={styles.titleDescription}>
+          모아모아의 서비스 개선 및 서비스 점검에 대한 소식을 전해드립니다
+        </span>
       </div>
 
       <div className={styles.contentWrap}>
@@ -107,39 +124,58 @@ const NoticeListPage = () => {
             onKeyDown={onSearchKeyDown}
             placeholder="제목, 내용을 검색해 보세요"
           />
-          <button type="button" className={styles.searchButton} onClick={onSearch} aria-label="검색">
+          <button
+            type="button"
+            className={styles.searchButton}
+            onClick={onSearch}
+            aria-label="검색"
+          >
             <SearchOutlinedIcon sx={{ fontSize: 20, color: "#252525" }} />
           </button>
         </div>
 
         <div className={styles.noticeList}>
-          {noticesQuery.isPending && (
+          {noticesQuery.isPending &&
             Array.from({ length: SKELETON_COUNT }).map((_, index) => (
-              <div key={`notice-skeleton-${index}`} className={`${styles.noticeItem} ${styles.skeletonItem}`} aria-busy="true">
+              <div
+                key={`notice-skeleton-${index}`}
+                className={`${styles.noticeItem} ${styles.skeletonItem}`}
+                aria-busy="true"
+              >
                 <div className={styles.noticeItemTop}>
-                  <div className={`${styles.noticeChip} ${styles.skeleton} ${styles.skeletonChip}`} />
-                  <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+                  <div
+                    className={`${styles.noticeChip} ${styles.skeleton} ${styles.skeletonChip}`}
+                  />
+                  <div
+                    className={`${styles.skeleton} ${styles.skeletonTitle}`}
+                  />
                 </div>
                 <div className={`${styles.skeleton} ${styles.skeletonDate}`} />
               </div>
-            ))
-          )}
+            ))}
 
-          {!noticesQuery.isPending && !noticesQuery.isError && notices.length === 0 && (
-            <div className={styles.statusMessage}>
-              {query.trim() ? "검색 결과가 없습니다." : "등록된 공지사항이 없습니다."}
-            </div>
-          )}
-
-          {!noticesQuery.isPending && notices.map((notice) => (
-            <div key={notice.id} className={styles.noticeItem}>
-              <div className={styles.noticeItemTop}>
-                <div className={styles.noticeChip}>{notice.chip}</div>
-                <span className={styles.noticeTitle}>{notice.title}</span>
+          {!noticesQuery.isPending &&
+            !noticesQuery.isError &&
+            notices.length === 0 && (
+              <div className={styles.statusMessage}>
+                {query.trim()
+                  ? "검색 결과가 없습니다."
+                  : "등록된 공지사항이 없습니다."}
               </div>
-              <span className={styles.publishedAt}>{formatDate(notice.publishedAt, { withTime: false })}</span>
-            </div>
-          ))}
+            )}
+
+          {!noticesQuery.isPending &&
+            notices.map((notice) => (
+              <div key={notice.id} className={styles.noticeItem}>
+                <div className={styles.noticeItemTop}>
+                  <div className={styles.noticeChip}>{notice.chip}</div>
+                  <span className={styles.noticeTitle}>{notice.title}</span>
+                </div>
+                <span className={styles.publishedAt}>
+                  {formatDate(notice.publishedAt, { withTime: false })}
+                </span>
+              </div>
+            ))}
         </div>
       </div>
 

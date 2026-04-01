@@ -1,43 +1,43 @@
 .wrap {
-    width: 100%;
+  width: 100%;
 }
 
 /* ===== 배너 ===== */
 .info {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    background: #3B4953;
-    border-radius: 12px;
+  background: #3b4953;
+  border-radius: 12px;
 }
 
 .infoInner {
-    width: 1000px;
-    padding: 50px 50px;
+  width: 1000px;
+  padding: 50px 50px;
 
-    display: flex;
-    flex-direction: column;
-    gap: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
 }
 
 .textSection {
-    color: #ffffff;
+  color: #ffffff;
 }
 
 .title {
-    margin: 0;
-    font-size: 40px;
-    line-height: 1.2;
-    font-weight: 500;
-    color: #ffffff;
+  margin: 0;
+  font-size: 40px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #ffffff;
 }
 
 .count {
-    font-weight: 700;
-    color: #DCE8FD;
-    font-size: 52px;
+  font-weight: 700;
+  color: #dce8fd;
+  font-size: 52px;
 }
 
 /* 오른쪽 CTA 박스 */
@@ -45,282 +45,286 @@
 }
 
 .ctaText {
-    margin: 0 0 10px 0;
-    font-weight: 300;
-    color: #ffffff;
-    font-size: 13px;
+  margin: 0 0 10px 0;
+  font-weight: 300;
+  color: #ffffff;
+  font-size: 13px;
 }
 
 .ctaRow {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .primaryButton {
-    height: 40px;
-    padding: 0 12px;
-    border: 0;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 700;
-    color: #ffffff;
-    background: #0E4BBC;
-    margin-top: 3px;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #ffffff;
+  background: #0e4bbc;
+  margin-top: 3px;
 }
 
 .primaryButton:hover {
-    opacity: 0.80;
-    transition: .3s;
+  opacity: 0.8;
+  transition: 0.3s;
 }
 
 .primaryButton:active {
-    transform: translateY(1px);
+  transform: translateY(1px);
 }
 
 .hint {
-    color: rgba(17, 24, 39, 0.7);
-    font-size: 13px;
+  color: rgba(17, 24, 39, 0.7);
+  font-size: 13px;
 }
 
 /* ===== 리스트 영역 ===== */
 .listSection {
-    width: 1000px;
-    margin-top: 50px;
+  width: 1000px;
+  margin-top: 50px;
 }
 
 .listHeader {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 16px;
-    margin-bottom: 30px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 30px;
 }
 
 .controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .search {
-    width: 700px;
-    height: 50px;
-    padding: 0 30px;
-    border-radius: 25px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    outline: none;
+  width: 700px;
+  height: 50px;
+  padding: 0 30px;
+  border-radius: 25px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  outline: none;
 }
 
 .search:focus {
-    border-color: #cbd5e1;
+  border-color: #cbd5e1;
 }
 
 .select {
-    height: 40px;
-    padding: 0 10px;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
 }
 
 .empty {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #6D6D6D;
-    font-size: 18px;
-    margin-top: 100px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #6d6d6d;
+  font-size: 18px;
+  margin-top: 100px;
 }
 
 .grid {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .card {
-    display: flex;
-    width: 170px;
-    flex-direction: column;
-    align-items: center;
-    margin: 20px 30px;
-    box-sizing: border-box;
-    cursor: pointer;
-    /*box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.05);*/
-    padding: 20px 10px;
-    border-radius: 12px;
-    /*border: 1px solid lightgray;*/
+  display: flex;
+  width: 170px;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 30px;
+  box-sizing: border-box;
+  cursor: pointer;
+  /*box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.05);*/
+  padding: 20px 10px;
+  border-radius: 12px;
+  /*border: 1px solid lightgray;*/
 }
 
 .logoWrap {
-    width: 60px;
-    height: 60px;
-    border-radius: 100%;
-    overflow: hidden;
+  width: 60px;
+  height: 60px;
+  border-radius: 100%;
+  overflow: hidden;
 }
 
 .logo {
-    width: 100%;
-    border-radius: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.2s ease;
+  width: 100%;
+  border-radius: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease;
 }
 
 .card:hover .logo {
-    transform: scale(1.07);
+  transform: scale(1.07);
 }
 
 .card:hover .blogName {
-    color: #0E4BBC;;
+  color: #0e4bbc;
 }
 
 .blogName {
-    margin: 20px 0 0 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: #111827;
-    transition: 0.2s ease;
+  margin: 20px 0 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  transition: 0.2s ease;
 }
 
 .subscription {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    color: #A8A8A8;
-    margin-top: 10px
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  color: #a8a8a8;
+  margin-top: 10px;
 }
 
 .subscriptionCount {
-    margin: 0;
-    font-size: 12px;
-    font-weight: 400;
-    color: #A8A8A8;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: #a8a8a8;
 }
 
 .subButton {
-    background: none;
-    outline: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font-weight: 700;
-    color: #0E4BBC;
-    font-size: 13px;
-    height: 17px;
-    line-height: 17px;
+  background: none;
+  outline: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-weight: 700;
+  color: #0e4bbc;
+  font-size: 13px;
+  height: 17px;
+  line-height: 17px;
 }
 
 .subscribing {
-    background: none;
-    outline: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font-weight: 700;
-    color: #A8A8A8;
-    font-size: 13px;
-    height: 17px;
-    line-height: 17px;
+  background: none;
+  outline: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-weight: 700;
+  color: #a8a8a8;
+  font-size: 13px;
+  height: 17px;
+  line-height: 17px;
 }
 
 .subButton:hover {
-    background: #f9fafb;
+  background: #f9fafb;
 }
 
 .subscribing:hover {
-    background: #f9fafb;
+  background: #f9fafb;
 }
 
 /* ===== 반응형 ===== */
 @media (max-width: 900px) {
-    .infoInner {
-        grid-template-columns: 1fr;
-        gap: 18px;
-    }
+  .infoInner {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
 
-    .title {
-        font-size: 32px;
-    }
+  .title {
+    font-size: 32px;
+  }
 
-    .controls {
-        width: 100%;
-    }
+  .controls {
+    width: 100%;
+  }
 
-    .search {
-        width: 100%;
-    }
+  .search {
+    width: 100%;
+  }
 
-    .grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 520px) {
-    .title {
-        font-size: 26px;
-    }
+  .title {
+    font-size: 26px;
+  }
 
-    .grid {
-        grid-template-columns: 1fr;
-    }
+  .grid {
+    grid-template-columns: 1fr;
+  }
 
-    .ctaRow {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+  .ctaRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* TechBlogsPage.module.css 에 추가 */
 
 /* 공통 스켈레톤 */
 .skeleton {
-    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
-    background-size: 400% 100%;
-    animation: shimmer 1.4s ease infinite;
-    border-radius: 10px;
+  background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 10px;
 }
 
 @keyframes shimmer {
-    0% { background-position: 100% 0; }
-    100% { background-position: 0 0; }
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
 }
 
 .skeletonCard {
-    cursor: default;
+  cursor: default;
 }
 
 .skeletonLine {
-    height: 19px;
-    width: 70%;
-    margin-top: 12px;
+  height: 19px;
+  width: 70%;
+  margin-top: 12px;
 }
 
 .skeletonCircle {
-    width: 60px;
-    height: 60px;
-    border-radius: 100%;
+  width: 60px;
+  height: 60px;
+  border-radius: 100%;
 }
 
 .skeletonLineShort {
-    height: 14px;
-    width: 90%;
-    margin-top: 8px;
+  height: 14px;
+  width: 90%;
+  margin-top: 8px;
 }
 
 .skeletonBtn {
-    height: 19px;
-    width: 72px;
-    border-radius: 10px;
+  height: 19px;
+  width: 72px;
+  border-radius: 10px;
 }
 
 .skeletonIcon {
-    width: 16px;
-    height: 16px;
-    border-radius: 999px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
 }

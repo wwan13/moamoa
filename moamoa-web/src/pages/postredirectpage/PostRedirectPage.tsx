@@ -40,7 +40,7 @@ const PostRedirectPage = () => {
           })
           navigate("/", { replace: true })
         },
-      }
+      },
     )
   }, [mutate, navigate, postId])
 

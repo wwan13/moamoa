@@ -1,170 +1,173 @@
 .wrap {
-    /*flex: 1;*/
-    /*display: grid;*/
-    /*grid-template-columns: 180px 1fr;*/
+  /*flex: 1;*/
+  /*display: grid;*/
+  /*grid-template-columns: 180px 1fr;*/
 }
 
 .left {
-    position: sticky;
-    top: 16px;
-    align-self: start;
+  position: sticky;
+  top: 16px;
+  align-self: start;
 }
 
 .blogInfo {
-    display: flex;
-    gap: 30px;
-    width: 100%;
-    padding: 20px 0;
-    margin-bottom: 16px;
-    /*border-bottom: 1px solid #e5e7eb;*/
+  display: flex;
+  gap: 30px;
+  width: 100%;
+  padding: 20px 0;
+  margin-bottom: 16px;
+  /*border-bottom: 1px solid #e5e7eb;*/
 }
 
 .posts {
 }
 
 .iconWrap {
-    width: 140px;
-    height: 140px;
-    border-radius: 100%;
-    box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.05);
-    display: block;
-    overflow: hidden;
+  width: 140px;
+  height: 140px;
+  border-radius: 100%;
+  box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.05);
+  display: block;
+  overflow: hidden;
 }
 
 .icon {
-    width: 100%;
-    object-fit: cover;
-    display: block;
+  width: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .detail {
-    padding: 8px 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .blogDetail {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .blogTitle {
-    font-size: 24px;
-    font-weight: 600;
-    color: #252525;
-    margin: 0 0 4px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #252525;
+  margin: 0 0 4px 0;
 }
 
 .blogStats {
-    font-size: 14px;
-    font-weight: 300;
-    margin: 0;
-    color: #A8A8A8;
+  font-size: 14px;
+  font-weight: 300;
+  margin: 0;
+  color: #a8a8a8;
 }
 
 .blogLink {
-    font-size: 14px;
-    color: #A8A8A8;
-    text-decoration: underline;
-    outline: none;
-    border: none;
-    background-color: #fff;
-    cursor: pointer;
-    padding: 0;
-    text-align: left;
+  font-size: 14px;
+  color: #a8a8a8;
+  text-decoration: underline;
+  outline: none;
+  border: none;
+  background-color: #fff;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
 }
 
 .buttonWrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .subButton {
-    outline: none;
-    border: none;
-    background-color: #0E4BBC;
-    width: 64px;
-    height: 32px;
-    border-radius: 18px;
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer
+  outline: none;
+  border: none;
+  background-color: #0e4bbc;
+  width: 64px;
+  height: 32px;
+  border-radius: 18px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .subIngButton {
-    box-sizing: border-box;
-    outline: none;
-    border: none;
-    background-color: #f3f4f6;
-    width: 84px;
-    height: 32px;
-    border-radius: 18px;
-    color: #A2A2A2;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer
+  box-sizing: border-box;
+  outline: none;
+  border: none;
+  background-color: #f3f4f6;
+  width: 84px;
+  height: 32px;
+  border-radius: 18px;
+  color: #a2a2a2;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
 }
 
-
 .alarmIngButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    box-sizing: border-box;
-    outline: none;
-    border: none;
-    background-color: #f3f4f6;
-    border-radius: 999px;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  outline: none;
+  border: none;
+  background-color: #f3f4f6;
+  border-radius: 999px;
+  cursor: pointer;
 }
 
 .alarmButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    box-sizing: border-box;
-    outline: none;
-    border: none;
-    background-color: #0E4BBC;
-    color: #ffffff;
-    border-radius: 999px;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  outline: none;
+  border: none;
+  background-color: #0e4bbc;
+  color: #ffffff;
+  border-radius: 999px;
+  cursor: pointer;
 }
 
 /* TechBlogDetailPage.module.css 에 추가 (조회 스켈레톤만) */
 .skeleton {
-    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
-    background-size: 400% 100%;
-    animation: shimmer 1.4s ease infinite;
-    border-radius: 6px;
+  background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 6px;
 }
 
 @keyframes shimmer {
-    0% { background-position: 100% 0; }
-    100% { background-position: 0 0; }
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
 }
 
 .skeletonIcon {
-    height: 140px;
-    width: 140px;
-    background: #ffffff;
+  height: 140px;
+  width: 140px;
+  background: #ffffff;
 }
 
 .skeletonLine {
-    height: 18px;
-    width: 220px;
+  height: 18px;
+  width: 220px;
 }
 
 .skeletonLineShort {
-    height: 12px;
-    width: 180px;
-    margin-top: 8px;
+  height: 12px;
+  width: 180px;
+  margin-top: 8px;
 }

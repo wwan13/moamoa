@@ -22,7 +22,11 @@ export const useMemberSummaryQuery = () => {
 }
 
 export const useCreateSocialMemberMutation = () => {
-  return useMutation<CreateSocialMemberResult, Error, CreateSocialMemberCommand>({
+  return useMutation<
+    CreateSocialMemberResult,
+    Error,
+    CreateSocialMemberCommand
+  >({
     mutationFn: (command) => memberApi.createSocial(command),
   })
 }

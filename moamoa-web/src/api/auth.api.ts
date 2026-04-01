@@ -26,12 +26,18 @@ export type LogoutResult = {
 }
 
 export const authApi = {
-  login: async (command: LoginCommand, config?: ApiRequestConfig): Promise<AuthTokens> => {
+  login: async (
+    command: LoginCommand,
+    config?: ApiRequestConfig,
+  ): Promise<AuthTokens> => {
     const res = await http.post<AuthTokens>("/api/auth/login", command, config)
     if (!res) throw new Error("EMPTY_LOGIN_RESPONSE")
     return res
   },
-  signup: async (command: SignupCommand, config?: ApiRequestConfig): Promise<AuthTokens> => {
+  signup: async (
+    command: SignupCommand,
+    config?: ApiRequestConfig,
+  ): Promise<AuthTokens> => {
     const res = await http.post<AuthTokens>("/api/member", command, config)
     if (!res) throw new Error("EMPTY_SIGNUP_RESPONSE")
     return res
@@ -42,9 +48,13 @@ export const authApi = {
   },
   loginSocialSession: async (
     command: LoginSocialSessionCommand,
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<AuthTokens> => {
-    const res = await http.post<AuthTokens>("/api/auth/login/social", command, config)
+    const res = await http.post<AuthTokens>(
+      "/api/auth/login/social",
+      command,
+      config,
+    )
     if (!res) throw new Error("EMPTY_SOCIAL_LOGIN_RESPONSE")
     return res
   },

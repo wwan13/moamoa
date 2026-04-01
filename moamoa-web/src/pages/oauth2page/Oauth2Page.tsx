@@ -1,48 +1,47 @@
-import GlobalSpinner from "../../components/globalspinner/GlobalSpinner";
-import {useEffect} from "react";
-import {useNavigate, useSearchParams} from "react-router-dom";
-import {showGlobalAlert} from "../../api/client";
-import useAuth from "../../auth/useAuth";
+import GlobalSpinner from "../../components/globalspinner/GlobalSpinner"
+import { useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { showGlobalAlert } from "../../api/client"
+import useAuth from "../../auth/useAuth"
 
 const Oauth2Page = () => {
-    const [searchParams] = useSearchParams()
-    const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
 
-    const { socialLogin } = useAuth()
+  const { socialLogin } = useAuth()
 
-    useEffect(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
 
-        const type = searchParams.get("type")
+    const type = searchParams.get("type")
 
-        if (type === "success") {
-            const isNew = searchParams.get("isNew") === "true"
-            const loginAction = async () => {
-                await socialLogin({ isNew })
-                navigate(isNew ? "/?welcome=true" : "/")
-            }
-            loginAction()
-        } else if (type === "hasError") {
-            const errorMessage = searchParams.get("errorMessage")
-            const errorAction = async () => {
-                await showGlobalAlert(errorMessage)
-                navigate("/")
-            }
-            errorAction()
-        } else if (type === "emailRequired") {
-            const provider = searchParams.get("provider")
-            const providerKey = searchParams.get("providerKey")
+    if (type === "success") {
+      const isNew = searchParams.get("isNew") === "true"
+      const loginAction = async () => {
+        await socialLogin({ isNew })
+        navigate(isNew ? "/?welcome=true" : "/")
+      }
+      loginAction()
+    } else if (type === "hasError") {
+      const errorMessage = searchParams.get("errorMessage")
+      const errorAction = async () => {
+        await showGlobalAlert(errorMessage)
+        navigate("/")
+      }
+      errorAction()
+    } else if (type === "emailRequired") {
+      const provider = searchParams.get("provider")
+      const providerKey = searchParams.get("providerKey")
 
-            navigate(`/oauth2/email?from=${provider}&id=${providerKey}`)
-        }
+      navigate(`/oauth2/email?from=${provider}&id=${providerKey}`)
+    }
+  }, [navigate, searchParams, socialLogin])
 
-    }, [navigate, searchParams, socialLogin]);
-
-    return (
-        <>
-            <GlobalSpinner />
-        </>
-    )
+  return (
+    <>
+      <GlobalSpinner />
+    </>
+  )
 }
 
 export default Oauth2Page

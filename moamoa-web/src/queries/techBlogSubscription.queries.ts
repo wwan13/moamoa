@@ -18,7 +18,11 @@ export const useSubscriptionToggleMutation = (options: ToggleOptions = {}) => {
 
   const invalidateOnSuccess = options.invalidateOnSuccess ?? true
 
-  return useMutation<SubscriptionToggleResult, Error, SubscriptionToggleCommand>({
+  return useMutation<
+    SubscriptionToggleResult,
+    Error,
+    SubscriptionToggleCommand
+  >({
     mutationFn: (command) => subscriptionApi.toggleSubscription(command),
     onSuccess: () => {
       if (!invalidateOnSuccess) return
@@ -31,7 +35,11 @@ export const useSubscriptionToggleMutation = (options: ToggleOptions = {}) => {
 }
 
 export const useNotificationToggleMutation = () => {
-  return useMutation<NotificationEnabledToggleResult, Error, NotificationEnabledToggleCommand>({
+  return useMutation<
+    NotificationEnabledToggleResult,
+    Error,
+    NotificationEnabledToggleCommand
+  >({
     mutationFn: (command) => subscriptionApi.toggleNotification(command),
   })
 }

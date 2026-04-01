@@ -1,4 +1,4 @@
-import {type ApiRequestConfig, http} from "./client"
+import { type ApiRequestConfig, http } from "./client"
 
 export type SubscriptionToggleCommand = {
   techBlogId: number
@@ -19,24 +19,24 @@ export type NotificationEnabledToggleResult = {
 export const subscriptionApi = {
   toggleSubscription: async (
     command: SubscriptionToggleCommand,
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<SubscriptionToggleResult> => {
     const res = await http.post<SubscriptionToggleResult>(
       "/api/subscription",
       command,
-      config
+      config,
     )
 
     return res ?? { subscribing: false }
   },
   toggleNotification: async (
     command: NotificationEnabledToggleCommand,
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<NotificationEnabledToggleResult> => {
     const res = await http.post<NotificationEnabledToggleResult>(
       "/api/subscription/notification-enabled",
       command,
-      config
+      config,
     )
 
     return res ?? { notificationEnabled: false }

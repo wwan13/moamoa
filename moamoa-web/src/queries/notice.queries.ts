@@ -17,7 +17,12 @@ export const useNoticesQuery = (conditions: NoticeQueryOptions = {}) => {
   const query = conditions.query ?? ""
 
   return useQuery<NoticeList>({
-    queryKey: ["notice", scope, "list", { page, size, query: query || undefined }],
+    queryKey: [
+      "notice",
+      scope,
+      "list",
+      { page, size, query: query || undefined },
+    ],
     queryFn: ({ signal }) => noticeApi.list({ page, size, query }, { signal }),
     staleTime: 60 * 1000,
   })

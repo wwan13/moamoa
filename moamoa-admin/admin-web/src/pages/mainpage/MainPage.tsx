@@ -1,19 +1,20 @@
-import PageTitle from "../../components/pagetitle/PageTitle.tsx";
-import {useEffect} from "react";
-import {useNavigate} from "react-router-dom";
+import PageTitle from "../../components/pagetitle/PageTitle.tsx"
+import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
 const MainPage = () => {
+  const navigate = useNavigate()
 
-    const navigate = useNavigate()
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    navigate("/dashboard")
+  }, [navigate])
 
-    useEffect(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" })
-        navigate("/dashboard")
-    }, [navigate]);
-
-    return <div>
-        <PageTitle value={"모아모아 관리자"} />
+  return (
+    <div>
+      <PageTitle value={"모아모아 관리자"} />
     </div>
+  )
 }
 
 export default MainPage

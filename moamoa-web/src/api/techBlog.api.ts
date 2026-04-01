@@ -42,16 +42,28 @@ const buildQuery = (paramsObj: Record<string, unknown> = {}): string => {
 }
 
 export const techBlogApi = {
-  list: async (conditions: TechBlogListConditions = {}, config?: ApiRequestConfig): Promise<TechBlogList> => {
+  list: async (
+    conditions: TechBlogListConditions = {},
+    config?: ApiRequestConfig,
+  ): Promise<TechBlogList> => {
     const q = buildQuery({ query: conditions.query || undefined })
     const res = await http.get<TechBlogList>(`/api/tech-blog${q}`, config)
     return res ?? { meta: { totalCount: 0 }, techBlogs: [] }
   },
-  findById: async (condition: TechBlogIdCondition, config?: ApiRequestConfig): Promise<TechBlogSummary | null> => {
-    return await http.get<TechBlogSummary>(`/api/tech-blog/${condition.techBlogId}`, config)
+  findById: async (
+    condition: TechBlogIdCondition,
+    config?: ApiRequestConfig,
+  ): Promise<TechBlogSummary | null> => {
+    return await http.get<TechBlogSummary>(
+      `/api/tech-blog/${condition.techBlogId}`,
+      config,
+    )
   },
   listSubscribed: async (config?: ApiRequestConfig): Promise<TechBlogList> => {
-    const res = await http.get<TechBlogList>("/api/tech-blog/subscription", config)
+    const res = await http.get<TechBlogList>(
+      "/api/tech-blog/subscription",
+      config,
+    )
     return res ?? { meta: { totalCount: 0 }, techBlogs: [] }
   },
 }

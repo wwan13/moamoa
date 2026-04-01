@@ -27,9 +27,11 @@ const newSessionKey = (): string => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [sessionKey, setSessionKey] = useState<string | null>(() =>
-    localStorage.getItem(SESSION_KEY)
+    localStorage.getItem(SESSION_KEY),
   )
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!localStorage.getItem(SESSION_KEY))
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
+    () => !!localStorage.getItem(SESSION_KEY),
+  )
 
   const [authModal, setAuthModal] = useState<AuthModalType>(null)
 
@@ -99,7 +101,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate("/signup")
   }
 
-  const login = async ({ email, password, isNew = false }: LoginParams): Promise<AuthTokens> => {
+  const login = async ({
+    email,
+    password,
+    isNew = false,
+  }: LoginParams): Promise<AuthTokens> => {
     const res = await loginMutation.mutateAsync({ email, password })
 
     await qc.cancelQueries()
@@ -112,7 +118,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return res
   }
 
-  const socialLogin = async ({ isNew = false }: SocialLoginParams): Promise<void> => {
+  const socialLogin = async ({
+    isNew = false,
+  }: SocialLoginParams): Promise<void> => {
     await qc.cancelQueries()
     qc.clear()
 

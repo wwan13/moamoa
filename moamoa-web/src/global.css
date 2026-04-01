@@ -1,40 +1,52 @@
-html, body {
-    font-family: 'Pretendard', sans-serif;
+html,
+body {
+  font-family: "Pretendard", sans-serif;
 }
 
 button,
 input,
 textarea,
 select {
-    font: inherit;
+  font: inherit;
 }
 
 button:focus {
-    outline: none;
+  outline: none;
 }
 
 button:focus-visible {
-    outline: none;
+  outline: none;
 }
 
-html, body {
-    margin: 0;
-    padding: 0;
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
-html, body, button {
-    letter-spacing: -0.02em;
+html,
+body,
+button {
+  letter-spacing: -0.02em;
 }
 
 html {
-    scrollbar-gutter: stable;
+  scrollbar-gutter: stable;
 }
 
 body.modal-open {
-    overflow: hidden;
+  overflow: hidden;
 }
 
-.markdown { color: #252525 }
-.markdown h1 { font-size: 32px; }
-.markdown h2 { font-size: 24px; }
-.markdown ul { padding-left: 20px; }
+.markdown {
+  color: #252525;
+}
+.markdown h1 {
+  font-size: 32px;
+}
+.markdown h2 {
+  font-size: 24px;
+}
+.markdown ul {
+  padding-left: 20px;
+}

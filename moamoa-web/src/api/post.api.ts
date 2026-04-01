@@ -93,8 +93,11 @@ const emptyPostList = (page = 1, size = DEFAULT_PAGE_SIZE): PostList => ({
   posts: [],
 })
 
-const resolveCategoryId = (category?: PostCategoryKey | number | string): number | undefined => {
-  if (category === undefined || category === null || category === "") return undefined
+const resolveCategoryId = (
+  category?: PostCategoryKey | number | string,
+): number | undefined => {
+  if (category === undefined || category === null || category === "")
+    return undefined
   if (typeof category === "number") return category > 0 ? category : undefined
 
   const normalized = String(category).trim().toLowerCase()
@@ -104,7 +107,10 @@ const resolveCategoryId = (category?: PostCategoryKey | number | string): number
 }
 
 export const postsApi = {
-  list: async (conditions: PostListConditions = {}, config?: ApiRequestConfig): Promise<PostList> => {
+  list: async (
+    conditions: PostListConditions = {},
+    config?: ApiRequestConfig,
+  ): Promise<PostList> => {
     const page = conditions.page
     const size = conditions.size ?? DEFAULT_PAGE_SIZE
     const q = buildQuery({
@@ -119,7 +125,7 @@ export const postsApi = {
   },
   listByTechBlogId: async (
     conditions: TechBlogPostConditions = {},
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<PostList> => {
     const page = conditions.page
     const q = buildQuery({
@@ -134,7 +140,7 @@ export const postsApi = {
   },
   listBySubscription: async (
     conditions: PostPagingConditions = {},
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<PostList> => {
     const page = conditions.page
     const q = buildQuery({
@@ -147,7 +153,7 @@ export const postsApi = {
   },
   listByBookmark: async (
     conditions: PostPagingConditions = {},
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<PostList> => {
     const page = conditions.page
     const q = buildQuery({
@@ -160,8 +166,12 @@ export const postsApi = {
   },
   viewPost: async (
     command: ViewPostCommand,
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<ViewedPostResult | null> => {
-    return await http.post<ViewedPostResult>(`/api/post/${command.postId}`, {}, config)
+    return await http.post<ViewedPostResult>(
+      `/api/post/${command.postId}`,
+      {},
+      config,
+    )
   },
 }

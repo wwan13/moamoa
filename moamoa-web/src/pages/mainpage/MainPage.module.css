@@ -1,48 +1,48 @@
 .banner {
-    /*height: 120px;*/
-    background: #ffffff;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    margin-bottom: 44px;
+  /*height: 120px;*/
+  background: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin-bottom: 44px;
 }
 .bannerImage {
-    border-radius: 12px;
-    width: 100%;
-    object-fit: cover;
-    display: block;
+  border-radius: 12px;
+  width: 100%;
+  object-fit: cover;
+  display: block;
 }
 .layout {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 180px 1fr;
-    gap: 32px;
-    align-items: start;
-    background: #ffffff;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 32px;
+  align-items: start;
+  background: #ffffff;
 }
 .left {
-    position: sticky;
-    top: calc(60px + 16px);
-    align-self: start;
-    display: flex;
-    width: 100%;
-    height: calc(100vh - 60px - 32px);
-    min-height: 0;
-    overflow: hidden;
+  position: sticky;
+  top: calc(60px + 16px);
+  align-self: start;
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 60px - 32px);
+  min-height: 0;
+  overflow: hidden;
 }
 .content {
-    flex: 1;
-    min-width: 0;
+  flex: 1;
+  min-width: 0;
 }
 @media (max-width: 900px) {
-    .layout {
-        grid-template-columns: 1fr;
-    }
-    .left {
-        position: static;
-        height: auto;
-        min-height: auto;
-        overflow: visible;
-        padding-right: 0;
-    }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .left {
+    position: static;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    padding-right: 0;
+  }
 }

@@ -11,9 +11,13 @@ export type BookmarkToggleResult = {
 export const bookmarkApi = {
   toggle: async (
     command: BookmarkToggleCommand,
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<BookmarkToggleResult> => {
-    const res = await http.post<BookmarkToggleResult>("/api/bookmark", command, config)
+    const res = await http.post<BookmarkToggleResult>(
+      "/api/bookmark",
+      command,
+      config,
+    )
     return res ?? { bookmarked: false }
   },
 }

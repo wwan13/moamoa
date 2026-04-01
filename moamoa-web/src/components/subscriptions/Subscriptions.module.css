@@ -2,73 +2,73 @@
 }
 
 .empty {
-    padding: 6px 10px;
-    color: #888;
-    font-size: 14px;
+  padding: 6px 10px;
+  color: #888;
+  font-size: 14px;
 }
 
 .header {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px;
-    margin-bottom: 4px;
-    border-radius: 8px;
-    transition: .2s ease;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-    outline: none;
-    font-size: 16px;
-    font-weight: 500;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  transition: 0.2s ease;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  outline: none;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .active {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 .header:hover {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 .title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #252525;
+  font-size: 16px;
+  font-weight: 600;
+  color: #252525;
 }
 
 .list {
-    padding: 0;
-    list-style: none;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  padding: 0;
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-    padding: 6px 10px;
-    border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
 
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    text-align: left;
-    transition: .2s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s ease;
 }
 
 .activeItem {
-    background: #f3f4f6;
+  background: #f3f4f6;
 }
 
 .item:hover {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 /*.item:hover .name {*/
@@ -80,136 +80,140 @@
 /*}*/
 
 .avatarWrap {
-    width: 26px;
-    height: 26px;
-    border-radius: 999px;
-    overflow: hidden;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  overflow: hidden;
 }
 
 .avatar {
-    width: 100%;
-    object-fit: cover;
-    flex-shrink: 0;
-    transition: 0.2s ease;
+  width: 100%;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: 0.2s ease;
 }
 
 .name {
-    flex: 1;
-    min-width: 0;
-    font-size: 14px;
-    font-weight: 400;
-    color: #111827;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #111827;
 
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-    transition: 0.2s ease;
+  transition: 0.2s ease;
 }
 
 .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: #2563eb; /* 유튜브 느낌의 파란 점 */
-    flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #2563eb; /* 유튜브 느낌의 파란 점 */
+  flex-shrink: 0;
 }
 
 .dotOff {
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: transparent;
-    flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: transparent;
+  flex-shrink: 0;
 }
 
 .more {
-    width: 100%;
-    margin-top: 6px;
-    position: sticky;
-    bottom: 0;
-    z-index: 1;
+  width: 100%;
+  margin-top: 6px;
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
 
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 
-    padding: 7px 10px;
-    line-height: 1;
-    border-radius: 8px;
-    border: none;
-    background: #fff;
-    cursor: pointer;
+  padding: 7px 10px;
+  line-height: 1;
+  border-radius: 8px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
 
-    color: #252525;
-    font-size: 13px;
-    font-weight: 600;
+  color: #252525;
+  font-size: 13px;
+  font-weight: 600;
 
-    transition: .2s ease;
+  transition: 0.2s ease;
 }
 
 .more span {
-    position: relative;
-    top: 1px;
+  position: relative;
+  top: 1px;
 }
 
 .more:hover {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 .chev {
-    display: inline-block;
-    transform: translateY(1px);
-    transition: transform 0.15s ease;
-    margin-right: 7px;
+  display: inline-block;
+  transform: translateY(1px);
+  transition: transform 0.15s ease;
+  margin-right: 7px;
 }
 
 .up {
-    transform: rotate(180deg) translateY(-1px);
+  transform: rotate(180deg) translateY(-1px);
 }
 
 .item:focus,
 .item:focus-visible,
 .more:focus,
 .more:focus-visible {
-    outline: none;
+  outline: none;
 }
 
 /* Subscriptions.module.css 에 추가 */
 
 /* 공통 스켈레톤 */
 .skeleton {
-    background-size: 400% 100%;
-    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
-    animation: shimmer 1.4s ease infinite;
-    border-radius: 6px;
+  background-size: 400% 100%;
+  background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 6px;
 }
 
 @keyframes shimmer {
-    0% { background-position: 100% 0; }
-    100% { background-position: 0 0; }
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
 }
 
 .skeletonRow {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: default;
 }
 
 .skeletonCircle {
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
 }
 
 .skeletonLine {
-    height: 12px;
-    width: 70%;
-    border-radius: 6px;
+  height: 12px;
+  width: 70%;
+  border-radius: 6px;
 }
 
 /* 기존 클래스에 덮어쓰기 쉬우려고 avatar에도 적용 가능 */
 .avatar.skeletonCircle {
-    background: none; /* img 기본 제거용 */
+  background: none; /* img 기본 제거용 */
 }

@@ -16,7 +16,7 @@ type QueryOptions = {
 
 export const useTechBlogsQuery = (
   conditions: TechBlogListQuery = {},
-  options: QueryOptions = {}
+  options: QueryOptions = {},
 ) => {
   const { authScope, publicScope } = useAuth()
   const scope = authScope ?? publicScope
@@ -24,21 +24,31 @@ export const useTechBlogsQuery = (
   const hasQuery = !!conditions.query
 
   return useQuery<TechBlogList>({
-    queryKey: ["techBlogs", scope, { query: hasQuery ? conditions.query : undefined }],
-    queryFn: ({ signal }) => techBlogApi.list({ query: conditions.query }, { signal }),
+    queryKey: [
+      "techBlogs",
+      scope,
+      { query: hasQuery ? conditions.query : undefined },
+    ],
+    queryFn: ({ signal }) =>
+      techBlogApi.list({ query: conditions.query }, { signal }),
     enabled: options.enabled ?? true,
     staleTime: hasQuery ? 0 : 60 * 1000,
     gcTime: hasQuery ? 0 : 5 * 60 * 1000,
   })
 }
 
-export const useTechBlogByIdQuery = ({ techBlogId }: { techBlogId?: string | number }) => {
+export const useTechBlogByIdQuery = ({
+  techBlogId,
+}: {
+  techBlogId?: string | number
+}) => {
   const { authScope, publicScope } = useAuth()
   const scope = authScope ?? publicScope
 
   return useQuery<TechBlogSummary | null>({
     queryKey: ["techBlog", scope, String(techBlogId)],
-    queryFn: ({ signal }) => techBlogApi.findById({ techBlogId: techBlogId ?? "" }, { signal }),
+    queryFn: ({ signal }) =>
+      techBlogApi.findById({ techBlogId: techBlogId ?? "" }, { signal }),
     enabled: !!techBlogId,
   })
 }

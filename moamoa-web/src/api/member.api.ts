@@ -47,17 +47,25 @@ export const memberApi = {
   },
   createSocial: async (
     command: CreateSocialMemberCommand,
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<CreateSocialMemberResult> => {
-    const res = await http.post<CreateSocialMemberResult>("/api/member/social", command, config)
+    const res = await http.post<CreateSocialMemberResult>(
+      "/api/member/social",
+      command,
+      config,
+    )
     if (!res) throw new Error("EMPTY_SOCIAL_MEMBER_RESPONSE")
     return res
   },
   changePassword: async (
     command: ChangePasswordCommand,
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<ChangePasswordResult> => {
-    const res = await http.post<ChangePasswordResult>("/api/member/password", command, config)
+    const res = await http.post<ChangePasswordResult>(
+      "/api/member/password",
+      command,
+      config,
+    )
     return res ?? { success: false }
   },
   unjoin: async (config?: ApiRequestConfig): Promise<MemberUnjoinResult> => {

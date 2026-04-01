@@ -40,7 +40,7 @@ const buildQuery = (paramsObj: Record<string, unknown> = {}): string => {
 export const noticeApi = {
   list: async (
     conditions: NoticeListConditions = {},
-    config?: ApiRequestConfig
+    config?: ApiRequestConfig,
   ): Promise<NoticeList> => {
     const page = conditions.page ?? 1
     const size = conditions.size ?? 10
@@ -51,9 +51,11 @@ export const noticeApi = {
     })
 
     const res = await http.get<NoticeList>(`/api/notice${q}`, config)
-    return res ?? {
-      meta: { page, size, totalCount: 0, totalPages: 0 },
-      notices: [],
-    }
+    return (
+      res ?? {
+        meta: { page, size, totalCount: 0, totalPages: 0 },
+        notices: [],
+      }
+    )
   },
 }

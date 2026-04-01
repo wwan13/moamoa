@@ -10,7 +10,9 @@ type BookmarkToggleOptions = {
   invalidateOnSuccess?: boolean
 }
 
-export const useBookmarkToggleMutation = (options: BookmarkToggleOptions = {}) => {
+export const useBookmarkToggleMutation = (
+  options: BookmarkToggleOptions = {},
+) => {
   const qc = useQueryClient()
   const { authScope, publicScope } = useAuth()
   const scope = authScope ?? publicScope

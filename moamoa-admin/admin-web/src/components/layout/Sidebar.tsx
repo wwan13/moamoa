@@ -1,121 +1,118 @@
-import styles from './Sidebar.module.css'
-import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
-import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
-import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined';
-import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
-import LibraryAddOutlinedIcon from '@mui/icons-material/LibraryAddOutlined';
-import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
-import {useLocation, useNavigate} from "react-router-dom"
+import styles from "./Sidebar.module.css"
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined"
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined"
+import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined"
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined"
+import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined"
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined"
+import { useLocation, useNavigate } from "react-router-dom"
 import * as React from "react"
 
 type Menu = {
-    title: string
-    key: string
-    navigateTo: string
-    icon: (active: boolean) => React.ReactNode
+  title: string
+  key: string
+  navigateTo: string
+  icon: (active: boolean) => React.ReactNode
 }
 
 const menus: Menu[] = [
-    {
-        title: "대시보드",
-        key: "/dashboard",
-        navigateTo: "/dashboard",
-        icon: (active) => (
-            <DashboardOutlinedIcon
-                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
-            />
-        ),
-    },
-    {
-        title: "로그",
-        key: "/log",
-        navigateTo: "/log",
-        icon: (active) => (
-            <ReceiptLongOutlinedIcon
-                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
-            />
-        ),
-    },
-    {
-        title: "게시글",
-        key: "/post",
-        navigateTo: "/post",
-        icon: (active) => (
-            <ArticleOutlinedIcon
-                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
-            />
-        ),
-    },
-    {
-        title: "기술블로그",
-        key: "/blog",
-        navigateTo: "/blog",
-        icon: (active) => (
-            <AppsOutlinedIcon
-                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
-            />
-        ),
-    },
-    {
-        title: "블로그 요청",
-        key: "/submission",
-        navigateTo: "/submission",
-        icon: (active) => (
-            <LibraryAddOutlinedIcon
-                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
-            />
-        ),
-    },
-    {
-        title: "피드백",
-        key: "/feedback",
-        navigateTo: "/feedback",
-        icon: (active) => (
-            <ChatOutlinedIcon
-                sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
-            />
-        ),
-    },
+  {
+    title: "대시보드",
+    key: "/dashboard",
+    navigateTo: "/dashboard",
+    icon: (active) => (
+      <DashboardOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
+  {
+    title: "로그",
+    key: "/log",
+    navigateTo: "/log",
+    icon: (active) => (
+      <ReceiptLongOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
+  {
+    title: "게시글",
+    key: "/post",
+    navigateTo: "/post",
+    icon: (active) => (
+      <ArticleOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
+  {
+    title: "기술블로그",
+    key: "/blog",
+    navigateTo: "/blog",
+    icon: (active) => (
+      <AppsOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
+  {
+    title: "블로그 요청",
+    key: "/submission",
+    navigateTo: "/submission",
+    icon: (active) => (
+      <LibraryAddOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
+  {
+    title: "피드백",
+    key: "/feedback",
+    navigateTo: "/feedback",
+    icon: (active) => (
+      <ChatOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
 ]
 
 const Sidebar = () => {
-    const { pathname } = useLocation()
-    const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
 
-    return (
-        <section className={styles.wrap}>
-            <div className={styles.top}>
-                <div className={styles.logoWrap}>
-                    <img
-                        alt="moamoa admin logo"
-                        src="https://i.imgur.com/dWAf3KG.png"
-                        className={styles.logo}
-                    />
-                </div>
+  return (
+    <section className={styles.wrap}>
+      <div className={styles.top}>
+        <div className={styles.logoWrap}>
+          <img
+            alt="moamoa admin logo"
+            src="https://i.imgur.com/dWAf3KG.png"
+            className={styles.logo}
+          />
+        </div>
 
-                <div className={styles.menus}>
-                    {menus.map((menu) => {
-                        const active =
-                            pathname === menu.key ||
-                            pathname.startsWith(`${menu.key}/`)
+        <div className={styles.menus}>
+          {menus.map((menu) => {
+            const active =
+              pathname === menu.key || pathname.startsWith(`${menu.key}/`)
 
-                        return (
-                            <div
-                                key={menu.key}
-                                className={`${styles.menu} ${active ? styles.active : ""}`}
-                                onClick={() => navigate(menu.navigateTo)}
-                            >
-                                <div className={styles.menuIcon}>
-                                    {menu.icon(active)}
-                                </div>
-                                <p>{menu.title}</p>
-                            </div>
-                        )
-                    })}
-                </div>
-            </div>
-        </section>
-    )
+            return (
+              <div
+                key={menu.key}
+                className={`${styles.menu} ${active ? styles.active : ""}`}
+                onClick={() => navigate(menu.navigateTo)}
+              >
+                <div className={styles.menuIcon}>{menu.icon(active)}</div>
+                <p>{menu.title}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 export default Sidebar

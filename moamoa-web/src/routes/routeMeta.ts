@@ -124,7 +124,10 @@ const META_RULES: MetaRule[] = [
   },
 ]
 
-const resolveCanonicalPath = (pattern: string, params: Record<string, string | undefined>) => {
+const resolveCanonicalPath = (
+  pattern: string,
+  params: Record<string, string | undefined>,
+) => {
   return pattern.replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => {
     const value = params[key]
     if (!value) return ""

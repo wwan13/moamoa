@@ -1,60 +1,60 @@
 .base {
-    font: inherit;
-    cursor: pointer;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    box-sizing: border-box;
-    font-size: 14px;
-    font-weight: 500;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .primary {
-    height: 40px;
-    background: #0E4BBC;
-    border-color: #0E4BBC;
-    color: #fff;
+  height: 40px;
+  background: #0e4bbc;
+  border-color: #0e4bbc;
+  color: #fff;
 }
 
 .primary:hover {
-    opacity: 0.80;
-    transition: .3s;
+  opacity: 0.8;
+  transition: 0.3s;
 }
 
 .border {
-    height: 40px;
-    background: #fff;
-    border-color: #0E4BBC;
-    color: #0E4BBC;
+  height: 40px;
+  background: #fff;
+  border-color: #0e4bbc;
+  color: #0e4bbc;
 }
 
 .border:hover {
-    background: #F5F8FF;
-    transition: .3s;
+  background: #f5f8ff;
+  transition: 0.3s;
 }
 
 .link {
-    background: none;
-    border: none;
-    padding: 0;
-    width: auto;
-    height: auto;
-    color: #898989;
-    text-decoration: underline;
-    font-weight: 500;
+  background: none;
+  border: none;
+  padding: 0;
+  width: auto;
+  height: auto;
+  color: #898989;
+  text-decoration: underline;
+  font-weight: 500;
 }
 
 .widthFull {
-    width: 100%;
+  width: 100%;
 }
 
 .widthAutoPad16 {
-    padding-left: 16px;
-    padding-right: 16px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 .base:disabled {
-    background: #DBDBDB;
-    color: #868686;
-    border: 1px solid #DBDBDB;
-    cursor: not-allowed;
+  background: #dbdbdb;
+  color: #868686;
+  border: 1px solid #dbdbdb;
+  cursor: not-allowed;
 }

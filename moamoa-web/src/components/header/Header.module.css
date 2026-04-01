@@ -1,80 +1,80 @@
 .header {
-    width: 1000px;
+  width: 1000px;
 
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
 
-    z-index: 50000;
+  z-index: 50000;
 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-    background: #fff;
-    padding: 16px 0 12px 0;
+  background: #fff;
+  padding: 16px 0 12px 0;
 
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .logoButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .logoButton:focus,
 .logoButton:focus-visible {
-    outline: none;
+  outline: none;
 }
 
 .logoImage {
-    height: 16px;
-    width: auto;
-    display: block;
+  height: 16px;
+  width: auto;
+  display: block;
 }
 
 .textButton {
-    appearance: none;
-    -webkit-appearance: none;
+  appearance: none;
+  -webkit-appearance: none;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 
-    height: 33px;
-    padding: 0 6px;
+  height: 33px;
+  padding: 0 6px;
 
-    background: none;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1;
-    color: #787878;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  color: #787878;
 }
 
 .textButton:hover {
-    background-color: #f3f4f6;
-    transition: .3s;
+  background-color: #f3f4f6;
+  transition: 0.3s;
 }
 
 .textButton:focus-visible {
-    outline: none;
-    text-decoration: underline;
+  outline: none;
+  text-decoration: underline;
 }
