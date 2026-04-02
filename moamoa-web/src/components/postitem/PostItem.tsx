@@ -7,7 +7,10 @@ import { useState, type MouseEvent } from "react"
 import useAuth from "../../auth/useAuth"
 import { useNavigate } from "react-router-dom"
 import { showGlobalConfirm, showToast } from "../../api/client"
-import { useBookmarkToggleMutation } from "../../queries/bookmark.queries"
+import {
+  useBookmarkMutation,
+  useUnbookmarkMutation,
+} from "../../queries/bookmark.queries"
 import type { PostSummary } from "../../api/post.api"
 import { usePostCategory } from "../../hooks/usePostCategory"
 
@@ -25,7 +28,10 @@ const PostItem = ({
   const navigate = useNavigate()
   const { isLoggedIn, openLogin } = useAuth()
 
-  const bookmarkToggle = useBookmarkToggleMutation({
+  const bookmarkMutation = useBookmarkMutation({
+    invalidateOnSuccess: false,
+  })
+  const unbookmarkMutation = useUnbookmarkMutation({
     invalidateOnSuccess: false,
   })
 
@@ -57,7 +63,7 @@ const PostItem = ({
       openLogin()
       return
     }
-    if (bookmarkToggle.isPending) return
+    if (bookmarkMutation.isPending || unbookmarkMutation.isPending) return
 
     const next = !bookmarked
 
@@ -66,7 +72,9 @@ const PostItem = ({
     setBookmarkCount((c) => Math.max(0, c + (next ? 1 : -1)))
 
     try {
-      const res = await bookmarkToggle.mutateAsync({ postId })
+      const res = next
+        ? await bookmarkMutation.mutateAsync({ postId })
+        : await unbookmarkMutation.mutateAsync({ postId })
       const finalBookmarked = !!res?.bookmarked
 
       setBookmarked(finalBookmarked)
@@ -208,7 +216,7 @@ const PostItem = ({
       <button
         type="button"
         className={styles.bookmarkButton}
-        disabled={bookmarkToggle.isPending}
+        disabled={bookmarkMutation.isPending || unbookmarkMutation.isPending}
         onClick={(e) => {
           stop(e)
           onToggleBookmark(post.id)

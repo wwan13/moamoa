@@ -5,8 +5,10 @@ import { useQueryClient } from "@tanstack/react-query"
 import useAuth from "../../auth/useAuth"
 import { showGlobalConfirm, showToast } from "../../api/client"
 import {
-  useSubscriptionToggleMutation,
-  useNotificationToggleMutation,
+  useDisableNotificationMutation,
+  useEnableNotificationMutation,
+  useSubscribeMutation,
+  useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
 import type { TechBlogSummary } from "../../api/techBlog.api"
 
@@ -28,11 +30,19 @@ const TechBlogItem = ({
   const qc = useQueryClient()
   const { isLoggedIn, openLogin } = useAuth()
 
-  const subToggle = useSubscriptionToggleMutation({
+  const subscribeMutation = useSubscribeMutation({
     invalidateOnSuccess: false,
   })
-  const notiToggle = useNotificationToggleMutation()
-  const isMutating = subToggle.isPending || notiToggle.isPending
+  const unsubscribeMutation = useUnsubscribeMutation({
+    invalidateOnSuccess: false,
+  })
+  const enableNotificationMutation = useEnableNotificationMutation()
+  const disableNotificationMutation = useDisableNotificationMutation()
+  const isMutating =
+    subscribeMutation.isPending ||
+    unsubscribeMutation.isPending ||
+    enableNotificationMutation.isPending ||
+    disableNotificationMutation.isPending
 
   const patchBlog = (
     techBlogId: number,
@@ -93,7 +103,11 @@ const TechBlogItem = ({
     }))
 
     try {
-      await subToggle.mutateAsync({ techBlogId })
+      if (wasSubscribed) {
+        await unsubscribeMutation.mutateAsync({ techBlogId })
+      } else {
+        await subscribeMutation.mutateAsync({ techBlogId })
+      }
       showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
     } catch {
       patchBlog(techBlogId, (b) => ({
@@ -143,7 +157,11 @@ const TechBlogItem = ({
     }))
 
     try {
-      await notiToggle.mutateAsync({ techBlogId })
+      if (wasEnabled) {
+        await disableNotificationMutation.mutateAsync({ techBlogId })
+      } else {
+        await enableNotificationMutation.mutateAsync({ techBlogId })
+      }
       showToast(wasEnabled ? "알람을 해제했어요." : "알람을 설정했어요.")
     } catch {
       patchBlog(techBlogId, (b) => ({

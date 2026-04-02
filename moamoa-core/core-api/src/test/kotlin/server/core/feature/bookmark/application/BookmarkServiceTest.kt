@@ -35,7 +35,7 @@ class BookmarkServiceTest : UnitTest() {
         )
 
         val memberId = 1L
-        val command = BookmarkToggleCommand(postId = 10L)
+        val command = BookmarkCommand(postId = 10L)
         val savedSlot = slot<Bookmark>()
 
         coEvery { memberRepository.existsById(memberId) } returns true
@@ -45,7 +45,7 @@ class BookmarkServiceTest : UnitTest() {
             Bookmark(id = 101L, memberId = savedSlot.captured.memberId, postId = savedSlot.captured.postId)
         }
 
-        val result = service.toggle(command, memberId)
+        val result = service.bookmark(command, memberId)
 
         result.bookmarked shouldBe true
         savedSlot.captured.memberId shouldBe memberId
@@ -53,7 +53,7 @@ class BookmarkServiceTest : UnitTest() {
     }
 
     @Test
-    fun `기존에 북마크 되어있지 않을 시 BookmarkUpdateEvent를 발행하고 bookmarked는 true이다`() = runTest {
+    fun `기존에 북마크 되어있지 않을 시 이벤트를 발행한다`() = runTest {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
@@ -66,7 +66,7 @@ class BookmarkServiceTest : UnitTest() {
         )
 
         val memberId = 1L
-        val command = BookmarkToggleCommand(postId = 10L)
+        val command = BookmarkCommand(postId = 10L)
 
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { postRepository.existsById(command.postId) } returns true
@@ -76,7 +76,7 @@ class BookmarkServiceTest : UnitTest() {
             Bookmark(id = 101L, memberId = bookmark.memberId, postId = bookmark.postId)
         }
 
-        service.toggle(command, memberId)
+        service.bookmark(command, memberId)
 
         verify(exactly = 1) {
             eventPublisher.publish(
@@ -88,6 +88,34 @@ class BookmarkServiceTest : UnitTest() {
                 any()
             )
         }
+    }
+
+    @Test
+    fun `기존에 북마크 되어 있으면 추가 생성하지 않는다`() = runTest {
+        val bookmarkRepository = mockk<BookmarkRepository>()
+        val postRepository = mockk<PostRepository>()
+        val memberRepository = mockk<MemberRepository>()
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            bookmarkRepository = bookmarkRepository,
+            postRepository = postRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
+        )
+
+        val memberId = 1L
+        val command = BookmarkCommand(postId = 10L)
+        val existing = Bookmark(id = 22L, memberId = memberId, postId = command.postId)
+
+        coEvery { memberRepository.existsById(memberId) } returns true
+        coEvery { postRepository.existsById(command.postId) } returns true
+        coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
+
+        val result = service.bookmark(command, memberId)
+
+        result.bookmarked shouldBe true
+        coVerify(exactly = 0) { bookmarkRepository.save(any()) }
+        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
     }
 
     @Test
@@ -104,22 +132,20 @@ class BookmarkServiceTest : UnitTest() {
         )
 
         val memberId = 1L
-        val command = BookmarkToggleCommand(postId = 10L)
+        val command = BookmarkCommand(postId = 10L)
         val existing = Bookmark(id = 22L, memberId = memberId, postId = command.postId)
 
-        coEvery { memberRepository.existsById(memberId) } returns true
-        coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
         coEvery { bookmarkRepository.delete(existing) } returns Unit
 
-        val result = service.toggle(command, memberId)
+        val result = service.unbookmark(command, memberId)
 
         result.bookmarked shouldBe false
         coVerify(exactly = 1) { bookmarkRepository.delete(existing) }
     }
 
     @Test
-    fun `기존에 북마크 되어 있을 시 BookmarkUpdateEvent를 발행하고 bookmarked는 false이다`() = runTest {
+    fun `기존에 북마크 되어 있을 시 해제 이벤트를 발행한다`() = runTest {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
@@ -132,15 +158,13 @@ class BookmarkServiceTest : UnitTest() {
         )
 
         val memberId = 1L
-        val command = BookmarkToggleCommand(postId = 10L)
+        val command = BookmarkCommand(postId = 10L)
         val existing = Bookmark(id = 22L, memberId = memberId, postId = command.postId)
 
-        coEvery { memberRepository.existsById(memberId) } returns true
-        coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
         coEvery { bookmarkRepository.delete(existing) } returns Unit
 
-        service.toggle(command, memberId)
+        service.unbookmark(command, memberId)
 
         verify(exactly = 1) {
             eventPublisher.publish(
@@ -155,7 +179,7 @@ class BookmarkServiceTest : UnitTest() {
     }
 
     @Test
-    fun `존재하지 않는 사용자면 예외가 발생한다`() = runTest {
+    fun `북마크가 없으면 해제 요청은 false를 반환한다`() = runTest {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
@@ -168,12 +192,36 @@ class BookmarkServiceTest : UnitTest() {
         )
 
         val memberId = 1L
-        val command = BookmarkToggleCommand(postId = 10L)
+        val command = BookmarkCommand(postId = 10L)
+
+        coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns null
+
+        val result = service.unbookmark(command, memberId)
+
+        result.bookmarked shouldBe false
+        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
+    }
+
+    @Test
+    fun `존재하지 않는 사용자면 북마크 시 예외가 발생한다`() = runTest {
+        val bookmarkRepository = mockk<BookmarkRepository>()
+        val postRepository = mockk<PostRepository>()
+        val memberRepository = mockk<MemberRepository>()
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            bookmarkRepository = bookmarkRepository,
+            postRepository = postRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
+        )
+
+        val memberId = 1L
+        val command = BookmarkCommand(postId = 10L)
 
         coEvery { memberRepository.existsById(memberId) } returns false
 
         val exception = shouldThrow<IllegalArgumentException> {
-            service.toggle(command, memberId)
+            service.bookmark(command, memberId)
         }
 
         exception.message shouldBe "존재하지 않는 사용자 입니다."
@@ -183,7 +231,7 @@ class BookmarkServiceTest : UnitTest() {
     }
 
     @Test
-    fun `존재하지 않는 게시글이면 예외가 발생한다`() = runTest {
+    fun `존재하지 않는 게시글이면 북마크 시 예외가 발생한다`() = runTest {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
@@ -196,13 +244,13 @@ class BookmarkServiceTest : UnitTest() {
         )
 
         val memberId = 1L
-        val command = BookmarkToggleCommand(postId = 10L)
+        val command = BookmarkCommand(postId = 10L)
 
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { postRepository.existsById(command.postId) } returns false
 
         val exception = shouldThrow<IllegalArgumentException> {
-            service.toggle(command, memberId)
+            service.bookmark(command, memberId)
         }
 
         exception.message shouldBe "존재하지 않는 게시글 입니다."

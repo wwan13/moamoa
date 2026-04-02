@@ -11,8 +11,10 @@ import { useTechBlogByIdQuery } from "../../queries/techBlog.queries"
 import { usePostsByTechBlogIdQuery } from "../../queries/post.queries"
 import type { PostCategoryKey } from "../../api/post.api"
 import {
-  useNotificationToggleMutation,
-  useSubscriptionToggleMutation,
+  useDisableNotificationMutation,
+  useEnableNotificationMutation,
+  useSubscribeMutation,
+  useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
 import NotificationsOffOutlinedIcon from "@mui/icons-material/NotificationsOffOutlined"
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
@@ -42,8 +44,10 @@ const TechBlogDetailPage = () => {
   const postsQuery = usePostsByTechBlogIdQuery({ page, techBlogId, category })
 
   // ✅ mutations
-  const subToggle = useSubscriptionToggleMutation()
-  const notiToggle = useNotificationToggleMutation()
+  const subscribeMutation = useSubscribeMutation()
+  const unsubscribeMutation = useUnsubscribeMutation()
+  const enableNotificationMutation = useEnableNotificationMutation()
+  const disableNotificationMutation = useDisableNotificationMutation()
 
   // ✅ data
   const techBlog = techBlogQuery.data
@@ -131,7 +135,7 @@ const TechBlogDetailPage = () => {
     if (!okLogin) return
 
     if (!techBlog) return
-    if (subToggle.isPending) return
+    if (subscribeMutation.isPending || unsubscribeMutation.isPending) return
 
     const techBlogIdNum = techBlog.id
     const wasSubscribed = !!techBlog.subscribed
@@ -159,7 +163,11 @@ const TechBlogDetailPage = () => {
     }))
 
     try {
-      await subToggle.mutateAsync({ techBlogId: techBlogIdNum })
+      if (wasSubscribed) {
+        await unsubscribeMutation.mutateAsync({ techBlogId: techBlogIdNum })
+      } else {
+        await subscribeMutation.mutateAsync({ techBlogId: techBlogIdNum })
+      }
 
       // 서버가 count/상태를 다시 계산하는 구조면 최소 refetch로 정합성 확보
       qc.invalidateQueries({ queryKey: techBlogQk, refetchType: "inactive" })
@@ -188,7 +196,10 @@ const TechBlogDetailPage = () => {
     if (!okLogin) return
 
     if (!techBlog) return
-    if (notiToggle.isPending) return
+    if (
+      enableNotificationMutation.isPending ||
+      disableNotificationMutation.isPending
+    ) return
     if (!techBlog.subscribed) return
 
     const techBlogIdNum = techBlog.id
@@ -211,7 +222,15 @@ const TechBlogDetailPage = () => {
     }))
 
     try {
-      await notiToggle.mutateAsync({ techBlogId: techBlogIdNum })
+      if (wasEnabled) {
+        await disableNotificationMutation.mutateAsync({
+          techBlogId: techBlogIdNum,
+        })
+      } else {
+        await enableNotificationMutation.mutateAsync({
+          techBlogId: techBlogIdNum,
+        })
+      }
 
       qc.invalidateQueries({ queryKey: techBlogQk, refetchType: "inactive" })
       qc.invalidateQueries({ queryKey: ["techBlogs"], refetchType: "inactive" })

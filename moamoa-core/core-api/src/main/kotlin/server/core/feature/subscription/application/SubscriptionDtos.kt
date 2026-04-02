@@ -1,17 +1,13 @@
 package server.core.feature.subscription.application
 
-data class SubscriptionToggleCommand(
+data class SubscriptionCommand(
     val techBlogId: Long
 )
 
-data class SubscriptionToggleResult(
+data class SubscriptionResult(
     val subscribing: Boolean
 )
 
-data class NotificationEnabledToggleCommand(
-    val techBlogId: Long
-)
-
-data class NotificationEnabledToggleResult(
+data class NotificationEnabledResult(
     val notificationEnabled: Boolean
 )

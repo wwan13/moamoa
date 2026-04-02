@@ -24,11 +24,11 @@ class BookmarkService(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    fun toggle(
-        command: BookmarkToggleCommand,
+    fun bookmark(
+        command: BookmarkCommand,
         memberId: Long
-    ): BookmarkToggleResult {
-        val mutexKey = "bookmarkToggle:$memberId:${command.postId}"
+    ): BookmarkResult {
+        val mutexKey = "bookmark:$memberId:${command.postId}"
 
         return keyedLock.withLock(mutexKey) {
             if (!memberRepository.existsById(memberId)) {
@@ -38,37 +38,49 @@ class BookmarkService(
                 throw IllegalArgumentException("존재하지 않는 게시글 입니다.")
             }
 
-            bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId)
-                ?.let { bookmark ->
-                    bookmarkRepository.delete(bookmark)
-                    eventPublisher.publish(
-                        BookmarkUpdatedEvent(
-                            memberId = bookmark.memberId,
-                            postId = bookmark.postId,
-                            bookmarked = false,
-                        )
-                    )
-                    logger.biz.info { "북마크를 해제합니다" }
+            if (bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) != null) {
+                return@withLock BookmarkResult(true)
+            }
 
-                    BookmarkToggleResult(false)
-                }
-                ?: let {
-                    val bookmark = Bookmark(
-                        memberId = memberId,
-                        postId = command.postId
-                    )
-                    val saved = bookmarkRepository.save(bookmark)
-                    eventPublisher.publish(
-                        BookmarkUpdatedEvent(
-                            memberId = saved.memberId,
-                            postId = saved.postId,
-                            bookmarked = true,
-                        )
-                    )
-                    logger.biz.info { "북마크를 등록합니다" }
+            val bookmark = Bookmark(
+                memberId = memberId,
+                postId = command.postId
+            )
+            val saved = bookmarkRepository.save(bookmark)
+            eventPublisher.publish(
+                BookmarkUpdatedEvent(
+                    memberId = saved.memberId,
+                    postId = saved.postId,
+                    bookmarked = true,
+                )
+            )
+            logger.biz.info { "북마크를 등록합니다" }
 
-                    BookmarkToggleResult(true)
-                }
+            BookmarkResult(true)
+        }
+    }
+
+    fun unbookmark(
+        command: BookmarkCommand,
+        memberId: Long
+    ): BookmarkResult {
+        val mutexKey = "bookmark:$memberId:${command.postId}"
+
+        return keyedLock.withLock(mutexKey) {
+            val bookmark = bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId)
+                ?: return@withLock BookmarkResult(false)
+
+            bookmarkRepository.delete(bookmark)
+            eventPublisher.publish(
+                BookmarkUpdatedEvent(
+                    memberId = bookmark.memberId,
+                    postId = bookmark.postId,
+                    bookmarked = false,
+                )
+            )
+            logger.biz.info { "북마크를 해제합니다" }
+
+            BookmarkResult(false)
         }
     }
 

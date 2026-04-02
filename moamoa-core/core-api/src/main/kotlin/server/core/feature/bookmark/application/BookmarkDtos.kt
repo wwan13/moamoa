@@ -1,9 +1,9 @@
 package server.core.feature.bookmark.application
 
-data class BookmarkToggleCommand(
+data class BookmarkCommand(
     val postId: Long
 )
 
-data class BookmarkToggleResult(
+data class BookmarkResult(
     val bookmarked: Boolean
 )

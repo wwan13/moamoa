@@ -345,6 +345,27 @@ export const http = {
     ),
   del: <T = unknown>(
     path: string,
+    bodyOrConfig: unknown | ApiRequestConfig = {},
     config: ApiRequestConfig = {},
-  ): Promise<T | null> => apiRequest<T>(path, { method: "DELETE" }, config),
+  ): Promise<T | null> => {
+    const hasBody =
+      bodyOrConfig !== null &&
+      typeof bodyOrConfig === "object" &&
+      !("baseUrl" in (bodyOrConfig as Record<string, unknown>)) &&
+      !("retry" in (bodyOrConfig as Record<string, unknown>)) &&
+      !("signal" in (bodyOrConfig as Record<string, unknown>))
+
+    if (!hasBody) {
+      return apiRequest<T>(path, { method: "DELETE" }, bodyOrConfig as ApiRequestConfig)
+    }
+
+    return apiRequest<T>(
+      path,
+      {
+        method: "DELETE",
+        body: bodyOrConfig instanceof FormData ? bodyOrConfig : JSON.stringify(bodyOrConfig),
+      },
+      config,
+    )
+  },
 }

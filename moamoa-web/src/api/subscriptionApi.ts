@@ -1,27 +1,23 @@
 import { type ApiRequestConfig, http } from "./client"
 
-export type SubscriptionToggleCommand = {
+export type SubscriptionCommand = {
   techBlogId: number
 }
 
-export type SubscriptionToggleResult = {
+export type SubscriptionResult = {
   subscribing: boolean
 }
 
-export type NotificationEnabledToggleCommand = {
-  techBlogId: number
-}
-
-export type NotificationEnabledToggleResult = {
+export type NotificationEnabledResult = {
   notificationEnabled: boolean
 }
 
 export const subscriptionApi = {
-  toggleSubscription: async (
-    command: SubscriptionToggleCommand,
+  subscribe: async (
+    command: SubscriptionCommand,
     config?: ApiRequestConfig,
-  ): Promise<SubscriptionToggleResult> => {
-    const res = await http.post<SubscriptionToggleResult>(
+  ): Promise<SubscriptionResult> => {
+    const res = await http.post<SubscriptionResult>(
       "/api/subscription",
       command,
       config,
@@ -29,11 +25,31 @@ export const subscriptionApi = {
 
     return res ?? { subscribing: false }
   },
-  toggleNotification: async (
-    command: NotificationEnabledToggleCommand,
+  unsubscribe: async (
+    command: SubscriptionCommand,
     config?: ApiRequestConfig,
-  ): Promise<NotificationEnabledToggleResult> => {
-    const res = await http.post<NotificationEnabledToggleResult>(
+  ): Promise<SubscriptionResult> => {
+    const res = await http.del<SubscriptionResult>("/api/subscription", command, config)
+
+    return res ?? { subscribing: false }
+  },
+  enableNotification: async (
+    command: SubscriptionCommand,
+    config?: ApiRequestConfig,
+  ): Promise<NotificationEnabledResult> => {
+    const res = await http.post<NotificationEnabledResult>(
+      "/api/subscription/notification-enabled",
+      command,
+      config,
+    )
+
+    return res ?? { notificationEnabled: false }
+  },
+  disableNotification: async (
+    command: SubscriptionCommand,
+    config?: ApiRequestConfig,
+  ): Promise<NotificationEnabledResult> => {
+    const res = await http.del<NotificationEnabledResult>(
       "/api/subscription/notification-enabled",
       command,
       config,

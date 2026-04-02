@@ -37,7 +37,11 @@ class Subscription(
     var notificationEnabled: Boolean = notificationEnabled
         private set
 
-    fun toggleNotification() {
-        notificationEnabled = !notificationEnabled
+    fun enableNotification() {
+        notificationEnabled = true
+    }
+
+    fun disableNotification() {
+        notificationEnabled = false
     }
 }

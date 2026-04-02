@@ -9,7 +9,10 @@ import { useQueryClient } from "@tanstack/react-query"
 import type { TechBlogSummary, TechBlogList } from "../../api/techBlog.api"
 
 import { useTechBlogsQuery } from "../../queries/techBlog.queries"
-import { useSubscriptionToggleMutation } from "../../queries/techBlogSubscription.queries"
+import {
+  useSubscribeMutation,
+  useUnsubscribeMutation,
+} from "../../queries/techBlogSubscription.queries"
 import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
 
 const SKELETON_COUNT = 12
@@ -46,8 +49,9 @@ const TechBlogsPage = () => {
     })
   }, [rawBlogs, search])
 
-  // ✅ subscribe toggle (mutation)
-  const subToggle = useSubscriptionToggleMutation()
+  // ✅ subscribe mutations
+  const subscribeMutation = useSubscribeMutation()
+  const unsubscribeMutation = useUnsubscribeMutation()
 
   // ✅ optimistic 업데이트를 위해 techBlogs 캐시 수정
   const patchTechBlog = (
@@ -79,7 +83,7 @@ const TechBlogsPage = () => {
       openLogin()
       return
     }
-    if (subToggle.isPending) return
+    if (subscribeMutation.isPending || unsubscribeMutation.isPending) return
 
     const wasSubscribed = !!blog.subscribed
     const techBlogId = blog.id
@@ -105,7 +109,11 @@ const TechBlogsPage = () => {
     }))
 
     try {
-      await subToggle.mutateAsync({ techBlogId })
+      if (wasSubscribed) {
+        await unsubscribeMutation.mutateAsync({ techBlogId })
+      } else {
+        await subscribeMutation.mutateAsync({ techBlogId })
+      }
       showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
     } catch {
       // rollback
