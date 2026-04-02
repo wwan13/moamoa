@@ -42,16 +42,6 @@ class Member(
     var password: String = password
         private set
 
-
-    fun created() {
-        registerEvent(
-            MemberCreateEvent(
-                memberId = id,
-                email = email,
-            )
-        )
-    }
-
     fun updatePassword(encodedPassword: String) {
         password = encodedPassword
     }

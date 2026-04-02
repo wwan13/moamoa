@@ -37,35 +37,7 @@ class Subscription(
     var notificationEnabled: Boolean = notificationEnabled
         private set
 
-
-    fun subscribe() {
-        registerEvent(
-            TechBlogSubscribeUpdatedEvent(
-                memberId = memberId,
-                techBlogId = techBlogId,
-                subscribed = true
-            )
-        )
-    }
-
-    fun unsubscribe() {
-        registerEvent(
-            TechBlogSubscribeUpdatedEvent(
-                memberId = memberId,
-                techBlogId = techBlogId,
-                subscribed = false
-            )
-        )
-    }
-
     fun toggleNotification() {
         notificationEnabled = !notificationEnabled
-        registerEvent(
-            NotificationUpdatedEvent(
-                memberId = memberId,
-                techBlogId = techBlogId,
-                enabled = notificationEnabled
-            )
-        )
     }
 }

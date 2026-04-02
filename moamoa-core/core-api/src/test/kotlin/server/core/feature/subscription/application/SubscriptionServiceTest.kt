@@ -4,18 +4,20 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.MemberRepository
-import server.core.feature.techblog.domain.TechBlogRepository
+import server.core.feature.subscription.domain.NotificationUpdatedEvent
 import server.core.feature.subscription.domain.Subscription
 import server.core.feature.subscription.domain.SubscriptionRepository
-import server.core.fixture.createTechBlog
+import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
+import server.core.feature.techblog.domain.TechBlogRepository
 import server.core.fixture.createSubscription
+import server.core.infra.event.TransactionalEventPublisher
+import server.lock.KeyedLock
 import test.UnitTest
 
 class SubscriptionServiceTest : UnitTest() {
@@ -24,11 +26,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -60,11 +63,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -85,6 +89,17 @@ class SubscriptionServiceTest : UnitTest() {
         }
 
         service.toggle(command, memberId)
+
+        verify(exactly = 1) {
+            eventPublisher.publish(
+                match<TechBlogSubscribeUpdatedEvent> {
+                    it.memberId == memberId &&
+                        it.techBlogId == command.techBlogId &&
+                        it.subscribed
+                },
+                any()
+            )
+        }
     }
 
     @Test
@@ -92,11 +107,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -124,11 +140,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -146,6 +163,17 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { subscriptionRepository.delete(existing) } returns Unit
 
         service.toggle(command, memberId)
+
+        verify(exactly = 1) {
+            eventPublisher.publish(
+                match<TechBlogSubscribeUpdatedEvent> {
+                    it.memberId == memberId &&
+                        it.techBlogId == command.techBlogId &&
+                        !it.subscribed
+                },
+                any()
+            )
+        }
     }
 
     @Test
@@ -153,11 +181,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -172,6 +201,7 @@ class SubscriptionServiceTest : UnitTest() {
         exception.message shouldBe "존재하지 않는 사용자 입니다."
         coVerify(exactly = 0) { techBlogRepository.existsById(any()) }
         coVerify(exactly = 0) { subscriptionRepository.findByMemberIdAndTechBlogId(any(), any()) }
+        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
     }
 
     @Test
@@ -179,11 +209,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -198,6 +229,7 @@ class SubscriptionServiceTest : UnitTest() {
 
         exception.message shouldBe "존재하지 않는 기술 블로그 입니다."
         coVerify(exactly = 0) { subscriptionRepository.findByMemberIdAndTechBlogId(any(), any()) }
+        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
     }
 
     @Test
@@ -205,11 +237,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -222,6 +255,7 @@ class SubscriptionServiceTest : UnitTest() {
         }
 
         exception.message shouldBe "구독중이지 않은 기술 블로그 입니다."
+        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
     }
 
     @Test
@@ -229,11 +263,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -259,11 +294,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -279,6 +315,17 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { subscriptionRepository.save(any()) } coAnswers { firstArg() }
 
         service.notificationEnabledToggle(command, memberId)
+
+        verify(exactly = 1) {
+            eventPublisher.publish(
+                match<NotificationUpdatedEvent> {
+                    it.memberId == memberId &&
+                        it.techBlogId == command.techBlogId &&
+                        !it.enabled
+                },
+                any()
+            )
+        }
     }
 
     @Test
@@ -286,11 +333,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -316,11 +364,12 @@ class SubscriptionServiceTest : UnitTest() {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val keyedLock = passThroughKeyedLock()
-        val service = SubscriptionService(            subscriptionRepository,
-            techBlogRepository,
-            memberRepository,
-            keyedLock
+        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val service = createService(
+            subscriptionRepository = subscriptionRepository,
+            techBlogRepository = techBlogRepository,
+            memberRepository = memberRepository,
+            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -336,9 +385,34 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { subscriptionRepository.save(any()) } coAnswers { firstArg() }
 
         service.notificationEnabledToggle(command, memberId)
+
+        verify(exactly = 1) {
+            eventPublisher.publish(
+                match<NotificationUpdatedEvent> {
+                    it.memberId == memberId &&
+                        it.techBlogId == command.techBlogId &&
+                        it.enabled
+                },
+                any()
+            )
+        }
     }
 
-    private fun passThroughKeyedLock(): server.lock.KeyedLock = object : server.lock.KeyedLock {
+    private fun createService(
+        subscriptionRepository: SubscriptionRepository,
+        techBlogRepository: TechBlogRepository,
+        memberRepository: MemberRepository,
+        keyedLock: KeyedLock = passThroughKeyedLock(),
+        eventPublisher: TransactionalEventPublisher = mockk(relaxed = true),
+    ): SubscriptionService = SubscriptionService(
+        subscriptionRepository = subscriptionRepository,
+        techBlogRepository = techBlogRepository,
+        memberRepository = memberRepository,
+        keyedLock = keyedLock,
+        eventPublisher = eventPublisher,
+    )
+
+    private fun passThroughKeyedLock(): KeyedLock = object : KeyedLock {
         override fun <T> withLock(key: String, block: () -> T): T = block()
     }
 }

@@ -4,11 +4,14 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.member.domain.MemberRepository
-import server.core.feature.techblog.application.TechBlogData
-import server.core.feature.techblog.domain.TechBlogRepository
+import server.core.feature.subscription.domain.NotificationUpdatedEvent
 import server.core.feature.subscription.domain.Subscription
 import server.core.feature.subscription.domain.SubscriptionRepository
+import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
+import server.core.feature.techblog.domain.TechBlogRepository
+import server.core.infra.event.TransactionalEventPublisher
 import server.global.logging.biz
+import server.lock.KeyedLock
 
 @Service
 @Transactional
@@ -16,7 +19,8 @@ class SubscriptionService(
     private val subscriptionRepository: SubscriptionRepository,
     private val techBlogRepository: TechBlogRepository,
     private val memberRepository: MemberRepository,
-    private val keyedLock: server.lock.KeyedLock
+    private val keyedLock: KeyedLock,
+    private val eventPublisher: TransactionalEventPublisher,
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -35,8 +39,14 @@ class SubscriptionService(
 
             subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId)
                 ?.let { subscription ->
-                    subscription.unsubscribe()
                     subscriptionRepository.delete(subscription)
+                    eventPublisher.publish(
+                        TechBlogSubscribeUpdatedEvent(
+                            memberId = subscription.memberId,
+                            techBlogId = subscription.techBlogId,
+                            subscribed = false,
+                        )
+                    )
                     logger.biz.info { "기술 블로그 구독을 해제합니다" }
 
                     SubscriptionToggleResult(false)
@@ -47,9 +57,14 @@ class SubscriptionService(
                         memberId = memberId,
                         techBlogId = command.techBlogId
                     )
-                    subscription.subscribe()
-
-                    subscriptionRepository.save(subscription)
+                    val saved = subscriptionRepository.save(subscription)
+                    eventPublisher.publish(
+                        TechBlogSubscribeUpdatedEvent(
+                            memberId = saved.memberId,
+                            techBlogId = saved.techBlogId,
+                            subscribed = true,
+                        )
+                    )
                     logger.biz.info { "기술 블로그를 구독합니다" }
 
                     SubscriptionToggleResult(true)
@@ -68,10 +83,17 @@ class SubscriptionService(
                 ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
 
             subscription.toggleNotification()
-            subscriptionRepository.save(subscription)
+            val saved = subscriptionRepository.save(subscription)
+            eventPublisher.publish(
+                NotificationUpdatedEvent(
+                    memberId = saved.memberId,
+                    techBlogId = saved.techBlogId,
+                    enabled = saved.notificationEnabled,
+                )
+            )
             logger.biz.info { "기술 블로그 알림 설정을 변경합니다" }
 
-            NotificationEnabledToggleResult(subscription.notificationEnabled)
+            NotificationEnabledToggleResult(saved.notificationEnabled)
         }
     }
 }

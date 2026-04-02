@@ -3,11 +3,13 @@ package server.core.feature.bookmark.application
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import server.core.feature.bookmark.domain.Bookmark
+import server.core.feature.bookmark.domain.BookmarkRepository
+import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.post.application.PostData
 import server.core.feature.post.domain.PostRepository
-import server.core.feature.bookmark.domain.Bookmark
-import server.core.feature.bookmark.domain.BookmarkRepository
+import server.core.infra.event.TransactionalEventPublisher
 import server.global.logging.biz
 import server.lock.KeyedLock
 
@@ -17,7 +19,8 @@ class BookmarkService(
     private val bookmarkRepository: BookmarkRepository,
     private val postRepository: PostRepository,
     private val memberRepository: MemberRepository,
-    private val keyedLock: KeyedLock
+    private val keyedLock: KeyedLock,
+    private val eventPublisher: TransactionalEventPublisher,
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -37,8 +40,14 @@ class BookmarkService(
 
             bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId)
                 ?.let { bookmark ->
-                    bookmark.unbookmark()
                     bookmarkRepository.delete(bookmark)
+                    eventPublisher.publish(
+                        BookmarkUpdatedEvent(
+                            memberId = bookmark.memberId,
+                            postId = bookmark.postId,
+                            bookmarked = false,
+                        )
+                    )
                     logger.biz.info { "북마크를 해제합니다" }
 
                     BookmarkToggleResult(false)
@@ -48,8 +57,14 @@ class BookmarkService(
                         memberId = memberId,
                         postId = command.postId
                     )
-                    bookmark.bookmark()
-                    bookmarkRepository.save(bookmark)
+                    val saved = bookmarkRepository.save(bookmark)
+                    eventPublisher.publish(
+                        BookmarkUpdatedEvent(
+                            memberId = saved.memberId,
+                            postId = saved.postId,
+                            bookmarked = true,
+                        )
+                    )
                     logger.biz.info { "북마크를 등록합니다" }
 
                     BookmarkToggleResult(true)

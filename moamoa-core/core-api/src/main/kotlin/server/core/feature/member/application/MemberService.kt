@@ -4,13 +4,15 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import server.core.feature.member.domain.Member
-import server.core.feature.member.domain.MemberRepository
-import server.core.feature.member.domain.Provider
 import server.core.feature.auth.infra.EmailVerificationCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
+import server.core.feature.member.domain.Member
+import server.core.feature.member.domain.MemberCreateEvent
+import server.core.feature.member.domain.MemberRepository
+import server.core.feature.member.domain.Provider
 import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException
+import server.core.infra.event.TransactionalEventPublisher
 import server.global.logging.biz
 import server.password.PasswordEncoder
 import java.util.*
@@ -21,7 +23,8 @@ class MemberService(
     private val memberRepository: MemberRepository,
     private val emailVerificationCache: EmailVerificationCache,
     private val passwordEncoder: PasswordEncoder,
-    private val socialMemberSessionCache: SocialMemberSessionCache
+    private val socialMemberSessionCache: SocialMemberSessionCache,
+    private val eventPublisher: TransactionalEventPublisher,
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -70,7 +73,12 @@ class MemberService(
         }
         val saved = memberRepository.save(member)
 
-        saved.created()
+        eventPublisher.publish(
+            MemberCreateEvent(
+                memberId = saved.id,
+                email = saved.email,
+            )
+        )
         logger.biz.info { "회원을 생성합니다" }
 
         return MemberData(saved)

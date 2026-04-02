@@ -4,25 +4,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.Member
-import server.core.feature.member.domain.MemberCreateEvent
 import server.core.feature.member.domain.Provider
-import server.core.fixture.createMember
 import test.UnitTest
 
 class MemberTest : UnitTest() {
-    @Test
-    fun `멤버 생성 이벤트는 멤버의 아이디와 이메일을 담는다`() {
-        val member = createMember(id = 10L, email = "user@example.com")
-
-        member.created()
-        val event = extractSingleEvent(member) as MemberCreateEvent
-
-        event shouldBe MemberCreateEvent(
-            memberId = member.id,
-            email = member.email
-        )
-    }
-
     @Test
     fun `내부 회원 생성 시 INTERNAL provider와 빈 providerKey를 가진다`() {
         val member = Member.fromInternal(
@@ -61,19 +46,5 @@ class MemberTest : UnitTest() {
         member.provider shouldBe Provider.GITHUB
         member.providerKey shouldBe "github-key"
         member.password shouldBe ""
-    }
-
-    private fun extractSingleEvent(entity: Any): Any {
-        var type: Class<*>? = entity.javaClass
-        while (type != null) {
-            runCatching {
-                val field = type.getDeclaredField("domainEvents")
-                field.isAccessible = true
-                val events = field.get(entity) as MutableCollection<*>
-                return events.single()!!
-            }
-            type = type.superclass
-        }
-        error("domainEvents field not found")
     }
 }

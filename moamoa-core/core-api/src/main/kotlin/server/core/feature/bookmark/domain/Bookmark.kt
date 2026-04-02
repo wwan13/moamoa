@@ -27,25 +27,4 @@ class Bookmark(
 
     @Column(name = "post_id", nullable = false)
     val postId: Long
-) : BaseEntity() {
-
-    fun bookmark() {
-        registerEvent(
-            BookmarkUpdatedEvent(
-                memberId = memberId,
-                postId = postId,
-                bookmarked = true
-            )
-        )
-    }
-
-    fun unbookmark() {
-        registerEvent(
-            BookmarkUpdatedEvent(
-                memberId = memberId,
-                postId = postId,
-                bookmarked = false
-            )
-        )
-    }
-}
+) : BaseEntity()

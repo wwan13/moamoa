@@ -1,37 +1,40 @@
-package server.core.infra.db.transaction
+package server.core.infra.event
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
-import org.springframework.transaction.event.TransactionPhase
-import org.springframework.transaction.event.TransactionalEventListener
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 import server.core.infra.db.outbox.EventOutbox
 import server.core.infra.db.outbox.EventOutboxRepository
 import server.global.logging.RequestLogContextHolder
 import server.global.logging.event
 import server.messaging.Event
-import server.messaging.definition.EventStream
-import java.util.UUID
+import server.messaging.definition.EventChannel
+import java.util.*
 
 @Component
-class DomainEventOutboxListener(
+class TransactionalEventPublisher(
     private val eventOutboxRepository: EventOutboxRepository,
     private val objectMapper: ObjectMapper,
 ) {
 
     private val logger = KotlinLogging.logger {}
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    fun handleEvent(event: Event) {
+    @Transactional(propagation = Propagation.MANDATORY)
+    fun publish(
+        event: Event,
+        channel: EventChannel = EventChannel.DEFAULT,
+    ) {
         val eventId = generateEventId()
-        val topic = EventStream.DEFAULT.channel.key
+        val topic = channel.key
 
         logger.event.info(
             event,
             "topic" to topic,
             "type" to event.type,
             "eventId" to eventId,
-        ) { "도메인 이벤트를 outbox에 저장합니다" }
+        ) { "이벤트를 outbox에 저장합니다" }
 
         val outbox = EventOutbox(
             topic = topic,
