@@ -52,6 +52,8 @@ const TechBlogsPage = () => {
   // ✅ subscribe mutations
   const subscribeMutation = useSubscribeMutation()
   const unsubscribeMutation = useUnsubscribeMutation()
+  const isSubscriptionPending =
+    subscribeMutation.isPending || unsubscribeMutation.isPending
 
   // ✅ optimistic 업데이트를 위해 techBlogs 캐시 수정
   const patchTechBlog = (
@@ -83,7 +85,7 @@ const TechBlogsPage = () => {
       openLogin()
       return
     }
-    if (subscribeMutation.isPending || unsubscribeMutation.isPending) return
+    if (isSubscriptionPending) return
 
     const wasSubscribed = !!blog.subscribed
     const techBlogId = blog.id
@@ -260,7 +262,7 @@ const TechBlogsPage = () => {
                         stop(e)
                         subscriptionToggle(blog)
                       }}
-                      disabled={subToggle.isPending}
+                      disabled={isSubscriptionPending}
                     >
                       {blog.subscribed ? "구독중" : "구독"}
                     </button>

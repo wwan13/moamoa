@@ -48,6 +48,11 @@ const TechBlogDetailPage = () => {
   const unsubscribeMutation = useUnsubscribeMutation()
   const enableNotificationMutation = useEnableNotificationMutation()
   const disableNotificationMutation = useDisableNotificationMutation()
+  const isSubscriptionPending =
+    subscribeMutation.isPending || unsubscribeMutation.isPending
+  const isNotificationPending =
+    enableNotificationMutation.isPending ||
+    disableNotificationMutation.isPending
 
   // ✅ data
   const techBlog = techBlogQuery.data
@@ -135,7 +140,7 @@ const TechBlogDetailPage = () => {
     if (!okLogin) return
 
     if (!techBlog) return
-    if (subscribeMutation.isPending || unsubscribeMutation.isPending) return
+    if (isSubscriptionPending) return
 
     const techBlogIdNum = techBlog.id
     const wasSubscribed = !!techBlog.subscribed
@@ -196,10 +201,7 @@ const TechBlogDetailPage = () => {
     if (!okLogin) return
 
     if (!techBlog) return
-    if (
-      enableNotificationMutation.isPending ||
-      disableNotificationMutation.isPending
-    ) return
+    if (isNotificationPending) return
     if (!techBlog.subscribed) return
 
     const techBlogIdNum = techBlog.id
@@ -299,12 +301,12 @@ const TechBlogDetailPage = () => {
             <button
               className={subscribed ? styles.subIngButton : styles.subButton}
               onClick={onSubButtonToggle}
-              disabled={subToggle.isPending || techBlogQuery.isPending}
+              disabled={isSubscriptionPending || techBlogQuery.isPending}
             >
               {subscribed ? "구독중" : "구독"}
             </button>
 
-            {subscribed && techBlog && !subToggle.isPending && (
+            {subscribed && techBlog && !isSubscriptionPending && (
               <button
                 className={
                   notificationEnabled
@@ -312,7 +314,7 @@ const TechBlogDetailPage = () => {
                     : styles.alarmButton
                 }
                 onClick={onNotificationButtonToggle}
-                disabled={notiToggle.isPending || techBlogQuery.isPending}
+                disabled={isNotificationPending || techBlogQuery.isPending}
               >
                 {notificationEnabled ? (
                   <NotificationsOffOutlinedIcon
