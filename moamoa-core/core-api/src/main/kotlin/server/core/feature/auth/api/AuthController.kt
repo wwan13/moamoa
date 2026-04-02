@@ -11,10 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import server.core.feature.auth.application.AuthService
 import server.core.feature.auth.application.AuthTokens
-import server.core.feature.auth.application.ConfirmEmailCommand
-import server.core.feature.auth.application.ConfirmEmailResult
-import server.core.feature.auth.application.EmailVerificationCommand
-import server.core.feature.auth.application.EmailVerificationResult
 import server.core.feature.auth.application.LoginCommand
 import server.core.feature.auth.application.LoginSocialSessionCommand
 import server.core.feature.auth.application.LogoutResult
@@ -31,24 +27,6 @@ import server.core.global.security.UnauthorizedException
 class AuthController(
     private val authService: AuthService
 ) {
-
-    @PostMapping("/email-verification")
-    fun emailVerification(
-        @RequestBody @Valid command: EmailVerificationCommand
-    ): ResponseEntity<EmailVerificationResult> {
-        val response =  authService.emailVerification(command)
-
-        return ResponseEntity.ok(response)
-    }
-
-    @PostMapping("/email-verification/confirm")
-    fun emailVerificationConfirm(
-        @RequestBody @Valid command: ConfirmEmailCommand
-    ): ResponseEntity<ConfirmEmailResult> {
-        val response = authService.confirmEmail(command)
-
-        return ResponseEntity.ok(response)
-    }
 
     @PostMapping("/login")
     fun login(

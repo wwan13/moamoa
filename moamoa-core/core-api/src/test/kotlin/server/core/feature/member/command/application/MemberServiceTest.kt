@@ -10,7 +10,6 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.feature.auth.infra.EmailVerificationCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.feature.member.application.ChangePasswordCommand
 import server.core.feature.member.application.CreateInternalMemberCommand
@@ -436,14 +435,12 @@ class MemberServiceTest : UnitTest() {
 
     private fun createFixture(): Fixture {
         val memberRepository = mockk<MemberRepository>()
-        val emailVerificationCache = mockk<EmailVerificationCache>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
         val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
 
         val service = MemberService(
             memberRepository = memberRepository,
-            emailVerificationCache = emailVerificationCache,
             passwordEncoder = passwordEncoder,
             socialMemberSessionCache = socialMemberSessionCache,
             eventPublisher = eventPublisher,

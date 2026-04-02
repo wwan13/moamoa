@@ -4,7 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import server.core.feature.auth.infra.EmailVerificationCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.feature.member.domain.Member
 import server.core.feature.member.domain.MemberCreateEvent
@@ -21,7 +20,6 @@ import java.util.*
 @Transactional
 class MemberService(
     private val memberRepository: MemberRepository,
-    private val emailVerificationCache: EmailVerificationCache,
     private val passwordEncoder: PasswordEncoder,
     private val socialMemberSessionCache: SocialMemberSessionCache,
     private val eventPublisher: TransactionalEventPublisher,
@@ -29,16 +27,12 @@ class MemberService(
     private val logger = KotlinLogging.logger {}
 
     fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
-//        if (!emailVerificationCache.isVerified(command.email)) {
-//            throw IllegalArgumentException("인증되지 않은 이메일 입니다.")
-//        }
-
         if (command.password != command.passwordConfirm) {
             throw IllegalArgumentException("비밀번호가 일치하지 않습니다.")
         }
         val encodedPassword = passwordEncoder.encode(command.password)
 
-        val member = Member.Companion.fromInternal(
+        val member = Member.fromInternal(
             email = command.email,
             password = encodedPassword
         )
@@ -46,7 +40,7 @@ class MemberService(
     }
 
     fun createSocialMember(command: CreateSocialMemberCommand): MemberData {
-        val member = Member.Companion.fromSocial(
+        val member = Member.fromSocial(
             email = command.email,
             provider = command.provider,
             providerKey = command.providerKey,
