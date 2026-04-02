@@ -122,7 +122,6 @@ class MemberService(
         }
 
         member.updatePassword(passwordEncoder.encode(command.newPassword))
-        memberRepository.save(member)
 
         return ChangePasswordResult(true)
     }

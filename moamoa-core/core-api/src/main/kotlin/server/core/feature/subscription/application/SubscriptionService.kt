@@ -83,17 +83,16 @@ class SubscriptionService(
                 ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
 
             subscription.toggleNotification()
-            val saved = subscriptionRepository.save(subscription)
             eventPublisher.publish(
                 NotificationUpdatedEvent(
-                    memberId = saved.memberId,
-                    techBlogId = saved.techBlogId,
-                    enabled = saved.notificationEnabled,
+                    memberId = subscription.memberId,
+                    techBlogId = subscription.techBlogId,
+                    enabled = subscription.notificationEnabled,
                 )
             )
             logger.biz.info { "기술 블로그 알림 설정을 변경합니다" }
 
-            NotificationEnabledToggleResult(saved.notificationEnabled)
+            NotificationEnabledToggleResult(subscription.notificationEnabled)
         }
     }
 }
