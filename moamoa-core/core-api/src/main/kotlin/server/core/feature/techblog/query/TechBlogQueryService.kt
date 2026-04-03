@@ -72,7 +72,7 @@ class TechBlogQueryService(
 
     fun findById(passport: Passport?, techBlogId: Long): TechBlogSummary {
         val base = findTechBlogById(techBlogId)
-            ?: throw IllegalStateException("존재하지 않는 기술블로그 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 기술블로그 입니다.")
 
         val stats = techBlogStatsReader.findById(base.id)
         val subInfo = if (passport == null) null
