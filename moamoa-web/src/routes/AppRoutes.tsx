@@ -17,6 +17,7 @@ import PrivacyPolicyPage from "../pages/privacypolicy/PrivacyPolicyPage.tsx"
 import NoticeListPage from "../pages/noticelistpage/NoticeListPage.tsx"
 import FindPasswordPage from "../pages/findpasswordpage/FindPasswordPage.tsx"
 import NoticeDetailPage from "../pages/noticedetailpage/NoticeDetailPage.tsx"
+import MaintenancePage from "../pages/maintenancepage/MaintenancePage.tsx"
 import NotFoundPage from "../pages/notfoundpage/NotFoundPage.tsx"
 
 const AppRoutes = () => {
@@ -38,6 +39,7 @@ const AppRoutes = () => {
 
         <Route path="/oauth2" element={<Oauth2Page />} />
 
+        <Route path="/maintenance" element={<MaintenancePage />} />
         <Route path="/404" element={<NotFoundPage />} />
       </Route>
 

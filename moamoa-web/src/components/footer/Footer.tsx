@@ -52,7 +52,12 @@ const Footer = () => {
             <button className={styles.link} onClick={handleSubmissionButton}>
               블로그 추가 요청
             </button>
-            <button className={styles.link}>문의 및 피드백</button>
+            <button
+              className={styles.link}
+              onClick={() => navigate("/maintenance")}
+            >
+              문의 및 피드백
+            </button>
           </div>
         </div>
         <div className={styles.divider} />

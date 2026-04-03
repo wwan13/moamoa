@@ -111,7 +111,10 @@ const MyPage = () => {
             <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }} />
           </button>
           <div className={styles.divider} />
-          <button className={styles.button} onClick={() => console.log("asd")}>
+          <button
+            className={styles.button}
+            onClick={() => navigate("/maintenance")}
+          >
             <p className={styles.buttonText}>블로그 요청 내역</p>
             <ArrowForwardIosIcon sx={{ fontSize: 16, color: "#A8A8A8" }} />
           </button>

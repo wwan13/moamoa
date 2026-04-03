@@ -128,6 +128,12 @@ const META_RULES: MetaRule[] = [
     description: "요청하신 페이지를 찾을 수 없습니다.",
     robots: "noindex,nofollow",
   },
+  {
+    path: "/maintenance",
+    title: "서비스 점검 중 | moamoa",
+    description: "더 나은 서비스를 위해 잠시 점검을 진행 중입니다.",
+    robots: "noindex,nofollow",
+  },
 ]
 
 const resolveCanonicalPath = (
