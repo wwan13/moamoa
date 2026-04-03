@@ -366,14 +366,21 @@ export const http = {
       !("signal" in (bodyOrConfig as Record<string, unknown>))
 
     if (!hasBody) {
-      return apiRequest<T>(path, { method: "DELETE" }, bodyOrConfig as ApiRequestConfig)
+      return apiRequest<T>(
+        path,
+        { method: "DELETE" },
+        bodyOrConfig as ApiRequestConfig,
+      )
     }
 
     return apiRequest<T>(
       path,
       {
         method: "DELETE",
-        body: bodyOrConfig instanceof FormData ? bodyOrConfig : JSON.stringify(bodyOrConfig),
+        body:
+          bodyOrConfig instanceof FormData
+            ? bodyOrConfig
+            : JSON.stringify(bodyOrConfig),
       },
       config,
     )

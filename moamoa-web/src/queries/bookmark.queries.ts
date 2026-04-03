@@ -25,9 +25,7 @@ const useInvalidateBookmarkQueries = (
   return { invalidate }
 }
 
-export const useBookmarkMutation = (
-  options: BookmarkMutationOptions = {},
-) => {
+export const useBookmarkMutation = (options: BookmarkMutationOptions = {}) => {
   const { invalidate } = useInvalidateBookmarkQueries(options)
 
   return useMutation<void, Error, BookmarkCommand>({

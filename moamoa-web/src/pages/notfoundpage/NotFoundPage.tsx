@@ -15,12 +15,40 @@ const NotFoundPage = () => {
           요청하신 페이지를 찾을 수 없다는 안내 일러스트
         </desc>
 
-        <ellipse cx="340" cy="420" rx="70" ry="12" fill="#0E4BBC" opacity="0.15" />
+        <ellipse
+          cx="340"
+          cy="420"
+          rx="70"
+          ry="12"
+          fill="#0E4BBC"
+          opacity="0.15"
+        />
 
         <g>
-          <rect x="230" y="170" width="220" height="165" rx="22" fill="#0E4BBC" />
-          <rect x="245" y="183" width="190" height="135" rx="14" fill="#0A3A99" />
-          <rect x="253" y="191" width="174" height="119" rx="10" fill="#082D80" />
+          <rect
+            x="230"
+            y="170"
+            width="220"
+            height="165"
+            rx="22"
+            fill="#0E4BBC"
+          />
+          <rect
+            x="245"
+            y="183"
+            width="190"
+            height="135"
+            rx="14"
+            fill="#0A3A99"
+          />
+          <rect
+            x="253"
+            y="191"
+            width="174"
+            height="119"
+            rx="10"
+            fill="#082D80"
+          />
 
           <text
             x="340"
@@ -61,8 +89,22 @@ const NotFoundPage = () => {
             <ellipse cx="377" cy="310" rx="20" ry="22" fill="white" />
             <ellipse cx="306" cy="313" rx="11" ry="13" fill="#0A3A99" />
             <ellipse cx="374" cy="313" rx="11" ry="13" fill="#0A3A99" />
-            <ellipse cx="310" cy="307" rx="4" ry="5" fill="white" opacity="0.7" />
-            <ellipse cx="378" cy="307" rx="4" ry="5" fill="white" opacity="0.7" />
+            <ellipse
+              cx="310"
+              cy="307"
+              rx="4"
+              ry="5"
+              fill="white"
+              opacity="0.7"
+            />
+            <ellipse
+              cx="378"
+              cy="307"
+              rx="4"
+              ry="5"
+              fill="white"
+              opacity="0.7"
+            />
             <circle cx="301" cy="318" r="2" fill="white" opacity="0.4" />
             <circle cx="369" cy="318" r="2" fill="white" opacity="0.4" />
           </g>
@@ -76,8 +118,22 @@ const NotFoundPage = () => {
             opacity="0.9"
           />
 
-          <ellipse cx="287" cy="338" rx="13" ry="8" fill="#FF6B9D" opacity="0.35" />
-          <ellipse cx="393" cy="338" rx="13" ry="8" fill="#FF6B9D" opacity="0.35" />
+          <ellipse
+            cx="287"
+            cy="338"
+            rx="13"
+            ry="8"
+            fill="#FF6B9D"
+            opacity="0.35"
+          />
+          <ellipse
+            cx="393"
+            cy="338"
+            rx="13"
+            ry="8"
+            fill="#FF6B9D"
+            opacity="0.35"
+          />
 
           <rect x="325" y="335" width="30" height="32" rx="5" fill="#0A3A99" />
           <rect x="290" y="363" width="100" height="16" rx="8" fill="#0A3A99" />

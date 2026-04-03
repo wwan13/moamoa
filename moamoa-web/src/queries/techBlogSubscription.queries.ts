@@ -9,9 +9,7 @@ type MutationOptions = {
   invalidateOnSuccess?: boolean
 }
 
-const useInvalidateSubscriptionQueries = (
-  options: MutationOptions = {},
-) => {
+const useInvalidateSubscriptionQueries = (options: MutationOptions = {}) => {
   const qc = useQueryClient()
   const { authScope } = useAuth()
   const invalidateOnSuccess = options.invalidateOnSuccess ?? true
