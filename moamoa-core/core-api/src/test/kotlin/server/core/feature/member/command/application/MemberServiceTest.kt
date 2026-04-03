@@ -250,7 +250,7 @@ class MemberServiceTest : UnitTest() {
 
         coEvery { fixture.memberRepository.findById(memberId) } returns Optional.empty()
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             fixture.service.findById(memberId)
         }
 
@@ -287,7 +287,7 @@ class MemberServiceTest : UnitTest() {
             fixture.memberRepository.findByProviderAndProviderKey(Provider.GITHUB, "github-key")
         } returns null
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             fixture.service.findSocialMember(Provider.GITHUB, "github-key")
         }
 

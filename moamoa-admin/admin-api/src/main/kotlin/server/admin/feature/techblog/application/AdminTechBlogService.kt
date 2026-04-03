@@ -43,7 +43,7 @@ internal class AdminTechBlogService(
     fun update(id: Long, command: AdminUpdateTechBlogCommand): AdminTechBlogData {
         validateTitle(command.title)
         val techBlog = techBlogRepository.findByIdOrNull(id)
-            ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 tech blog 입니다.")
         techBlog.update(command.title, command.blogUrl, command.icon)
         return AdminTechBlogData(techBlog)
     }
@@ -61,7 +61,7 @@ internal class AdminTechBlogService(
         }
 
         val techBlog = techBlogRepository.findByIdOrNull(command.techBlogId)
-            ?: throw IllegalArgumentException("존재하지 않는 tech blog 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 tech blog 입니다.")
 
         val fetchedPosts = runBlocking {
             techBlogSources[techBlog.key].getPosts().toList()

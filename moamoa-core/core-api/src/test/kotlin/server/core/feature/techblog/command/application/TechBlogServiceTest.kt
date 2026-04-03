@@ -46,7 +46,7 @@ class TechBlogServiceTest : UnitTest() {
 
         coEvery { techBlogRepository.findByKey(techBlogKey) } returns null
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             service.findByKey(techBlogKey)
         }
 

@@ -29,7 +29,7 @@ class AuthServiceTest : UnitTest() {
 
         coEvery { fixture.memberRepository.findByEmail(command.email) } returns null
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             fixture.service.login(command)
         }
 

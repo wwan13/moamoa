@@ -35,7 +35,7 @@ class BookmarkedPostQueryService(
             page = conditions.page ?: 1
         )
         val categoryId = conditions.category?.let {
-            Category.fromId(it)?.id ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
+            Category.fromId(it)?.id ?: throw NoSuchElementException("존재하지 않는 카테고리입니다.")
         }
 
         val entry = loadEntry(memberId = passport.memberId, paging = paging, categoryId = categoryId)

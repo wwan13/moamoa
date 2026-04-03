@@ -13,9 +13,9 @@ internal enum class AdminCategory(
 
     companion object {
         fun fromId(id: Long) = entries.firstOrNull { it.id == id }
-            ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 카테고리입니다.")
 
         fun fromName(name: String) = entries.firstOrNull { it.name == name }
-            ?: throw IllegalArgumentException("존재하지 않는 카테고리입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 카테고리입니다.")
     }
 }

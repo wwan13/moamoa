@@ -243,7 +243,7 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns false
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             service.subscribe(command, memberId)
         }
 
@@ -272,7 +272,7 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns false
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             service.subscribe(command, memberId)
         }
 
@@ -299,7 +299,7 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns null
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             service.enableNotification(command, memberId)
         }
 
@@ -325,7 +325,7 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns null
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             service.disableNotification(command, memberId)
         }
 

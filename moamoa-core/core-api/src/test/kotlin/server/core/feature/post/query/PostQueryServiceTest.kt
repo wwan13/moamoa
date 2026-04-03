@@ -67,7 +67,7 @@ class PostQueryServiceTest : UnitTest() {
             warmupCoordinator = mockk(relaxed = true),
         )
 
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<NoSuchElementException> {
             service.findByConditions(
                 conditions = PostQueryConditions(page = 1, size = 20, query = null, category = 999L),
                 passport = null

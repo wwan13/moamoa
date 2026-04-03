@@ -15,7 +15,7 @@ class PostService(
     @Transactional(readOnly = true)
     fun findById(postId: Long): PostData {
         val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("존재하지 않는 게시글 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 게시글 입니다.")
         postViewCountCache.incr(postId)
 
         return PostData(post)

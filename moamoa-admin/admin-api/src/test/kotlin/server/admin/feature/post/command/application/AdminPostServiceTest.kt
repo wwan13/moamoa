@@ -40,7 +40,7 @@ class AdminPostServiceTest : UnitTest() {
 
         every { postRepository.findById(postId) } returns Optional.empty()
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             service.updateCategory(postId, command)
         }
 

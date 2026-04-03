@@ -109,6 +109,15 @@ class ApiControllerAdvice(
         return badRequest(e.message ?: "잘못된 요청입니다")
     }
 
+    @ExceptionHandler(NoSuchElementException::class)
+    fun handleNoSuchElement(
+        request: HttpServletRequest,
+        e: NoSuchElementException
+    ): ResponseEntity<ErrorResponse> {
+        logClientError(request, 404, e.message ?: "요청한 리소스를 찾을 수 없습니다", e)
+        return error(HttpStatus.NOT_FOUND, e.message ?: "요청한 리소스를 찾을 수 없습니다")
+    }
+
     @ExceptionHandler(UnauthorizedException::class)
     fun handleUnauthorized(
         request: HttpServletRequest,

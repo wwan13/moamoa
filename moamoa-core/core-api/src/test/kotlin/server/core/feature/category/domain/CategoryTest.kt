@@ -37,7 +37,7 @@ class CategoryTest : UnitTest() {
 
     @Test
     fun `존재하지 않는 name이면 예외가 발생한다`() {
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<NoSuchElementException> {
             Category.fromName("INVALID")
         }
     }

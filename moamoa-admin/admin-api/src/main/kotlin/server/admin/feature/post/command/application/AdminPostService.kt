@@ -16,7 +16,7 @@ internal class AdminPostService(
         command: AdminUpdateCategoryCommand
     ) {
         val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("존재하지 않는 게시글 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 게시글 입니다.")
 
         post.updateCategory(command.categoryId)
     }

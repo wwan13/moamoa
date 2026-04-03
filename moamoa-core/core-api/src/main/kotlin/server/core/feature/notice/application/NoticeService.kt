@@ -11,6 +11,6 @@ class NoticeService(
 
     fun findById(noticeId: Long): NoticeData {
         return noticeRepository.findByIdOrNull(noticeId)?.let(::NoticeData)
-            ?: throw IllegalArgumentException("공지사항을 찾을 수 없습니다.")
+            ?: throw NoSuchElementException("공지사항을 찾을 수 없습니다.")
     }
 }

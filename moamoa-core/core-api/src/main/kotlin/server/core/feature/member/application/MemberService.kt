@@ -81,7 +81,7 @@ class MemberService(
     @Transactional(readOnly = true)
     fun findById(memberId: Long): MemberData? {
         return memberRepository.findByIdOrNull(memberId)?.let(::MemberData)
-            ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 사용자 입니다.")
     }
 
     @Transactional(readOnly = true)
@@ -91,7 +91,7 @@ class MemberService(
             providerKey = providerKey,
         )
             ?.let(::MemberData)
-            ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 사용자 입니다.")
     }
 
     @Transactional(readOnly = true)

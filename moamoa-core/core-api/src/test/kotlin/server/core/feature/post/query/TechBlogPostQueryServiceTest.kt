@@ -61,7 +61,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
             mockk(relaxed = true)
         )
 
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<NoSuchElementException> {
             service.findAllByConditions(
                 TechBlogPostQueryConditions(techBlogId = 1L, page = 1, size = 20, category = 999L),
                 Passport(10L, MemberRole.USER)

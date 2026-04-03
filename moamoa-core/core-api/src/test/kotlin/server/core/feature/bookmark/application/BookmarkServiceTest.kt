@@ -216,7 +216,7 @@ class BookmarkServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns false
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             service.bookmark(command, memberId)
         }
 
@@ -245,7 +245,7 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { memberRepository.existsById(memberId) } returns true
         coEvery { postRepository.existsById(command.postId) } returns false
 
-        val exception = shouldThrow<IllegalArgumentException> {
+        val exception = shouldThrow<NoSuchElementException> {
             service.bookmark(command, memberId)
         }
 

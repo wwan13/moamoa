@@ -9,6 +9,7 @@ import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.post.application.PostData
 import server.core.feature.post.domain.PostRepository
+import server.core.global.security.UnauthorizedException
 import server.core.infra.event.TransactionalEventPublisher
 import server.global.logging.biz
 import server.lock.KeyedLock
@@ -32,10 +33,10 @@ class BookmarkService(
 
         keyedLock.withLock(mutexKey) {
             if (!memberRepository.existsById(memberId)) {
-                throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
+                throw UnauthorizedException()
             }
             if (!postRepository.existsById(command.postId)) {
-                throw IllegalArgumentException("존재하지 않는 게시글 입니다.")
+                throw NoSuchElementException("존재하지 않는 게시글 입니다.")
             }
 
             if (bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) != null) {

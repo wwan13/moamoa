@@ -12,7 +12,7 @@ class TechBlogService(
     @Transactional(readOnly = true)
     fun findByKey(techBlogKey: String): TechBlogData {
         return techBlogRepository.findByKey(techBlogKey)?.let(::TechBlogData)
-            ?: throw IllegalArgumentException("존재하지 않는 기술 블로그 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 기술 블로그 입니다.")
     }
 
     @Transactional(readOnly = true)

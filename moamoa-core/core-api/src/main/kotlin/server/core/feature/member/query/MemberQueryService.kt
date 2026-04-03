@@ -20,7 +20,7 @@ class MemberQueryService(
 ) {
     fun findById(memberId: Long): MemberSummary {
         val member = memberRepository.findByIdOrNull(memberId)
-            ?: throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
+            ?: throw NoSuchElementException("존재하지 않는 사용자 입니다.")
 
         val subscriptionCount = subscriptionCache.get(memberId)?.count()?.toLong()
             ?: subscriptionRepository.countByMemberId(memberId)

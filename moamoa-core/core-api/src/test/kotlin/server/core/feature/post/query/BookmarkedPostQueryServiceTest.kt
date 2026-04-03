@@ -60,7 +60,7 @@ class BookmarkedPostQueryServiceTest : UnitTest() {
             mockk(relaxed = true)
         )
 
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<NoSuchElementException> {
             service.findAllByConditions(
                 PostQueryConditions(page = 1, size = 20, query = null, category = 999L),
                 Passport(10L, MemberRole.USER)

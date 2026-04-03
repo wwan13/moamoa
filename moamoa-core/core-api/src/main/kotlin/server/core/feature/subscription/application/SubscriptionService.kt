@@ -9,6 +9,7 @@ import server.core.feature.subscription.domain.Subscription
 import server.core.feature.subscription.domain.SubscriptionRepository
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.core.feature.techblog.domain.TechBlogRepository
+import server.core.global.security.UnauthorizedException
 import server.core.infra.event.TransactionalEventPublisher
 import server.global.logging.biz
 import server.lock.KeyedLock
@@ -31,10 +32,10 @@ class SubscriptionService(
         val mutexKey = "subscription:$memberId:${command.techBlogId}"
         keyedLock.withLock(mutexKey) {
             if (!memberRepository.existsById(memberId)) {
-                throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
+                throw UnauthorizedException()
             }
             if (!techBlogRepository.existsById(command.techBlogId)) {
-                throw IllegalArgumentException("존재하지 않는 기술 블로그 입니다.")
+                throw NoSuchElementException("존재하지 않는 기술 블로그 입니다.")
             }
 
             if (subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) != null) {
@@ -88,7 +89,7 @@ class SubscriptionService(
         keyedLock.withLock(mutexKey) {
             val subscription = subscriptionRepository
                 .findByMemberIdAndTechBlogId(memberId, command.techBlogId)
-                ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
+                ?: throw NoSuchElementException("구독중이지 않은 기술 블로그 입니다.")
 
             subscription.enableNotification()
             eventPublisher.publish(
@@ -110,7 +111,7 @@ class SubscriptionService(
         keyedLock.withLock(mutexKey) {
             val subscription = subscriptionRepository
                 .findByMemberIdAndTechBlogId(memberId, command.techBlogId)
-                ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
+                ?: throw NoSuchElementException("구독중이지 않은 기술 블로그 입니다.")
 
             subscription.disableNotification()
             eventPublisher.publish(
