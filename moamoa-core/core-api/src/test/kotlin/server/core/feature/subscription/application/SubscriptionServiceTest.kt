@@ -50,9 +50,8 @@ class SubscriptionServiceTest : UnitTest() {
             )
         }
 
-        val result = service.subscribe(command, memberId)
+        service.subscribe(command, memberId)
 
-        result.subscribing shouldBe true
         savedSlot.captured.memberId shouldBe memberId
         savedSlot.captured.techBlogId shouldBe command.techBlogId
         savedSlot.captured.notificationEnabled shouldBe true
@@ -128,9 +127,8 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { techBlogRepository.existsById(command.techBlogId) } returns true
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
 
-        val result = service.subscribe(command, memberId)
+        service.subscribe(command, memberId)
 
-        result.subscribing shouldBe true
         coVerify(exactly = 0) { subscriptionRepository.save(any()) }
         verify(exactly = 0) { eventPublisher.publish(any(), any()) }
     }
@@ -160,9 +158,8 @@ class SubscriptionServiceTest : UnitTest() {
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
         coEvery { subscriptionRepository.delete(existing) } returns Unit
 
-        val result = service.unsubscribe(command, memberId)
+        service.unsubscribe(command, memberId)
 
-        result.subscribing shouldBe false
         coVerify(exactly = 1) { subscriptionRepository.delete(existing) }
     }
 
@@ -206,7 +203,7 @@ class SubscriptionServiceTest : UnitTest() {
     }
 
     @Test
-    fun `구독중이 아니면 구독 해제 요청은 false를 반환한다`() = runTest {
+    fun `구독중이 아니면 구독 해제 요청은 아무 작업 없이 종료한다`() = runTest {
         val subscriptionRepository = mockk<SubscriptionRepository>()
         val techBlogRepository = mockk<TechBlogRepository>()
         val memberRepository = mockk<MemberRepository>()
@@ -223,9 +220,8 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns null
 
-        val result = service.unsubscribe(command, memberId)
+        service.unsubscribe(command, memberId)
 
-        result.subscribing shouldBe false
         verify(exactly = 0) { eventPublisher.publish(any(), any()) }
     }
 
@@ -361,9 +357,8 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
 
-        val result = service.enableNotification(command, memberId)
+        service.enableNotification(command, memberId)
 
-        result.notificationEnabled shouldBe true
         existing.notificationEnabled shouldBe true
     }
 
@@ -429,9 +424,8 @@ class SubscriptionServiceTest : UnitTest() {
 
         coEvery { subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) } returns existing
 
-        val result = service.disableNotification(command, memberId)
+        service.disableNotification(command, memberId)
 
-        result.notificationEnabled shouldBe false
         existing.notificationEnabled shouldBe false
     }
 

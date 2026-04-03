@@ -1,9 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   subscriptionApi,
-  type NotificationEnabledResult,
   type SubscriptionCommand,
-  type SubscriptionResult,
 } from "../api/subscriptionApi.ts"
 import useAuth from "../auth/useAuth"
 
@@ -32,7 +30,7 @@ const useInvalidateSubscriptionQueries = (
 export const useSubscribeMutation = (options: MutationOptions = {}) => {
   const { invalidate } = useInvalidateSubscriptionQueries(options)
 
-  return useMutation<SubscriptionResult, Error, SubscriptionCommand>({
+  return useMutation<void, Error, SubscriptionCommand>({
     mutationFn: (command) => subscriptionApi.subscribe(command),
     onSuccess: invalidate,
   })
@@ -41,20 +39,20 @@ export const useSubscribeMutation = (options: MutationOptions = {}) => {
 export const useUnsubscribeMutation = (options: MutationOptions = {}) => {
   const { invalidate } = useInvalidateSubscriptionQueries(options)
 
-  return useMutation<SubscriptionResult, Error, SubscriptionCommand>({
+  return useMutation<void, Error, SubscriptionCommand>({
     mutationFn: (command) => subscriptionApi.unsubscribe(command),
     onSuccess: invalidate,
   })
 }
 
 export const useEnableNotificationMutation = () => {
-  return useMutation<NotificationEnabledResult, Error, SubscriptionCommand>({
+  return useMutation<void, Error, SubscriptionCommand>({
     mutationFn: (command) => subscriptionApi.enableNotification(command),
   })
 }
 
 export const useDisableNotificationMutation = () => {
-  return useMutation<NotificationEnabledResult, Error, SubscriptionCommand>({
+  return useMutation<void, Error, SubscriptionCommand>({
     mutationFn: (command) => subscriptionApi.disableNotification(command),
   })
 }

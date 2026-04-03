@@ -1,10 +1,8 @@
 package server.core.feature.member.api
 
 import jakarta.validation.Valid
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import server.core.feature.member.application.ChangePasswordCommand
-import server.core.feature.member.application.ChangePasswordResult
 import server.core.feature.member.application.CreateInternalMemberCommand
 import server.core.feature.member.application.CreateSocialMemberCommand
 import server.core.feature.member.application.CreateSocialMemberResult
@@ -12,12 +10,12 @@ import server.core.feature.member.application.EmailExistsCommand
 import server.core.feature.member.application.EmailExistsResult
 import server.core.feature.member.application.MemberData
 import server.core.feature.member.application.MemberService
-import server.core.feature.member.application.MemberUnjoinResult
 import server.core.feature.member.application.MemberUnjoinService
 import server.core.feature.member.query.MemberQueryService
 import server.core.feature.member.query.MemberSummary
 import server.core.global.security.Passport
 import server.core.global.security.RequestPassport
+import server.core.global.web.ApiResponse
 
 @RestController
 @RequestMapping("/api/member")
@@ -30,55 +28,55 @@ class MemberController(
     @PostMapping
     fun createInternalMember(
         @RequestBody @Valid command: CreateInternalMemberCommand
-    ): ResponseEntity<MemberData> {
+    ): ApiResponse<MemberData> {
         val response = memberService.createInternalMember(command)
 
-        return ResponseEntity.ok(response)
+        return ApiResponse.of(response)
     }
 
     @PostMapping("/social")
     fun createSocialMember(
         @RequestBody @Valid command: CreateSocialMemberCommand
-    ): ResponseEntity<CreateSocialMemberResult> {
+    ): ApiResponse<CreateSocialMemberResult> {
         val response = memberService.createSocialMemberWithSession(command)
 
-        return ResponseEntity.ok(response)
+        return ApiResponse.of(response)
     }
 
     @GetMapping("/email-exists")
     fun emailExists(
         @Valid command: EmailExistsCommand
-    ): ResponseEntity<EmailExistsResult> {
+    ): ApiResponse<EmailExistsResult> {
         val response = memberService.emailExists(command)
 
-        return ResponseEntity.ok(response)
+        return ApiResponse.of(response)
     }
 
     @GetMapping
     fun findByPassport(
         @RequestPassport passport: Passport
-    ): ResponseEntity<MemberSummary> {
+    ): ApiResponse<MemberSummary> {
         val response = memberQueryService.findById(passport.memberId)
 
-        return ResponseEntity.ok(response)
+        return ApiResponse.of(response)
     }
 
     @PostMapping("/password")
     fun changePassword(
         @RequestBody @Valid command: ChangePasswordCommand,
         @RequestPassport passport: Passport
-    ): ResponseEntity<ChangePasswordResult> {
-        val response = memberService.changePassword(command, passport)
+    ): ApiResponse<Unit> {
+        memberService.changePassword(command, passport)
 
-        return ResponseEntity.ok(response)
+        return ApiResponse.of()
     }
 
     @DeleteMapping
     fun unjoin(
         @RequestPassport passport: Passport
-    ): ResponseEntity<MemberUnjoinResult> {
-        val response = memberUnjoinService.unjoin(passport)
+    ): ApiResponse<Unit> {
+        memberUnjoinService.unjoin(passport)
 
-        return ResponseEntity.ok(response)
+        return ApiResponse.of()
     }
 }

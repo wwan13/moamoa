@@ -27,9 +27,9 @@ class SubscriptionService(
     fun subscribe(
         command: SubscriptionCommand,
         memberId: Long
-    ): SubscriptionResult {
+    ) {
         val mutexKey = "subscription:$memberId:${command.techBlogId}"
-        return keyedLock.withLock(mutexKey) {
+        keyedLock.withLock(mutexKey) {
             if (!memberRepository.existsById(memberId)) {
                 throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
             }
@@ -38,7 +38,7 @@ class SubscriptionService(
             }
 
             if (subscriptionRepository.findByMemberIdAndTechBlogId(memberId, command.techBlogId) != null) {
-                return@withLock SubscriptionResult(true)
+                return@withLock
             }
 
             val subscription = Subscription(
@@ -55,20 +55,18 @@ class SubscriptionService(
                 )
             )
             logger.biz.info { "기술 블로그를 구독합니다" }
-
-            SubscriptionResult(true)
         }
     }
 
     fun unsubscribe(
         command: SubscriptionCommand,
         memberId: Long
-    ): SubscriptionResult {
+    ) {
         val mutexKey = "subscription:$memberId:${command.techBlogId}"
-        return keyedLock.withLock(mutexKey) {
+        keyedLock.withLock(mutexKey) {
             val subscription = subscriptionRepository
                 .findByMemberIdAndTechBlogId(memberId, command.techBlogId)
-                ?: return@withLock SubscriptionResult(false)
+                ?: return@withLock
 
             subscriptionRepository.delete(subscription)
             eventPublisher.publish(
@@ -79,17 +77,15 @@ class SubscriptionService(
                 )
             )
             logger.biz.info { "기술 블로그 구독을 해제합니다" }
-
-            SubscriptionResult(false)
         }
     }
 
     fun enableNotification(
         command: SubscriptionCommand,
         memberId: Long
-    ): NotificationEnabledResult {
+    ) {
         val mutexKey = "notificationEnabled:$memberId:${command.techBlogId}"
-        return keyedLock.withLock(mutexKey) {
+        keyedLock.withLock(mutexKey) {
             val subscription = subscriptionRepository
                 .findByMemberIdAndTechBlogId(memberId, command.techBlogId)
                 ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
@@ -103,17 +99,15 @@ class SubscriptionService(
                 )
             )
             logger.biz.info { "기술 블로그 알림을 활성화합니다" }
-
-            NotificationEnabledResult(true)
         }
     }
 
     fun disableNotification(
         command: SubscriptionCommand,
         memberId: Long
-    ): NotificationEnabledResult {
+    ) {
         val mutexKey = "notificationEnabled:$memberId:${command.techBlogId}"
-        return keyedLock.withLock(mutexKey) {
+        keyedLock.withLock(mutexKey) {
             val subscription = subscriptionRepository
                 .findByMemberIdAndTechBlogId(memberId, command.techBlogId)
                 ?: throw IllegalArgumentException("구독중이지 않은 기술 블로그 입니다.")
@@ -127,8 +121,6 @@ class SubscriptionService(
                 )
             )
             logger.biz.info { "기술 블로그 알림을 비활성화합니다" }
-
-            NotificationEnabledResult(false)
         }
     }
 }

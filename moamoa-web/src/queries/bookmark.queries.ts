@@ -1,9 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import {
-  bookmarkApi,
-  type BookmarkCommand,
-  type BookmarkResult,
-} from "../api/bookmark.api"
+import { bookmarkApi, type BookmarkCommand } from "../api/bookmark.api"
 import useAuth from "../auth/useAuth"
 
 type BookmarkMutationOptions = {
@@ -34,7 +30,7 @@ export const useBookmarkMutation = (
 ) => {
   const { invalidate } = useInvalidateBookmarkQueries(options)
 
-  return useMutation<BookmarkResult, Error, BookmarkCommand>({
+  return useMutation<void, Error, BookmarkCommand>({
     mutationFn: (command) => bookmarkApi.bookmark(command),
     onSuccess: (_data, variables) => invalidate(variables.postId),
   })
@@ -45,7 +41,7 @@ export const useUnbookmarkMutation = (
 ) => {
   const { invalidate } = useInvalidateBookmarkQueries(options)
 
-  return useMutation<BookmarkResult, Error, BookmarkCommand>({
+  return useMutation<void, Error, BookmarkCommand>({
     mutationFn: (command) => bookmarkApi.unbookmark(command),
     onSuccess: (_data, variables) => invalidate(variables.postId),
   })

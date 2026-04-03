@@ -420,17 +420,14 @@ class MemberServiceTest : UnitTest() {
         )
         val member = createMember(id = 1L, password = "encoded-old")
         val passport = Passport(memberId = member.id, role = member.role)
-        val savedSlot = slot<Member>()
 
         coEvery { fixture.memberRepository.findById(passport.memberId) } returns Optional.of(member)
         every { fixture.passwordEncoder.matches(command.oldPassword, member.password) } returns true
         every { fixture.passwordEncoder.encode(command.newPassword) } returns "encoded-new"
-        coEvery { fixture.memberRepository.save(capture(savedSlot)) } returns member
 
-        val result = fixture.service.changePassword(command, passport)
+        fixture.service.changePassword(command, passport)
 
-        result.success shouldBe true
-        savedSlot.captured.password shouldBe "encoded-new"
+        member.password shouldBe "encoded-new"
     }
 
     private fun createFixture(): Fixture {

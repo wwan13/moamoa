@@ -138,12 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (!ok) return
 
-    const res = await logoutMutation.mutateAsync()
-
-    if (!res?.success) {
-      await showGlobalAlert("다시 시도해 주세요")
-      return
-    }
+    await logoutMutation.mutateAsync()
 
     await qc.cancelQueries()
     qc.clear()
@@ -155,12 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const logoutProcess = async (): Promise<void> => {
-    const res = await logoutMutation.mutateAsync()
-
-    if (!res?.success) {
-      await showGlobalAlert("다시 시도해 주세요")
-      return
-    }
+    await logoutMutation.mutateAsync()
 
     await qc.cancelQueries()
     qc.clear()

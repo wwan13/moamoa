@@ -103,7 +103,7 @@ class MemberService(
     fun changePassword(
         command: ChangePasswordCommand,
         passport: Passport
-    ): ChangePasswordResult {
+    ) {
         logger.biz.info { "비밀번호를 변경합니다" }
         if (command.oldPassword == command.newPassword) {
             throw IllegalArgumentException("같은 비밀번호는 사용할 수 없습니다.")
@@ -122,7 +122,5 @@ class MemberService(
         }
 
         member.updatePassword(passwordEncoder.encode(command.newPassword))
-
-        return ChangePasswordResult(true)
     }
 }

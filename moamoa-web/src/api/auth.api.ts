@@ -21,10 +21,6 @@ export type AuthTokens = {
   refreshToken: string
 }
 
-export type LogoutResult = {
-  success: boolean
-}
-
 export const authApi = {
   login: async (
     command: LoginCommand,
@@ -42,9 +38,8 @@ export const authApi = {
     if (!res) throw new Error("EMPTY_SIGNUP_RESPONSE")
     return res
   },
-  logout: async (config?: ApiRequestConfig): Promise<LogoutResult> => {
-    const res = await http.post<LogoutResult>("/api/auth/logout", {}, config)
-    return res ?? { success: false }
+  logout: async (config?: ApiRequestConfig): Promise<void> => {
+    await http.post<void>("/api/auth/logout", {}, config)
   },
   loginSocialSession: async (
     command: LoginSocialSessionCommand,

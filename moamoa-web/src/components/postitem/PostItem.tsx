@@ -72,14 +72,15 @@ const PostItem = ({
     setBookmarkCount((c) => Math.max(0, c + (next ? 1 : -1)))
 
     try {
-      const res = next
-        ? await bookmarkMutation.mutateAsync({ postId })
-        : await unbookmarkMutation.mutateAsync({ postId })
-      const finalBookmarked = !!res?.bookmarked
+      if (next) {
+        await bookmarkMutation.mutateAsync({ postId })
+      } else {
+        await unbookmarkMutation.mutateAsync({ postId })
+      }
 
-      setBookmarked(finalBookmarked)
+      setBookmarked(next)
 
-      if (finalBookmarked) showToast("북마크 되었습니다.")
+      if (next) showToast("북마크 되었습니다.")
       else showToast("북마크 해제하였습니다.")
     } catch {
       // rollback

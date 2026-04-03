@@ -20,13 +20,11 @@ class MemberUnjoinService(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    fun unjoin(passport: Passport): MemberUnjoinResult {
+    fun unjoin(passport: Passport) {
         logger.biz.info { "회원 탈퇴를 처리합니다" }
         bookmarkRepository.deleteAllByMemberId(passport.memberId)
         subscriptionRepository.deleteAllByMemberId(passport.memberId)
         submissionRepository.deleteAllByMemberId(passport.memberId)
         memberRepository.deleteById(passport.memberId)
-
-        return MemberUnjoinResult(true)
     }
 }

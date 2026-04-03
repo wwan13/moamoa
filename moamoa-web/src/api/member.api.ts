@@ -33,14 +33,6 @@ export type ChangePasswordCommand = {
   passwordConfirm: string
 }
 
-export type ChangePasswordResult = {
-  success: boolean
-}
-
-export type MemberUnjoinResult = {
-  success: boolean
-}
-
 export const memberApi = {
   summary: async (config?: ApiRequestConfig): Promise<MemberSummary | null> => {
     return await http.get<MemberSummary>("/api/member", config)
@@ -60,16 +52,10 @@ export const memberApi = {
   changePassword: async (
     command: ChangePasswordCommand,
     config?: ApiRequestConfig,
-  ): Promise<ChangePasswordResult> => {
-    const res = await http.post<ChangePasswordResult>(
-      "/api/member/password",
-      command,
-      config,
-    )
-    return res ?? { success: false }
+  ): Promise<void> => {
+    await http.post<void>("/api/member/password", command, config)
   },
-  unjoin: async (config?: ApiRequestConfig): Promise<MemberUnjoinResult> => {
-    const res = await http.del<MemberUnjoinResult>("/api/member", config)
-    return res ?? { success: false }
+  unjoin: async (config?: ApiRequestConfig): Promise<void> => {
+    await http.del<void>("/api/member", config)
   },
 }

@@ -1,6 +1,5 @@
 package server.core.global.web
 
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -8,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController
 class HealthController {
 
     @GetMapping("/health-check")
-    fun healthCheck(): ResponseEntity<String> {
-        return ResponseEntity.ok("healthy")
+    fun healthCheck(): ApiResponse<String> {
+        return ApiResponse.of("healthy")
     }
 }

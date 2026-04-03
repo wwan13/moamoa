@@ -3,11 +3,9 @@ import useAuth from "../auth/useAuth"
 import {
   memberApi,
   type ChangePasswordCommand,
-  type ChangePasswordResult,
   type CreateSocialMemberCommand,
   type CreateSocialMemberResult,
   type MemberSummary,
-  type MemberUnjoinResult,
 } from "../api/member.api"
 
 export const useMemberSummaryQuery = () => {
@@ -32,13 +30,13 @@ export const useCreateSocialMemberMutation = () => {
 }
 
 export const useChangePasswordMutation = () => {
-  return useMutation<ChangePasswordResult, Error, ChangePasswordCommand>({
+  return useMutation<void, Error, ChangePasswordCommand>({
     mutationFn: (command) => memberApi.changePassword(command),
   })
 }
 
 export const useUnjoinMutation = () => {
-  return useMutation<MemberUnjoinResult, Error, void>({
+  return useMutation<void, Error, void>({
     mutationFn: () => memberApi.unjoin(),
   })
 }

@@ -45,9 +45,8 @@ class BookmarkServiceTest : UnitTest() {
             Bookmark(id = 101L, memberId = savedSlot.captured.memberId, postId = savedSlot.captured.postId)
         }
 
-        val result = service.bookmark(command, memberId)
+        service.bookmark(command, memberId)
 
-        result.bookmarked shouldBe true
         savedSlot.captured.memberId shouldBe memberId
         savedSlot.captured.postId shouldBe command.postId
     }
@@ -111,9 +110,8 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { postRepository.existsById(command.postId) } returns true
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
 
-        val result = service.bookmark(command, memberId)
+        service.bookmark(command, memberId)
 
-        result.bookmarked shouldBe true
         coVerify(exactly = 0) { bookmarkRepository.save(any()) }
         verify(exactly = 0) { eventPublisher.publish(any(), any()) }
     }
@@ -138,9 +136,8 @@ class BookmarkServiceTest : UnitTest() {
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns existing
         coEvery { bookmarkRepository.delete(existing) } returns Unit
 
-        val result = service.unbookmark(command, memberId)
+        service.unbookmark(command, memberId)
 
-        result.bookmarked shouldBe false
         coVerify(exactly = 1) { bookmarkRepository.delete(existing) }
     }
 
@@ -179,7 +176,7 @@ class BookmarkServiceTest : UnitTest() {
     }
 
     @Test
-    fun `북마크가 없으면 해제 요청은 false를 반환한다`() = runTest {
+    fun `북마크가 없으면 해제 요청은 아무 작업 없이 종료한다`() = runTest {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
@@ -196,9 +193,8 @@ class BookmarkServiceTest : UnitTest() {
 
         coEvery { bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) } returns null
 
-        val result = service.unbookmark(command, memberId)
+        service.unbookmark(command, memberId)
 
-        result.bookmarked shouldBe false
         verify(exactly = 0) { eventPublisher.publish(any(), any()) }
     }
 

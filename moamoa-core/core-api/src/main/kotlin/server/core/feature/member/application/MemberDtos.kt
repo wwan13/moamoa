@@ -80,11 +80,3 @@ data class ChangePasswordCommand(
     @field:Pattern(regexp = "^(?=.*[^A-Za-z0-9])[A-Za-z0-9[^A-Za-z0-9]]{8,32}$")
     val passwordConfirm: String
 )
-
-data class ChangePasswordResult(
-    val success: Boolean,
-)
-
-data class MemberUnjoinResult(
-    val success: Boolean,
-)

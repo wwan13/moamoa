@@ -199,9 +199,8 @@ class AuthServiceTest : UnitTest() {
 
         coEvery { fixture.refreshTokenCache.evict(memberId) } returns Unit
 
-        val result = fixture.service.logout(memberId)
+        fixture.service.logout(memberId)
 
-        result.success shouldBe true
         coVerify(exactly = 1) { fixture.refreshTokenCache.evict(memberId) }
     }
 

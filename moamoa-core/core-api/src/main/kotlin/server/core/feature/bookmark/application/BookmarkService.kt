@@ -27,10 +27,10 @@ class BookmarkService(
     fun bookmark(
         command: BookmarkCommand,
         memberId: Long
-    ): BookmarkResult {
+    ) {
         val mutexKey = "bookmark:$memberId:${command.postId}"
 
-        return keyedLock.withLock(mutexKey) {
+        keyedLock.withLock(mutexKey) {
             if (!memberRepository.existsById(memberId)) {
                 throw IllegalArgumentException("존재하지 않는 사용자 입니다.")
             }
@@ -39,7 +39,7 @@ class BookmarkService(
             }
 
             if (bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId) != null) {
-                return@withLock BookmarkResult(true)
+                return@withLock
             }
 
             val bookmark = Bookmark(
@@ -55,20 +55,18 @@ class BookmarkService(
                 )
             )
             logger.biz.info { "북마크를 등록합니다" }
-
-            BookmarkResult(true)
         }
     }
 
     fun unbookmark(
         command: BookmarkCommand,
         memberId: Long
-    ): BookmarkResult {
+    ) {
         val mutexKey = "bookmark:$memberId:${command.postId}"
 
-        return keyedLock.withLock(mutexKey) {
+        keyedLock.withLock(mutexKey) {
             val bookmark = bookmarkRepository.findByMemberIdAndPostId(memberId, command.postId)
-                ?: return@withLock BookmarkResult(false)
+                ?: return@withLock
 
             bookmarkRepository.delete(bookmark)
             eventPublisher.publish(
@@ -79,8 +77,6 @@ class BookmarkService(
                 )
             )
             logger.biz.info { "북마크를 해제합니다" }
-
-            BookmarkResult(false)
         }
     }
 

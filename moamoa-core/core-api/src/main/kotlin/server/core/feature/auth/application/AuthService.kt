@@ -72,10 +72,8 @@ class AuthService(
     }
 
     @Transactional(readOnly = true)
-    fun logout(memberId: Long): LogoutResult {
+    fun logout(memberId: Long) {
         refreshTokenCache.evict(memberId)
-
-        return LogoutResult(true)
     }
 
     @Transactional(readOnly = true)

@@ -4,7 +4,6 @@ import {
   type AuthTokens,
   type LoginCommand,
   type LoginSocialSessionCommand,
-  type LogoutResult,
   type SignupCommand,
 } from "../api/auth.api"
 
@@ -21,7 +20,7 @@ export const useSignupMutation = () => {
 }
 
 export const useLogoutMutation = () => {
-  return useMutation<LogoutResult, Error, void>({
+  return useMutation<void, Error, void>({
     mutationFn: () => authApi.logout(),
   })
 }
