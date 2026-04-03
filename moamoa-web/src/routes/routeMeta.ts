@@ -122,6 +122,12 @@ const META_RULES: MetaRule[] = [
     description: "원문 게시글로 이동합니다.",
     robots: "noindex,nofollow",
   },
+  {
+    path: "/404",
+    title: "페이지를 찾을 수 없음 | moamoa",
+    description: "요청하신 페이지를 찾을 수 없습니다.",
+    robots: "noindex,nofollow",
+  },
 ]
 
 const resolveCanonicalPath = (

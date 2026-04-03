@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom"
+import { Navigate, Route, Routes } from "react-router-dom"
 import MainPage from "../pages/mainpage/MainPage"
 import TechBlogsPage from "../pages/techblogspage/TechBlogsPage"
 import TechBlogDetailPage from "../pages/techblogdetailpage/TechBlogDetailPage"
@@ -17,6 +17,7 @@ import PrivacyPolicyPage from "../pages/privacypolicy/PrivacyPolicyPage.tsx"
 import NoticeListPage from "../pages/noticelistpage/NoticeListPage.tsx"
 import FindPasswordPage from "../pages/findpasswordpage/FindPasswordPage.tsx"
 import NoticeDetailPage from "../pages/noticedetailpage/NoticeDetailPage.tsx"
+import NotFoundPage from "../pages/notfoundpage/NotFoundPage.tsx"
 
 const AppRoutes = () => {
   return (
@@ -43,7 +44,10 @@ const AppRoutes = () => {
         <Route path="/find/password" element={<FindPasswordPage />} />
         <Route path="/oauth2/email" element={<Oauth2EmailInputPage />} />
         <Route path="/post/:postId" element={<PostRedirectPage />} />
+        <Route path="/404" element={<NotFoundPage />} />
       </Route>
+
+      <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   )
 }

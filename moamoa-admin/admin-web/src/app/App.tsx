@@ -6,10 +6,12 @@ import GlobalToast from "../components/toast/GlobalToast"
 import {
   setOnGlobalAlert,
   setOnGlobalConfirm,
+  setOnNotFound,
   setOnServerError,
   setOnToast,
   type Toast,
 } from "../api/client"
+import { useNavigate } from "react-router-dom"
 
 type ConfirmState = {
   title?: string
@@ -38,6 +40,7 @@ function App() {
     onConfirm: () => {},
     onCancel: () => {},
   })
+  const navigate = useNavigate()
 
   useEffect(() => {
     setOnServerError(({ message }) => {
@@ -72,7 +75,11 @@ function App() {
         setConfirmOpen(true)
       },
     )
-  }, [])
+
+    setOnNotFound(() => {
+      navigate("/404")
+    })
+  }, [navigate])
 
   return (
     <div>

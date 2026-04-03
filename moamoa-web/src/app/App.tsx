@@ -2,6 +2,7 @@ import AppRoutes from "../routes/AppRoutes"
 
 import {
   setOnGlobalAlert,
+  setOnNotFound,
   setOnServerError,
   setOnToast,
   setOnGlobalConfirm,
@@ -91,7 +92,11 @@ const App = () => {
     // ✅ Search 전역 핸들러 등록 (추가)
     setOnOpenSearch(() => setSearchOpen(true))
     setOnCloseSearch(() => setSearchOpen(false))
-  }, [])
+
+    setOnNotFound(() => {
+      navigate("/404")
+    })
+  }, [navigate])
 
   useEffect(() => {
     document.body.classList.toggle("modal-open", searchOpen)

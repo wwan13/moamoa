@@ -49,6 +49,11 @@ export function setOnServerError(handler: (params: ServerErrorParams) => void) {
   onServerError = typeof handler === "function" ? handler : () => {}
 }
 
+let onNotFound = () => {}
+export function setOnNotFound(handler: () => void) {
+  onNotFound = typeof handler === "function" ? handler : () => {}
+}
+
 let onLogout = () => {}
 export function setOnLogout(handler: () => void) {
   onLogout = typeof handler === "function" ? handler : () => {}
@@ -251,6 +256,11 @@ export async function apiRequest<T = unknown>(
 
     await ensureReissued(baseUrl)
     return await apiRequest<T>(path, options, { ...config, retry: false })
+  }
+
+  if (status === 404) {
+    onNotFound()
+    return await new Promise<T | null>(() => {})
   }
 
   if (status === 500) onServerError({ message: "잠시 후 다시 시도해 주세요." })

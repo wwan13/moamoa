@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom"
+import { Navigate, Route, Routes } from "react-router-dom"
 import MainPage from "../pages/mainpage/MainPage.tsx"
 import LoginPage from "../pages/loginpage/LoginPage.tsx"
 import AppLayout from "../components/layout/AppLayout"
@@ -8,6 +8,7 @@ import FeedbackPage from "../pages/feedbackpage/FeedbackPage.tsx"
 import SubmissionPage from "../pages/submissionpage/SubmissionPage.tsx"
 import TechBlogPage from "../pages/techblogpage/TechBlogPage.tsx"
 import LogPage from "../pages/logpage/LogPage.tsx"
+import NotFoundPage from "../pages/notfoundpage/NotFoundPage.tsx"
 
 const AppRoutes = () => {
   return (
@@ -22,6 +23,8 @@ const AppRoutes = () => {
         <Route path="/log" element={<LogPage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/404" element={<NotFoundPage />} />
+      <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   )
 }

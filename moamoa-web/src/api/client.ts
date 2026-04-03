@@ -53,6 +53,11 @@ export const setOnServerError = (
   onServerError = typeof handler === "function" ? handler : () => {}
 }
 
+let onNotFound: () => void = () => {}
+export const setOnNotFound = (handler: () => void): void => {
+  onNotFound = typeof handler === "function" ? handler : () => {}
+}
+
 let onLogout: () => void = () => {}
 export const setOnLogout = (handler: () => void): void => {
   onLogout = typeof handler === "function" ? handler : () => {}
@@ -290,6 +295,11 @@ export const apiRequest = async <T = unknown>(
 
     await ensureReissued(baseUrl)
     return await apiRequest<T>(path, options, { ...config, retry: false })
+  }
+
+  if (status === 404) {
+    onNotFound()
+    return await new Promise<T | null>(() => {})
   }
 
   if (status === 500) {
