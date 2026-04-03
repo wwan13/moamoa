@@ -1,0 +1,14 @@
+.wrap {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.illustration {
+  width: min(100%, 680px);
+  height: auto;
+}

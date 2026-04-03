@@ -37,6 +37,8 @@ const AppRoutes = () => {
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
         <Route path="/oauth2" element={<Oauth2Page />} />
+
+        <Route path="/404" element={<NotFoundPage />} />
       </Route>
 
       <Route element={<BlankLayout />}>
@@ -44,7 +46,6 @@ const AppRoutes = () => {
         <Route path="/find/password" element={<FindPasswordPage />} />
         <Route path="/oauth2/email" element={<Oauth2EmailInputPage />} />
         <Route path="/post/:postId" element={<PostRedirectPage />} />
-        <Route path="/404" element={<NotFoundPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/404" replace />} />
