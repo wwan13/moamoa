@@ -30,17 +30,19 @@ internal class RedisCacheMemory(
 
     override fun <T> set(key: String, value: T, ttlMillis: Long?) {
         val json = objectMapper.writeValueAsString(value)
+        val adjustedTtlMillis = ttlWithJitter(ttlMillis)
         runWithInfraException("Cache write failed. key=$key") {
-            if (ttlMillis == null) valueOps.set(key, json)
-            else valueOps.set(key, json, ttlMillis, TimeUnit.MILLISECONDS)
+            if (adjustedTtlMillis == null) valueOps.set(key, json)
+            else valueOps.set(key, json, adjustedTtlMillis, TimeUnit.MILLISECONDS)
         }
     }
 
     override fun <T> setIfAbsent(key: String, value: T, ttlMillis: Long?): Boolean {
         val json = objectMapper.writeValueAsString(value)
+        val adjustedTtlMillis = ttlWithJitter(ttlMillis)
         return runWithInfraException("Cache setIfAbsent failed. key=$key") {
-            if (ttlMillis == null) valueOps.setIfAbsent(key, json) ?: false
-            else valueOps.setIfAbsent(key, json, ttlMillis, TimeUnit.MILLISECONDS) ?: false
+            if (adjustedTtlMillis == null) valueOps.setIfAbsent(key, json) ?: false
+            else valueOps.setIfAbsent(key, json, adjustedTtlMillis, TimeUnit.MILLISECONDS) ?: false
         }
     }
 
@@ -89,8 +91,8 @@ internal class RedisCacheMemory(
             val jsonByKey = valuesByKey.mapValues { (_, v) -> objectMapper.writeValueAsString(v) }
             valueOps.multiSet(jsonByKey)
             if (ttlMillis != null) {
-                val expiration = Expiration.milliseconds(ttlMillis)
                 for (key in jsonByKey.keys) {
+                    val expiration = Expiration.milliseconds(ttlWithJitter(ttlMillis) ?: ttlMillis)
                     redis.expire(key, expiration.expirationTimeInMilliseconds, TimeUnit.MILLISECONDS)
                 }
             }

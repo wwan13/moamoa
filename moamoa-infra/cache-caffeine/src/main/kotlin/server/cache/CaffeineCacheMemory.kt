@@ -88,9 +88,8 @@ internal class CaffeineCacheMemory(
     }
 
     override fun mset(valuesByKey: Map<String, Any>, ttlMillis: Long?) {
-        val expireAt = toExpireAt(ttlMillis)
         valuesByKey.forEach { (key, value) ->
-            cache.put(key, CacheEntry(objectMapper.writeValueAsString(value), expireAt))
+            cache.put(key, CacheEntry(objectMapper.writeValueAsString(value), toExpireAt(ttlMillis)))
         }
     }
 
@@ -110,7 +109,7 @@ internal class CaffeineCacheMemory(
     }
 
     private fun toExpireAt(ttlMillis: Long?): Long? {
-        return ttlMillis?.let { System.currentTimeMillis() + it }
+        return ttlWithJitter(ttlMillis)?.let { System.currentTimeMillis() + it }
     }
 
     private data class CacheEntry(
