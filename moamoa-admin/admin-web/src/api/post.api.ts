@@ -50,10 +50,6 @@ export type AdminUpdateCategoryCommand = {
   categoryId: number
 }
 
-export type AdminUpdateCategoryResult = {
-  success: boolean
-}
-
 function buildPostQueryString(conditions: AdminPostQueryConditions): string {
   const params = new URLSearchParams()
 
@@ -94,11 +90,10 @@ export const postApi = {
   updateCategory: async (
     postId: number,
     command: AdminUpdateCategoryCommand,
-  ): Promise<AdminUpdateCategoryResult> => {
-    const res = await http.post<AdminUpdateCategoryResult>(
+  ): Promise<void> => {
+    await http.post<void>(
       `/api/admin/post/category/${postId}`,
       command,
     )
-    return res ?? { success: false }
   },
 }

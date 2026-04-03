@@ -74,9 +74,7 @@ internal class AdminAuthService(
         return AdminAuthTokens(accessToken, refreshToken)
     }
 
-    fun logout(memberId: Long): AdminLogoutResult {
+    fun logout(memberId: Long) {
         refreshTokenCache.evict(memberId)
-
-        return AdminLogoutResult(true)
     }
 }

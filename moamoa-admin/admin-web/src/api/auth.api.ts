@@ -10,10 +10,6 @@ export type AdminAuthTokens = {
   refreshToken: string
 }
 
-export type AdminLogoutResult = {
-  success: boolean
-}
-
 export const authApi = {
   login: async (command: AdminLoginCommand): Promise<AdminAuthTokens> => {
     const res = await http.post<AdminAuthTokens>(
@@ -23,8 +19,7 @@ export const authApi = {
     if (!res) throw new Error("EMPTY_LOGIN_RESPONSE")
     return res
   },
-  logout: async (): Promise<AdminLogoutResult> => {
-    const res = await http.post<AdminLogoutResult>("/api/admin/auth/logout", {})
-    return res ?? { success: false }
+  logout: async (): Promise<void> => {
+    await http.post<void>("/api/admin/auth/logout", {})
   },
 }

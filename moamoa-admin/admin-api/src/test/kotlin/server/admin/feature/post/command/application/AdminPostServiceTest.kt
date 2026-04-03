@@ -15,7 +15,7 @@ import test.UnitTest
 class AdminPostServiceTest : UnitTest() {
 
     @Test
-    fun `카테고리 업데이트 시 게시글의 categoryId를 변경하고 성공을 반환한다`() = runTest {
+    fun `카테고리 업데이트 시 게시글의 categoryId를 변경한다`() = runTest {
         val postRepository = mockk<AdminPostRepository>()
         val service = AdminPostService(postRepository)
 
@@ -25,9 +25,8 @@ class AdminPostServiceTest : UnitTest() {
 
         every { postRepository.findById(postId) } returns Optional.of(post)
 
-        val result = service.updateCategory(postId, command)
+        service.updateCategory(postId, command)
 
-        result.success shouldBe true
         post.categoryId shouldBe command.categoryId
     }
 

@@ -1,9 +1,9 @@
 package server.admin.feature.techblog.api
 
 import jakarta.validation.Valid
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import server.admin.feature.techblog.application.*
+import server.admin.global.web.AdminApiResponse
 
 @RestController
 @RequestMapping("/api/admin/tech-blog")
@@ -13,26 +13,26 @@ internal class AdminTechBlogController(
     @PostMapping
     fun create(
         @RequestBody @Valid command: AdminCreateTechBlogCommand
-    ): ResponseEntity<AdminTechBlogData> {
+    ): AdminApiResponse<AdminTechBlogData> {
         val response = techBlogService.create(command)
 
-        return ResponseEntity.ok(response)
+        return AdminApiResponse.of(response)
     }
 
     @PostMapping("/init")
     fun init(
         @RequestBody @Valid command: AdminInitTechBlogCommand
-    ): ResponseEntity<AdminInitTechBlogResult> {
+    ): AdminApiResponse<AdminInitTechBlogResult> {
         val response = techBlogService.initTechBlog(command)
-        return ResponseEntity.ok(response)
+        return AdminApiResponse.of(response)
     }
 
     @PatchMapping("/{techBlogId}")
     fun update(
         @PathVariable techBlogId: Long,
         @RequestBody @Valid command: AdminUpdateTechBlogCommand
-    ): ResponseEntity<AdminTechBlogData> {
+    ): AdminApiResponse<AdminTechBlogData> {
         val response = techBlogService.update(techBlogId, command)
-        return ResponseEntity.ok(response)
+        return AdminApiResponse.of(response)
     }
 }

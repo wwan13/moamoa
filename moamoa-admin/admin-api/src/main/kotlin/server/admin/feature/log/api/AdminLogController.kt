@@ -1,6 +1,5 @@
 package server.admin.feature.log.api
 
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -10,6 +9,7 @@ import server.admin.feature.log.query.AdminLogQueryService
 import server.admin.global.security.AdminPassport
 import server.admin.global.security.RequestAdminPassport
 import server.admin.global.security.ensureAdmin
+import server.admin.global.web.AdminApiResponse
 
 @RestController
 @RequestMapping("/api/admin/log")
@@ -21,9 +21,9 @@ internal class AdminLogController(
     fun findByConditions(
         conditions: AdminLogQueryConditions,
         @RequestAdminPassport passport: AdminPassport,
-    ): ResponseEntity<AdminLogPage> {
+    ): AdminApiResponse<AdminLogPage> {
         passport.ensureAdmin()
         val response = logQueryService.findByConditions(conditions)
-        return ResponseEntity.ok(response)
+        return AdminApiResponse.of(response)
     }
 }

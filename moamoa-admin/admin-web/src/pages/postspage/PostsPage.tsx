@@ -67,14 +67,10 @@ const PostsPage = () => {
     if (nextCategoryId === prevCategoryId) return true
 
     try {
-      const result = await updatePostCategoryMutation.mutateAsync({
+      await updatePostCategoryMutation.mutateAsync({
         postId,
         categoryId: nextCategoryId,
       })
-      if (!result.success) {
-        await showGlobalAlert("카테고리 변경에 실패했습니다.")
-        return false
-      }
       return true
     } catch {
       await showGlobalAlert("카테고리 변경에 실패했습니다.")

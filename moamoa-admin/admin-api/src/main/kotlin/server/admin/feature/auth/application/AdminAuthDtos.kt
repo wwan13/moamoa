@@ -20,7 +20,3 @@ data class AdminAuthTokens(
     val accessToken: String,
     val refreshToken: String
 )
-
-data class AdminLogoutResult(
-    val success: Boolean
-)

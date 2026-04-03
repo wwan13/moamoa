@@ -1,7 +1,6 @@
 package server.admin.feature.post.api
 
 import jakarta.validation.Valid
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -10,13 +9,13 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import server.admin.feature.post.command.application.AdminPostService
 import server.admin.feature.post.command.application.AdminUpdateCategoryCommand
-import server.admin.feature.post.command.application.AdminUpdateCategoryResult
 import server.admin.feature.post.query.AdminPostList
 import server.admin.feature.post.query.AdminPostQueryConditions
 import server.admin.feature.post.query.AdminPostQueryService
 import server.admin.global.security.AdminPassport
 import server.admin.global.security.RequestAdminPassport
 import server.admin.global.security.ensureAdmin
+import server.admin.global.web.AdminApiResponse
 
 @RestController
 @RequestMapping("/api/admin/post")
@@ -29,10 +28,10 @@ internal class AdminPostController(
     fun findByConditions(
         conditions: AdminPostQueryConditions,
         @RequestAdminPassport passport: AdminPassport
-    ): ResponseEntity<AdminPostList> {
+    ): AdminApiResponse<AdminPostList> {
         passport.ensureAdmin()
         val response = postQueryService.findByConditions(conditions)
-        return ResponseEntity.ok(response)
+        return AdminApiResponse.of(response)
     }
 
     @PostMapping("/category/{postId}")
@@ -40,9 +39,9 @@ internal class AdminPostController(
         @PathVariable postId: Long,
         @RequestBody @Valid command: AdminUpdateCategoryCommand,
         @RequestAdminPassport passport: AdminPassport
-    ): ResponseEntity<AdminUpdateCategoryResult> {
+    ): AdminApiResponse<Unit> {
         passport.ensureAdmin()
-        val response = postService.updateCategory(postId, command)
-        return ResponseEntity.ok(response)
+        postService.updateCategory(postId, command)
+        return AdminApiResponse.of()
     }
 }

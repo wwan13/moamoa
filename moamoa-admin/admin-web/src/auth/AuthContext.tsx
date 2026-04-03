@@ -107,8 +107,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   )
 
   const logout = useCallback(async () => {
-    const res = await logoutMutation.mutateAsync()
-    if (!res?.success) return
+    await logoutMutation.mutateAsync()
 
     await qc.cancelQueries()
     qc.clear()

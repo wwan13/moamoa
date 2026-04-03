@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   postApi,
-  type AdminUpdateCategoryResult,
   type AdminPostList,
   type AdminPostQueryConditions,
 } from "../api/post.api"
@@ -21,11 +20,7 @@ type UpdatePostCategoryVariables = {
 export function useUpdatePostCategoryMutation() {
   const queryClient = useQueryClient()
 
-  return useMutation<
-    AdminUpdateCategoryResult,
-    Error,
-    UpdatePostCategoryVariables
-  >({
+  return useMutation<void, Error, UpdatePostCategoryVariables>({
     mutationFn: ({ postId, categoryId }) =>
       postApi.updateCategory(postId, { categoryId }),
     onSuccess: async () => {
