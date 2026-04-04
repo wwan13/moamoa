@@ -1,18 +1,13 @@
-package server.batch.member.tasklet
+package server.batch.member.sendalarmemail.job
 
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.StepContribution
-import org.springframework.batch.core.StepExecution
-import org.springframework.batch.repeat.RepeatStatus
-import org.springframework.batch.core.scope.context.ChunkContext
-import org.springframework.batch.core.scope.context.StepContext
-import server.batch.member.dto.AlarmContent
+import server.batch.member.generatealarmcontent.dto.AlarmContent
 import server.mail.MailContent
 import server.mail.MailSender
 import server.queue.QueueMemory
@@ -24,7 +19,7 @@ import java.time.format.DateTimeFormatter
 
 class SendAlarmEmailTaskletTest : UnitTest() {
     @Test
-    fun `MailTemplate NewPosts 생성자에서 길이 초과 텍스트를 말줄임 처리한다`() {
+    fun `MailTemplate NewPosts 생성자는 원본 텍스트를 유지한다`() {
         val summary = MailTemplate.NewPosts.PostSummary(
             techBlogId = 1L,
             techBlogIcon = "https://example.com/icon.png",
@@ -39,14 +34,14 @@ class SendAlarmEmailTaskletTest : UnitTest() {
             url = "https://example.com/post-1",
         )
 
-        summary.title.length shouldBe 36
-        summary.title.endsWith("...") shouldBe true
+        summary.title.length shouldBe 40
+        summary.title.endsWith("...") shouldBe false
 
-        detail.title.length shouldBe 34
-        detail.title.endsWith("...") shouldBe true
+        detail.title.length shouldBe 40
+        detail.title.endsWith("...") shouldBe false
 
-        detail.description.length shouldBe 254
-        detail.description.endsWith("...") shouldBe true
+        detail.description.length shouldBe 260
+        detail.description.endsWith("...") shouldBe false
     }
 
     @Test
@@ -57,12 +52,7 @@ class SendAlarmEmailTaskletTest : UnitTest() {
 
         coEvery { queueMemory.drain("ALARM_CONTENTS", AlarmContent::class.java, 200) } returns emptyList()
 
-        val result = sut.execute(
-            contribution = contribution(),
-            chunkContext = chunkContext(),
-        )
-
-        result shouldBe RepeatStatus.FINISHED
+        runBlocking { sut.run(emptyMap()) }
         coVerify(exactly = 1) { queueMemory.drain("ALARM_CONTENTS", AlarmContent::class.java, 200) }
         coVerify(exactly = 0) { mailSender.send(any<MailContent.Template>()) }
     }
@@ -84,12 +74,7 @@ class SendAlarmEmailTaskletTest : UnitTest() {
         } returnsMany listOf(listOf(alarm), emptyList())
         coEvery { mailSender.send(capture(sent)) } returns Unit
 
-        val result = sut.execute(
-            contribution = contribution(),
-            chunkContext = chunkContext(),
-        )
-
-        result shouldBe RepeatStatus.FINISHED
+        runBlocking { sut.run(emptyMap()) }
         coVerify(exactly = 2) { queueMemory.drain("ALARM_CONTENTS", AlarmContent::class.java, 200) }
         coVerify(exactly = 1) { mailSender.send(any<MailContent.Template>()) }
 
@@ -129,12 +114,7 @@ class SendAlarmEmailTaskletTest : UnitTest() {
         } returnsMany listOf(listOf(first, second), emptyList())
         coEvery { mailSender.send(any<MailContent.Template>()) } throws IllegalStateException("mail down") andThen Unit
 
-        val result = sut.execute(
-            contribution = contribution(),
-            chunkContext = chunkContext(),
-        )
-
-        result shouldBe RepeatStatus.FINISHED
+        runBlocking { sut.run(emptyMap()) }
         coVerify(exactly = 2) { mailSender.send(any<MailContent.Template>()) }
     }
 
@@ -167,13 +147,4 @@ class SendAlarmEmailTaskletTest : UnitTest() {
             )
         )
 
-    private fun contribution(): StepContribution {
-        val stepExecution = StepExecution("sendAlarmEmailStep", JobExecution(1L))
-        return StepContribution(stepExecution)
-    }
-
-    private fun chunkContext(): ChunkContext {
-        val stepExecution = StepExecution("sendAlarmEmailStep", JobExecution(1L))
-        return ChunkContext(StepContext(stepExecution))
-    }
 }

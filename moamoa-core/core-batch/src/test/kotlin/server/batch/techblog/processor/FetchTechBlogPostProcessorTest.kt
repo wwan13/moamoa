@@ -1,4 +1,4 @@
-package server.batch.techblog.processor
+package server.batch.techblog.collecttechblogpost.processor
 
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -7,8 +7,9 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import kotlinx.coroutines.flow.flowOf
-import server.batch.techblog.dto.TechBlogKey
-import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
+import kotlinx.coroutines.runBlocking
+import server.batch.techblog.collecttechblogpost.dto.TechBlogKey
+import server.batch.techblog.collecttechblogpost.monitoring.TechBlogCollectMonitorStore
 import server.techblog.TechBlogPostCategory
 import server.techblog.TechBlogPostCatetorizer
 import server.techblog.TechBlogPost
@@ -25,7 +26,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 100L, 10L)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore)
         val techBlogKey = TechBlogKey(id = 7L, techBlogKey = "wanted", title = "Wanted")
         val post = TechBlogPost(
             key = "p1",
@@ -42,7 +43,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         coEvery { source.getPosts(10) } returns flowOf(post)
         coEvery { monitorStore.recordFetchSuccess(100L, techBlogKey, 1) } returns Unit
 
-        val result = sut.process(techBlogKey)
+        val result = runBlocking { sut.process(techBlogKey, runId = 100L, postLimit = 10) }
 
         result?.size shouldBe 1
         result?.first()?.key shouldBe "p1"
@@ -57,14 +58,14 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 101L, null)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore)
         val techBlogKey = TechBlogKey(id = 8L, techBlogKey = "kakao", title = "Kakao")
 
         every { sources["kakao"] } returns source
         coEvery { source.getPosts(null) } returns flowOf()
         coEvery { monitorStore.recordFetchSuccess(101L, techBlogKey, 0) } returns Unit
 
-        val result = sut.process(techBlogKey)
+        val result = runBlocking { sut.process(techBlogKey, runId = 101L, postLimit = null) }
 
         result shouldBe emptyList()
         coVerify(exactly = 1) { monitorStore.recordFetchSuccess(101L, techBlogKey, 0) }
@@ -76,7 +77,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 102L, 5L)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore)
         val techBlogKey = TechBlogKey(id = 9L, techBlogKey = "bad", title = "Bad")
         val throwable = IllegalStateException("boom")
 
@@ -84,7 +85,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         coEvery { source.getPosts(5) } throws throwable
         coEvery { monitorStore.recordFetchFailure(102L, techBlogKey, throwable) } returns Unit
 
-        val result = sut.process(techBlogKey)
+        val result = runBlocking { sut.process(techBlogKey, runId = 102L, postLimit = 5) }
 
         result shouldBe emptyList()
         coVerify(exactly = 1) { monitorStore.recordFetchFailure(102L, techBlogKey, throwable) }
@@ -96,7 +97,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 103L, 10L)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore)
         val techBlogKey = TechBlogKey(id = 10L, techBlogKey = "ok", title = "OK")
         val post = TechBlogPost(
             key = "p2",
@@ -113,7 +114,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         coEvery { source.getPosts(10) } returns flowOf(post)
         coEvery { monitorStore.recordFetchSuccess(103L, techBlogKey, 1) } throws IllegalStateException("redis down")
 
-        val result = sut.process(techBlogKey)
+        val result = runBlocking { sut.process(techBlogKey, runId = 103L, postLimit = 10) }
 
         result?.size shouldBe 1
         result?.first()?.key shouldBe "p2"
@@ -125,7 +126,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 104L, 10L)
+        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore)
         val techBlogKey = TechBlogKey(id = 11L, techBlogKey = "none", title = "None")
         val post = TechBlogPost(
             key = "p3",
@@ -142,7 +143,7 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
         coEvery { source.getPosts(10) } returns flowOf(post)
         coEvery { monitorStore.recordFetchSuccess(104L, techBlogKey, 1) } returns Unit
 
-        val result = sut.process(techBlogKey)
+        val result = runBlocking { sut.process(techBlogKey, runId = 104L, postLimit = 10) }
 
         result?.size shouldBe 1
         result?.first()?.categoryId shouldBe 999L

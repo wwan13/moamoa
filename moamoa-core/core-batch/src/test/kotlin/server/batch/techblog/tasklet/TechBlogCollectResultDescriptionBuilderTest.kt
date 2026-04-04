@@ -1,12 +1,12 @@
-package server.batch.techblog.tasklet
+package server.batch.techblog.notifytechblogcollectresult.job
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import server.batch.techblog.monitoring.FetchStatus
-import server.batch.techblog.monitoring.NotifyResultType
-import server.batch.techblog.monitoring.TechBlogCollectMonitorSnapshot
-import server.batch.techblog.monitoring.TechBlogCollectSourceResult
-import server.batch.techblog.monitoring.TechBlogCollectTotals
+import server.batch.techblog.collecttechblogpost.monitoring.FetchStatus
+import server.batch.techblog.collecttechblogpost.monitoring.NotifyResultType
+import server.batch.techblog.collecttechblogpost.monitoring.TechBlogCollectMonitorSnapshot
+import server.batch.techblog.collecttechblogpost.monitoring.TechBlogCollectSourceResult
+import server.batch.techblog.collecttechblogpost.monitoring.TechBlogCollectTotals
 import test.UnitTest
 
 class TechBlogCollectResultDescriptionBuilderTest : UnitTest() {
