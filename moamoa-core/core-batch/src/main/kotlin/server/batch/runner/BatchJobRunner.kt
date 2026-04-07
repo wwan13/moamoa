@@ -1,30 +1,36 @@
 package server.batch.runner
 
+import org.springframework.batch.core.Job
+import org.springframework.batch.core.JobParametersBuilder
 import org.springframework.stereotype.Service
-import server.batch.common.job.CoroutineBatchJob
-import server.batch.common.queue.CoroutineJobQueue
+import server.batch.common.queue.BatchQueue
 
 @Service
 internal class BatchJobRunner(
-    private val jobQueue: CoroutineJobQueue,
-    coroutineJobs: List<CoroutineBatchJob>,
+    private val batchQueue: BatchQueue,
+    jobs: List<Job>,
 ) {
-    private val coroutineJobsByName = coroutineJobs.associateBy { it.jobName }
+    private val jobsByName = jobs.associateBy { it.name }
 
     fun enqueue(command: BatchJobRunCommand): BatchJobRunResult {
+        val job = jobsByName[command.jobName]
+            ?: throw IllegalArgumentException("지원하지 않는 job 입니다: ${command.jobName}")
+
         if (command.parameters.containsKey("run.id")) {
             throw IllegalArgumentException("run.id 는 자동으로 생성됩니다")
         }
 
         val runId = System.currentTimeMillis()
-        val coroutineJob = coroutineJobsByName[command.jobName]
-            ?: throw IllegalArgumentException("지원하지 않는 job 입니다: ${command.jobName}")
+        val params = JobParametersBuilder()
+            .addLong("run.id", runId)
+            .apply {
+                command.parameters.forEach { (key, value) ->
+                    addString(key, value)
+                }
+            }
+            .toJobParameters()
 
-        val params = buildMap {
-            put("run.id", runId.toString())
-            putAll(command.parameters)
-        }
-        jobQueue.enqueue(coroutineJob, params)
+        batchQueue.enqueue(job, params)
 
         return BatchJobRunResult(
             jobName = command.jobName,

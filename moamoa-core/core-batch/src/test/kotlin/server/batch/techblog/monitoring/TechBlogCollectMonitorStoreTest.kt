@@ -1,11 +1,11 @@
-package server.batch.techblog.collecttechblogpost.monitoring
+package server.batch.techblog.monitoring
 
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.batch.techblog.collecttechblogpost.dto.TechBlogKey
+import server.batch.techblog.dto.TechBlogKey
 import server.cache.CacheMemory
 import test.UnitTest
 

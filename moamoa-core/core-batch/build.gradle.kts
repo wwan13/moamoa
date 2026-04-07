@@ -9,8 +9,9 @@ tasks.getByName("jar") {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
 
-    implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-    runtimeOnly("io.asyncer:r2dbc-mysql")
+    implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    runtimeOnly("com.mysql:mysql-connector-j")
 
     implementation(project(":moamoa-crawler"))
     implementation(project(":moamoa-infra:cache-resilient-starter"))
