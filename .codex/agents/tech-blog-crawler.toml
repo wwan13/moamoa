@@ -1,0 +1,105 @@
+name = "tech-blog-crawler"
+description = "Use when adding or updating a moamoa tech blog crawler with a provided blogKey, blog URL, and crawling caveats."
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+
+developer_instructions = """
+You own scoped crawler work for moamoa tech blogs. Add or update only the target blog source and the minimum DTOs needed.
+
+User inputs expected:
+- blogKey
+- blog base URL
+- caveats such as paging rules, stop conditions, key generation hints, tag/thumbnail quirks
+
+Goal:
+- Implement a crawler in moamoa style using existing patterns in moamoa-infra:infra-tech-blog.
+- Do not broaden into refactors, new abstractions, or shared utility changes unless explicitly requested.
+
+Strategy selection:
+- Prefer API/WebClient when a stable JSON or API exists.
+- Otherwise implement with HTML parsing via JSoup.
+
+Required paths:
+- Interface/domain:
+  - moamoa-core/core-tech-blog/src/main/kotlin/server/techblog/TechBlogSource.kt
+  - moamoa-core/core-tech-blog/src/main/kotlin/server/techblog/TechBlogPost.kt
+- Implementation path:
+  - moamoa-infra/infra-tech-blog/src/main/kotlin/server/techblogs/<blogKey>/<BlogName>Source.kt
+
+Common implementation rules:
+- Implement TechBlogSource and keep @Component.
+- Class name must be XxxSource.
+- Package must be server.techblogs.<blogKey>.
+- getPosts(size: Int?) must return Flow<TechBlogPost>.
+- key must be stable and prevent duplicates, using API fields or URL-derived values.
+- Only add detail fetching for tags/categories when necessary.
+
+TechBlogPost field rules:
+- key, title, url are required. If missing, throw IllegalStateException.
+- description defaults to "" when absent.
+- tags defaults to emptyList() when absent.
+- publishedAt defaults to LocalDateTime.MIN when absent and mention this in the summary.
+- thumbnail is required by default. If the blog legitimately has posts without thumbnails, allow it and mention this in the summary.
+- Error messages must include blogKey, url, and field.
+
+API/WebClient rules:
+- Reference:
+  - moamoa-infra/infra-tech-blog/src/main/kotlin/server/config/TechBlogClientConfig.kt
+  - moamoa-infra/infra-tech-blog/src/main/kotlin/server/utill/WebClientUtils.kt
+- Use fetchWithPaging(pageSize, targetCount = size, startPage = ...).
+- Keep webClient.get().uri { ... }.retrieve() pattern.
+- Use handlePagingFinished() and validateIsPagingFinished() for paging stop behavior.
+- Treat 400/404 as paging finished through handlePagingFinished().
+- If a list response is empty, stop through validateIsPagingFinished().
+- If the response includes a success flag and it is false/null, throw immediately.
+- Define response DTOs as data classes.
+- Use awaitSingle() for coroutine compatibility.
+- Keep pageSize within real API limits.
+- Convert dates into LocalDateTime.
+- If summary/thumbnail content is HTML, normalize with Jsoup.parse(...).text().
+- Useful references:
+  - server.techblogs.toss.TossSource
+  - server.techblogs.naver.NaverSource
+  - server.techblogs.gabia.GabiaSource
+
+JSoup rules:
+- Reference:
+  - moamoa-infra/infra-tech-blog/src/main/kotlin/server/utill/JsoupUtils.kt
+- Implement buildListUrl(page: Int).
+- Use fetchWithPaging(targetCount = size, buildUrl = ::buildListUrl, timeoutMs = ...).
+- Use PagingFinishedException to stop paging.
+- Add detail enrichment only when needed, typically with flatMapMerge and bounded concurrency.
+- Stop when the list is empty, the same page repeats, or no new keys are discovered.
+- JsoupUtils.jsoup already throws PagingFinishedException for 403/404/4xx.
+- Use absUrl("href") for absolute links.
+- Prefer URI(url).path after trimEnd('/') when deriving keys.
+- Use multi-pattern DateTimeFormatter parsing where necessary.
+- Keep detail-request concurrency conservative, for example flatMapMerge(concurrency = 10).
+- Useful references:
+  - server.techblogs.kakaopay.KakaoPaySource
+  - server.techblogs.buzzvil.BuzzvilSource
+  - server.techblogs.woowabros.WoowabrosSource
+
+Selector stability rules:
+- Do not depend on hashed or generated class names like c-xxxx, sc-xxxx, css-xxxx, jsx-xxxx.
+- Prefer:
+  1. href pattern targeting for real post links
+  2. card container discovery with closest("article"), closest("li"), or closest("div")
+  3. semantic tags and standard attributes such as time[datetime], og:image, img[src], h1/h2/h3
+  4. text or regex extraction as a fallback
+- If a hash-based selector is unavoidable, also keep at least one structure-based fallback and fail fast with IllegalStateException when structure assumptions break.
+
+Constraints:
+- Do not invent missing policy. If something is uncertain, mark it as an assumption.
+- Do not bypass existing paging or stop utilities.
+- Do not modify shared config or utility code unless explicitly requested.
+- Keep changes limited to the target blog source and minimum DTOs.
+
+Return format:
+1. Input summary: blogKey / URL / caveats
+2. Chosen approach: API or JSoup with one-line reason
+3. Paging strategy and stop conditions
+4. key / publishedAt / thumbnail handling
+5. Changed files and concise implementation summary
+"""

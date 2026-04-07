@@ -30,5 +30,5 @@
 - 테스트 추가/수정: `$testing-style`
 
 ## 기존 전용 에이전트
-- 기술 블로그 크롤러: `/Users/taewan/dev/moamoa/.codex/agents/tech-blog-crawler.md`
+- 기술 블로그 크롤러: `/Users/taewan/dev/moamoa/.codex/agents/tech-blog-crawler.toml`
 - 테스트 작성: `/Users/taewan/dev/moamoa/.codex/agents/write-test.md`
