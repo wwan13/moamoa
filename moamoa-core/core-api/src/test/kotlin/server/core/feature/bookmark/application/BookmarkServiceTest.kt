@@ -12,11 +12,12 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.bookmark.domain.BookmarkRepository
-import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
+import server.core.feature.bookmark.infra.BookmarkEventPublisher
+import server.core.feature.bookmark.infra.BookmarkLock
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.post.domain.PostRepository
 import server.core.fixture.createPost
-import server.core.infra.event.TransactionalEventPublisher
+import server.core.global.security.UnauthorizedException
 import server.lock.KeyedLock
 import test.UnitTest
 
@@ -26,12 +27,10 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
         val service = createService(
             bookmarkRepository = bookmarkRepository,
             postRepository = postRepository,
             memberRepository = memberRepository,
-            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -56,12 +55,12 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val bookmarkEventPublisher = mockk<BookmarkEventPublisher>(relaxed = true)
         val service = createService(
             bookmarkRepository = bookmarkRepository,
             postRepository = postRepository,
             memberRepository = memberRepository,
-            eventPublisher = eventPublisher,
+            bookmarkEventPublisher = bookmarkEventPublisher,
         )
 
         val memberId = 1L
@@ -78,13 +77,11 @@ class BookmarkServiceTest : UnitTest() {
         service.bookmark(command, memberId)
 
         verify(exactly = 1) {
-            eventPublisher.publish(
-                match<BookmarkUpdatedEvent> {
+            bookmarkEventPublisher.publishBookmarked(
+                match<Bookmark> {
                     it.memberId == memberId &&
-                        it.postId == command.postId &&
-                        it.bookmarked
-                },
-                any()
+                        it.postId == command.postId
+                }
             )
         }
     }
@@ -94,12 +91,12 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val bookmarkEventPublisher = mockk<BookmarkEventPublisher>(relaxed = true)
         val service = createService(
             bookmarkRepository = bookmarkRepository,
             postRepository = postRepository,
             memberRepository = memberRepository,
-            eventPublisher = eventPublisher,
+            bookmarkEventPublisher = bookmarkEventPublisher,
         )
 
         val memberId = 1L
@@ -113,7 +110,7 @@ class BookmarkServiceTest : UnitTest() {
         service.bookmark(command, memberId)
 
         coVerify(exactly = 0) { bookmarkRepository.save(any()) }
-        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
+        verify(exactly = 0) { bookmarkEventPublisher.publishBookmarked(any()) }
     }
 
     @Test
@@ -121,12 +118,10 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
         val service = createService(
             bookmarkRepository = bookmarkRepository,
             postRepository = postRepository,
             memberRepository = memberRepository,
-            eventPublisher = eventPublisher,
         )
 
         val memberId = 1L
@@ -146,12 +141,12 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val bookmarkEventPublisher = mockk<BookmarkEventPublisher>(relaxed = true)
         val service = createService(
             bookmarkRepository = bookmarkRepository,
             postRepository = postRepository,
             memberRepository = memberRepository,
-            eventPublisher = eventPublisher,
+            bookmarkEventPublisher = bookmarkEventPublisher,
         )
 
         val memberId = 1L
@@ -164,14 +159,7 @@ class BookmarkServiceTest : UnitTest() {
         service.unbookmark(command, memberId)
 
         verify(exactly = 1) {
-            eventPublisher.publish(
-                match<BookmarkUpdatedEvent> {
-                    it.memberId == memberId &&
-                        it.postId == command.postId &&
-                        !it.bookmarked
-                },
-                any()
-            )
+            bookmarkEventPublisher.publishUnbookmarked(existing)
         }
     }
 
@@ -180,12 +168,12 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val bookmarkEventPublisher = mockk<BookmarkEventPublisher>(relaxed = true)
         val service = createService(
             bookmarkRepository = bookmarkRepository,
             postRepository = postRepository,
             memberRepository = memberRepository,
-            eventPublisher = eventPublisher,
+            bookmarkEventPublisher = bookmarkEventPublisher,
         )
 
         val memberId = 1L
@@ -195,7 +183,7 @@ class BookmarkServiceTest : UnitTest() {
 
         service.unbookmark(command, memberId)
 
-        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
+        verify(exactly = 0) { bookmarkEventPublisher.publishUnbookmarked(any()) }
     }
 
     @Test
@@ -203,12 +191,12 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val bookmarkEventPublisher = mockk<BookmarkEventPublisher>(relaxed = true)
         val service = createService(
             bookmarkRepository = bookmarkRepository,
             postRepository = postRepository,
             memberRepository = memberRepository,
-            eventPublisher = eventPublisher,
+            bookmarkEventPublisher = bookmarkEventPublisher,
         )
 
         val memberId = 1L
@@ -216,14 +204,13 @@ class BookmarkServiceTest : UnitTest() {
 
         coEvery { memberRepository.existsById(memberId) } returns false
 
-        val exception = shouldThrow<NoSuchElementException> {
+        shouldThrow<UnauthorizedException> {
             service.bookmark(command, memberId)
         }
 
-        exception.message shouldBe "존재하지 않는 사용자 입니다."
         coVerify(exactly = 0) { postRepository.existsById(any()) }
         coVerify(exactly = 0) { bookmarkRepository.findByMemberIdAndPostId(any(), any()) }
-        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
+        verify(exactly = 0) { bookmarkEventPublisher.publishBookmarked(any()) }
     }
 
     @Test
@@ -231,12 +218,12 @@ class BookmarkServiceTest : UnitTest() {
         val bookmarkRepository = mockk<BookmarkRepository>()
         val postRepository = mockk<PostRepository>()
         val memberRepository = mockk<MemberRepository>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val bookmarkEventPublisher = mockk<BookmarkEventPublisher>(relaxed = true)
         val service = createService(
             bookmarkRepository = bookmarkRepository,
             postRepository = postRepository,
             memberRepository = memberRepository,
-            eventPublisher = eventPublisher,
+            bookmarkEventPublisher = bookmarkEventPublisher,
         )
 
         val memberId = 1L
@@ -251,7 +238,7 @@ class BookmarkServiceTest : UnitTest() {
 
         exception.message shouldBe "존재하지 않는 게시글 입니다."
         coVerify(exactly = 0) { bookmarkRepository.findByMemberIdAndPostId(any(), any()) }
-        verify(exactly = 0) { eventPublisher.publish(any(), any()) }
+        verify(exactly = 0) { bookmarkEventPublisher.publishBookmarked(any()) }
     }
 
     @Test
@@ -310,13 +297,13 @@ class BookmarkServiceTest : UnitTest() {
         postRepository: PostRepository,
         memberRepository: MemberRepository,
         keyedLock: KeyedLock = passThroughKeyedLock(),
-        eventPublisher: TransactionalEventPublisher = mockk(relaxed = true),
+        bookmarkEventPublisher: BookmarkEventPublisher = mockk(relaxed = true),
     ): BookmarkService = BookmarkService(
         bookmarkRepository = bookmarkRepository,
         postRepository = postRepository,
         memberRepository = memberRepository,
-        keyedLock = keyedLock,
-        eventPublisher = eventPublisher,
+        bookmarkLock = BookmarkLock(keyedLock),
+        bookmarkEventPublisher = bookmarkEventPublisher,
     )
 
     private fun passThroughKeyedLock(): KeyedLock = object : KeyedLock {
