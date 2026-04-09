@@ -5,16 +5,13 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.bookmark.domain.Bookmark
 import server.core.feature.bookmark.domain.BookmarkRepository
-import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
 import server.core.feature.bookmark.infra.BookmarkEventPublisher
 import server.core.feature.bookmark.infra.BookmarkLock
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.post.application.PostData
 import server.core.feature.post.domain.PostRepository
 import server.core.global.security.UnauthorizedException
-import server.core.infra.event.TransactionalEventPublisher
 import server.global.logging.biz
-import server.lock.KeyedLock
 
 @Service
 @Transactional

@@ -4,13 +4,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
-import server.lock.KeyedLock
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class WarmupCoordinator(
-    private val keyedLock: server.lock.KeyedLock,
+    private val warmupLock: WarmupLock,
     @param:Qualifier("singleFlightWarmupScope")
     private val warmupScope: CoroutineScope,
 ) {
@@ -21,7 +20,7 @@ class WarmupCoordinator(
 
         warmupScope.launch {
             try {
-                keyedLock.withLock(key) {
+                warmupLock.withLock(key) {
                     block()
                 }
             } finally {

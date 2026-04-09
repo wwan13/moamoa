@@ -9,7 +9,6 @@ import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.infra.cache.WarmupCoordinator
 import server.lock.KeyedLock
 import test.UnitTest
 import java.util.concurrent.ConcurrentHashMap
@@ -77,7 +76,7 @@ class WarmupCoordinatorTest : UnitTest() {
                 CoroutineExceptionHandler { _, _ -> }
         )
         return WarmupCoordinator(
-            keyedLock = TestKeyedLock(),
+            warmupLock = WarmupLock(TestKeyedLock()),
             warmupScope = scope,
         )
     }

@@ -17,13 +17,12 @@ import server.core.feature.member.application.CreateSocialMemberCommand
 import server.core.feature.member.application.EmailExistsCommand
 import server.core.feature.member.application.MemberService
 import server.core.feature.member.domain.Member
-import server.core.feature.member.domain.MemberCreateEvent
 import server.core.feature.member.domain.MemberRepository
 import server.core.feature.member.domain.Provider
+import server.core.feature.member.infra.MemberEventPublisher
 import server.core.fixture.createMember
 import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException
-import server.core.infra.event.TransactionalEventPublisher
 import server.password.PasswordEncoder
 import test.UnitTest
 import java.util.Optional
@@ -63,7 +62,7 @@ class MemberServiceTest : UnitTest() {
 
         exception.message shouldBe "이미 가입된 이메일 입니다."
         coVerify(exactly = 0) { fixture.memberRepository.save(any()) }
-        verify(exactly = 0) { fixture.eventPublisher.publish(any(), any()) }
+        verify(exactly = 0) { fixture.memberEventPublisher.publishCreated(any()) }
     }
 
     @Test
@@ -90,11 +89,10 @@ class MemberServiceTest : UnitTest() {
         savedSlot.captured.password shouldBe "encoded-password"
         savedSlot.captured.provider shouldBe Provider.INTERNAL
         verify(exactly = 1) {
-            fixture.eventPublisher.publish(
-                match<MemberCreateEvent> {
-                    it.memberId == savedMember.id && it.email == savedMember.email
-                },
-                any()
+            fixture.memberEventPublisher.publishCreated(
+                match<Member> {
+                    it.id == savedMember.id && it.email == savedMember.email
+                }
             )
         }
     }
@@ -133,7 +131,7 @@ class MemberServiceTest : UnitTest() {
 
         exception.message shouldBe "이미 가입된 이메일 입니다."
         coVerify(exactly = 0) { fixture.memberRepository.save(any()) }
-        verify(exactly = 0) { fixture.eventPublisher.publish(any(), any()) }
+        verify(exactly = 0) { fixture.memberEventPublisher.publishCreated(any()) }
     }
 
     @Test
@@ -165,11 +163,10 @@ class MemberServiceTest : UnitTest() {
         savedSlot.captured.provider shouldBe command.provider
         savedSlot.captured.providerKey shouldBe command.providerKey
         verify(exactly = 1) {
-            fixture.eventPublisher.publish(
-                match<MemberCreateEvent> {
-                    it.memberId == savedMember.id && it.email == savedMember.email
-                },
-                any()
+            fixture.memberEventPublisher.publishCreated(
+                match<Member> {
+                    it.id == savedMember.id && it.email == savedMember.email
+                }
             )
         }
     }
@@ -200,11 +197,10 @@ class MemberServiceTest : UnitTest() {
         result.token.isNotBlank() shouldBe true
         coVerify(exactly = 1) { fixture.socialMemberSessionCache.set(result.token, savedMember.id) }
         verify(exactly = 1) {
-            fixture.eventPublisher.publish(
-                match<MemberCreateEvent> {
-                    it.memberId == savedMember.id && it.email == savedMember.email
-                },
-                any()
+            fixture.memberEventPublisher.publishCreated(
+                match<Member> {
+                    it.id == savedMember.id && it.email == savedMember.email
+                }
             )
         }
     }
@@ -225,7 +221,7 @@ class MemberServiceTest : UnitTest() {
         }
 
         coVerify(exactly = 0) { fixture.socialMemberSessionCache.set(any(), any()) }
-        verify(exactly = 0) { fixture.eventPublisher.publish(any(), any()) }
+        verify(exactly = 0) { fixture.memberEventPublisher.publishCreated(any()) }
     }
 
     @Test
@@ -434,13 +430,13 @@ class MemberServiceTest : UnitTest() {
         val memberRepository = mockk<MemberRepository>()
         val passwordEncoder = mockk<PasswordEncoder>()
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
-        val eventPublisher = mockk<TransactionalEventPublisher>(relaxed = true)
+        val memberEventPublisher = mockk<MemberEventPublisher>(relaxed = true)
 
         val service = MemberService(
             memberRepository = memberRepository,
             passwordEncoder = passwordEncoder,
             socialMemberSessionCache = socialMemberSessionCache,
-            eventPublisher = eventPublisher,
+            memberEventPublisher = memberEventPublisher,
         )
 
         return Fixture(
@@ -448,7 +444,7 @@ class MemberServiceTest : UnitTest() {
             memberRepository = memberRepository,
             passwordEncoder = passwordEncoder,
             socialMemberSessionCache = socialMemberSessionCache,
-            eventPublisher = eventPublisher,
+            memberEventPublisher = memberEventPublisher,
         )
     }
 
@@ -457,6 +453,6 @@ class MemberServiceTest : UnitTest() {
         val memberRepository: MemberRepository,
         val passwordEncoder: PasswordEncoder,
         val socialMemberSessionCache: SocialMemberSessionCache,
-        val eventPublisher: TransactionalEventPublisher,
+        val memberEventPublisher: MemberEventPublisher,
     )
 }
