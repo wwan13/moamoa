@@ -50,7 +50,7 @@ class MemberService(
 
     fun createSocialMemberWithSession(command: CreateSocialMemberCommand): CreateSocialMemberResult {
         val member = createMember(
-            Member.Companion.fromSocial(
+            Member.fromSocial(
                 email = command.email,
                 provider = command.provider,
                 providerKey = command.providerKey,

@@ -33,7 +33,7 @@ class PostStatsReader(
 
         if (dbMap.isNotEmpty()) {
             val cacheKeys = dbMap.keys.map(postStatsCache::key)
-            val warmupKey = WarmupCoordinator.Companion.msetKey("PostStatsCache", cacheKeys)
+            val warmupKey = WarmupCoordinator.msetKey("PostStatsCache", cacheKeys)
             warmupCoordinator.launchIfAbsent(warmupKey) {
                 postStatsCache.mSet(dbMap)
             }

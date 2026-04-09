@@ -33,7 +33,7 @@ class TechBlogStatsReader(
         }
         if (dbMap.isNotEmpty()) {
             val cacheKeys = dbMap.keys.map(techBlogSummaryCache::key)
-            val warmupKey = WarmupCoordinator.Companion.msetKey("TechBlogSummaryCache", cacheKeys)
+            val warmupKey = WarmupCoordinator.msetKey("TechBlogSummaryCache", cacheKeys)
             warmupCoordinator.launchIfAbsent(warmupKey) {
                 techBlogSummaryCache.mSet(dbMap)
             }
