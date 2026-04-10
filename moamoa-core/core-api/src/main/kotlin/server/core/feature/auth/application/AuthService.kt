@@ -13,7 +13,6 @@ import server.token.TokenProvider
 import server.token.TokenType
 
 @Service
-@Transactional
 class AuthService(
     private val memberRepository: MemberRepository,
     private val tokenProvider: TokenProvider,

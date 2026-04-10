@@ -12,11 +12,12 @@ import server.core.support.paging.calculateTotalPage
 import server.core.support.query.createJdslQuery
 
 @Service
-@Transactional(readOnly = true)
 class NoticeQueryService(
     @PersistenceContext
     private val entityManager: EntityManager,
 ) {
+
+    @Transactional(readOnly = true)
     fun findByConditions(conditions: NoticeQueryConditions): NoticeList {
         val paging = Paging(
             size = conditions.size ?: 20,

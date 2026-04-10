@@ -14,7 +14,6 @@ import server.core.global.security.UnauthorizedException
 import server.global.logging.biz
 
 @Service
-@Transactional
 class BookmarkService(
     private val bookmarkRepository: BookmarkRepository,
     private val postRepository: PostRepository,
@@ -24,6 +23,7 @@ class BookmarkService(
 ) {
     private val logger = KotlinLogging.logger {}
 
+    @Transactional
     fun bookmark(
         command: BookmarkCommand,
         memberId: Long
@@ -48,6 +48,7 @@ class BookmarkService(
         logger.biz.info { "북마크를 등록합니다" }
     }
 
+    @Transactional
     fun unbookmark(
         command: BookmarkCommand,
         memberId: Long

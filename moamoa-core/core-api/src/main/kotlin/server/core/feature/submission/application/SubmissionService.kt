@@ -9,13 +9,13 @@ import server.core.feature.submission.infra.SubmissionEventPublisher
 import server.global.logging.biz
 
 @Service
-@Transactional
 class SubmissionService(
     private val submissionRepository: SubmissionRepository,
     private val submissionEventPublisher: SubmissionEventPublisher,
 ) {
     private val logger = KotlinLogging.logger {}
 
+    @Transactional
     fun create(
         command: SubmissionCreateCommand,
         memberId: Long

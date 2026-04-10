@@ -11,7 +11,6 @@ import server.core.infra.cache.WarmupCoordinator
 import server.core.support.query.createJdslQuery
 
 @Component
-@Transactional(readOnly = true)
 class SubscribedTechBlogReader(
     @PersistenceContext
     private val entityManager: EntityManager,
@@ -19,6 +18,7 @@ class SubscribedTechBlogReader(
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
+    @Transactional(readOnly = true)
     fun findSubscribedMap(
         memberId: Long,
         techBlogIds: List<Long>
@@ -36,6 +36,7 @@ class SubscribedTechBlogReader(
         return result
     }
 
+    @Transactional(readOnly = true)
     fun findAllSubscribedList(memberId: Long): List<SubscriptionInfo> {
         return loadAll(memberId)
     }
@@ -53,6 +54,7 @@ class SubscribedTechBlogReader(
         return subscriptions
     }
 
+    @Transactional(readOnly = true)
     fun findById(
         memberId: Long,
         techBlogId: Long

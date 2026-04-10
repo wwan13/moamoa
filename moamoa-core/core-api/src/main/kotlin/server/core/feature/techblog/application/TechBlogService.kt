@@ -5,7 +5,6 @@ import org.springframework.transaction.annotation.Transactional
 import server.core.feature.techblog.domain.TechBlogRepository
 
 @Service
-@Transactional
 class TechBlogService(
     private val techBlogRepository: TechBlogRepository
 ) {

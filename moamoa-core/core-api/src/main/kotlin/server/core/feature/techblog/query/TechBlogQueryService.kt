@@ -13,7 +13,6 @@ import server.core.infra.cache.WarmupCoordinator
 import server.core.support.query.createJdslQuery
 
 @Service
-@Transactional(readOnly = true)
 class TechBlogQueryService(
     @PersistenceContext
     private val entityManager: EntityManager,
@@ -22,6 +21,8 @@ class TechBlogQueryService(
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
+
+    @Transactional(readOnly = true)
     fun findAll(
         passport: Passport?,
         conditions: TechBlogQueryConditions
@@ -70,6 +71,7 @@ class TechBlogQueryService(
         return list
     }
 
+    @Transactional(readOnly = true)
     fun findById(passport: Passport?, techBlogId: Long): TechBlogSummary {
         val base = findTechBlogById(techBlogId)
             ?: throw NoSuchElementException("존재하지 않는 기술블로그 입니다.")

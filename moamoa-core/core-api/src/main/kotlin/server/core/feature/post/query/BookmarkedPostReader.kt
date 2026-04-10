@@ -11,7 +11,6 @@ import server.core.infra.cache.WarmupCoordinator
 import server.core.support.query.createJdslQuery
 
 @Component
-@Transactional(readOnly = true)
 class BookmarkedPostReader(
     @PersistenceContext
     private val entityManager: EntityManager,
@@ -19,6 +18,7 @@ class BookmarkedPostReader(
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
+    @Transactional(readOnly = true)
     fun findBookmarkedPostIdSet(
         memberId: Long,
         postIds: List<Long>,

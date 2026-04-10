@@ -12,7 +12,6 @@ import server.core.infra.cache.WarmupCoordinator
 import server.core.support.query.createJdslQuery
 
 @Component
-@Transactional(readOnly = true)
 class TechBlogStatsReader(
     @PersistenceContext
     private val entityManager: EntityManager,
@@ -20,6 +19,7 @@ class TechBlogStatsReader(
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
+    @Transactional(readOnly = true)
     fun findTechBlogStatsMap(techBlogIds: List<Long>): Map<Long, TechBlogStats> {
         if (techBlogIds.isEmpty()) return emptyMap()
 
@@ -53,6 +53,7 @@ class TechBlogStatsReader(
         return result
     }
 
+    @Transactional(readOnly = true)
     fun findById(techBlogId: Long): TechBlogStats? {
         val cached = techBlogSummaryCache.get(techBlogId)
         if (cached != null) {

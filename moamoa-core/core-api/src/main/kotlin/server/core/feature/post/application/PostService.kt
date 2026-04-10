@@ -7,7 +7,6 @@ import server.core.feature.post.domain.PostRepository
 import server.core.feature.post.infra.PostViewCountCache
 
 @Service
-@Transactional
 class PostService(
     private val postRepository: PostRepository,
     private val postViewCountCache: PostViewCountCache

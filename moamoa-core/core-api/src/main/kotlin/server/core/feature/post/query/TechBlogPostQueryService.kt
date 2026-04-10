@@ -17,7 +17,6 @@ import server.core.support.paging.calculateTotalPage
 import server.core.support.query.createJdslQuery
 
 @Service
-@Transactional(readOnly = true)
 class TechBlogPostQueryService(
     @PersistenceContext
     private val entityManager: EntityManager,
@@ -26,6 +25,8 @@ class TechBlogPostQueryService(
     private val postStatsReader: PostStatsReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
+
+    @Transactional(readOnly = true)
     fun findAllByConditions(
         conditions: TechBlogPostQueryConditions,
         passport: Passport?,

@@ -13,7 +13,6 @@ import server.core.global.security.UnauthorizedException
 import server.global.logging.biz
 
 @Service
-@Transactional
 class SubscriptionService(
     private val subscriptionRepository: SubscriptionRepository,
     private val techBlogRepository: TechBlogRepository,
@@ -23,6 +22,7 @@ class SubscriptionService(
 ) {
     private val logger = KotlinLogging.logger {}
 
+    @Transactional
     fun subscribe(
         command: SubscriptionCommand,
         memberId: Long
@@ -48,6 +48,7 @@ class SubscriptionService(
         logger.biz.info { "기술 블로그를 구독합니다" }
     }
 
+    @Transactional
     fun unsubscribe(
         command: SubscriptionCommand,
         memberId: Long
@@ -61,6 +62,7 @@ class SubscriptionService(
         logger.biz.info { "기술 블로그 구독을 해제합니다" }
     }
 
+    @Transactional
     fun enableNotification(
         command: SubscriptionCommand,
         memberId: Long
@@ -74,6 +76,7 @@ class SubscriptionService(
         logger.biz.info { "기술 블로그 알림을 활성화합니다" }
     }
 
+    @Transactional
     fun disableNotification(
         command: SubscriptionCommand,
         memberId: Long

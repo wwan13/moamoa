@@ -15,7 +15,6 @@ import kotlin.collections.emptyMap
 import kotlin.collections.forEach
 
 @Service
-@Transactional(readOnly = true)
 class SubscribedTechBlogQueryService(
     @PersistenceContext
     private val entityManager: EntityManager,
@@ -23,6 +22,8 @@ class SubscribedTechBlogQueryService(
     private val techBlogSummaryCache: TechBlogSummaryCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
+
+    @Transactional(readOnly = true)
     fun findSubscribingTechBlogs(passport: Passport): TechBlogList {
         val techBlogs = loadAll(passport.memberId)
         val meta = TechBlogListMeta(totalCount = techBlogs.size.toLong())

@@ -10,7 +10,6 @@ import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
 import server.core.feature.techblog.infra.SubscriptionCache
 
 @Service
-@Transactional(readOnly = true)
 class MemberQueryService(
     private val memberRepository: MemberRepository,
     private val subscriptionRepository: SubscriptionRepository,
@@ -18,6 +17,8 @@ class MemberQueryService(
     private val subscriptionCache: SubscriptionCache,
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache
 ) {
+
+    @Transactional(readOnly = true)
     fun findById(memberId: Long): MemberSummary {
         val member = memberRepository.findByIdOrNull(memberId)
             ?: throw NoSuchElementException("존재하지 않는 사용자 입니다.")

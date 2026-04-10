@@ -11,7 +11,6 @@ import server.core.infra.cache.WarmupCoordinator
 import server.core.support.query.createJdslQuery
 
 @Component
-@Transactional(readOnly = true)
 class PostStatsReader(
     @PersistenceContext
     private val entityManager: EntityManager,
@@ -19,6 +18,7 @@ class PostStatsReader(
     private val warmupCoordinator: WarmupCoordinator,
 ) {
 
+    @Transactional(readOnly = true)
     fun findPostStatsMap(postIds: List<Long>): Map<Long, PostStats> {
         if (postIds.isEmpty()) return emptyMap()
 

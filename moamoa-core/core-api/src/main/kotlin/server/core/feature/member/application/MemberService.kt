@@ -16,7 +16,6 @@ import server.password.PasswordEncoder
 import java.util.*
 
 @Service
-@Transactional
 class MemberService(
     private val memberRepository: MemberRepository,
     private val passwordEncoder: PasswordEncoder,
@@ -25,6 +24,7 @@ class MemberService(
 ) {
     private val logger = KotlinLogging.logger {}
 
+    @Transactional
     fun createInternalMember(command: CreateInternalMemberCommand): MemberData {
         if (command.password != command.passwordConfirm) {
             throw IllegalArgumentException("비밀번호가 일치하지 않습니다.")
@@ -38,6 +38,7 @@ class MemberService(
         return createMember(member)
     }
 
+    @Transactional
     fun createSocialMember(command: CreateSocialMemberCommand): MemberData {
         val member = Member.fromSocial(
             email = command.email,
@@ -47,6 +48,7 @@ class MemberService(
         return createMember(member)
     }
 
+    @Transactional
     fun createSocialMemberWithSession(command: CreateSocialMemberCommand): CreateSocialMemberResult {
         val member = createMember(
             Member.fromSocial(
@@ -94,6 +96,7 @@ class MemberService(
         return EmailExistsResult(exists)
     }
 
+    @Transactional
     fun changePassword(
         command: ChangePasswordCommand,
         passport: Passport

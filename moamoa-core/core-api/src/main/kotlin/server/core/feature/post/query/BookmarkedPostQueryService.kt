@@ -18,7 +18,6 @@ import server.core.support.paging.calculateTotalPage
 import server.core.support.query.createJdslQuery
 
 @Service
-@Transactional(readOnly = true)
 class BookmarkedPostQueryService(
     @PersistenceContext
     private val entityManager: EntityManager,
@@ -26,6 +25,8 @@ class BookmarkedPostQueryService(
     private val postStatsReader: PostStatsReader,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
+
+    @Transactional(readOnly = true)
     fun findAllByConditions(
         conditions: PostQueryConditions,
         passport: Passport,
