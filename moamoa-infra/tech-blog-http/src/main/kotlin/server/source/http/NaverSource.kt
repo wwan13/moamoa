@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactor.awaitSingle
-import org.jsoup.Jsoup
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import server.source.common.normalizeTagTitle
@@ -64,7 +63,7 @@ internal class NaverSource(
                     if (title.isBlank()) return@mapNotNull null
 
                     val description = item.postHtml
-                        ?.let { Jsoup.parse(it).text().trim() }
+                        ?.let(::stripHtml)
                         .orEmpty()
 
                     val publishedAt = item.postPublishedAt
@@ -133,6 +132,12 @@ internal class NaverSource(
     private fun epochMsToLocalDateTime(epochMs: Long): LocalDateTime =
         LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMs), zoneId)
 
+    private fun stripHtml(value: String): String =
+        value.replace(HTML_TAG_REGEX, " ")
+            .replace(HTML_ENTITY_REGEX, " ")
+            .replace(MULTI_SPACE_REGEX, " ")
+            .trim()
+
     private data class ListResponse(
         val content: List<Item>
     ) {
@@ -156,5 +161,8 @@ internal class NaverSource(
 
     companion object {
         private const val DEFAULT_THUMBNAIL = ""
+        private val HTML_TAG_REGEX = Regex("<[^>]+>")
+        private val HTML_ENTITY_REGEX = Regex("&[^;\\s]{1,10};")
+        private val MULTI_SPACE_REGEX = Regex("\\s+")
     }
 }
