@@ -15,7 +15,7 @@
 
 - `moamoa-core/core-api`: 모아모아 메인 API 서버
 - `moamoa-core/core-batch`: 모아모아 배치 작업 서버
-- `moamoa-crawler`: 기술 블로그 크롤러(계약 + HTTP + Jsoup 구현)
+- `moamoa-infra/tech-blog-*`: 기술 블로그 크롤러 계약/api, HTTP 구현, Jsoup 구현, starter
 - `moamoa-infra/cache-*`: cache 계약/구현(redis, caffeine, resilient)/starter
 - `moamoa-infra/queue-*`: queue 계약/redis 구현/starter
 - `moamoa-infra/set-*`: set 계약/redis 구현/starter
