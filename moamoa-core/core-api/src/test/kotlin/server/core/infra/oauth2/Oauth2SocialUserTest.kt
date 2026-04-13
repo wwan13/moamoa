@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.string.shouldNotBeBlank
 import org.junit.jupiter.api.Test
+import server.core.feature.auth.infra.Oauth2SocialUser
 import server.core.feature.member.domain.MemberRole
 import server.core.feature.member.domain.Provider
 import test.UnitTest

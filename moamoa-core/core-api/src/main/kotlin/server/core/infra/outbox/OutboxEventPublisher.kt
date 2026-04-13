@@ -1,4 +1,4 @@
-package server.core.infra.messagebroker
+package server.core.infra.outbox
 
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy

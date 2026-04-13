@@ -11,9 +11,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionStatus
-import server.core.infra.db.outbox.EventOutbox
-import server.core.infra.db.outbox.EventOutboxRepository
-import server.core.infra.messagebroker.OutboxPublishWorker
+import server.core.infra.outbox.EventOutbox
+import server.core.infra.outbox.EventOutboxRepository
+import server.core.infra.outbox.OutboxPublishWorker
 import server.messaging.EventPublisher
 import server.messaging.health.MessagingHealthStateManager
 import test.UnitTest

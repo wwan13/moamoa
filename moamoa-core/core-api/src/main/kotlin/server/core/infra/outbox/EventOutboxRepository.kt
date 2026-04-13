@@ -1,4 +1,4 @@
-package server.core.infra.db.outbox
+package server.core.infra.outbox
 
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.jpa.repository.JpaRepository

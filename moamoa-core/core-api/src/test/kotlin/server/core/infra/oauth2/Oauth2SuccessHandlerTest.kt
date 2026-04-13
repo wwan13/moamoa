@@ -13,6 +13,8 @@ import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.Authentication
 import server.core.feature.auth.application.AuthService
 import server.core.feature.auth.application.AuthTokens
+import server.core.feature.auth.infra.Oauth2SocialUser
+import server.core.feature.auth.infra.Oauth2SuccessHandler
 import server.core.feature.member.domain.MemberRole
 import server.core.feature.member.domain.Provider
 import server.core.feature.auth.infra.RefreshTokenCache

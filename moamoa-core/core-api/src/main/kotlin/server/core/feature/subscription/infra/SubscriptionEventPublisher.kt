@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional
 import server.core.feature.subscription.domain.NotificationUpdatedEvent
 import server.core.feature.subscription.domain.Subscription
 import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
-import server.core.infra.event.TransactionalEventPublisher
+import server.core.infra.outbox.TransactionalEventPublisher
 
 @Component
 class SubscriptionEventPublisher(

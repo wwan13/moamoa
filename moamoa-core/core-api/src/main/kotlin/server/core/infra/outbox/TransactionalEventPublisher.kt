@@ -1,17 +1,15 @@
-package server.core.infra.event
+package server.core.infra.outbox
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import server.core.infra.db.outbox.EventOutbox
-import server.core.infra.db.outbox.EventOutboxRepository
 import server.global.logging.RequestLogContextHolder
 import server.global.logging.event
 import server.messaging.Event
 import server.messaging.definition.EventChannel
-import java.util.*
+import java.util.UUID
 
 @Component
 class TransactionalEventPublisher(

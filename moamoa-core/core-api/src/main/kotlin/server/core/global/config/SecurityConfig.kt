@@ -5,9 +5,9 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.web.SecurityFilterChain
-import server.core.infra.oauth2.Oauth2FailureHandler
-import server.core.infra.oauth2.Oauth2SuccessHandler
-import server.core.infra.oauth2.Oauth2UserService
+import server.core.feature.auth.infra.Oauth2FailureHandler
+import server.core.feature.auth.infra.Oauth2SuccessHandler
+import server.core.feature.auth.infra.Oauth2UserService
 
 @Configuration
 @EnableWebSecurity

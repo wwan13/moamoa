@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.submission.domain.Submission
 import server.core.feature.submission.domain.SubmissionCreateEvent
-import server.core.infra.event.TransactionalEventPublisher
+import server.core.infra.outbox.TransactionalEventPublisher
 
 @Component
 class SubmissionEventPublisher(

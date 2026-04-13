@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.AuthenticationException
-import server.core.infra.oauth2.Oauth2FailureHandler
+import server.core.feature.auth.infra.Oauth2FailureHandler
 import test.UnitTest
 
 class Oauth2FailureHandlerTest : UnitTest() {

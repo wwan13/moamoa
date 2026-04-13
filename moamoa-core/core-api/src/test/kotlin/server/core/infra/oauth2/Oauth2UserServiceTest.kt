@@ -11,6 +11,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.OAuth2AccessToken
 import org.springframework.security.oauth2.core.user.OAuth2User
+import server.core.feature.auth.infra.Oauth2SocialUser
+import server.core.feature.auth.infra.Oauth2UserService
 import server.core.feature.member.application.CreateSocialMemberCommand
 import server.core.feature.member.application.MemberData
 import server.core.feature.member.application.MemberService

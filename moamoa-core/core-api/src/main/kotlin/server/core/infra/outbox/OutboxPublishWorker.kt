@@ -1,11 +1,10 @@
-package server.core.infra.messagebroker
+package server.core.infra.outbox
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import server.core.infra.db.outbox.EventOutboxRepository
 import server.global.logging.errorType
 import server.messaging.EventPublisher
 import server.messaging.health.MessagingHealthStateManager

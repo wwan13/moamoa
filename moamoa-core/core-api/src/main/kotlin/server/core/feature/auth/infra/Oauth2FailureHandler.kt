@@ -1,4 +1,4 @@
-package server.core.infra.oauth2
+package server.core.feature.auth.infra
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

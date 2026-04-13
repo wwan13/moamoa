@@ -1,4 +1,4 @@
-package server.core.infra.db.outbox
+package server.core.infra.outbox
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

@@ -1,4 +1,4 @@
-package server.core.infra.oauth2
+package server.core.feature.auth.infra
 
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.core.user.OAuth2User
