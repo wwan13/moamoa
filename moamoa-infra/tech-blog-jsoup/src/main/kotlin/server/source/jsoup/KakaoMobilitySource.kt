@@ -1,16 +1,12 @@
 package server.source.jsoup
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.reactor.awaitSingle
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.parser.Parser
 import org.springframework.stereotype.Component
-import org.springframework.web.reactive.function.client.WebClient
 import server.source.common.PagingFinishedException
-import server.source.http.util.fetchWithPaging
-import server.source.http.util.handlePagingFinished
-import server.source.http.util.validateIsPagingFinished
+import server.source.jsoup.util.fetchWithPaging
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
 import java.net.URI
@@ -19,31 +15,21 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
-internal class KakaoMobilitySource(
-    private val webClient: WebClient
-) : TechBlogSource {
+internal class KakaoMobilitySource : TechBlogSource {
 
     override suspend fun getPosts(size: Int?): Flow<TechBlogPost> {
-        return fetchWithPaging(pageSize = PAGE_SIZE, targetCount = size) { limit, page ->
-            if (page > 1) throw PagingFinishedException()
+        var fetched = false
+        return fetchWithPaging(targetCount = size, buildUrl = { FEED_URL }, timeoutMs = TIMEOUT_MS) { doc ->
+            if (fetched) throw PagingFinishedException()
+            fetched = true
 
-            val xml = webClient.get()
-                .uri(FEED_URL)
-                .retrieve()
-                .handlePagingFinished()
-                .bodyToMono(String::class.java)
-                .awaitSingle()
-
-            val items = parseItems(xml).let { parsed ->
-                if (limit >= parsed.size) parsed else parsed.take(limit)
-            }
-            items.validateIsPagingFinished()
+            val items = parseItems(doc)
+            if (items.isEmpty()) throw PagingFinishedException()
             items
         }
     }
 
-    private fun parseItems(xml: String): List<TechBlogPost> {
-        val doc = Jsoup.parse(xml, "", Parser.xmlParser())
+    private fun parseItems(doc: Document): List<TechBlogPost> {
         return doc.select("channel > item").mapNotNull(::toPost)
     }
 
@@ -113,7 +99,7 @@ internal class KakaoMobilitySource(
     companion object {
         private const val BLOG_KEY = "kakaoMobility"
         private const val FEED_URL = "https://developers.kakaomobility.com/techblogs.xml"
-        private const val PAGE_SIZE = 50
+        private const val TIMEOUT_MS = 10_000
         private const val DEFAULT_THUMBNAIL = ""
     }
 }
