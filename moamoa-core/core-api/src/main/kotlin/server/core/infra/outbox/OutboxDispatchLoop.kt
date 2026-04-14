@@ -9,13 +9,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.stereotype.Component
+import kotlin.time.Duration.Companion.milliseconds
 
 @Component
 class OutboxDispatchLoop(
     private val outboxEventDispatcher: OutboxEventDispatcher,
     private val outboxScope: CoroutineScope,
 ) {
-    private val log = kLogger {}
     private var loopJob: Job? = null
 
     @PostConstruct
@@ -23,18 +23,14 @@ class OutboxDispatchLoop(
         if (loopJob?.isActive == true) return
         loopJob = outboxScope.launch {
             while (isActive) {
-                val executed = runCatching {
-                    outboxEventDispatcher.dispatchBatch(batchSize = 200)
-                }.onFailure { e ->
-                    log.warn { "outbox publish loop failed" }
-                }.getOrDefault(false)
+                val executed = outboxEventDispatcher.dispatchBatch(batchSize = 200)
 
                 if (!executed) {
-                    delay(10_000)
+                    delay(10_000.milliseconds)
                     continue
                 }
 
-                delay(1_000)
+                delay(1_000.milliseconds)
             }
         }
     }
