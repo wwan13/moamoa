@@ -11,8 +11,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging.logger as kLogger
 import org.springframework.stereotype.Component
 
 @Component
-class OutboxEventPublisher(
-    private val eventOutboxPublishWorker: OutboxPublishWorker,
+class OutboxDispatchLoop(
+    private val outboxEventDispatcher: OutboxEventDispatcher,
     private val outboxScope: CoroutineScope,
 ) {
     private val log = kLogger {}
@@ -24,7 +24,7 @@ class OutboxEventPublisher(
         loopJob = outboxScope.launch {
             while (isActive) {
                 val executed = runCatching {
-                    eventOutboxPublishWorker.runOnce(batchSize = 200)
+                    outboxEventDispatcher.dispatchBatch(batchSize = 200)
                 }.onFailure { e ->
                     log.warn { "outbox publish loop failed" }
                 }.getOrDefault(false)

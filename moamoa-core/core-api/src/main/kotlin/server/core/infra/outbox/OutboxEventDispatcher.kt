@@ -10,8 +10,8 @@ import server.messaging.EventPublisher
 import server.messaging.health.MessagingHealthStateManager
 
 @Component
-class OutboxPublishWorker(
-    private val eventPublisher: EventPublisher,
+class OutboxEventDispatcher(
+    private val brokerEventPublisher: EventPublisher,
     private val eventOutboxRepository: EventOutboxRepository,
     txManager: PlatformTransactionManager,
     private val healthStateManager: MessagingHealthStateManager,
@@ -19,7 +19,7 @@ class OutboxPublishWorker(
     private val logger = KotlinLogging.logger {}
     private val transactionTemplate = TransactionTemplate(txManager)
 
-    fun runOnce(batchSize: Int): Boolean {
+    fun dispatchBatch(batchSize: Int): Boolean {
         if (healthStateManager.isDegraded()) {
             val recovered = healthStateManager.tryRecover()
             if (!recovered) return false
@@ -32,7 +32,7 @@ class OutboxPublishWorker(
             for (row in rows) {
                 try {
                     val payloadJson = row.payload
-                    eventPublisher.publish(
+                    brokerEventPublisher.publish(
                         channel = row.topic,
                         type = row.type,
                         payloadJson = payloadJson,
