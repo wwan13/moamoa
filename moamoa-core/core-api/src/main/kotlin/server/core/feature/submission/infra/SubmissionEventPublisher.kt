@@ -3,8 +3,8 @@ package server.core.feature.submission.infra
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import server.core.feature.submission.application.SubmissionCreateEvent
 import server.core.feature.submission.domain.Submission
-import server.core.feature.submission.domain.SubmissionCreateEvent
 import server.core.infra.outbox.TransactionalEventPublisher
 
 @Component

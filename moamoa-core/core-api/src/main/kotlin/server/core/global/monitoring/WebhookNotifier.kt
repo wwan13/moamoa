@@ -4,9 +4,9 @@ import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
 import server.WebhookSender
 import server.content.WebhookContent
-import server.core.feature.feedback.domain.FeedbackCreateEvent
-import server.core.feature.member.domain.MemberCreateEvent
-import server.core.feature.submission.domain.SubmissionCreateEvent
+import server.core.feature.feedback.application.FeedbackCreateEvent
+import server.core.feature.member.application.MemberCreateEvent
+import server.core.feature.submission.application.SubmissionCreateEvent
 import server.core.global.profile.isProd
 import server.messaging.annotation.EventHandler
 import server.messaging.definition.EventStream

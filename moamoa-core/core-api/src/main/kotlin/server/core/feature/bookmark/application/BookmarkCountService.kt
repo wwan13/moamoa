@@ -2,7 +2,7 @@ package server.core.feature.bookmark.application
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
+import server.core.feature.bookmark.application.BookmarkUpdatedEvent
 import server.core.feature.post.domain.PostRepository
 import server.messaging.definition.EventStream
 import server.messaging.annotation.TransactionEventHandler

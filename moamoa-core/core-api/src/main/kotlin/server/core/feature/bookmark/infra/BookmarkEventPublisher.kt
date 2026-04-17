@@ -1,10 +1,10 @@
 package server.core.feature.bookmark.infra
 
+import server.core.feature.bookmark.application.BookmarkUpdatedEvent
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.bookmark.domain.Bookmark
-import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
 import server.core.infra.outbox.TransactionalEventPublisher
 
 @Component

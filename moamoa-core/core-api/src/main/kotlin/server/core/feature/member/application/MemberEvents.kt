@@ -1,4 +1,4 @@
-package server.core.feature.member.domain
+package server.core.feature.member.application
 
 import server.messaging.Event
 

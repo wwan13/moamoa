@@ -1,4 +1,4 @@
-package server.core.feature.submission.domain
+package server.core.feature.submission.application
 
 import server.messaging.Event
 

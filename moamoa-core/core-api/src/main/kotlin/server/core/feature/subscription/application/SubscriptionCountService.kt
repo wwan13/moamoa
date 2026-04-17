@@ -2,7 +2,7 @@ package server.core.feature.subscription.application
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
+import server.core.feature.subscription.application.TechBlogSubscribeUpdatedEvent
 import server.core.feature.techblog.domain.TechBlogRepository
 import server.messaging.definition.EventStream
 import server.messaging.annotation.TransactionEventHandler

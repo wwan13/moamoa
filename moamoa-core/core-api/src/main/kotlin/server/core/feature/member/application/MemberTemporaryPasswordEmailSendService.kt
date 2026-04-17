@@ -2,7 +2,7 @@ package server.core.feature.member.application
 
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
-import server.core.feature.member.domain.ApplyTemporaryPasswordEvent
+import server.core.feature.member.application.ApplyTemporaryPasswordEvent
 import server.mail.MailContent
 import server.mail.MailSender
 import server.messaging.annotation.EventHandler

@@ -1,5 +1,6 @@
-package server.core.feature.feedback.domain
+package server.core.feature.feedback.application
 
+import server.core.feature.feedback.domain.FeedbackType
 import server.messaging.Event
 
 data class FeedbackCreateEvent(

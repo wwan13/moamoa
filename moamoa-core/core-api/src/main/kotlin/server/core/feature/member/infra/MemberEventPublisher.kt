@@ -3,9 +3,9 @@ package server.core.feature.member.infra
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import server.core.feature.member.domain.ApplyTemporaryPasswordEvent
+import server.core.feature.member.application.ApplyTemporaryPasswordEvent
 import server.core.feature.member.domain.Member
-import server.core.feature.member.domain.MemberCreateEvent
+import server.core.feature.member.application.MemberCreateEvent
 import server.core.infra.outbox.TransactionalEventPublisher
 
 @Component

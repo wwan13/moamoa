@@ -1,4 +1,4 @@
-package server.core.feature.bookmark.domain
+package server.core.feature.bookmark.application
 
 import server.messaging.Event
 

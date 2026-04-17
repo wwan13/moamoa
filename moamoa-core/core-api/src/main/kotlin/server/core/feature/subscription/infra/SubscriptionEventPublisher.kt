@@ -3,9 +3,9 @@ package server.core.feature.subscription.infra
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import server.core.feature.subscription.domain.NotificationUpdatedEvent
+import server.core.feature.subscription.application.NotificationUpdatedEvent
+import server.core.feature.subscription.application.TechBlogSubscribeUpdatedEvent
 import server.core.feature.subscription.domain.Subscription
-import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
 import server.core.infra.outbox.TransactionalEventPublisher
 
 @Component
