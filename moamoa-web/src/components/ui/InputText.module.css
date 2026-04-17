@@ -23,7 +23,7 @@
 
 /* ✅ focus 시 */
 .input:focus {
-  border-color: #252525;
+  border-color: #0E4BBC;
 }
 
 .error {
