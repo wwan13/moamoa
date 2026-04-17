@@ -5,8 +5,16 @@ type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   hasError?: boolean
 }
 
-const TextArea = ({ hasError = false, className = "", ...props }: TextAreaProps) => {
-  const textAreaClassName = [styles.textarea, hasError ? styles.error : "", className]
+const TextArea = ({
+  hasError = false,
+  className = "",
+  ...props
+}: TextAreaProps) => {
+  const textAreaClassName = [
+    styles.textarea,
+    hasError ? styles.error : "",
+    className,
+  ]
     .filter(Boolean)
     .join(" ")
 

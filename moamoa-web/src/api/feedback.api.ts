@@ -23,7 +23,11 @@ export const feedbackApi = {
     command: FeedbackCreateCommand,
     config?: ApiRequestConfig,
   ): Promise<FeedbackCreateResult> => {
-    const res = await http.post<FeedbackCreateResult>("/api/feedback", command, config)
+    const res = await http.post<FeedbackCreateResult>(
+      "/api/feedback",
+      command,
+      config,
+    )
     if (!res) throw new Error("EMPTY_FEEDBACK_RESPONSE")
     return res
   },

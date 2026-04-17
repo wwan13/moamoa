@@ -10,9 +10,7 @@ import InputText from "../../components/ui/InputText"
 import TextArea from "../../components/ui/TextArea"
 import GlobalSpinner from "../../components/globalspinner/GlobalSpinner"
 import { showGlobalAlert, showToast } from "../../api/client"
-import {
-  useCreateFeedbackMutation,
-} from "../../queries/feedback.queries"
+import { useCreateFeedbackMutation } from "../../queries/feedback.queries"
 import type { FeedbackType } from "../../api/feedback.api"
 import styles from "./FeedbackPage.module.css"
 
@@ -130,7 +128,11 @@ const FeedbackPage = () => {
     }
 
     if (!contentValid) {
-      await showGlobalAlert(content.trim().length === 0 ? "내용을 입력해 주세요." : `최대 ${CONTENT_MAX_LENGTH}자까지 입력 가능해요.`)
+      await showGlobalAlert(
+        content.trim().length === 0
+          ? "내용을 입력해 주세요."
+          : `최대 ${CONTENT_MAX_LENGTH}자까지 입력 가능해요.`,
+      )
       return
     }
 

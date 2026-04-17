@@ -56,25 +56,25 @@
   gap: 10px;
   min-height: 48px;
   padding: 12px 16px;
-  border: 1px solid #DBDEE3;
+  border: 1px solid #dbdee3;
   border-radius: 8px;
   color: #252525;
-    background: #ffffff;
+  background: #ffffff;
   font-size: 14px;
   font-weight: 400;
   text-align: left;
   cursor: pointer;
-  transition: .2s ease;
+  transition: 0.2s ease;
 }
 
 .categoryButton:hover {
-  border-color: #0E4BBC;
-  background: #DBE4F5;
+  border-color: #0e4bbc;
+  background: #dbe4f5;
 }
 
 .categoryButtonSelected {
-  border-color: #0E4BBC;
-  background: #DBE4F5;
+  border-color: #0e4bbc;
+  background: #dbe4f5;
 }
 
 .categoryIcon {
@@ -101,7 +101,7 @@
   margin-top: 8px;
   border: none;
   border-radius: 10px;
-  background: #0E4BBC;
+  background: #0e4bbc;
   color: #fff;
   font-size: 14px;
   font-weight: 500;
