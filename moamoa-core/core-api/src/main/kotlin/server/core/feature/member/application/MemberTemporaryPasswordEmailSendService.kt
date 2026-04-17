@@ -15,7 +15,7 @@ class MemberTemporaryPasswordEmailSendService(
     private val mailSender: MailSender,
 ) {
 
-    @EventHandler(ApplyTemporaryPasswordEvent::class, EventStream.DEFAULT)
+    @EventHandler(EventStream.DEFAULT)
     fun sendEmail(event: ApplyTemporaryPasswordEvent) = runBlocking {
         val template = MailTemplate.ApplyTemporaryPassword(event.temporaryPassword)
         val content = MailContent.Template(

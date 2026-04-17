@@ -17,12 +17,12 @@ class PostCacheEvictService(
     private val postStatsCache: PostStatsCache,
     private val bookmarkedAllPostIdSetCache: BookmarkedAllPostIdSetCache
 ) {
-    @EventHandler(TechBlogSubscribeUpdatedEvent::class, EventStream.POST_CACHE_HANDLING)
+    @EventHandler(EventStream.POST_CACHE_HANDLING)
     fun subscriptionUpdatedPostCacheEvict(event: TechBlogSubscribeUpdatedEvent) {
         subscribedPostListCache.evictAll(event.memberId)
     }
 
-    @EventHandler(BookmarkUpdatedEvent::class, EventStream.POST_CACHE_HANDLING)
+    @EventHandler(EventStream.POST_CACHE_HANDLING)
     fun bookmarkUpdatedPostCacheEvict(event: BookmarkUpdatedEvent) {
         bookmarkedPostListCache.evictAll(event.memberId)
         postStatsCache.evict(event.postId)

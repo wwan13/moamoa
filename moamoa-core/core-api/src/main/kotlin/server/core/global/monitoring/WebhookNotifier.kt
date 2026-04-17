@@ -16,7 +16,7 @@ class WebhookNotifier(
     private val environment: Environment
 ) {
 
-    @EventHandler(MemberCreateEvent::class, stream = EventStream.MONITORING)
+    @EventHandler(stream = EventStream.MONITORING)
     fun memberCreateWebhookNotify(event: MemberCreateEvent) {
         if (!environment.isProd()) return
 
@@ -31,7 +31,7 @@ class WebhookNotifier(
         webhookSender.sendAsync(content)
     }
 
-    @EventHandler(SubmissionCreateEvent::class, stream = EventStream.MONITORING)
+    @EventHandler(stream = EventStream.MONITORING)
     fun submissionCreateWebhookNotify(event: SubmissionCreateEvent) {
         if (!environment.isProd()) return
 

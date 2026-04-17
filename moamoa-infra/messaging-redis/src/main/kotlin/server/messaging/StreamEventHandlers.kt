@@ -70,8 +70,7 @@ internal class StreamEventHandlers(
                     method = method,
                     targetClass = targetClass,
                     methodName = method.name,
-                    paramType = method.parameterTypes[0],
-                    payloadClass = eventHandler.value.java,
+                    payloadClass = method.parameterTypes[0],
                     stream = eventHandler.stream,
                     transactional = eventHandler.transaction,
                 )
@@ -84,15 +83,13 @@ internal class StreamEventHandlers(
         method: java.lang.reflect.Method,
         targetClass: Class<*>,
         methodName: String,
-        paramType: Class<*>,
         payloadClass: Class<out Any>,
         stream: EventStream,
         transactional: Boolean,
     ): StreamMessageHandler? {
-        if (!paramType.isAssignableFrom(payloadClass)) {
+        if (payloadClass == Any::class.java) {
             logger.warn {
-                "Skip event handler method. parameter type mismatch: ${targetClass.name}.$methodName " +
-                    "param=${paramType.name} event=${payloadClass.name}"
+                "Skip event handler method. concrete event parameter is required: ${targetClass.name}.$methodName"
             }
             return null
         }

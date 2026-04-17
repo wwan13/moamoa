@@ -14,13 +14,13 @@ class TechBlogCacheEvictService(
     private val subscriptionCache: SubscriptionCache
 ) {
 
-    @EventHandler(TechBlogSubscribeUpdatedEvent::class, EventStream.TECH_BLOG_CACHE_HANDLING)
+    @EventHandler(EventStream.TECH_BLOG_CACHE_HANDLING)
     fun subscriptionUpdatedTechBlogCacheEvict(event: TechBlogSubscribeUpdatedEvent) {
         techBlogSummaryCache.evict(event.techBlogId)
         subscriptionCache.evictAll(event.memberId)
     }
 
-    @EventHandler(NotificationUpdatedEvent::class, EventStream.TECH_BLOG_CACHE_HANDLING)
+    @EventHandler(EventStream.TECH_BLOG_CACHE_HANDLING)
     fun notificationUpdatedTechBlogCacheEvict(event: NotificationUpdatedEvent) {
         techBlogSummaryCache.evict(event.techBlogId)
         subscriptionCache.evictAll(event.memberId)

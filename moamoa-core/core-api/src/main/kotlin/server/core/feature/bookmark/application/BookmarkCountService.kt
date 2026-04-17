@@ -11,7 +11,7 @@ import server.messaging.annotation.TransactionEventHandler
 class BookmarkCountService(
     private val postRepository: PostRepository,
 ) {
-    @TransactionEventHandler(BookmarkUpdatedEvent::class, EventStream.COUNT_PROCESSING)
+    @TransactionEventHandler(EventStream.COUNT_PROCESSING)
     fun bookmarkUpdatedCountCalculate(event: BookmarkUpdatedEvent) {
         val delta = if (event.bookmarked) 1L else -1L
         postRepository.findByIdOrNull(event.postId)?.updateBookmarkCount(delta)

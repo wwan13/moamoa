@@ -11,7 +11,7 @@ import server.messaging.annotation.TransactionEventHandler
 class SubscriptionCountService(
     private val techBlogRepository: TechBlogRepository,
 ) {
-    @TransactionEventHandler(TechBlogSubscribeUpdatedEvent::class, EventStream.COUNT_PROCESSING)
+    @TransactionEventHandler(EventStream.COUNT_PROCESSING)
     fun subscriptionUpdatedCountCalculate(event: TechBlogSubscribeUpdatedEvent) {
         val delta = if (event.subscribed) +1L else -1L
         techBlogRepository.findByIdOrNull(event.techBlogId)?.updateSubscriptionCount(delta)
