@@ -7,6 +7,7 @@
 - 아키텍처: `/Users/taewan/dev/moamoa/.codex/agents/guides/architecture.md`
 - 공통 작업 규칙: `/Users/taewan/dev/moamoa/.codex/agents/guides/convention.md`
 - 모듈 경계 규칙: `/Users/taewan/dev/moamoa/.codex/agents/guides/module-boundary.md`
+- 기능 추가 워크플로우: `/Users/taewan/dev/moamoa/.codex/agents/guides/feature-workflow.md`
 - 커밋 규칙: `/Users/taewan/dev/moamoa/.codex/agents/guides/commit.md`
 - 프론트엔드 규칙: `/Users/taewan/dev/moamoa/.codex/agents/guides/frontend_convention.md`
 
