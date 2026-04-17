@@ -3,9 +3,9 @@ import InputText from "../../components/ui/InputText"
 import Button from "../../components/ui/Button"
 import { useEffect, useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
-import { useSignupMutation } from "../../queries/auth.queries"
-import useAuth from "../../auth/useAuth"
+import { useApplyTemporaryPasswordMutation } from "../../queries/member.queries"
 import GlobalSpinner from "../../components/globalspinner/GlobalSpinner"
+import { showGlobalAlert } from "../../api/client"
 
 const FindPasswordPage = () => {
   const navigate = useNavigate()
@@ -13,10 +13,7 @@ const FindPasswordPage = () => {
   const [email, setEmail] = useState("")
   const [emailError, setEmailError] = useState("")
 
-  const signupMutation = useSignupMutation()
-  const { login, openLogin, isLoginLoading } = useAuth()
-
-  const [isLoading, setIsLoading] = useState(false)
+  const applyTemporaryPasswordMutation = useApplyTemporaryPasswordMutation()
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" })
@@ -35,13 +32,20 @@ const FindPasswordPage = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (validateEmail(email) != "") return
+
+    try {
+      await applyTemporaryPasswordMutation.mutateAsync({ email })
+      navigate("/find/password/complete")
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "알 수 없는 오류가 발생했어요."
+      showGlobalAlert(message)
+    }
   }
 
   return (
     <div className={styles.wrapper}>
-      {(signupMutation.isPending || isLoginLoading || isLoading) && (
-        <GlobalSpinner />
-      )}
+      {applyTemporaryPasswordMutation.isPending && <GlobalSpinner />}
       <div className={styles.card}>
         <div className={styles.titleWrap}>
           <img
@@ -75,7 +79,7 @@ const FindPasswordPage = () => {
                 <span className={styles.error}>{emailError}</span>
               )}
             </div>
-            <Button type="submit">회원가입</Button>
+            <Button type="submit">임시 비밀번호 받기</Button>
           </div>
         </form>
       </div>

@@ -13,6 +13,7 @@ import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException
 import server.global.logging.biz
 import server.password.PasswordEncoder
+import java.security.SecureRandom
 import java.util.*
 
 @Service
@@ -119,5 +120,34 @@ class MemberService(
         }
 
         member.updatePassword(passwordEncoder.encode(command.newPassword))
+    }
+
+    @Transactional
+    fun applyTemporaryPassword(
+        command: ApplyTemporaryPasswordCommand
+    ) {
+        val member = memberRepository.findByEmail(command.email)
+            ?: throw IllegalArgumentException("등록되지 않은 이메일입니다")
+
+        val temporaryPassword = generateTemporaryPassword()
+        member.updatePassword(passwordEncoder.encode(temporaryPassword))
+
+        memberEventPublisher.publishApplyTemporaryPassword(member, temporaryPassword)
+    }
+
+    private fun generateTemporaryPassword(): String {
+        val normalChars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789"
+        val specialChars = "!@#$%^&*"
+        val random = SecureRandom()
+
+        val password = mutableListOf<Char>()
+
+        repeat(7) {
+            password += normalChars[random.nextInt(normalChars.length)]
+        }
+        password += specialChars[random.nextInt(specialChars.length)]
+        password.shuffle(random)
+
+        return password.joinToString("")
     }
 }

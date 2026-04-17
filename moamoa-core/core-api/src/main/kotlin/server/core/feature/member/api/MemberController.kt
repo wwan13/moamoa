@@ -2,6 +2,7 @@ package server.core.feature.member.api
 
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*
+import server.core.feature.member.application.ApplyTemporaryPasswordCommand
 import server.core.feature.member.application.ChangePasswordCommand
 import server.core.feature.member.application.CreateInternalMemberCommand
 import server.core.feature.member.application.CreateSocialMemberCommand
@@ -76,6 +77,15 @@ class MemberController(
         @RequestPassport passport: Passport
     ): ApiResponse<Unit> {
         memberUnjoinService.unjoin(passport)
+
+        return ApiResponse.of()
+    }
+
+    @PostMapping("/password/temporary")
+    fun applyTemporaryPassword(
+        @RequestBody @Valid command: ApplyTemporaryPasswordCommand,
+    ): ApiResponse<Unit> {
+        memberService.applyTemporaryPassword(command)
 
         return ApiResponse.of()
     }

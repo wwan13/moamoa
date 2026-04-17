@@ -33,6 +33,10 @@ export type ChangePasswordCommand = {
   passwordConfirm: string
 }
 
+export type ApplyTemporaryPasswordCommand = {
+  email: string
+}
+
 export const memberApi = {
   summary: async (config?: ApiRequestConfig): Promise<MemberSummary | null> => {
     return await http.get<MemberSummary>("/api/member", config)
@@ -54,6 +58,12 @@ export const memberApi = {
     config?: ApiRequestConfig,
   ): Promise<void> => {
     await http.post<void>("/api/member/password", command, config)
+  },
+  applyTemporaryPassword: async (
+    command: ApplyTemporaryPasswordCommand,
+    config?: ApiRequestConfig,
+  ): Promise<void> => {
+    await http.post<void>("/api/member/password/temporary", command, config)
   },
   unjoin: async (config?: ApiRequestConfig): Promise<void> => {
     await http.del<void>("/api/member", config)

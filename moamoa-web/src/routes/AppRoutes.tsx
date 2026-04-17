@@ -20,6 +20,7 @@ import NoticeDetailPage from "../pages/noticedetailpage/NoticeDetailPage.tsx"
 import MaintenancePage from "../pages/maintenancepage/MaintenancePage.tsx"
 import NotFoundPage from "../pages/notfoundpage/NotFoundPage.tsx"
 import LoginRedirectPage from "../pages/loginredirectpage/LoginRedirectPage.tsx"
+import FindPasswordCompletePage from "../pages/findpasswordcompletepage/FindPasswordCompletePage.tsx"
 
 const AppRoutes = () => {
   return (
@@ -48,6 +49,10 @@ const AppRoutes = () => {
       <Route element={<BlankLayout />}>
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/find/password" element={<FindPasswordPage />} />
+        <Route
+          path="/find/password/complete"
+          element={<FindPasswordCompletePage />}
+        />
         <Route path="/oauth2/email" element={<Oauth2EmailInputPage />} />
         <Route path="/post/:postId" element={<PostRedirectPage />} />
       </Route>

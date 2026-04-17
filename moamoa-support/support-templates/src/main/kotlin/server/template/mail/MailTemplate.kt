@@ -41,4 +41,10 @@ sealed interface MailTemplate {
             )
         }
     }
+
+    data class ApplyTemporaryPassword(
+        val password: String
+    ) : MailTemplate {
+        override val path: String = "apply-temporary-password"
+    }
 }

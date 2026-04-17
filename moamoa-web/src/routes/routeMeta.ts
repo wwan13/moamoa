@@ -105,6 +105,12 @@ const META_RULES: MetaRule[] = [
     robots: "noindex,nofollow",
   },
   {
+    path: "/find/password/complete",
+    title: "모아모아 | 이메일 발송 완료",
+    description: "임시 비밀번호 발급 안내 페이지입니다.",
+    robots: "noindex,nofollow",
+  },
+  {
     path: "/login",
     title: "모아모아 | 로그인",
     description: "로그인 모달로 이동합니다.",

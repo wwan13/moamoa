@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import useAuth from "../auth/useAuth"
 import {
+  type ApplyTemporaryPasswordCommand,
   memberApi,
   type ChangePasswordCommand,
   type CreateSocialMemberCommand,
@@ -32,6 +33,12 @@ export const useCreateSocialMemberMutation = () => {
 export const useChangePasswordMutation = () => {
   return useMutation<void, Error, ChangePasswordCommand>({
     mutationFn: (command) => memberApi.changePassword(command),
+  })
+}
+
+export const useApplyTemporaryPasswordMutation = () => {
+  return useMutation<void, Error, ApplyTemporaryPasswordCommand>({
+    mutationFn: (command) => memberApi.applyTemporaryPassword(command),
   })
 }
 
