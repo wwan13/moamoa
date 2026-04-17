@@ -105,6 +105,12 @@ const META_RULES: MetaRule[] = [
     robots: "noindex,nofollow",
   },
   {
+    path: "/login",
+    title: "모아모아 | 로그인",
+    description: "로그인 모달로 이동합니다.",
+    robots: "noindex,nofollow",
+  },
+  {
     path: "/oauth2",
     title: "모아모아 | 로그인",
     description: "소셜 로그인 처리 페이지입니다.",
