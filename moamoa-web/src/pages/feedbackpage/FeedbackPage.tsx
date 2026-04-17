@@ -8,13 +8,19 @@ import FeedOutlinedIcon from "@mui/icons-material/FeedOutlined"
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded"
 import InputText from "../../components/ui/InputText"
 import TextArea from "../../components/ui/TextArea"
-import { showGlobalAlert } from "../../api/client"
+import GlobalSpinner from "../../components/globalspinner/GlobalSpinner"
+import { showGlobalAlert, showToast } from "../../api/client"
+import {
+  useCreateFeedbackMutation,
+} from "../../queries/feedback.queries"
+import type { FeedbackType } from "../../api/feedback.api"
 import styles from "./FeedbackPage.module.css"
 
 type FeedbackCategory = {
   id: string
   label: string
   icon: ReactNode
+  type: FeedbackType
 }
 
 const FEEDBACK_CATEGORIES: FeedbackCategory[] = [
@@ -22,31 +28,37 @@ const FEEDBACK_CATEGORIES: FeedbackCategory[] = [
     id: "account",
     label: "계정/ 로그인",
     icon: <PersonRoundedIcon sx={{ fontSize: 18 }} />,
+    type: "ACCOUNT_LOGIN",
   },
   {
     id: "subscription",
     label: "이메일 구독",
     icon: <MailOutlineRoundedIcon sx={{ fontSize: 18 }} />,
+    type: "EMAIL_SUBSCRIPTION",
   },
   {
     id: "bug",
     label: "기능 오류 / 버그",
     icon: <SettingsRoundedIcon sx={{ fontSize: 18 }} />,
+    type: "ERROR_BUG",
   },
   {
     id: "feature",
     label: "기능 제안",
     icon: <AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />,
+    type: "FEATURE_REQUEST",
   },
   {
     id: "content",
     label: "블로그 / 콘텐츠",
     icon: <FeedOutlinedIcon sx={{ fontSize: 18 }} />,
+    type: "BLOG_CONTENT",
   },
   {
     id: "service",
     label: "서비스 피드백",
     icon: <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 18 }} />,
+    type: "SERVICE_FEEDBACK",
   },
 ]
 
@@ -59,6 +71,7 @@ const FeedbackPage = () => {
   const [email, setEmail] = useState<string>("")
   const [contentError, setContentError] = useState<string>("")
   const [emailError, setEmailError] = useState<string>("")
+  const createFeedbackMutation = useCreateFeedbackMutation()
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" })
@@ -126,11 +139,38 @@ const FeedbackPage = () => {
       return
     }
 
-    await showGlobalAlert("문의 접수 기능은 준비 중입니다.")
+    const selectedFeedbackType = FEEDBACK_CATEGORIES.find(
+      (category) => category.id === selectedCategory,
+    )?.type
+
+    if (!selectedFeedbackType) {
+      await showGlobalAlert("문의 유형을 다시 선택해 주세요.")
+      return
+    }
+
+    try {
+      await createFeedbackMutation.mutateAsync({
+        type: selectedFeedbackType,
+        content: content.trim(),
+        email: email.trim(),
+      })
+
+      setSelectedCategory("")
+      setContent("")
+      setEmail("")
+      setContentError("")
+      setEmailError("")
+      showToast("문의가 접수되었습니다.", { type: "success" })
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "잠시 후 다시 시도해 주세요."
+      await showGlobalAlert(message)
+    }
   }
 
   return (
     <section className={styles.page}>
+      {createFeedbackMutation.isPending && <GlobalSpinner />}
       <div className={styles.hero}>
         <h1 className={styles.title}>문의 및 피드백</h1>
         <p className={styles.description}>
@@ -151,6 +191,7 @@ const FeedbackPage = () => {
                   key={category.id}
                   type="button"
                   className={`${styles.categoryButton} ${isSelected ? styles.categoryButtonSelected : ""}`}
+                  disabled={createFeedbackMutation.isPending}
                   onClick={() => setSelectedCategory(category.id)}
                 >
                   <span className={styles.categoryIcon}>{category.icon}</span>
@@ -170,6 +211,7 @@ const FeedbackPage = () => {
             placeholder="내용을 입력해 주세요"
             value={content}
             hasError={contentError !== ""}
+            disabled={createFeedbackMutation.isPending}
             onChange={(event) => {
               const nextContent = event.target.value
               setContent(nextContent)
@@ -194,6 +236,7 @@ const FeedbackPage = () => {
             type="email"
             placeholder="답변 받을 이메일 주소를 입력해 주세요"
             value={email}
+            disabled={createFeedbackMutation.isPending}
             onChange={(event) => {
               const nextEmail = event.target.value
               setEmail(nextEmail)
@@ -212,7 +255,7 @@ const FeedbackPage = () => {
         <button
           type="submit"
           className={styles.submitButton}
-          disabled={!isSubmitEnabled}
+          disabled={!isSubmitEnabled || createFeedbackMutation.isPending}
         >
           보내기
         </button>
