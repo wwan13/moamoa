@@ -1,5 +1,5 @@
 import AppRoutes from "../routes/AppRoutes.tsx"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import GlobalAlertModal from "../components/alert/GlobalAlertModal"
 import GlobalConfirmModal from "../components/confirm/GlobalConfirmModal"
 import GlobalToast from "../components/toast/GlobalToast"
@@ -22,6 +22,10 @@ type ConfirmState = {
   onCancel?: () => void
 }
 
+type ToastItem = Toast & {
+  id: number
+}
+
 function App() {
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertTitle, setAlertTitle] = useState("오류")
@@ -30,7 +34,8 @@ function App() {
     () => () => setAlertOpen(false),
   )
 
-  const [toast, setToast] = useState<Toast | null>(null)
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+  const toastSequence = useRef(0)
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmState, setConfirmState] = useState<ConfirmState>({
@@ -60,7 +65,16 @@ function App() {
       setAlertOpen(true)
     })
 
-    setOnToast(setToast)
+    setOnToast((toast) => {
+      toastSequence.current += 1
+      setToasts((prev) => [
+        ...prev,
+        {
+          ...toast,
+          id: toastSequence.current,
+        },
+      ])
+    })
 
     setOnGlobalConfirm(
       ({ title, message, confirmText, cancelText, onConfirm, onCancel }) => {
@@ -106,7 +120,12 @@ function App() {
         }}
       />
 
-      <GlobalToast toast={toast} onClose={() => setToast(null)} />
+      <GlobalToast
+        toasts={toasts}
+        onClose={(id) => {
+          setToasts((prev) => prev.filter((toast) => toast.id !== id))
+        }}
+      />
 
       <AppRoutes />
     </div>

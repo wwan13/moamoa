@@ -1,19 +1,26 @@
-.toast {
+.viewport {
   position: fixed;
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 10px;
+  z-index: 300000;
+  pointer-events: none;
+}
 
+.toast {
   padding: 12px 16px;
   border-radius: 8px;
   font-size: 14px;
   color: #fff;
+  white-space: nowrap;
 
   background: #0e4bbc;
   opacity: 0.8;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-
-  z-index: 300000;
 }
 
 /* 등장 */
@@ -29,21 +36,21 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translate(-50%, 10px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 }
 
 @keyframes slideDown {
   from {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
   to {
     opacity: 0;
-    transform: translate(-50%, 10px);
+    transform: translateY(10px);
   }
 }

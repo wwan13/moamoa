@@ -18,9 +18,13 @@ import LoginModal from "../components/loginmodal/LoginModal"
 import Search from "../components/search/Search" // 경로 맞춰
 import RouteMetaTags from "../routes/RouteMetaTags"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { GlobalConfirmParams, Toast } from "../api/client"
 import { useNavigate } from "react-router-dom"
+
+type ToastItem = Toast & {
+  id: number
+}
 
 const App = () => {
   // ✅ alert 상태
@@ -32,7 +36,8 @@ const App = () => {
   )
   const navigate = useNavigate()
 
-  const [toast, setToast] = useState<Toast | null>(null)
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+  const toastSequence = useRef(0)
 
   // ✅ confirm 상태
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -73,7 +78,16 @@ const App = () => {
       setAlertOpen(true)
     })
 
-    setOnToast(setToast)
+    setOnToast((toast) => {
+      toastSequence.current += 1
+      setToasts((prev) => [
+        ...prev,
+        {
+          ...toast,
+          id: toastSequence.current,
+        },
+      ])
+    })
 
     setOnGlobalConfirm(
       ({ title, message, confirmText, cancelText, onConfirm, onCancel }) => {
@@ -132,7 +146,12 @@ const App = () => {
         }}
       />
 
-      <GlobalToast toast={toast} onClose={() => setToast(null)} />
+      <GlobalToast
+        toasts={toasts}
+        onClose={(id) => {
+          setToasts((prev) => prev.filter((toast) => toast.id !== id))
+        }}
+      />
 
       <LoginModal
         open={authModal === "login"}
