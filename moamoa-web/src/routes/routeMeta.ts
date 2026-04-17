@@ -63,6 +63,12 @@ const META_RULES: MetaRule[] = [
     robots: "index,follow",
   },
   {
+    path: "/feedback",
+    title: "모아모아 | 문의 및 피드백",
+    description: "moamoa 서비스에 대한 문의와 피드백을 남겨 주세요.",
+    robots: "index,follow",
+  },
+  {
     path: "/subscription",
     title: "모아모아 | 내 구독",
     description: "구독한 기술 블로그를 관리합니다.",

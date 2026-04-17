@@ -21,6 +21,7 @@ import MaintenancePage from "../pages/maintenancepage/MaintenancePage.tsx"
 import NotFoundPage from "../pages/notfoundpage/NotFoundPage.tsx"
 import LoginRedirectPage from "../pages/loginredirectpage/LoginRedirectPage.tsx"
 import FindPasswordCompletePage from "../pages/findpasswordcompletepage/FindPasswordCompletePage.tsx"
+import FeedbackPage from "../pages/feedbackpage/FeedbackPage.tsx"
 
 const AppRoutes = () => {
   return (
@@ -38,6 +39,7 @@ const AppRoutes = () => {
         <Route path="/notice/:noticeId" element={<NoticeDetailPage />} />
 
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="/login" element={<LoginRedirectPage />} />
 
         <Route path="/oauth2" element={<Oauth2Page />} />

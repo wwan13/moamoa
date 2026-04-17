@@ -54,7 +54,7 @@ const Footer = () => {
             </button>
             <button
               className={styles.link}
-              onClick={() => navigate("/maintenance")}
+              onClick={() => navigate("/feedback")}
             >
               문의 및 피드백
             </button>

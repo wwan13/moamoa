@@ -1,0 +1,35 @@
+.textarea {
+  width: 100%;
+  min-height: 87px;
+  padding: 12px 10px;
+  border: 1px solid #d9dce1;
+  border-radius: 8px;
+  box-sizing: border-box;
+  resize: vertical;
+  outline: none;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #252525;
+}
+
+.textarea::placeholder {
+  color: #b2b2b2;
+}
+
+.textarea:focus {
+  border-color: #0e4bbc;
+}
+
+.error {
+  border-color: #ff4d4f;
+  background: #fff7f7;
+}
+
+.error:focus {
+  border-color: #ff4d4f;
+}
+
+.error::placeholder {
+  color: #ff4d4f;
+}
