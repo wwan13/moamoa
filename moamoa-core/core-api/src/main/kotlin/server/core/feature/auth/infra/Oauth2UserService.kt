@@ -7,7 +7,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Service
 import server.core.feature.member.application.CreateSocialMemberCommand
 import server.core.feature.member.application.MemberService
-import server.core.feature.member.domain.Provider
+import server.core.feature.member.domain.MemberProvider
 
 @Service
 class Oauth2UserService(
@@ -21,11 +21,11 @@ class Oauth2UserService(
         val registrationId = userRequest.clientRegistration.registrationId
         val attributes = oAuth2User.attributes
 
-        val provider = Provider.from(registrationId)
+        val provider = MemberProvider.from(registrationId)
 
         val oauthAttributes = when (provider) {
-            Provider.GOOGLE -> fromGoogle(attributes)
-            Provider.GITHUB -> fromGithub(attributes)
+            MemberProvider.GOOGLE -> fromGoogle(attributes)
+            MemberProvider.GITHUB -> fromGithub(attributes)
             else -> throw IllegalArgumentException("Not Oauth provider")
         }
 
@@ -69,7 +69,7 @@ class Oauth2UserService(
     }
 
     private fun fromGoogle(attr: Map<String, Any?>) = OauthAttributes(
-        provider = Provider.GOOGLE,
+        provider = MemberProvider.GOOGLE,
         providerKey = attr["sub"]?.toString()
             ?: throw IllegalStateException("Invalid google login response format"),
         email = attr["email"]?.toString()
@@ -83,14 +83,14 @@ class Oauth2UserService(
         val email = attr["email"] as? String
 
         return OauthAttributes(
-            provider = Provider.GITHUB,
+            provider = MemberProvider.GITHUB,
             providerKey = id,
             email = email
         )
     }
 
     private data class OauthAttributes(
-        val provider: Provider,
+        val provider: MemberProvider,
         val providerKey: String,
         val email: String?
     )

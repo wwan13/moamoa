@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import server.admin.support.domain.AdminBaseEntity
+import server.core.feature.member.domain.MemberRole
+import server.core.feature.member.domain.MemberProvider
 
 @Entity
 @Table(name = "member")
@@ -17,7 +19,7 @@ internal class AdminMember(
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
-    val role: AdminMemberRole,
+    val role: MemberRole,
 
     @Column(name = "email")
     val email: String,
@@ -27,12 +29,12 @@ internal class AdminMember(
 
     @Column(name = "provider")
     @Enumerated(EnumType.STRING)
-    val provider: AdminProvider,
+    val provider: MemberProvider,
 
     @Column(name = "provider_key")
     val providerKey: String,
 ) : AdminBaseEntity() {
 
     val isAdmin: Boolean
-        get() = role == AdminMemberRole.ADMIN
+        get() = role == MemberRole.ADMIN
 }

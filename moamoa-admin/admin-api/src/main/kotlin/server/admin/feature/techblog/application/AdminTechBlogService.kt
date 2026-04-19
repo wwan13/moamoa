@@ -5,7 +5,6 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import server.admin.feature.category.domain.AdminCategory
 import server.admin.feature.post.command.domain.AdminPost
 import server.admin.feature.post.command.domain.AdminPostRepository
 import server.admin.feature.posttag.domain.AdminPostTag
@@ -14,6 +13,7 @@ import server.admin.feature.tag.domain.AdminTag
 import server.admin.feature.tag.domain.AdminTagRepository
 import server.admin.feature.techblog.domain.AdminTechBlog
 import server.admin.feature.techblog.domain.AdminTechBlogRepository
+import server.core.feature.category.domain.Category
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSources
 
@@ -104,7 +104,7 @@ internal class AdminTechBlogService(
                 url = it.url,
                 publishedAt = it.publishedAt,
                 techBlogId = techBlog.id,
-                categoryId = AdminCategory.UNDEFINED.id,
+                categoryId = Category.UNDEFINED.id,
             )
         }
         return postRepository.saveAll(posts).toList()

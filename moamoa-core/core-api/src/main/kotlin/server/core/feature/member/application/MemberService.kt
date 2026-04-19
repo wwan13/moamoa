@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.feature.member.domain.Member
+import server.core.feature.member.domain.MemberProvider
 import server.core.feature.member.domain.MemberRepository
-import server.core.feature.member.domain.Provider
 import server.core.feature.member.infra.MemberEventPublisher
 import server.core.global.security.Passport
 import server.core.global.security.UnauthorizedException
@@ -82,7 +82,7 @@ class MemberService(
     }
 
     @Transactional(readOnly = true)
-    fun findSocialMember(provider: Provider, providerKey: String): MemberData {
+    fun findSocialMember(provider: MemberProvider, providerKey: String): MemberData {
         return memberRepository.findByProviderAndProviderKey(
             provider = provider,
             providerKey = providerKey,
@@ -112,7 +112,7 @@ class MemberService(
         }
         val member = memberRepository.findByIdOrNull(passport.memberId)
             ?: throw UnauthorizedException()
-        if (member.provider != Provider.INTERNAL) {
+        if (member.provider != MemberProvider.INTERNAL) {
             throw IllegalArgumentException("이메일로 회원가입한 사용자가 아닙니다.")
         }
         if (!passwordEncoder.matches(command.oldPassword, member.password)) {

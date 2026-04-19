@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import server.core.feature.member.domain.Member
 import server.core.feature.member.domain.MemberRole
-import server.core.feature.member.domain.Provider
+import server.core.feature.member.domain.MemberProvider
 
 data class EmailExistsCommand(
     @field:NotBlank
@@ -37,7 +37,7 @@ data class CreateSocialMemberCommand(
     val email: String,
 
     @field:NotNull
-    val provider: Provider,
+    val provider: MemberProvider,
 
     @field:NotBlank
     val providerKey: String

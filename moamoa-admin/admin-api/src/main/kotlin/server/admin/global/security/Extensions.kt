@@ -1,9 +1,9 @@
 package server.admin.global.security
 
-import server.admin.feature.member.domain.AdminMemberRole
+import server.core.feature.member.domain.MemberRole
 
 internal fun AdminPassport.ensureAdmin() {
-    if (role != AdminMemberRole.ADMIN) {
+    if (role != MemberRole.ADMIN) {
         throw AdminForbiddenException()
     }
 }

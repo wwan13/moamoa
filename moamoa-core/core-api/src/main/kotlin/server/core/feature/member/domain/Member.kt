@@ -33,7 +33,7 @@ class Member(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "provider", length = 128, nullable = false)
-    val provider: Provider,
+    val provider: MemberProvider,
 
     @Column(name = "provider_key", length = 256, nullable = false)
     val providerKey: String,
@@ -53,16 +53,16 @@ class Member(
         ) = Member(
             email = email,
             password = password,
-            provider = Provider.INTERNAL,
+            provider = MemberProvider.INTERNAL,
             providerKey = ""
         )
 
         fun fromSocial(
             email: String,
-            provider: Provider,
+            provider: MemberProvider,
             providerKey: String
         ): Member {
-            if (provider == Provider.INTERNAL) {
+            if (provider == MemberProvider.INTERNAL) {
                 throw IllegalStateException("소셜 로그인으로 회원가입한 유저입니다.")
             }
 

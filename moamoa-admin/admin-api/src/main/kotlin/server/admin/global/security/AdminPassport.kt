@@ -1,8 +1,8 @@
 package server.admin.global.security
 
-import server.admin.feature.member.domain.AdminMemberRole
+import server.core.feature.member.domain.MemberRole
 
 internal data class AdminPassport(
     val memberId: Long,
-    val role: AdminMemberRole
+    val role: MemberRole
 )

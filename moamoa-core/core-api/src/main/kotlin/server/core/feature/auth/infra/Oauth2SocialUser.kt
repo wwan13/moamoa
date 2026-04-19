@@ -3,7 +3,7 @@ package server.core.feature.auth.infra
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.core.user.OAuth2User
 import server.core.feature.member.domain.MemberRole
-import server.core.feature.member.domain.Provider
+import server.core.feature.member.domain.MemberProvider
 import java.util.UUID
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
@@ -16,7 +16,7 @@ sealed class Oauth2SocialUser : OAuth2User {
     ) : Oauth2SocialUser()
 
     data class EmailRequired(
-        val provider: Provider,
+        val provider: MemberProvider,
         val providerKey: String,
     ) : Oauth2SocialUser()
 

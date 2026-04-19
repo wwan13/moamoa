@@ -2,6 +2,7 @@ rootProject.name = "moamoa"
 
 include("moamoa-core")
 include("moamoa-core:core-api")
+include("moamoa-core:core-enum")
 include("moamoa-core:core-batch")
 
 include("moamoa-infra")

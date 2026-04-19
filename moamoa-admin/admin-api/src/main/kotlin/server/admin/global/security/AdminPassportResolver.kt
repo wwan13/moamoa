@@ -7,8 +7,8 @@ import org.springframework.web.bind.support.WebDataBinderFactory
 import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
-import server.admin.feature.member.domain.AdminMemberRole
 import server.global.logging.RequestLogContextHolder
+import server.core.feature.member.domain.MemberRole
 import server.token.TokenProvider
 import server.token.TokenType
 import kotlin.reflect.jvm.kotlinFunction
@@ -44,8 +44,8 @@ class AdminPassportResolver(
         val principal = tokenProvider.decodeToken(accessToken)
         if (principal.type != TokenType.ACCESS) return unauthorized()
 
-        val role = principal.role?.let { AdminMemberRole.valueOf(it) } ?: return unauthorized()
-        if (role != AdminMemberRole.ADMIN) return unauthorized()
+        val role = principal.role?.let { MemberRole.valueOf(it) } ?: return unauthorized()
+        if (role != MemberRole.ADMIN) return unauthorized()
         request.setAttribute(RequestLogContextHolder.USER_ID_ATTR, principal.memberId.toString())
 
         return AdminPassport(memberId = principal.memberId, role = role)

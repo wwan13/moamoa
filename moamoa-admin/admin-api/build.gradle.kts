@@ -15,6 +15,7 @@ dependencies {
     implementation("com.linecorp.kotlin-jdsl:jpql-render:3.7.2")
     runtimeOnly("com.mysql:mysql-connector-j")
 
+    implementation(project(":moamoa-core:core-enum"))
     implementation(project(":moamoa-support:support-api-docs"))
     implementation(project(":moamoa-support:support-logging"))
 

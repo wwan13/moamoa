@@ -27,6 +27,7 @@ dependencies {
     implementation(project(":moamoa-infra:messaging-redis-starter"))
     implementation(project(":moamoa-infra:token-jwt-starter"))
     implementation(project(":moamoa-infra:password-crypto-starter"))
+    implementation(project(":moamoa-core:core-enum"))
     implementation(project(":moamoa-support:support-api-docs"))
     implementation(project(":moamoa-support:support-templates"))
     implementation(project(":moamoa-support:support-webhook"))
