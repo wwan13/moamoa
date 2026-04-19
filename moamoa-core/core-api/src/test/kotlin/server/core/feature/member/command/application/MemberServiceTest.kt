@@ -10,6 +10,7 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import server.core.feature.auth.infra.RefreshTokenCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.feature.member.application.ChangePasswordCommand
 import server.core.feature.member.application.CreateInternalMemberCommand
@@ -17,8 +18,8 @@ import server.core.feature.member.application.CreateSocialMemberCommand
 import server.core.feature.member.application.EmailExistsCommand
 import server.core.feature.member.application.MemberService
 import server.core.feature.member.domain.Member
+import server.core.feature.member.domain.MemberProvider
 import server.core.feature.member.domain.MemberRepository
-import server.core.feature.member.domain.Provider
 import server.core.feature.member.infra.MemberEventPublisher
 import server.core.fixture.createMember
 import server.core.global.security.Passport
@@ -87,7 +88,7 @@ class MemberServiceTest : UnitTest() {
         result.role shouldBe savedMember.role
         savedSlot.captured.email shouldBe command.email
         savedSlot.captured.password shouldBe "encoded-password"
-        savedSlot.captured.provider shouldBe Provider.INTERNAL
+        savedSlot.captured.provider shouldBe MemberProvider.INTERNAL
         verify(exactly = 1) {
             fixture.memberEventPublisher.publishCreated(
                 match<Member> {
@@ -102,7 +103,7 @@ class MemberServiceTest : UnitTest() {
         val fixture = createFixture()
         val command = CreateSocialMemberCommand(
             email = "user@example.com",
-            provider = Provider.INTERNAL,
+            provider = MemberProvider.INTERNAL,
             providerKey = "internal-key"
         )
 
@@ -119,7 +120,7 @@ class MemberServiceTest : UnitTest() {
         val fixture = createFixture()
         val command = CreateSocialMemberCommand(
             email = "user@example.com",
-            provider = Provider.GITHUB,
+            provider = MemberProvider.GITHUB,
             providerKey = "github-key"
         )
 
@@ -139,7 +140,7 @@ class MemberServiceTest : UnitTest() {
         val fixture = createFixture()
         val command = CreateSocialMemberCommand(
             email = "social@example.com",
-            provider = Provider.GITHUB,
+            provider = MemberProvider.GITHUB,
             providerKey = "github-key"
         )
         val savedMember = createMember(
@@ -176,7 +177,7 @@ class MemberServiceTest : UnitTest() {
         val fixture = createFixture()
         val command = CreateSocialMemberCommand(
             email = "social@example.com",
-            provider = Provider.GITHUB,
+            provider = MemberProvider.GITHUB,
             providerKey = "github-key"
         )
         val savedMember = createMember(
@@ -210,7 +211,7 @@ class MemberServiceTest : UnitTest() {
         val fixture = createFixture()
         val command = CreateSocialMemberCommand(
             email = "social@example.com",
-            provider = Provider.GITHUB,
+            provider = MemberProvider.GITHUB,
             providerKey = "github-key"
         )
 
@@ -259,7 +260,7 @@ class MemberServiceTest : UnitTest() {
         val member = createMember(
             id = 202L,
             email = "social@example.com",
-            provider = Provider.GITHUB,
+            provider = MemberProvider.GITHUB,
             providerKey = "github-key",
             password = ""
         )
@@ -280,11 +281,11 @@ class MemberServiceTest : UnitTest() {
         val fixture = createFixture()
 
         coEvery {
-            fixture.memberRepository.findByProviderAndProviderKey(Provider.GITHUB, "github-key")
+            fixture.memberRepository.findByProviderAndProviderKey(MemberProvider.GITHUB, "github-key")
         } returns null
 
         val exception = shouldThrow<NoSuchElementException> {
-            fixture.service.findSocialMember(Provider.GITHUB, "github-key")
+            fixture.service.findSocialMember(MemberProvider.GITHUB, "github-key")
         }
 
         exception.message shouldBe "존재하지 않는 사용자 입니다."
@@ -373,7 +374,7 @@ class MemberServiceTest : UnitTest() {
             newPassword = "password!2",
             passwordConfirm = "password!2"
         )
-        val member = createMember(id = 1L, provider = Provider.GITHUB, providerKey = "github-key", password = "")
+        val member = createMember(id = 1L, provider = MemberProvider.GITHUB, providerKey = "github-key", password = "")
         val passport = Passport(memberId = member.id, role = member.role)
 
         coEvery { fixture.memberRepository.findById(passport.memberId) } returns Optional.of(member)
@@ -404,10 +405,11 @@ class MemberServiceTest : UnitTest() {
         }
 
         exception.message shouldBe "기존 비밀번호가 일치하지 않습니다."
+        verify(exactly = 0) { fixture.refreshTokenCache.evict(any()) }
     }
 
     @Test
-    fun `비밀번호 변경 시 새 비밀번호로 저장한다`() = runTest {
+    fun `비밀번호 변경 시 새 비밀번호로 저장하고 refresh token을 삭제한다`() = runTest {
         val fixture = createFixture()
         val command = ChangePasswordCommand(
             oldPassword = "password!1",
@@ -424,17 +426,20 @@ class MemberServiceTest : UnitTest() {
         fixture.service.changePassword(command, passport)
 
         member.password shouldBe "encoded-new"
+        verify(exactly = 1) { fixture.refreshTokenCache.evict(member.id) }
     }
 
     private fun createFixture(): Fixture {
         val memberRepository = mockk<MemberRepository>()
         val passwordEncoder = mockk<PasswordEncoder>()
+        val refreshTokenCache = mockk<RefreshTokenCache>(relaxed = true)
         val socialMemberSessionCache = mockk<SocialMemberSessionCache>()
         val memberEventPublisher = mockk<MemberEventPublisher>(relaxed = true)
 
         val service = MemberService(
             memberRepository = memberRepository,
             passwordEncoder = passwordEncoder,
+            refreshTokenCache = refreshTokenCache,
             socialMemberSessionCache = socialMemberSessionCache,
             memberEventPublisher = memberEventPublisher,
         )
@@ -443,6 +448,7 @@ class MemberServiceTest : UnitTest() {
             service = service,
             memberRepository = memberRepository,
             passwordEncoder = passwordEncoder,
+            refreshTokenCache = refreshTokenCache,
             socialMemberSessionCache = socialMemberSessionCache,
             memberEventPublisher = memberEventPublisher,
         )
@@ -452,6 +458,7 @@ class MemberServiceTest : UnitTest() {
         val service: MemberService,
         val memberRepository: MemberRepository,
         val passwordEncoder: PasswordEncoder,
+        val refreshTokenCache: RefreshTokenCache,
         val socialMemberSessionCache: SocialMemberSessionCache,
         val memberEventPublisher: MemberEventPublisher,
     )

@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import server.core.feature.auth.infra.RefreshTokenCache
 import server.core.feature.auth.infra.SocialMemberSessionCache
 import server.core.feature.member.domain.Member
 import server.core.feature.member.domain.MemberProvider
@@ -20,6 +21,7 @@ import java.util.*
 class MemberService(
     private val memberRepository: MemberRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val refreshTokenCache: RefreshTokenCache,
     private val socialMemberSessionCache: SocialMemberSessionCache,
     private val memberEventPublisher: MemberEventPublisher,
 ) {
@@ -120,6 +122,7 @@ class MemberService(
         }
 
         member.updatePassword(passwordEncoder.encode(command.newPassword))
+        refreshTokenCache.evict(member.id)
     }
 
     @Transactional
