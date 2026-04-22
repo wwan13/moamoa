@@ -20,6 +20,7 @@ const FindPasswordPage = () => {
   }, [])
 
   const emailFormatErrorMessage = "이메일 형식이 올바르지 않습니다."
+  const emailNotFoundErrorMessage = "등록되지 않은 이메일입니다"
 
   const validateEmail = (value) => {
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -39,6 +40,10 @@ const FindPasswordPage = () => {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "알 수 없는 오류가 발생했어요."
+      if (message === emailNotFoundErrorMessage) {
+        setEmailError(emailNotFoundErrorMessage)
+        return
+      }
       showGlobalAlert(message)
     }
   }
