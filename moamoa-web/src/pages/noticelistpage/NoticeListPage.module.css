@@ -29,46 +29,6 @@
   gap: 24px;
 }
 
-.searchForm {
-  border: 1px solid #dbdee3;
-  width: min(100%, 380px);
-  height: 40px;
-  border-radius: 20px;
-  padding: 9px 18px;
-  box-sizing: border-box;
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.search {
-  width: 100%;
-  height: 22px;
-  padding: 0;
-  outline: none;
-  border: none;
-  font-size: 14px;
-  color: #252525;
-  background: transparent;
-}
-
-.search::placeholder {
-  color: #bcc0c6;
-}
-
-.searchButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  padding: 0;
-  margin-left: 12px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
 .noticeList {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,4 @@
 import styles from "./NoticeListPage.module.css"
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined"
 import Pagination from "@mui/material/Pagination"
 import {
   useEffect,
@@ -11,6 +10,7 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { formatDate } from "../../utils/date"
 import { useNoticesQuery } from "../../queries/notice.queries"
+import NoticeSearchBar from "./NoticeSearchBar"
 
 const PAGE_SIZE = 10
 const SKELETON_COUNT = 8
@@ -37,6 +37,7 @@ const NoticeListPage = () => {
 
   const notices = noticesQuery.data?.notices ?? []
   const totalPages = noticesQuery.data?.meta?.totalPages ?? 0
+  const hasInputQuery = inputQuery.trim().length > 0
 
   useEffect(() => {
     if (!noticesQuery.data) return
@@ -83,6 +84,19 @@ const NoticeListPage = () => {
     )
   }
 
+  const onClearSearch = () => {
+    setInputQuery("")
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete("query")
+        next.delete("page")
+        return next
+      },
+      { replace: true },
+    )
+  }
+
   const onSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter") return
     onSearch()
@@ -115,25 +129,14 @@ const NoticeListPage = () => {
       </div>
 
       <div className={styles.contentWrap}>
-        <div className={styles.searchForm}>
-          <input
-            id="search"
-            className={styles.search}
-            type="text"
-            value={inputQuery}
-            onChange={onSearchChange}
-            onKeyDown={onSearchKeyDown}
-            placeholder="제목, 내용을 검색해 보세요"
-          />
-          <button
-            type="button"
-            className={styles.searchButton}
-            onClick={onSearch}
-            aria-label="검색"
-          >
-            <SearchOutlinedIcon sx={{ fontSize: 20, color: "#252525" }} />
-          </button>
-        </div>
+        <NoticeSearchBar
+          query={inputQuery}
+          hasInputQuery={hasInputQuery}
+          onChange={onSearchChange}
+          onKeyDown={onSearchKeyDown}
+          onSearch={onSearch}
+          onClear={onClearSearch}
+        />
 
         <div className={styles.noticeList}>
           {noticesQuery.isPending &&
