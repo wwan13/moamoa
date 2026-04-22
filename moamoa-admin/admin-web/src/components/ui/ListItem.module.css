@@ -24,8 +24,12 @@
   align-items: center;
   gap: 16px;
   min-height: 56px;
-  padding: 0 40px 0 16px;
+  padding: 0 16px;
   position: relative;
+}
+
+.expandableGrid {
+  padding-right: 40px;
 }
 
 .cell {

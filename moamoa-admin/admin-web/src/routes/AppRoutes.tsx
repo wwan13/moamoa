@@ -3,6 +3,7 @@ import MainPage from "../pages/mainpage/MainPage.tsx"
 import LoginPage from "../pages/loginpage/LoginPage.tsx"
 import AppLayout from "../components/layout/AppLayout"
 import DashboardPage from "../pages/dashboardpage/DashboardPage.tsx"
+import NoticeListPage from "../pages/noticelistpage/NoticeListPage.tsx"
 import PostsPage from "../pages/postspage/PostsPage.tsx"
 import FeedbackPage from "../pages/feedbackpage/FeedbackPage.tsx"
 import SubmissionPage from "../pages/submissionpage/SubmissionPage.tsx"
@@ -15,6 +16,7 @@ const AppRoutes = () => {
       <Route element={<AppLayout />}>
         <Route path="/" element={<MainPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/notice" element={<NoticeListPage />} />
         <Route path="/post" element={<PostsPage />} />
         <Route path="/blog" element={<TechBlogPage />} />
         <Route path="/feedback" element={<FeedbackPage />} />

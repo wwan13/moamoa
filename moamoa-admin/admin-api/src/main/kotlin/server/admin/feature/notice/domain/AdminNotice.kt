@@ -27,8 +27,12 @@ internal class AdminNotice(
     val content: String,
 
     @Column(name = "published")
-    val published: Boolean,
+    var published: Boolean,
 
     @Column(name = "published_at")
     val publishedAt: LocalDateTime,
-) : AdminBaseEntity()
+) : AdminBaseEntity() {
+    fun updatePublished(published: Boolean) {
+        this.published = published
+    }
+}

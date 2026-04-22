@@ -6,3 +6,7 @@ data class AdminNoticeCreateCommand(
     val content: String,
     val isNewBlog: Boolean,
 )
+
+data class AdminUpdateNoticePublishedCommand(
+    val published: Boolean,
+)

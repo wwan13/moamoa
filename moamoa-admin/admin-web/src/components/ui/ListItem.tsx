@@ -63,7 +63,7 @@ export function ListItem({
             }
           }}
         >
-          <div className={styles.summaryGrid} style={style}>
+          <div className={`${styles.summaryGrid} ${styles.expandableGrid}`} style={style}>
             {cells.map((cell, index) => (
               <div key={index} className={styles.cell}>
                 {cell}

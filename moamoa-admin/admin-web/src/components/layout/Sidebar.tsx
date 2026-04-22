@@ -4,6 +4,7 @@ import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined"
 import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined"
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined"
 import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined"
+import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined"
 import { useLocation, useNavigate } from "react-router-dom"
 import * as React from "react"
 
@@ -21,6 +22,16 @@ const menus: Menu[] = [
     navigateTo: "/dashboard",
     icon: (active) => (
       <DashboardOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
+  {
+    title: "공지사항",
+    key: "/notice",
+    navigateTo: "/notice",
+    icon: (active) => (
+      <CampaignOutlinedIcon
         sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
       />
     ),
