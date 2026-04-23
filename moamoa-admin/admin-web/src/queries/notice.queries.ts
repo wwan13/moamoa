@@ -17,12 +17,30 @@ type UpdateNoticePublishedVariables = {
   published: boolean
 }
 
+type CreateNoticeVariables = {
+  title: string
+  chip: string
+  content: string
+  published: boolean
+}
+
 export function useUpdateNoticePublishedMutation() {
   const queryClient = useQueryClient()
 
   return useMutation<void, Error, UpdateNoticePublishedVariables>({
     mutationFn: ({ noticeId, published }) =>
       noticeApi.updatePublished(noticeId, { published }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-notices"] })
+    },
+  })
+}
+
+export function useCreateNoticeMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, CreateNoticeVariables>({
+    mutationFn: (command) => noticeApi.create(command),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin-notices"] })
     },

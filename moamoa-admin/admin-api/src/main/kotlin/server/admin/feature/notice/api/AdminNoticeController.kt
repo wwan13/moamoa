@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import server.admin.feature.notice.application.AdminNoticeCreateCommand
 import server.admin.feature.notice.application.AdminNoticeService
 import server.admin.feature.notice.application.AdminUpdateNoticePublishedCommand
 import server.admin.feature.notice.query.AdminNoticeList
@@ -23,6 +24,15 @@ internal class AdminNoticeController(
     private val noticeService: AdminNoticeService,
     private val noticeQueryService: AdminNoticeQueryService,
 ) {
+    @PostMapping
+    fun create(
+        @RequestBody @Valid command: AdminNoticeCreateCommand,
+        @RequestAdminPassport passport: AdminPassport,
+    ): AdminApiResponse<Unit> {
+        passport.ensureAdmin()
+        noticeService.create(command)
+        return AdminApiResponse.of()
+    }
 
     @GetMapping
     fun findByConditions(

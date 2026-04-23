@@ -32,6 +32,13 @@ export type AdminUpdateNoticePublishedCommand = {
   published: boolean
 }
 
+export type AdminCreateNoticeCommand = {
+  title: string
+  chip: string
+  content: string
+  published: boolean
+}
+
 const buildNoticeQueryString = (
   conditions: AdminNoticeQueryConditions,
 ): string => {
@@ -71,5 +78,8 @@ export const noticeApi = {
     command: AdminUpdateNoticePublishedCommand,
   ): Promise<void> => {
     await http.post<void>(`/api/admin/notice/published/${noticeId}`, command)
+  },
+  create: async (command: AdminCreateNoticeCommand): Promise<void> => {
+    await http.post<void>("/api/admin/notice", command)
   },
 }

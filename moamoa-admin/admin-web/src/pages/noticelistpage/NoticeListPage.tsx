@@ -4,6 +4,7 @@ import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined"
 import styles from "./NoticeListPage.module.css"
 import { showGlobalAlert } from "../../api/client"
 import PageTitle from "../../components/pagetitle/PageTitle.tsx"
+import Button from "../../components/ui/Button.tsx"
 import { Dropdown } from "../../components/ui/Dropdown.tsx"
 import { Search } from "../../components/ui/Search.tsx"
 import { ListHeader } from "../../components/ui/ListHeader.tsx"
@@ -12,6 +13,7 @@ import {
   useNoticesQuery,
   useUpdateNoticePublishedMutation,
 } from "../../queries/notice.queries"
+import { useNavigate } from "react-router-dom"
 
 const statusDropdownOptions = [
   { value: "all", label: "전체 상태" },
@@ -41,6 +43,7 @@ const formatPublishedAt = (value: string): string => {
 }
 
 const NoticeListPage = () => {
+  const navigate = useNavigate()
   const [searchInput, setSearchInput] = useState("")
   const [query, setQuery] = useState("")
   const [statusValue, setStatusValue] = useState("all")
@@ -159,6 +162,9 @@ const NoticeListPage = () => {
               setStatusValue(value)
             }}
           />
+          <Button type="button" onClick={() => navigate("/notice/create")}>
+            공지사항 등록
+          </Button>
         </div>
       </section>
 

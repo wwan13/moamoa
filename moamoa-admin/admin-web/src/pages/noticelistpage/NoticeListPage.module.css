@@ -15,6 +15,10 @@
   align-items: center;
 }
 
+.filterRight {
+  gap: 12px;
+}
+
 .searchWrap {
   background: #ffffff;
   width: 360px;
