@@ -1,4 +1,5 @@
 import styles from "./NoticeDetailPage.module.css"
+import DOMPurify from "dompurify"
 import { useEffect, useMemo } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import Button from "../../components/ui/Button.tsx"
@@ -15,6 +16,9 @@ const NoticeDetailPage = () => {
   }, [noticeId])
   const noticeQuery = useNoticeByIdQuery({ noticeId: parsedNoticeId })
   const notice = noticeQuery.data
+  const sanitizedNoticeContent = useMemo(() => {
+    return DOMPurify.sanitize(notice?.content ?? "")
+  }, [notice?.content])
 
   useEffect(() => {
     if (parsedNoticeId) return
@@ -78,7 +82,10 @@ const NoticeDetailPage = () => {
             />
           </div>
         ) : (
-          <div className={styles.noticeContent}>{notice?.content ?? ""}</div>
+          <div
+            className={styles.noticeContent}
+            dangerouslySetInnerHTML={{ __html: sanitizedNoticeContent }}
+          />
         )}
       </div>
 
