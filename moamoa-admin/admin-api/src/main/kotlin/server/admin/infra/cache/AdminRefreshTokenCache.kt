@@ -5,7 +5,7 @@ import server.cache.CacheMemory
 import server.cache.get
 
 @Component
-class AdminRefreshTokenCache(
+internal class AdminRefreshTokenCache(
     private val cacheMemory: server.cache.CacheMemory
 ) {
 

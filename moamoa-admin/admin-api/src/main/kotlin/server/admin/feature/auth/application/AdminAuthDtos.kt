@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
-data class AdminLoginCommand(
+internal data class AdminLoginCommand(
     @field:NotBlank
     @field:Email
     val email: String,
@@ -16,7 +16,7 @@ data class AdminLoginCommand(
     val password: String
 )
 
-data class AdminAuthTokens(
+internal data class AdminAuthTokens(
     val accessToken: String,
     val refreshToken: String
 )

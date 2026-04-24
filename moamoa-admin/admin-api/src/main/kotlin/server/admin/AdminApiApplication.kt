@@ -1,3 +1,3 @@
 package server.admin
 
-class AdminApiApplication
+internal class AdminApiApplication

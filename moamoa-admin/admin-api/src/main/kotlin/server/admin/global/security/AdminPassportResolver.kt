@@ -14,7 +14,7 @@ import server.token.TokenType
 import kotlin.reflect.jvm.kotlinFunction
 
 @Component
-class AdminPassportResolver(
+internal class AdminPassportResolver(
     private val tokenProvider: TokenProvider,
 ) : HandlerMethodArgumentResolver {
 

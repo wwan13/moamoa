@@ -6,7 +6,7 @@ import com.linecorp.kotlinjdsl.render.jpql.JpqlRenderer
 import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
 
-fun <T : Any> EntityManager.createJdslQuery(
+internal fun <T : Any> EntityManager.createJdslQuery(
     query: JpqlQuery<*>,
     resultClass: Class<T>,
     offset: Int,

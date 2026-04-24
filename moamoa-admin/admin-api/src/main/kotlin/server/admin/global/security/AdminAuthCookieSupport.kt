@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
 
-object AdminAuthCookieSupport {
+internal object AdminAuthCookieSupport {
     const val ACCESS_TOKEN_COOKIE = "adminAccessToken"
     const val REFRESH_TOKEN_COOKIE = "adminRefreshToken"
     const val REFRESH_TOKEN_HEADER = "X-Refresh-Token"
@@ -13,7 +13,7 @@ object AdminAuthCookieSupport {
     const val REFRESH_TOKEN_MAX_AGE_SECONDS = 604_800L
 }
 
-fun HttpServletResponse.appendAdminAuthCookies(accessToken: String, refreshToken: String) {
+internal fun HttpServletResponse.appendAdminAuthCookies(accessToken: String, refreshToken: String) {
     addHeader(
         HttpHeaders.SET_COOKIE,
         adminAuthCookie(
@@ -32,7 +32,7 @@ fun HttpServletResponse.appendAdminAuthCookies(accessToken: String, refreshToken
     )
 }
 
-fun HttpServletResponse.expireAdminAuthCookies() {
+internal fun HttpServletResponse.expireAdminAuthCookies() {
     addHeader(
         HttpHeaders.SET_COOKIE,
         adminAuthCookie(name = AdminAuthCookieSupport.ACCESS_TOKEN_COOKIE, value = "", maxAge = 0)
@@ -43,7 +43,7 @@ fun HttpServletResponse.expireAdminAuthCookies() {
     )
 }
 
-fun HttpServletRequest.resolveAdminAccessToken(): String? {
+internal fun HttpServletRequest.resolveAdminAccessToken(): String? {
     val authorization = getHeader(HttpHeaders.AUTHORIZATION)
     if (!authorization.isNullOrBlank() && authorization.startsWith("Bearer ", ignoreCase = true)) {
         val token = authorization.substringAfter(' ', "").trim()
@@ -52,7 +52,7 @@ fun HttpServletRequest.resolveAdminAccessToken(): String? {
     return adminCookieValue(AdminAuthCookieSupport.ACCESS_TOKEN_COOKIE)
 }
 
-fun HttpServletRequest.resolveAdminRefreshToken(): String? {
+internal fun HttpServletRequest.resolveAdminRefreshToken(): String? {
     val headerToken = getHeader(AdminAuthCookieSupport.REFRESH_TOKEN_HEADER)?.trim()
     if (!headerToken.isNullOrBlank()) return headerToken
     return adminCookieValue(AdminAuthCookieSupport.REFRESH_TOKEN_COOKIE)

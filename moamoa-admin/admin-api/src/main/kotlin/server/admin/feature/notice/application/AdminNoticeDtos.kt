@@ -3,7 +3,7 @@ package server.admin.feature.notice.application
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
-data class AdminNoticeCreateCommand(
+internal data class AdminNoticeCreateCommand(
     @field:NotBlank
     @field:Size(max = 2048)
     val title: String,
@@ -18,6 +18,6 @@ data class AdminNoticeCreateCommand(
     val published: Boolean,
 )
 
-data class AdminUpdateNoticePublishedCommand(
+internal data class AdminUpdateNoticePublishedCommand(
     val published: Boolean,
 )

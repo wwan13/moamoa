@@ -1,3 +1,3 @@
 package server.admin.global.security
 
-class AdminUnauthorizedException : RuntimeException("LOGIN_AGAIN")
+internal class AdminUnauthorizedException : RuntimeException("LOGIN_AGAIN")
