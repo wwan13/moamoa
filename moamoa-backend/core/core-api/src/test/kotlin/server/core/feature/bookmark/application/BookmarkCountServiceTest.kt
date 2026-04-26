@@ -6,7 +6,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
 import server.core.feature.post.domain.PostRepository
 import server.core.fixture.createPost
 import test.UnitTest
