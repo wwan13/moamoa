@@ -13,18 +13,20 @@
 
 ## 모듈 설명
 
-- `moamoa-core/core-api`: 모아모아 메인 API 서버
-- `moamoa-core/core-batch`: 모아모아 배치 작업 서버
-- `moamoa-infra/tech-blog-*`: 기술 블로그 크롤러 계약/api, HTTP 구현, Jsoup 구현, starter
-- `moamoa-infra/cache-*`: cache 계약/구현(redis, caffeine, resilient)/starter
-- `moamoa-infra/queue-*`: queue 계약/redis 구현/starter
-- `moamoa-infra/set-*`: set 계약/redis 구현/starter
-- `moamoa-infra/lock-*`: lock 계약/redisson·local·resilient 구현/starter
-- `moamoa-infra/messaging-*`: messaging 계약/redis 구현/starter
-- `moamoa-infra/token-*`: token 계약/jwt 구현/starter
-- `moamoa-infra/password-*`: password 계약/crypto 구현/starter
-- `moamoa-infra/mail-*`: mail 계약/mailgun 구현/starter
-- `moamoa-support/*`: 공통 지원 모듈(API 문서, 로깅, 템플릿, 테스트 등)
-- `moamoa-web`: 사용자 웹 프론트엔드
-- `moamoa-admin/admin-api`: 관리자 API 서버
-- `moamoa-admin/admin-web`: 관리자 웹 프론트엔드
+- `moamoa-ai`: 오케스트레이션 자산과 작업 보조 코드를 두는 공간
+- `moamoa-frontend/core-web`: 사용자 웹 프론트엔드
+- `moamoa-frontend/admin-web`: 관리자 웹 프론트엔드
+- `moamoa-backend/admin`: 관리자 API 서버
+- `moamoa-backend/core/core-api`: 모아모아 메인 API 서버
+- `moamoa-backend/core/core-batch`: 모아모아 배치 작업 서버
+- `moamoa-backend/core/core-enum`: 백엔드 공통 enum 모듈
+- `moamoa-backend/infra/tech-blog-*`: 기술 블로그 크롤러 계약/api, HTTP 구현, Jsoup 구현, starter
+- `moamoa-backend/infra/cache-*`: cache 계약/구현(redis, caffeine, resilient)/starter
+- `moamoa-backend/infra/queue-*`: queue 계약/redis 구현/starter
+- `moamoa-backend/infra/set-*`: set 계약/redis 구현/starter
+- `moamoa-backend/infra/lock-*`: lock 계약/redisson·local·resilient 구현/starter
+- `moamoa-backend/infra/messaging-*`: messaging 계약/redis 구현/starter
+- `moamoa-backend/infra/token-*`: token 계약/jwt 구현/starter
+- `moamoa-backend/infra/password-*`: password 계약/crypto 구현/starter
+- `moamoa-backend/infra/mail-*`: mail 계약/mailgun 구현/starter
+- `moamoa-backend/support/*`: 공통 지원 모듈(API 문서, 로깅, 템플릿, 테스트 등)

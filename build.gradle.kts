@@ -20,6 +20,10 @@ allprojects {
 }
 
 subprojects {
+    if (!buildFile.exists()) {
+        return@subprojects
+    }
+
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "org.jetbrains.kotlin.plugin.spring")
     apply(plugin = "org.springframework.boot")
