@@ -1,7 +1,5 @@
 rootProject.name = "moamoa"
 
-include("moamoa-ai")
-
 include("moamoa-frontend")
 include("moamoa-frontend:core-web")
 include("moamoa-frontend:admin-web")

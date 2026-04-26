@@ -13,7 +13,6 @@
 
 ## 모듈 설명
 
-- `moamoa-ai`: 오케스트레이션 자산과 작업 보조 코드를 두는 공간
 - `moamoa-frontend/core-web`: 사용자 웹 프론트엔드
 - `moamoa-frontend/admin-web`: 관리자 웹 프론트엔드
 - `moamoa-backend/admin`: 관리자 API 서버
