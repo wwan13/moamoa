@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.core.env.Environment
 import server.WebhookSender
 import server.content.WebhookContent
-import server.core.feature.member.domain.MemberCreateEvent
+import server.core.feature.member.application.MemberCreateEvent
 import test.UnitTest
 
 class WebhookNotifierTest : UnitTest() {

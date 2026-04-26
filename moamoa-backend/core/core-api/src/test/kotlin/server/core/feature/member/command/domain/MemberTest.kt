@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.Member
-import server.core.feature.member.domain.Provider
+import server.core.feature.member.domain.MemberProvider
 import test.UnitTest
 
 class MemberTest : UnitTest() {
@@ -17,7 +17,7 @@ class MemberTest : UnitTest() {
 
         member.email shouldBe "user@example.com"
         member.password shouldBe "encoded-password"
-        member.provider shouldBe Provider.INTERNAL
+        member.provider shouldBe MemberProvider.INTERNAL
         member.providerKey shouldBe ""
     }
 
@@ -26,7 +26,7 @@ class MemberTest : UnitTest() {
         val exception = shouldThrow<IllegalStateException> {
             Member.fromSocial(
                 email = "user@example.com",
-                provider = Provider.INTERNAL,
+                provider = MemberProvider.INTERNAL,
                 providerKey = "internal-key"
             )
         }
@@ -38,12 +38,12 @@ class MemberTest : UnitTest() {
     fun `소셜 회원 생성 시 provider와 providerKey를 저장하고 비밀번호는 비어있다`() {
         val member = Member.fromSocial(
             email = "social@example.com",
-            provider = Provider.GITHUB,
+            provider = MemberProvider.GITHUB,
             providerKey = "github-key"
         )
 
         member.email shouldBe "social@example.com"
-        member.provider shouldBe Provider.GITHUB
+        member.provider shouldBe MemberProvider.GITHUB
         member.providerKey shouldBe "github-key"
         member.password shouldBe ""
     }

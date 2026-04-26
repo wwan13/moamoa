@@ -17,7 +17,7 @@ import server.core.feature.member.application.CreateSocialMemberCommand
 import server.core.feature.member.application.MemberData
 import server.core.feature.member.application.MemberService
 import server.core.feature.member.domain.MemberRole
-import server.core.feature.member.domain.Provider
+import server.core.feature.member.domain.MemberProvider
 import test.UnitTest
 import java.time.Instant
 
@@ -33,7 +33,7 @@ class Oauth2UserServiceTest : UnitTest() {
         setDelegate(service, delegate)
         every { delegate.loadUser(userRequest) } returns oauth2User
         every {
-            memberService.findSocialMember(Provider.GOOGLE, "google-1")
+            memberService.findSocialMember(MemberProvider.GOOGLE, "google-1")
         } returns MemberData(
             id = 10L,
             email = "a@b.com",
@@ -60,13 +60,13 @@ class Oauth2UserServiceTest : UnitTest() {
         setDelegate(service, delegate)
         every { delegate.loadUser(userRequest) } returns oauth2User
         every {
-            memberService.findSocialMember(Provider.GITHUB, "1234")
+            memberService.findSocialMember(MemberProvider.GITHUB, "1234")
         } throws IllegalArgumentException("not found")
 
         val result = service.loadUser(userRequest)
 
         result shouldBe Oauth2SocialUser.EmailRequired(
-            provider = Provider.GITHUB,
+            provider = MemberProvider.GITHUB,
             providerKey = "1234"
         )
     }
@@ -82,13 +82,13 @@ class Oauth2UserServiceTest : UnitTest() {
         setDelegate(service, delegate)
         every { delegate.loadUser(userRequest) } returns oauth2User
         every {
-            memberService.findSocialMember(Provider.GOOGLE, "google-2")
+            memberService.findSocialMember(MemberProvider.GOOGLE, "google-2")
         } throws IllegalArgumentException("not found")
         every {
             memberService.createSocialMember(
                 CreateSocialMemberCommand(
                     email = "new@b.com",
-                    provider = Provider.GOOGLE,
+                    provider = MemberProvider.GOOGLE,
                     providerKey = "google-2"
                 )
             )
@@ -118,13 +118,13 @@ class Oauth2UserServiceTest : UnitTest() {
         setDelegate(service, delegate)
         every { delegate.loadUser(userRequest) } returns oauth2User
         every {
-            memberService.findSocialMember(Provider.GOOGLE, "google-3")
+            memberService.findSocialMember(MemberProvider.GOOGLE, "google-3")
         } throws IllegalArgumentException("not found")
         every {
             memberService.createSocialMember(
                 CreateSocialMemberCommand(
                     email = "err@b.com",
-                    provider = Provider.GOOGLE,
+                    provider = MemberProvider.GOOGLE,
                     providerKey = "google-3"
                 )
             )

@@ -92,7 +92,7 @@ class OutboxEventDispatcherTest : UnitTest() {
     }
 
     @Test
-    fun `브로커 장애면 즉시 중단하고 누적 성공건만 마킹한다`() = runTest {
+    fun `브로커 장애도 발행 실패로 처리하고 다음 이벤트의 성공건만 마킹한다`() = runTest {
         val brokerEventPublisher = mockk<EventPublisher>()
         val eventOutboxRepository = mockk<EventOutboxRepository>()
         val outboxEventMarker = mockk<OutboxEventMarker>(relaxed = true)
@@ -104,6 +104,7 @@ class OutboxEventDispatcherTest : UnitTest() {
         coEvery { eventOutboxRepository.findUnpublished(2) } returns rows
         every { brokerEventPublisher.publish("topic-1", "type-1", "payload-1", "e1") } throws
             IllegalStateException("redis down")
+        every { brokerEventPublisher.publish("topic-2", "type-2", "payload-2", "e2") } just runs
 
         val dispatcher = OutboxEventDispatcher(
             eventPublisher = brokerEventPublisher,
@@ -114,10 +115,10 @@ class OutboxEventDispatcherTest : UnitTest() {
 
         val result = dispatcher.dispatchBatch(2)
 
-        result shouldBe false
+        result shouldBe true
         verify(exactly = 1) { brokerEventPublisher.publish("topic-1", "type-1", "payload-1", "e1") }
-        verify(exactly = 0) { brokerEventPublisher.publish("topic-2", "type-2", "payload-2", "e2") }
-        verify(exactly = 1) { outboxEventMarker.markPublished(emptyList()) }
+        verify(exactly = 1) { brokerEventPublisher.publish("topic-2", "type-2", "payload-2", "e2") }
+        verify(exactly = 1) { outboxEventMarker.markPublished(listOf(2L)) }
     }
 
     @Test

@@ -16,7 +16,7 @@ import server.core.feature.auth.application.AuthTokens
 import server.core.feature.auth.infra.Oauth2SocialUser
 import server.core.feature.auth.infra.Oauth2SuccessHandler
 import server.core.feature.member.domain.MemberRole
-import server.core.feature.member.domain.Provider
+import server.core.feature.member.domain.MemberProvider
 import server.core.feature.auth.infra.RefreshTokenCache
 import test.UnitTest
 
@@ -63,7 +63,7 @@ class Oauth2SuccessHandlerTest : UnitTest() {
 
         every { environment.activeProfiles } returns emptyArray()
         every { authentication.principal } returns Oauth2SocialUser.EmailRequired(
-            provider = Provider.GOOGLE,
+            provider = MemberProvider.GOOGLE,
             providerKey = "google-123"
         )
 

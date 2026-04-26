@@ -5,8 +5,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import server.core.feature.post.application.PostCacheEvictService
-import server.core.feature.bookmark.domain.BookmarkUpdatedEvent
-import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
+import server.core.feature.bookmark.application.BookmarkUpdatedEvent
+import server.core.feature.subscription.application.TechBlogSubscribeUpdatedEvent
 import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
 import server.core.feature.post.infra.BookmarkedPostListCache
 import server.core.feature.post.infra.PostStatsCache

@@ -6,7 +6,7 @@ import io.kotest.matchers.string.shouldNotBeBlank
 import org.junit.jupiter.api.Test
 import server.core.feature.auth.infra.Oauth2SocialUser
 import server.core.feature.member.domain.MemberRole
-import server.core.feature.member.domain.Provider
+import server.core.feature.member.domain.MemberProvider
 import test.UnitTest
 
 class Oauth2SocialUserTest : UnitTest() {
@@ -24,7 +24,7 @@ class Oauth2SocialUserTest : UnitTest() {
     @Test
     fun `EmailRequired 는 속성이 없다`() {
         val user = Oauth2SocialUser.EmailRequired(
-            provider = Provider.GOOGLE,
+            provider = MemberProvider.GOOGLE,
             providerKey = "google-123"
         )
 

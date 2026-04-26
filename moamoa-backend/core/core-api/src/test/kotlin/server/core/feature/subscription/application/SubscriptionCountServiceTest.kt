@@ -6,7 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.feature.subscription.domain.TechBlogSubscribeUpdatedEvent
+import server.core.feature.subscription.application.TechBlogSubscribeUpdatedEvent
 import server.core.feature.techblog.domain.TechBlogRepository
 import server.core.fixture.createTechBlog
 import test.UnitTest
