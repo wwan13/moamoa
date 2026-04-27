@@ -13,6 +13,7 @@ Use this skill when the user asks about backend deployment, release execution, o
 - Remote host entry: `ssh hs`
 - Remote infra directory: `/Users/taewan/dev/infra`
 - Remote Docker bin directory: `/Applications/Docker.app/Contents/Resources/bin`
+- Remote compose scope: `/docker/moamoa/docker-compose.moamoa.yml` only
 - Remote deploy command: `export PATH=/Applications/Docker.app/Contents/Resources/bin:/usr/local/bin:$PATH && docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d --pull always`
 
 ## What The Current Script Does
@@ -35,12 +36,15 @@ Use this skill when the user asks about backend deployment, release execution, o
 5. Connect to the deploy host with `ssh hs`.
 6. Move to `/Users/taewan/dev/infra`. Do not use `~/d/infra`; that shorthand is stale for the current host.
 7. Before running compose remotely, export `PATH=/Applications/Docker.app/Contents/Resources/bin:/usr/local/bin:$PATH` so both `docker` and `docker-credential-desktop` resolve in non-interactive SSH sessions.
-8. Run `docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d --pull always`.
-9. Treat the deployment as complete once the compose update finishes without errors.
+8. Only operate on `docker/moamoa/docker-compose.moamoa.yml`. Do not inspect, edit, or run other compose files as part of moamoa deployment unless the user explicitly overrides this rule.
+9. Run `docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d --pull always`.
+10. Do not run Docker volume management commands such as `docker volume rm`, `docker volume prune`, or any compose workflow that would recreate or delete unrelated volumes. Preserve all existing non-moamoa volumes on the host.
+11. Treat the deployment as complete once the compose update finishes without errors.
 
 ## Notes
 - The current documented flow is for backend deployment, centered on the `core-api` Docker image.
 - The operational default tag is `prod`. Only use another tag when the user explicitly asks for it.
 - The compose command is the production refresh step because `--pull always` forces the remote host to fetch the latest image before recreating containers.
 - On host `hs`, plain SSH sessions may not have Docker Desktop binaries on `PATH`; use the baseline `PATH` export before any remote Docker command.
+- Deployment scope on the host is intentionally narrow: touch only `/docker/moamoa/docker-compose.moamoa.yml` and avoid any action that could affect other compose stacks or Docker volumes.
 - If the task changes image names, compose paths, or host access conventions, update this skill and the related deploy script together.
