@@ -97,24 +97,13 @@
   margin-bottom: 30px;
 }
 
-.controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.search {
-  width: 700px;
+.searchBar {
+  --search-bar-width: min(100%, 762px);
+  max-width: 100%;
   height: 50px;
-  padding: 0 30px;
+  padding: 0 22px;
   border-radius: 25px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  outline: none;
-}
-
-.search:focus {
-  border-color: #cbd5e1;
+  margin: 0 auto;
 }
 
 .select {

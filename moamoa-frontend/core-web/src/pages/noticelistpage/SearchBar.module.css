@@ -1,6 +1,6 @@
 .searchForm {
   border: 1px solid #dbdee3;
-  width: min(100%, 380px);
+  width: var(--search-bar-width, min(100%, 380px));
   height: 40px;
   border-radius: 20px;
   padding: 9px 18px;

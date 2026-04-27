@@ -17,6 +17,7 @@ import {
   useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
 import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
+import SearchBar from "../noticelistpage/SearchBar"
 
 const SKELETON_COUNT = 12
 
@@ -265,15 +266,17 @@ const TechBlogsPage = () => {
 
         <section className={styles.listSection}>
           <div className={styles.listHeader}>
-            <div className={styles.controls}>
-              <input
-                className={styles.search}
-                placeholder="검색"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                disabled={techBlogsQuery.isPending}
-              />
-            </div>
+            <SearchBar
+              query={search}
+              hasInputQuery={search.trim().length > 0}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={() => {}}
+              onSearch={() => {}}
+              onClear={() => setSearch("")}
+              placeholder="기술 블로그를 검색해 보세요"
+              disabled={techBlogsQuery.isPending}
+              className={styles.searchBar}
+            />
           </div>
 
           {techBlogsQuery.isPending ? (

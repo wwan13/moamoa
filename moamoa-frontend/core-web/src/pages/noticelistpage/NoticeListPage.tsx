@@ -10,7 +10,7 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { formatDate } from "../../utils/date"
 import { useNoticesQuery } from "../../queries/notice.queries"
-import NoticeSearchBar from "./NoticeSearchBar"
+import SearchBar from "./SearchBar"
 
 const PAGE_SIZE = 10
 const SKELETON_COUNT = 8
@@ -129,7 +129,7 @@ const NoticeListPage = () => {
       </div>
 
       <div className={styles.contentWrap}>
-        <NoticeSearchBar
+        <SearchBar
           query={inputQuery}
           hasInputQuery={hasInputQuery}
           onChange={onSearchChange}
