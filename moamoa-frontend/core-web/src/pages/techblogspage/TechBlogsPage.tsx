@@ -5,11 +5,14 @@ import useAuth from "../../auth/useAuth"
 import { showGlobalConfirm, showToast } from "../../api/client"
 import { useNavigate } from "react-router-dom"
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
+import NotificationsOffOutlinedIcon from "@mui/icons-material/NotificationsOffOutlined"
 import { useQueryClient } from "@tanstack/react-query"
 import type { TechBlogSummary, TechBlogList } from "../../api/techBlog.api"
 
 import { useTechBlogsQuery } from "../../queries/techBlog.queries"
 import {
+  useDisableNotificationMutation,
+  useEnableNotificationMutation,
   useSubscribeMutation,
   useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
@@ -50,17 +53,26 @@ const TechBlogsPage = () => {
   }, [rawBlogs, search])
 
   // ✅ subscribe mutations
-  const subscribeMutation = useSubscribeMutation()
-  const unsubscribeMutation = useUnsubscribeMutation()
+  const subscribeMutation = useSubscribeMutation({
+    invalidateOnSuccess: false,
+  })
+  const unsubscribeMutation = useUnsubscribeMutation({
+    invalidateOnSuccess: false,
+  })
+  const enableNotificationMutation = useEnableNotificationMutation()
+  const disableNotificationMutation = useDisableNotificationMutation()
   const isSubscriptionPending =
     subscribeMutation.isPending || unsubscribeMutation.isPending
+  const isNotificationPending =
+    enableNotificationMutation.isPending ||
+    disableNotificationMutation.isPending
+  const isMutating = isSubscriptionPending || isNotificationPending
 
-  // ✅ optimistic 업데이트를 위해 techBlogs 캐시 수정
-  const patchTechBlog = (
+  const patchTechBlogCaches = (
     techBlogId: number,
     patcher: (blog: TechBlogSummary) => TechBlogSummary,
   ) => {
-    qc.setQueryData(["techBlogs"], (old: unknown) => {
+    qc.setQueriesData({ queryKey: ["techBlogs"] }, (old: unknown) => {
       const cache = old as TechBlogList | undefined
       if (!cache?.techBlogs) return old
       return {
@@ -69,6 +81,21 @@ const TechBlogsPage = () => {
           b.id === techBlogId ? patcher(b) : b,
         ),
       }
+    })
+
+    qc.setQueriesData({ queryKey: ["techBlog"] }, (old: unknown) => {
+      const blog = old as TechBlogSummary | null | undefined
+      if (!blog || blog.id !== techBlogId) return old
+      return patcher(blog)
+    })
+  }
+
+  const invalidateTechBlogCaches = () => {
+    qc.invalidateQueries({ queryKey: ["techBlogs"], refetchType: "inactive" })
+    qc.invalidateQueries({ queryKey: ["techBlog"], refetchType: "inactive" })
+    qc.invalidateQueries({
+      queryKey: ["techBlogs", "subscribed"],
+      refetchType: "inactive",
     })
   }
 
@@ -88,6 +115,7 @@ const TechBlogsPage = () => {
     if (isSubscriptionPending) return
 
     const wasSubscribed = !!blog.subscribed
+    const wasNotificationEnabled = !!blog.notificationEnabled
     const techBlogId = blog.id
 
     if (wasSubscribed) {
@@ -101,13 +129,14 @@ const TechBlogsPage = () => {
     }
 
     // optimistic
-    patchTechBlog(techBlogId, (b) => ({
+    patchTechBlogCaches(techBlogId, (b) => ({
       ...b,
       subscribed: !wasSubscribed,
       subscriptionCount: Math.max(
         0,
         (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
       ),
+      notificationEnabled: wasSubscribed ? false : true,
     }))
 
     try {
@@ -116,16 +145,69 @@ const TechBlogsPage = () => {
       } else {
         await subscribeMutation.mutateAsync({ techBlogId })
       }
+      invalidateTechBlogCaches()
       showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
     } catch {
       // rollback
-      patchTechBlog(techBlogId, (b) => ({
+      patchTechBlogCaches(techBlogId, (b) => ({
         ...b,
         subscribed: wasSubscribed,
         subscriptionCount: Math.max(
           0,
           (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
         ),
+        notificationEnabled: wasNotificationEnabled,
+      }))
+      showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
+    }
+  }
+
+  const notificationToggle = async (blog: TechBlogSummary) => {
+    if (!isLoggedIn) {
+      const ok = await showGlobalConfirm({
+        title: "로그인",
+        message: "로그인이 필요한 기능입니다. 로그인 하시겠습니까?",
+        confirmText: "로그인",
+      })
+      if (!ok) {
+        return
+      }
+      openLogin()
+      return
+    }
+    if (isNotificationPending) return
+    if (!blog.subscribed) return
+
+    const wasEnabled = !!blog.notificationEnabled
+    const techBlogId = blog.id
+
+    if (wasEnabled) {
+      const ok = await showGlobalConfirm({
+        title: "알림 해제",
+        message: "이 기술 블로그 알림을 해제할까요?",
+        confirmText: "해제",
+        cancelText: "유지",
+      })
+      if (!ok) return
+    }
+
+    patchTechBlogCaches(techBlogId, (b) => ({
+      ...b,
+      notificationEnabled: !wasEnabled,
+    }))
+
+    try {
+      if (wasEnabled) {
+        await disableNotificationMutation.mutateAsync({ techBlogId })
+      } else {
+        await enableNotificationMutation.mutateAsync({ techBlogId })
+      }
+      invalidateTechBlogCaches()
+      showToast(wasEnabled ? "알림을 해제했어요." : "알림을 설정했어요.")
+    } catch {
+      patchTechBlogCaches(techBlogId, (b) => ({
+        ...b,
+        notificationEnabled: wasEnabled,
       }))
       showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
     }
@@ -212,7 +294,7 @@ const TechBlogsPage = () => {
                   <div
                     className={`${styles.skeletonLineShort} ${styles.skeleton}`}
                   />
-                  <div className={styles.subscription}>
+                  <div className={styles.subscribedActions}>
                     <div
                       className={`${styles.skeletonBtn} ${styles.skeleton}`}
                     />
@@ -233,7 +315,11 @@ const TechBlogsPage = () => {
               {filteredBlogs.map((blog) => (
                 <article
                   key={blog.id}
-                  className={styles.card}
+                  className={`${styles.card} ${
+                    blog.subscribed
+                      ? styles.cardSubscribed
+                      : styles.cardUnsubscribed
+                  }`}
                   onClick={() => navigate(`/blog/${blog.id}`)}
                 >
                   <div className={styles.logoWrap}>
@@ -246,30 +332,75 @@ const TechBlogsPage = () => {
 
                   <p className={styles.blogName}>{blog.title}</p>
 
-                  <div className={styles.subscription}>
+                  <div className={styles.meta}>
                     <p className={styles.subscriptionCount}>
-                      구독자 {blog.subscriptionCount}명 · 게시글{" "}
-                      {blog.postCount}개
+                      게시글 {blog.postCount}개 · 구독자{" "}
+                      {blog.subscriptionCount}명
                     </p>
                   </div>
 
-                  <div className={styles.subscription}>
-                    <button
-                      className={
-                        blog.subscribed ? styles.subscribing : styles.subButton
-                      }
-                      onClick={(e) => {
-                        stop(e)
-                        subscriptionToggle(blog)
-                      }}
-                      disabled={isSubscriptionPending}
-                    >
-                      {blog.subscribed ? "구독중" : "구독"}
-                    </button>
+                  {blog.subscribed ? (
+                    <div className={styles.subscribedActions}>
+                      <button
+                        className={styles.subscribedButton}
+                        onClick={(e) => {
+                          stop(e)
+                          subscriptionToggle(blog)
+                        }}
+                        disabled={isMutating}
+                      >
+                        <span className={styles.subscribedCheck}>✓</span>
+                        구독중
+                      </button>
 
-                    <span>·</span>
-                    <NotificationsNoneOutlinedIcon fontSize="small" />
-                  </div>
+                      <span className={styles.actionDivider} aria-hidden="true">
+                        ·
+                      </span>
+
+                      <button
+                        className={
+                          blog.notificationEnabled
+                            ? styles.alarmActiveButton
+                            : styles.alarmInactiveButton
+                        }
+                        onClick={(e) => {
+                          stop(e)
+                          notificationToggle(blog)
+                        }}
+                        disabled={isMutating}
+                        aria-label={
+                          blog.notificationEnabled ? "알림 해제" : "알림 설정"
+                        }
+                      >
+                        {blog.notificationEnabled ? (
+                          <NotificationsNoneOutlinedIcon fontSize="small" />
+                        ) : (
+                          <NotificationsOffOutlinedIcon fontSize="small" />
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={styles.hoverAction}>
+                      <div className={styles.subscribeButtonWrap}>
+                        {!isLoggedIn && (
+                          <div className={styles.loginTooltip} role="tooltip">
+                            로그인 후 구독할 수 있어요
+                          </div>
+                        )}
+
+                        <button
+                          className={styles.hoverSubscribeButton}
+                          onClick={(e) => {
+                            stop(e)
+                            subscriptionToggle(blog)
+                          }}
+                          disabled={isMutating}
+                        >
+                          구독
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
