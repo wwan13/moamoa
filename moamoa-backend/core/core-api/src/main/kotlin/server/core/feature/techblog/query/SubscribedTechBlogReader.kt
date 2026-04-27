@@ -1,19 +1,16 @@
 package server.core.feature.techblog.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.subscription.domain.Subscription
+import server.core.global.jdsl.JdslExecutor
 import server.core.feature.techblog.infra.SubscriptionCache
 import server.core.infra.cache.WarmupCoordinator
-import server.core.support.query.createJdslQuery
 
 @Component
 class SubscribedTechBlogReader(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: JdslExecutor,
     private val subscriptionCache: SubscriptionCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
@@ -64,8 +61,8 @@ class SubscribedTechBlogReader(
     }
 
     private fun findSubscriptionInfoList(memberId: Long): List<SubscriptionInfo> {
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = findSubscriptionInfoListQuery(memberId),
                 resultClass = SubscriptionInfo::class.java,
                 offset = 0,

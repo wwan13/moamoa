@@ -3,23 +3,22 @@ package server.core.feature.post.query
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
-import server.core.feature.post.query.BookmarkedPostReader
 import server.core.feature.post.infra.BookmarkedAllPostIdSetCache
+import server.core.global.jdsl.JdslExecutor
 import server.core.infra.cache.WarmupCoordinator
 import test.UnitTest
 
 class BookmarkedPostReaderTest : UnitTest() {
     @Test
     fun `캐시된 북마크가 있으면 캐시에서 필터링한다`() {
-        val entityManager = mockk<EntityManager>(relaxed = true)
+        val jdslExecutor = mockk<JdslExecutor>(relaxed = true)
         val bookmarkedAllPostIdSetCache = mockk<BookmarkedAllPostIdSetCache>()
 
         every { bookmarkedAllPostIdSetCache.get(1L) } returns setOf(1L, 3L)
 
         val reader = BookmarkedPostReader(
-            entityManager = entityManager,
+            jdslExecutor = jdslExecutor,
             bookmarkedAllPostIdSetCache = bookmarkedAllPostIdSetCache,
             warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
         )

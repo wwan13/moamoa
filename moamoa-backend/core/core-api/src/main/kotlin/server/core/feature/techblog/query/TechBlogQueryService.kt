@@ -1,21 +1,18 @@
 package server.core.feature.techblog.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.post.domain.Post
 import server.core.feature.techblog.domain.TechBlog
 import server.core.feature.techblog.infra.TechBlogListCache
+import server.core.global.jdsl.JdslExecutor
 import server.core.global.security.Passport
 import server.core.infra.cache.WarmupCoordinator
-import server.core.support.query.createJdslQuery
 
 @Service
 class TechBlogQueryService(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: JdslExecutor,
     private val techBlogListCache: TechBlogListCache,
     private val techBlogStatsReader: TechBlogStatsReader,
     private val subscribedTechBlogReader: SubscribedTechBlogReader,
@@ -91,8 +88,8 @@ class TechBlogQueryService(
     private fun findAllTechBlogs(query: String?): List<TechBlogSummary> {
         val keyword = query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = findAllTechBlogsQuery(keyword),
                 resultClass = TechBlogSummary::class.java,
                 offset = 0,
@@ -102,8 +99,8 @@ class TechBlogQueryService(
     }
 
     private fun findTechBlogById(techBlogId: Long): TechBlogSummary? {
-        val blog = entityManager
-            .createJdslQuery(
+        val blog = jdslExecutor
+            .createQuery(
                 query = findTechBlogByIdQuery(techBlogId),
                 resultClass = TechBlogSummary::class.java,
                 offset = 0,
@@ -119,8 +116,8 @@ class TechBlogQueryService(
     private fun findPostCountMap(techBlogIds: List<Long>): Map<Long, Long> {
         if (techBlogIds.isEmpty()) return emptyMap()
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = findPostCountMapQuery(techBlogIds),
                 resultClass = TechBlogStats::class.java,
                 offset = 0,

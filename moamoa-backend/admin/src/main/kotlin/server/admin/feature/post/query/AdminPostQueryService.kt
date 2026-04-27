@@ -1,8 +1,6 @@
 package server.admin.feature.post.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.admin.feature.post.command.domain.AdminPost
@@ -10,13 +8,12 @@ import server.admin.feature.posttag.domain.AdminPostTag
 import server.admin.feature.tag.domain.AdminTag
 import server.admin.feature.techblog.application.AdminTechBlogData
 import server.admin.feature.techblog.domain.AdminTechBlog
-import server.admin.support.query.createJdslQuery
+import server.admin.global.jdsl.AdminJdslExecutor
 
 @Service
 @Transactional(readOnly = true)
 internal class AdminPostQueryService(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: AdminJdslExecutor,
 ) {
     fun findByConditions(conditions: AdminPostQueryConditions): AdminPostList {
         val size = conditions.size?.takeIf { it > 0 } ?: 20L
@@ -52,8 +49,8 @@ internal class AdminPostQueryService(
     ): List<AdminPostRow> {
         val jpqlQuery = createBasePostsQuery(conditions)
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = AdminPostRow::class.java,
                 offset = offset.toInt(),
@@ -65,8 +62,8 @@ internal class AdminPostQueryService(
     private fun fetchTotalCount(conditions: AdminPostQueryConditions): Long {
         val jpqlQuery = createCountPostsQuery(conditions)
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = Long::class.javaObjectType,
                 offset = 0,
@@ -97,8 +94,8 @@ internal class AdminPostQueryService(
                 )
         }
 
-        val rows = entityManager
-            .createJdslQuery(
+        val rows = jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = AdminPostTagRow::class.java,
                 offset = 0,

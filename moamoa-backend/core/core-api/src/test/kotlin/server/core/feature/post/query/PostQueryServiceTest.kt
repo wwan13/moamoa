@@ -5,10 +5,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.MemberRole
 import server.core.feature.post.infra.PostListCache
+import server.core.global.jdsl.JdslExecutor
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
 import server.core.support.domain.ListEntry
@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 class PostQueryServiceTest : UnitTest() {
     @Test
     fun `캐시된 게시글이 있으면 통계와 북마크를 병합한다`() {
-        val entityManager = mockk<EntityManager>(relaxed = true)
+        val jdslExecutor = mockk<JdslExecutor>(relaxed = true)
         val postListCache = mockk<PostListCache>()
         val bookmarkedPostReader = mockk<BookmarkedPostReader>()
         val postStatsReader = mockk<PostStatsReader>()
@@ -39,7 +39,7 @@ class PostQueryServiceTest : UnitTest() {
         every { bookmarkedPostReader.findBookmarkedPostIdSet(10L, listOf(1L, 2L)) } returns setOf(2L)
 
         val service = PostQueryService(
-            entityManager = entityManager,
+            jdslExecutor = jdslExecutor,
             postListCache = postListCache,
             bookmarkedPostReader = bookmarkedPostReader,
             postStatsReader = postStatsReader,
@@ -60,7 +60,7 @@ class PostQueryServiceTest : UnitTest() {
     @Test
     fun `유효하지 않은 카테고리면 예외가 발생한다`() {
         val service = PostQueryService(
-            entityManager = mockk(relaxed = true),
+            jdslExecutor = mockk(relaxed = true),
             postListCache = mockk(),
             bookmarkedPostReader = mockk(),
             postStatsReader = mockk(),

@@ -1,19 +1,16 @@
 package server.core.feature.post.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.PostStatsCache
+import server.core.global.jdsl.JdslExecutor
 import server.core.infra.cache.WarmupCoordinator
-import server.core.support.query.createJdslQuery
 
 @Component
 class PostStatsReader(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: JdslExecutor,
     private val postStatsCache: PostStatsCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
@@ -64,8 +61,8 @@ class PostStatsReader(
                 )
         }
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = PostStats::class.java,
                 offset = 0,

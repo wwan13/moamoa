@@ -1,20 +1,17 @@
 package server.core.feature.techblog.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.post.domain.Post
 import server.core.feature.techblog.domain.TechBlog
 import server.core.feature.techblog.infra.TechBlogSummaryCache
+import server.core.global.jdsl.JdslExecutor
 import server.core.infra.cache.WarmupCoordinator
-import server.core.support.query.createJdslQuery
 
 @Component
 class TechBlogStatsReader(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: JdslExecutor,
     private val techBlogSummaryCache: TechBlogSummaryCache,
     private val warmupCoordinator: WarmupCoordinator,
 ) {
@@ -81,8 +78,8 @@ class TechBlogStatsReader(
     private fun findTechBlogSummaryMap(ids: List<Long>): Map<Long, TechBlogSummary> {
         if (ids.isEmpty()) return emptyMap()
 
-        val rows = entityManager
-            .createJdslQuery(
+        val rows = jdslExecutor
+            .createQuery(
                 query = findTechBlogSummaryMapQuery(ids),
                 resultClass = TechBlogSummary::class.java,
                 offset = 0,
@@ -98,8 +95,8 @@ class TechBlogStatsReader(
     private fun findPostCountMap(techBlogIds: List<Long>): Map<Long, Long> {
         if (techBlogIds.isEmpty()) return emptyMap()
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = findPostCountMapQuery(techBlogIds),
                 resultClass = TechBlogStats::class.java,
                 offset = 0,

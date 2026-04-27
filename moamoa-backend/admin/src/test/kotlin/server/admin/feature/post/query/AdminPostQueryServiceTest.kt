@@ -3,9 +3,9 @@ package server.admin.feature.post.query
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
 import org.junit.jupiter.api.Test
+import server.admin.global.jdsl.AdminJdslExecutor
 import test.UnitTest
 import java.time.LocalDateTime
 
@@ -13,8 +13,8 @@ class AdminPostQueryServiceTest : UnitTest() {
 
     @Test
     fun `techBlogIds가 빈 집합이면 조회 없이 빈 결과를 반환한다`() {
-        val entityManager = mockk<EntityManager>(relaxed = true)
-        val service = AdminPostQueryService(entityManager)
+        val jdslExecutor = mockk<AdminJdslExecutor>(relaxed = true)
+        val service = AdminPostQueryService(jdslExecutor)
 
         val result = service.findByConditions(
             AdminPostQueryConditions(
@@ -33,15 +33,15 @@ class AdminPostQueryServiceTest : UnitTest() {
 
     @Test
     fun `게시글과 태그를 조합해 목록을 반환한다`() {
-        val entityManager = mockk<EntityManager>()
+        val jdslExecutor = mockk<AdminJdslExecutor>()
         val countQuery = mockk<TypedQuery<Long>>(relaxed = true)
         val postQuery = mockk<TypedQuery<AdminPostRow>>(relaxed = true)
         val tagQuery = mockk<TypedQuery<AdminPostTagRow>>(relaxed = true)
-        val service = AdminPostQueryService(entityManager)
+        val service = AdminPostQueryService(jdslExecutor)
 
-        every { entityManager.createQuery(any<String>(), Long::class.javaObjectType) } returns countQuery
-        every { entityManager.createQuery(any<String>(), AdminPostRow::class.java) } returns postQuery
-        every { entityManager.createQuery(any<String>(), AdminPostTagRow::class.java) } returns tagQuery
+        every { jdslExecutor.createQuery(any(), Long::class.javaObjectType, any(), any()) } returns countQuery
+        every { jdslExecutor.createQuery(any(), AdminPostRow::class.java, any(), any()) } returns postQuery
+        every { jdslExecutor.createQuery(any(), AdminPostTagRow::class.java, any(), any()) } returns tagQuery
         every { countQuery.resultList } returns listOf(1L)
         every { postQuery.resultList } returns listOf(
             AdminPostRow(

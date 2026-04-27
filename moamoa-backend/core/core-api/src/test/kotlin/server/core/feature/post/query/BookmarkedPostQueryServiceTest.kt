@@ -5,10 +5,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.MemberRole
 import server.core.feature.post.infra.BookmarkedPostListCache
+import server.core.global.jdsl.JdslExecutor
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
 import server.core.support.domain.ListEntry
@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 class BookmarkedPostQueryServiceTest : UnitTest() {
     @Test
     fun `캐시된 북마크 게시글을 통계와 병합한다`() {
-        val entityManager = mockk<EntityManager>(relaxed = true)
+        val jdslExecutor = mockk<JdslExecutor>(relaxed = true)
         val bookmarkedPostListCache = mockk<BookmarkedPostListCache>()
         val postStatsReader = mockk<PostStatsReader>()
         val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
@@ -35,7 +35,7 @@ class BookmarkedPostQueryServiceTest : UnitTest() {
         )
 
         val service = BookmarkedPostQueryService(
-            entityManager,
+            jdslExecutor,
             bookmarkedPostListCache,
             postStatsReader,
             warmupCoordinator

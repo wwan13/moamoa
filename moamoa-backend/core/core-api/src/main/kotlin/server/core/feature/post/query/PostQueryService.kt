@@ -1,8 +1,6 @@
 package server.core.feature.post.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.category.domain.Category
@@ -11,17 +9,16 @@ import server.core.feature.post.domain.PostTag
 import server.core.feature.post.infra.PostListCache
 import server.core.feature.tag.domain.Tag
 import server.core.feature.techblog.domain.TechBlog
+import server.core.global.jdsl.JdslExecutor
 import server.core.global.security.Passport
 import server.core.infra.cache.WarmupCoordinator
 import server.core.support.domain.ListEntry
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
-import server.core.support.query.createJdslQuery
 
 @Service
 class PostQueryService(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: JdslExecutor,
     private val postListCache: PostListCache,
     private val bookmarkedPostReader: BookmarkedPostReader,
     private val postStatsReader: PostStatsReader,
@@ -116,8 +113,8 @@ class PostQueryService(
         val offset = (paging.page - 1L) * paging.size
         val jpqlQuery = createBasePostsQuery(query, categoryId)
 
-        val rows = entityManager
-            .createJdslQuery(
+        val rows = jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = PostSummary::class.java,
                 offset = offset.toInt(),
@@ -131,8 +128,8 @@ class PostQueryService(
     private fun fetchCountAllPosts(query: String?, categoryId: Long?): Long {
         val jpqlQuery = createCountAllPostsQuery(query, categoryId)
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = Long::class.javaObjectType,
                 offset = 0,

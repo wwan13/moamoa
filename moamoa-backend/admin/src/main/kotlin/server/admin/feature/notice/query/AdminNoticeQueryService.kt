@@ -1,18 +1,15 @@
 package server.admin.feature.notice.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.admin.feature.notice.domain.AdminNotice
-import server.admin.support.query.createJdslQuery
+import server.admin.global.jdsl.AdminJdslExecutor
 
 @Service
 @Transactional(readOnly = true)
 internal class AdminNoticeQueryService(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: AdminJdslExecutor,
 ) {
     fun findByConditions(conditions: AdminNoticeQueryConditions): AdminNoticeList {
         val size = conditions.size?.takeIf { it > 0 } ?: 20L
@@ -64,8 +61,8 @@ internal class AdminNoticeQueryService(
                 )
         }
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = AdminNoticeSummary::class.java,
                 offset = offset.toInt(),
@@ -91,8 +88,8 @@ internal class AdminNoticeQueryService(
                 )
         }
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = Long::class.javaObjectType,
                 offset = 0,

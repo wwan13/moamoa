@@ -5,10 +5,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
 import server.core.feature.member.domain.MemberRole
 import server.core.feature.post.infra.TechBlogPostListCache
+import server.core.global.jdsl.JdslExecutor
 import server.core.infra.cache.WarmupCoordinator
 import server.core.global.security.Passport
 import server.core.support.domain.ListEntry
@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 class TechBlogPostQueryServiceTest : UnitTest() {
     @Test
     fun `캐시된 기술블로그 게시글을 병합한다`() {
-        val entityManager = mockk<EntityManager>(relaxed = true)
+        val jdslExecutor = mockk<JdslExecutor>(relaxed = true)
         val techBlogPostListCache = mockk<TechBlogPostListCache>()
         val bookmarkedPostReader = mockk<BookmarkedPostReader>()
         val postStatsReader = mockk<PostStatsReader>()
@@ -35,7 +35,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
         every { bookmarkedPostReader.findBookmarkedPostIdSet(10L, listOf(1L, 2L)) } returns setOf(2L)
 
         val service = TechBlogPostQueryService(
-            entityManager,
+            jdslExecutor,
             techBlogPostListCache,
             bookmarkedPostReader,
             postStatsReader,

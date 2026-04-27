@@ -1,20 +1,17 @@
 package server.core.feature.notice.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.jpql
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.notice.domain.Notice
+import server.core.global.jdsl.JdslExecutor
 import server.core.support.domain.ListEntry
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
-import server.core.support.query.createJdslQuery
 
 @Service
 class NoticeQueryService(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: JdslExecutor,
 ) {
 
     @Transactional(readOnly = true)
@@ -53,8 +50,8 @@ class NoticeQueryService(
         val offset = (paging.page - 1L) * paging.size
         val jpqlQuery = createNoticesQuery(query)
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = NoticeSummary::class.java,
                 offset = offset.toInt(),
@@ -66,8 +63,8 @@ class NoticeQueryService(
     private fun fetchCount(query: String?): Long {
         val jpqlQuery = createCountQuery(query)
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = Long::class.javaObjectType,
                 offset = 0,

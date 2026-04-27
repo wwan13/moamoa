@@ -1,8 +1,6 @@
 package server.core.feature.post.query
 
 import com.linecorp.kotlinjdsl.dsl.jpql.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.core.feature.bookmark.domain.Bookmark
@@ -10,17 +8,16 @@ import server.core.feature.category.domain.Category
 import server.core.feature.post.domain.Post
 import server.core.feature.post.infra.BookmarkedPostListCache
 import server.core.feature.techblog.domain.TechBlog
+import server.core.global.jdsl.JdslExecutor
 import server.core.global.security.Passport
 import server.core.infra.cache.WarmupCoordinator
 import server.core.support.domain.ListEntry
 import server.core.support.paging.Paging
 import server.core.support.paging.calculateTotalPage
-import server.core.support.query.createJdslQuery
 
 @Service
 class BookmarkedPostQueryService(
-    @PersistenceContext
-    private val entityManager: EntityManager,
+    private val jdslExecutor: JdslExecutor,
     private val bookmarkedPostListCache: BookmarkedPostListCache,
     private val postStatsReader: PostStatsReader,
     private val warmupCoordinator: WarmupCoordinator,
@@ -105,8 +102,8 @@ class BookmarkedPostQueryService(
         val offset = (paging.page - 1L) * paging.size
         val jpqlQuery = createBookmarkedBasePostsQuery(memberId, categoryId)
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = PostSummary::class.java,
                 offset = offset.toInt(),
@@ -118,8 +115,8 @@ class BookmarkedPostQueryService(
     private fun fetchCountBookmarkedPosts(memberId: Long, categoryId: Long?): Long {
         val jpqlQuery = createCountBookmarkedPostsQuery(memberId, categoryId)
 
-        return entityManager
-            .createJdslQuery(
+        return jdslExecutor
+            .createQuery(
                 query = jpqlQuery,
                 resultClass = Long::class.javaObjectType,
                 offset = 0,

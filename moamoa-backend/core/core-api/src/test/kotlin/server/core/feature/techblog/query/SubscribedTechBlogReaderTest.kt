@@ -3,11 +3,9 @@ package server.core.feature.techblog.query
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Test
-import server.core.feature.techblog.query.SubscribedTechBlogReader
-import server.core.feature.techblog.query.SubscriptionInfo
 import server.core.feature.techblog.infra.SubscriptionCache
+import server.core.global.jdsl.JdslExecutor
 import server.core.infra.cache.WarmupCoordinator
 import test.UnitTest
 
@@ -21,7 +19,7 @@ class SubscribedTechBlogReaderTest : UnitTest() {
         )
 
         val reader = SubscribedTechBlogReader(
-            entityManager = mockk<EntityManager>(relaxed = true),
+            jdslExecutor = mockk<JdslExecutor>(relaxed = true),
             subscriptionCache = subscriptionCache,
             warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
         )
