@@ -13,6 +13,7 @@ import { useTechBlogsQuery } from "../../queries/techBlog.queries"
 import {
   useDisableNotificationMutation,
   useEnableNotificationMutation,
+  patchSubscribedTechBlogsCache,
   useSubscribeMutation,
   useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
@@ -23,7 +24,7 @@ const SKELETON_COUNT = 12
 
 const TechBlogsPage = () => {
   const navigate = useNavigate()
-  const { isLoggedIn, openLogin } = useAuth()
+  const { isLoggedIn, openLogin, authScope } = useAuth()
   const qc = useQueryClient()
 
   const [search, setSearch] = useState("")
@@ -91,15 +92,6 @@ const TechBlogsPage = () => {
     })
   }
 
-  const invalidateTechBlogCaches = () => {
-    qc.invalidateQueries({ queryKey: ["techBlogs"], refetchType: "inactive" })
-    qc.invalidateQueries({ queryKey: ["techBlog"], refetchType: "inactive" })
-    qc.invalidateQueries({
-      queryKey: ["techBlogs", "subscribed"],
-      refetchType: "inactive",
-    })
-  }
-
   const subscriptionToggle = async (blog: TechBlogSummary) => {
     if (!isLoggedIn) {
       const ok = await showGlobalConfirm({
@@ -139,6 +131,21 @@ const TechBlogsPage = () => {
       ),
       notificationEnabled: wasSubscribed ? false : true,
     }))
+    patchSubscribedTechBlogsCache({
+      queryClient: qc,
+      authScope,
+      techBlog: {
+        ...blog,
+        subscribed: !wasSubscribed,
+        subscriptionCount: Math.max(
+          0,
+          (blog.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+        ),
+        notificationEnabled: wasSubscribed ? false : true,
+      },
+      subscribed: !wasSubscribed,
+      notificationEnabled: wasSubscribed ? false : true,
+    })
 
     try {
       if (wasSubscribed) {
@@ -146,7 +153,6 @@ const TechBlogsPage = () => {
       } else {
         await subscribeMutation.mutateAsync({ techBlogId })
       }
-      invalidateTechBlogCaches()
       showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
     } catch {
       // rollback
@@ -159,6 +165,13 @@ const TechBlogsPage = () => {
         ),
         notificationEnabled: wasNotificationEnabled,
       }))
+      patchSubscribedTechBlogsCache({
+        queryClient: qc,
+        authScope,
+        techBlog: blog,
+        subscribed: wasSubscribed,
+        notificationEnabled: wasNotificationEnabled,
+      })
       showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
     }
   }
@@ -196,6 +209,16 @@ const TechBlogsPage = () => {
       ...b,
       notificationEnabled: !wasEnabled,
     }))
+    patchSubscribedTechBlogsCache({
+      queryClient: qc,
+      authScope,
+      techBlog: {
+        ...blog,
+        notificationEnabled: !wasEnabled,
+      },
+      subscribed: true,
+      notificationEnabled: !wasEnabled,
+    })
 
     try {
       if (wasEnabled) {
@@ -203,13 +226,19 @@ const TechBlogsPage = () => {
       } else {
         await enableNotificationMutation.mutateAsync({ techBlogId })
       }
-      invalidateTechBlogCaches()
       showToast(wasEnabled ? "알림을 해제했어요." : "알림을 설정했어요.")
     } catch {
       patchTechBlogCaches(techBlogId, (b) => ({
         ...b,
         notificationEnabled: wasEnabled,
       }))
+      patchSubscribedTechBlogsCache({
+        queryClient: qc,
+        authScope,
+        techBlog: blog,
+        subscribed: true,
+        notificationEnabled: wasEnabled,
+      })
       showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
     }
   }

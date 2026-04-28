@@ -7,6 +7,7 @@ import { showGlobalConfirm, showToast } from "../../api/client"
 import {
   useDisableNotificationMutation,
   useEnableNotificationMutation,
+  patchSubscribedTechBlogsCache,
   useSubscribeMutation,
   useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
@@ -16,6 +17,7 @@ type TechBlogItemProps = {
   techBlog?: TechBlogSummary
   isSkeleton?: boolean
   onItemClick?: () => void
+  syncSubscribedListCache?: boolean
 }
 
 type TechBlogListCache = {
@@ -26,9 +28,10 @@ const TechBlogItem = ({
   techBlog,
   isSkeleton = false,
   onItemClick,
+  syncSubscribedListCache = true,
 }: TechBlogItemProps) => {
   const qc = useQueryClient()
-  const { isLoggedIn, openLogin } = useAuth()
+  const { isLoggedIn, openLogin, authScope } = useAuth()
 
   const subscribeMutation = useSubscribeMutation({
     invalidateOnSuccess: false,
@@ -78,6 +81,7 @@ const TechBlogItem = ({
     }
 
     if (!techBlog) return
+    if (isMutating) return
 
     const wasSubscribed = !!techBlog.subscribed
     const techBlogId = techBlog.id
@@ -92,32 +96,40 @@ const TechBlogItem = ({
       if (!ok) return
     }
 
-    patchBlog(techBlogId, (b) => ({
-      ...b,
-      subscribed: !wasSubscribed,
-      subscriptionCount: Math.max(
-        0,
-        (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
-      ),
-      notificationEnabled: true,
-    }))
-
     try {
       if (wasSubscribed) {
         await unsubscribeMutation.mutateAsync({ techBlogId })
       } else {
         await subscribeMutation.mutateAsync({ techBlogId })
       }
-      showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
-    } catch {
       patchBlog(techBlogId, (b) => ({
         ...b,
-        subscribed: wasSubscribed,
+        subscribed: !wasSubscribed,
         subscriptionCount: Math.max(
           0,
-          (b.subscriptionCount ?? 0) + (wasSubscribed ? 1 : -1),
+          (b.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
         ),
+        notificationEnabled: wasSubscribed ? false : true,
       }))
+      if (syncSubscribedListCache) {
+        patchSubscribedTechBlogsCache({
+          queryClient: qc,
+          authScope,
+          techBlog: {
+            ...techBlog,
+            subscribed: !wasSubscribed,
+            subscriptionCount: Math.max(
+              0,
+              (techBlog.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+            ),
+            notificationEnabled: wasSubscribed ? false : true,
+          },
+          subscribed: !wasSubscribed,
+          notificationEnabled: wasSubscribed ? false : true,
+        })
+      }
+      showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
+    } catch {
       showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
     }
   }
@@ -137,6 +149,7 @@ const TechBlogItem = ({
     }
 
     if (!techBlog) return
+    if (isMutating) return
 
     const wasEnabled = !!techBlog.notificationEnabled
     const techBlogId = techBlog.id
@@ -151,23 +164,30 @@ const TechBlogItem = ({
       if (!ok) return
     }
 
-    patchBlog(techBlogId, (b) => ({
-      ...b,
-      notificationEnabled: !wasEnabled,
-    }))
-
     try {
       if (wasEnabled) {
         await disableNotificationMutation.mutateAsync({ techBlogId })
       } else {
         await enableNotificationMutation.mutateAsync({ techBlogId })
       }
-      showToast(wasEnabled ? "알람을 해제했어요." : "알람을 설정했어요.")
-    } catch {
       patchBlog(techBlogId, (b) => ({
         ...b,
-        notificationEnabled: wasEnabled,
+        notificationEnabled: !wasEnabled,
       }))
+      if (syncSubscribedListCache) {
+        patchSubscribedTechBlogsCache({
+          queryClient: qc,
+          authScope,
+          techBlog: {
+            ...techBlog,
+            notificationEnabled: !wasEnabled,
+          },
+          subscribed: true,
+          notificationEnabled: !wasEnabled,
+        })
+      }
+      showToast(wasEnabled ? "알람을 해제했어요." : "알람을 설정했어요.")
+    } catch {
       showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
     }
   }
@@ -227,7 +247,6 @@ const TechBlogItem = ({
               e.stopPropagation()
               subscriptionToggle()
             }}
-            disabled={isMutating}
           >
             {techBlog.subscribed ? "구독중" : "구독"}
           </button>
@@ -243,7 +262,6 @@ const TechBlogItem = ({
                 e.stopPropagation()
                 notificationToggle()
               }}
-              disabled={isMutating}
             >
               {techBlog.notificationEnabled ? (
                 <NotificationsOffOutlinedIcon

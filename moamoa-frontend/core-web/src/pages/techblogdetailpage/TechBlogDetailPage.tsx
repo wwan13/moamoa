@@ -13,6 +13,7 @@ import type { PostCategoryKey } from "../../api/post.api"
 import {
   useDisableNotificationMutation,
   useEnableNotificationMutation,
+  patchSubscribedTechBlogsCache,
   useSubscribeMutation,
   useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
@@ -44,8 +45,12 @@ const TechBlogDetailPage = () => {
   const postsQuery = usePostsByTechBlogIdQuery({ page, techBlogId, category })
 
   // ✅ mutations
-  const subscribeMutation = useSubscribeMutation()
-  const unsubscribeMutation = useUnsubscribeMutation()
+  const subscribeMutation = useSubscribeMutation({
+    invalidateOnSuccess: false,
+  })
+  const unsubscribeMutation = useUnsubscribeMutation({
+    invalidateOnSuccess: false,
+  })
   const enableNotificationMutation = useEnableNotificationMutation()
   const disableNotificationMutation = useDisableNotificationMutation()
   const isSubscriptionPending =
@@ -166,6 +171,21 @@ const TechBlogDetailPage = () => {
       // ✅ 구독 해제면 알림 off / 구독이면 알림 on
       notificationEnabled: wasSubscribed ? false : true,
     }))
+    patchSubscribedTechBlogsCache({
+      queryClient: qc,
+      authScope,
+      techBlog: {
+        ...techBlog,
+        subscribed: !wasSubscribed,
+        subscriptionCount: Math.max(
+          0,
+          (techBlog.subscriptionCount ?? 0) + (wasSubscribed ? -1 : 1),
+        ),
+        notificationEnabled: wasSubscribed ? false : true,
+      },
+      subscribed: !wasSubscribed,
+      notificationEnabled: wasSubscribed ? false : true,
+    })
 
     try {
       if (wasSubscribed) {
@@ -173,10 +193,6 @@ const TechBlogDetailPage = () => {
       } else {
         await subscribeMutation.mutateAsync({ techBlogId: techBlogIdNum })
       }
-
-      // 서버가 count/상태를 다시 계산하는 구조면 최소 refetch로 정합성 확보
-      qc.invalidateQueries({ queryKey: techBlogQk, refetchType: "inactive" })
-      qc.invalidateQueries({ queryKey: ["techBlogs"], refetchType: "inactive" })
 
       showToast(wasSubscribed ? "구독을 해제했어요." : "구독했어요.")
     } catch {
@@ -192,6 +208,13 @@ const TechBlogDetailPage = () => {
       }))
 
       qc.invalidateQueries({ queryKey: techBlogQk })
+      patchSubscribedTechBlogsCache({
+        queryClient: qc,
+        authScope,
+        techBlog,
+        subscribed: wasSubscribed,
+        notificationEnabled: techBlog.notificationEnabled,
+      })
       showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
     }
   }
@@ -222,6 +245,16 @@ const TechBlogDetailPage = () => {
       ...b,
       notificationEnabled: !wasEnabled,
     }))
+    patchSubscribedTechBlogsCache({
+      queryClient: qc,
+      authScope,
+      techBlog: {
+        ...techBlog,
+        notificationEnabled: !wasEnabled,
+      },
+      subscribed: true,
+      notificationEnabled: !wasEnabled,
+    })
 
     try {
       if (wasEnabled) {
@@ -234,9 +267,6 @@ const TechBlogDetailPage = () => {
         })
       }
 
-      qc.invalidateQueries({ queryKey: techBlogQk, refetchType: "inactive" })
-      qc.invalidateQueries({ queryKey: ["techBlogs"], refetchType: "inactive" })
-
       showToast(wasEnabled ? "알림을 해제했어요." : "알림을 설정했어요.")
     } catch {
       // ✅ rollback
@@ -246,6 +276,13 @@ const TechBlogDetailPage = () => {
       }))
 
       qc.invalidateQueries({ queryKey: techBlogQk })
+      patchSubscribedTechBlogsCache({
+        queryClient: qc,
+        authScope,
+        techBlog,
+        subscribed: true,
+        notificationEnabled: wasEnabled,
+      })
       showToast("처리 중 오류가 발생했어요. 다시 시도해 주세요.")
     }
   }

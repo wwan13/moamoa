@@ -38,6 +38,7 @@ const MySubscriptionPage = () => {
       <TechBlogItem
         key={techBlog.id}
         techBlog={techBlog}
+        syncSubscribedListCache={false}
         onItemClick={() => {
           navigate(`/blog/${techBlog.id}`)
         }}
