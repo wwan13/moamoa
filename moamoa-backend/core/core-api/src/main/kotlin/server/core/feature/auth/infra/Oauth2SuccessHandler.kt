@@ -42,7 +42,7 @@ class Oauth2SuccessHandler(
 
             is Oauth2SocialUser.EmailRequired -> {
                 redirectUrl(
-                    "emailRequired" to "emailRequired",
+                    "type" to "emailRequired",
                     "provider" to authenticatedUser.provider.name,
                     "providerKey" to authenticatedUser.providerKey
                 )
