@@ -82,6 +82,7 @@ moamoa/
 
 - Shared backend structure, module placement, and dependency direction: `$backend-architecture`
 - Backend API contract changes: `$backend-api-contract`
+- core-api Swagger/OpenAPI spec extraction and inspection: `$backend-openapi-spec`
 - Backend JPA/JDBC and transaction boundaries: `$backend-persistence-jpa`
 - Backend logging, traceId, and request boundary logging: `$backend-logging-strategy`
 - Backend test additions and updates: `$backend-testing-style`
@@ -135,6 +136,7 @@ moamoa/
 ./gradlew :moamoa-backend:core:core-batch:test
 ./gradlew :moamoa-backend:core:core-api:bootJar
 ./gradlew :moamoa-backend:admin:bootJar
+./gradlew -q :moamoa-backend:core:core-api:extractOpenApiSpec -Ppath=/api/post -Pmethod=GET -Pmode=json
 ```
 
 ### Frontend
