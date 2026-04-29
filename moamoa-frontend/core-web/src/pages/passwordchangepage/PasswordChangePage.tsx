@@ -1,7 +1,7 @@
 import styles from "./PasswordChangePage.module.css"
 import { useEffect, useState } from "react"
 import useAuth from "../../auth/useAuth"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import InputText from "../../components/ui/InputText"
 import Button from "../../components/ui/Button"
 import GlobalSpinner from "../../components/globalspinner/GlobalSpinner"
@@ -11,6 +11,7 @@ import { showGlobalAlert, showGlobalConfirm, showToast } from "../../api/client"
 const PasswordChangePage = () => {
   const { isLoggedIn } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [oldPassword, setOldPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -30,9 +31,25 @@ const PasswordChangePage = () => {
 
   const changePasswordMutation = useChangePasswordMutation()
 
+  const resetForm = () => {
+    setOldPassword("")
+    setNewPassword("")
+    setPasswordConfirm("")
+    setPasswordSizeValid("")
+    setPasswordCombineValid("")
+    setExtraPasswordError("")
+    setOldPasswordError("")
+    setPasswordConfirmError("")
+    changePasswordMutation.reset()
+  }
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" })
   }, [])
+
+  useEffect(() => {
+    resetForm()
+  }, [location.key])
 
   useEffect(() => {
     if (!isLoggedIn) {
