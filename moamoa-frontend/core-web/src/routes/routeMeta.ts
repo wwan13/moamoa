@@ -3,6 +3,8 @@ import { matchPath } from "react-router-dom"
 const SITE_URL = "https://moamoa.dev"
 const SITE_NAME = "moamoa"
 const DEFAULT_OG_IMAGE = `https://i.imgur.com/8n3jdl6.png`
+const SITE_DESCRIPTION =
+  "매일 업데이트되는 테크 기업들의 기술 블로그를 북마크하고 구독해서 매일 오전 8시 이메일로 받아보세요."
 
 type MetaRule = {
   path: string
@@ -23,7 +25,7 @@ type RouteMeta = {
 
 const DEFAULT_META: RouteMeta = {
   title: "moamoa | 기술 블로그 모아보기",
-  description: "기술 블로그의 최신 글을 moamoa에서 한 번에 모아보세요.",
+  description: SITE_DESCRIPTION,
   robots: "noindex,nofollow",
   canonicalUrl: `${SITE_URL}/`,
   ogType: "website",
@@ -35,7 +37,7 @@ const META_RULES: MetaRule[] = [
   {
     path: "/",
     title: "모아모아 | 기술 블로그를 한 곳에서",
-    description: "기술 블로그의 최신 글을 moamoa에서 한 번에 모아보세요.",
+    description: SITE_DESCRIPTION,
     robots: "index,follow",
   },
   {
