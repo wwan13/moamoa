@@ -86,7 +86,7 @@ moamoa/
 - Backend JPA/JDBC and transaction boundaries: `$backend-persistence-jpa`
 - Backend logging, traceId, and request boundary logging: `$backend-logging-strategy`
 - Backend test additions and updates: `$backend-testing-style`
-- Backend image build, push, and remote compose deployment: `$backend-deployment`
+- Backend image build and Docker Hub push: `$backend-deployment`
 
 ### Frontend
 

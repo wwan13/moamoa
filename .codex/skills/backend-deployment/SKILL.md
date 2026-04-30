@@ -1,20 +1,17 @@
 ---
 name: backend-deployment
-description: "Use this skill for moamoa backend deployment work. It applies when you need to build and push the backend Docker image locally, then connect to the deployment host and refresh the running service with docker compose."
+description: "Use this skill for moamoa backend Docker image push work. It applies when you need to build the backend Docker image locally and push it to Docker Hub."
 ---
 
-# Backend Deployment
+# Backend Docker Push
 
-Use this skill when the user asks about backend deployment, release execution, or the current deploy flow for moamoa.
+Use this skill when the user asks about backend image publishing, release image push, or the current Docker push flow for moamoa.
 
-## Deployment Baseline
-- Local deploy script: `.platform/script/deploy/deploy.sh`
+## Push Baseline
+- Local push script: `.platform/script/deploy/deploy.sh`
 - Default image tag: `prod`
-- Remote host entry: `ssh hs`
-- Remote infra directory: `/Users/taewan/dev/infra`
-- Remote Docker bin directory: `/Applications/Docker.app/Contents/Resources/bin`
-- Remote compose scope: `/docker/moamoa/docker-compose.moamoa.yml` only
-- Remote deploy command: `export PATH=/Applications/Docker.app/Contents/Resources/bin:/usr/local/bin:$PATH && docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d --pull always`
+- Image name: `wwan13/moamoa-core`
+- Docker build context: `moamoa-backend/core/core-api`
 
 ## What The Current Script Does
 - Runs `./gradlew clean`
@@ -23,28 +20,20 @@ Use this skill when the user asks about backend deployment, release execution, o
 - Pushes that image to Docker Hub
 
 ## Use This Skill When
-- Running a backend deployment
-- Explaining the backend deployment sequence
-- Updating docs or automation around the current deploy flow
-- Verifying whether a backend change requires image build, push, and remote compose refresh
+- Running a backend Docker image push
+- Explaining the backend image push sequence
+- Updating docs or automation around the current push flow
+- Verifying whether a backend change requires image build and push
 
 ## Workflow
-1. Confirm the target stays within backend deployment docs or scripts before editing.
+1. Confirm the target stays within backend Docker push docs or scripts before editing.
 2. Read `.platform/script/deploy/deploy.sh` to verify the current image build and push steps.
-3. If the user does not explicitly request another tag, treat the deployment tag as `prod`.
-4. If executing deployment, run the local build and push flow first, typically via `.platform/script/deploy/deploy.sh prod`.
-5. Connect to the deploy host with `ssh hs`.
-6. Move to `/Users/taewan/dev/infra`. Do not use `~/d/infra`; that shorthand is stale for the current host.
-7. Before running compose remotely, export `PATH=/Applications/Docker.app/Contents/Resources/bin:/usr/local/bin:$PATH` so both `docker` and `docker-credential-desktop` resolve in non-interactive SSH sessions.
-8. Only operate on `docker/moamoa/docker-compose.moamoa.yml`. Do not inspect, edit, or run other compose files as part of moamoa deployment unless the user explicitly overrides this rule.
-9. Run `docker compose -f docker/moamoa/docker-compose.moamoa.yml up -d --pull always`.
-10. Do not run Docker volume management commands such as `docker volume rm`, `docker volume prune`, or any compose workflow that would recreate or delete unrelated volumes. Preserve all existing non-moamoa volumes on the host.
-11. Treat the deployment as complete once the compose update finishes without errors.
+3. If the user does not explicitly request another tag, treat the push tag as `prod`.
+4. If executing the flow, run the local build and push steps via `.platform/script/deploy/deploy.sh prod`.
+5. Treat the task as complete once the image push finishes without errors.
 
 ## Notes
-- The current documented flow is for backend deployment, centered on the `core-api` Docker image.
+- The current documented flow is for backend Docker image push, centered on the `core-api` Docker image.
 - The operational default tag is `prod`. Only use another tag when the user explicitly asks for it.
-- The compose command is the production refresh step because `--pull always` forces the remote host to fetch the latest image before recreating containers.
-- On host `hs`, plain SSH sessions may not have Docker Desktop binaries on `PATH`; use the baseline `PATH` export before any remote Docker command.
-- Deployment scope on the host is intentionally narrow: touch only `/docker/moamoa/docker-compose.moamoa.yml` and avoid any action that could affect other compose stacks or Docker volumes.
-- If the task changes image names, compose paths, or host access conventions, update this skill and the related deploy script together.
+- This skill does not include remote host access, remote Docker commands, or compose-based refresh steps.
+- If the task changes image names, tags, or local push script conventions, update this skill and the related script together.
