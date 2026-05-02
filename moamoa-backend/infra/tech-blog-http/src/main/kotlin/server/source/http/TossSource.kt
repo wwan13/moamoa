@@ -44,7 +44,7 @@ internal class TossSource(
                 TechBlogPost(
                     key = it.id.toString(),
                     title = it.title,
-                    description = it.subtitle,
+                    description = it.subtitle ?: "",
                     tags = listOf(it.category),
                     thumbnail = it.thumbnailConfig.imageUrl ?: "",
                     publishedAt = ZonedDateTime.parse(it.publishedTime).toLocalDateTime(),
@@ -70,7 +70,7 @@ internal class TossSource(
                 val id: Long,
                 val key: String,
                 val title: String,
-                val subtitle: String,
+                val subtitle: String?,
                 val category: String,
                 val publishedTime: String,
                 val thumbnailConfig: ThumbnailConfig,
