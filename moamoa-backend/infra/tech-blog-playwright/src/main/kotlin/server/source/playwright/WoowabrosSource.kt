@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Component
+import server.config.PlaywrightProperties
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
 import java.net.URI
@@ -22,7 +23,9 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Component
-internal class WoowabrosSource : TechBlogSource {
+internal class WoowabrosSource(
+    private val playwrightProperties: PlaywrightProperties = PlaywrightProperties(),
+) : TechBlogSource {
 
     private val objectMapper = ObjectMapper()
 
@@ -49,10 +52,7 @@ internal class WoowabrosSource : TechBlogSource {
 
     private fun scrapePosts(size: Int?): List<TechBlogPost> {
         Playwright.create().use { playwright ->
-            playwright.chromium().launch(
-                BrowserType.LaunchOptions()
-                    .setHeadless(true)
-            ).use { browser ->
+            openBrowser(playwright).use { browser ->
                 browser.newContext(
                     Browser.NewContextOptions()
                         .setUserAgent(USER_AGENT)
@@ -69,6 +69,22 @@ internal class WoowabrosSource : TechBlogSource {
                 }
             }
         }
+    }
+
+    private fun openBrowser(playwright: Playwright): Browser {
+        val endpoint = playwrightProperties.wsEndpoint?.trim()
+        if (!endpoint.isNullOrBlank()) {
+            return playwright.chromium().connect(
+                endpoint,
+                BrowserType.ConnectOptions()
+                    .setTimeout(10_000.0)
+            )
+        }
+
+        return playwright.chromium().launch(
+            BrowserType.LaunchOptions()
+                .setHeadless(true)
+        )
     }
 
     private fun fetchSummaries(page: Page, size: Int?): List<TechBlogPost> {
