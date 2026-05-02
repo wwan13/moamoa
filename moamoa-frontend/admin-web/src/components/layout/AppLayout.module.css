@@ -1,11 +1,12 @@
 .shell {
+  --sidebar-width: 220px;
   min-height: 100vh;
-  display: flex;
   background: #f7f8fa;
 }
 
 .main {
-  flex: 1;
+  min-height: 100vh;
+  margin-left: var(--sidebar-width);
   flex-direction: column;
 }
 

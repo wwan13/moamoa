@@ -1,10 +1,14 @@
 .wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 220px;
   height: 100vh;
   background: #ffffff;
   box-shadow: 2px 2px 12px rgba(1, 1, 1, 0.007);
   padding: 32px 16px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .top {
