@@ -27,16 +27,6 @@ const menus: Menu[] = [
     ),
   },
   {
-    title: "공지사항",
-    key: "/notice",
-    navigateTo: "/notice",
-    icon: (active) => (
-      <CampaignOutlinedIcon
-        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
-      />
-    ),
-  },
-  {
     title: "게시글",
     key: "/post",
     navigateTo: "/post",
@@ -52,6 +42,16 @@ const menus: Menu[] = [
     navigateTo: "/blog",
     icon: (active) => (
       <AppsOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
+  {
+    title: "공지사항",
+    key: "/notice",
+    navigateTo: "/notice",
+    icon: (active) => (
+      <CampaignOutlinedIcon
         sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
       />
     ),
