@@ -1,41 +1,62 @@
 package server.admin.feature.techblog.application
 
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import server.admin.feature.post.command.domain.AdminPost
+import server.admin.feature.post.command.domain.AdminPostCountProjection
 import server.admin.feature.post.command.domain.AdminPostRepository
 import server.admin.feature.posttag.domain.AdminPostTag
 import server.admin.feature.posttag.domain.AdminPostTagRepository
+import server.admin.feature.subscription.domain.AdminSubscriptionCountProjection
+import server.admin.feature.subscription.domain.AdminSubscriptionRepository
 import server.admin.feature.tag.domain.AdminTag
 import server.admin.feature.tag.domain.AdminTagRepository
 import server.admin.feature.techblog.domain.AdminTechBlog
 import server.admin.feature.techblog.domain.AdminTechBlogRepository
+import server.admin.feature.techblog.infra.TechBlogCollector
 import server.core.feature.category.domain.Category
 import server.techblog.TechBlogPost
-import server.techblog.TechBlogSources
 
 @Service
 internal class AdminTechBlogService(
     private val techBlogRepository: AdminTechBlogRepository,
-    private val techBlogSources: TechBlogSources,
     private val postRepository: AdminPostRepository,
+    private val subscriptionRepository: AdminSubscriptionRepository,
+    private val techBlogCollector: TechBlogCollector,
     private val tagRepository: AdminTagRepository,
     private val postTagRepository: AdminPostTagRepository,
 ) {
+    @Transactional(readOnly = true)
+    fun findAll(): List<AdminTechBlogData> {
+        val techBlogs = techBlogRepository.findAllByOrderByTitleAscIdAsc()
+        if (techBlogs.isEmpty()) return emptyList()
+
+        val techBlogIds = techBlogs.map { it.id }
+        val postCounts = postRepository.countByTechBlogIds(techBlogIds)
+            .associatePostCountsByTechBlogId()
+        val subscriptionCounts = subscriptionRepository.countByTechBlogIds(techBlogIds)
+            .associateSubscriptionCountsByTechBlogId()
+
+        return techBlogs.map { techBlog ->
+            AdminTechBlogData(
+                techBlog = techBlog,
+                postCount = postCounts[techBlog.id] ?: 0,
+                subscriptionCount = subscriptionCounts[techBlog.id] ?: 0,
+            )
+        }
+    }
 
     @Transactional
     fun create(command: AdminCreateTechBlogCommand): AdminTechBlogData {
         validateTitle(command.title)
-        val techBlog = AdminTechBlog(
+        val techBlog = server.admin.feature.techblog.domain.AdminTechBlog(
             title = command.title,
             icon = command.icon,
             blogUrl = command.blogUrl,
             key = command.key,
         )
-        techBlogSources.validateExists(techBlog.key)
+        techBlogCollector.validateExists(techBlog.key)
         return AdminTechBlogData(techBlogRepository.save(techBlog))
     }
 
@@ -55,30 +76,27 @@ internal class AdminTechBlogService(
     }
 
     @Transactional
-    fun initTechBlog(command: AdminInitTechBlogCommand): AdminInitTechBlogResult {
-        if (postRepository.existsByTechBlogId(command.techBlogId)) {
-            throw IllegalArgumentException("이미 초기화된 tech blog 입니다.")
-        }
-
-        val techBlog = techBlogRepository.findByIdOrNull(command.techBlogId)
+    fun createPosts(
+        techBlogId: Long,
+        fetchedPosts: List<TechBlogPost>,
+    ): AdminCollectPostsResult {
+        val techBlog = techBlogRepository.findByIdOrNull(techBlogId)
             ?: throw NoSuchElementException("존재하지 않는 tech blog 입니다.")
 
-        val fetchedPosts = runBlocking {
-            techBlogSources[techBlog.key].getPosts().toList()
-        }
+        val tagsByTitle = upsertTags(fetchedPosts)
+        val existingPostsByKey = findExistingPostsByKey(techBlog.id, fetchedPosts)
+        val collectResult = saveCollectedPosts(techBlog, fetchedPosts, existingPostsByKey)
+        syncPostTags(collectResult.posts, fetchedPosts, tagsByTitle)
 
-        val categoriesByTitle = upsertTags(fetchedPosts)
-        val savedPosts = savePosts(techBlog, fetchedPosts)
-        savePostTags(savedPosts, fetchedPosts, categoriesByTitle)
-
-        return AdminInitTechBlogResult(
+        return AdminCollectPostsResult(
             techBlog = AdminTechBlogData(techBlog),
-            newPostCount = savedPosts.size,
+            newPostCount = collectResult.newPostCount,
+            updatedPostCount = collectResult.updatedPostCount,
         )
     }
 
     private fun upsertTags(fetchedPosts: List<TechBlogPost>): Map<String, AdminTag> {
-        val titles = fetchedPosts.flatMap { it.tags }.map { it.lowercase() }.distinct()
+        val titles = fetchedPosts.flatMap { it.tags }.mapNotNull(::normalizeTagTitle).distinct()
         if (titles.isEmpty()) return emptyMap()
 
         val existing = tagRepository.findAllByTitleIn(titles)
@@ -94,42 +112,110 @@ internal class AdminTechBlogService(
         return (existing + saved).associateBy { it.title }
     }
 
-    private fun savePosts(techBlog: AdminTechBlog, fetchedPosts: List<TechBlogPost>): List<AdminPost> {
-        val posts = fetchedPosts.map {
-            AdminPost(
-                key = it.key,
-                title = it.title,
-                description = it.description,
-                thumbnail = it.thumbnail,
-                url = it.url,
-                publishedAt = it.publishedAt,
-                techBlogId = techBlog.id,
-                categoryId = Category.UNDEFINED.id,
-            )
-        }
-        return postRepository.saveAll(posts).toList()
+    private fun findExistingPostsByKey(techBlogId: Long, fetchedPosts: List<TechBlogPost>): Map<String, AdminPost> {
+        if (fetchedPosts.isEmpty()) return emptyMap()
+
+        return postRepository.findAllByTechBlogIdAndKeyIn(techBlogId, fetchedPosts.map { it.key })
+            .associateBy { it.key }
     }
 
-    private fun savePostTags(
-        savedPosts: List<AdminPost>,
+    private fun saveCollectedPosts(
+        techBlog: AdminTechBlog,
         fetchedPosts: List<TechBlogPost>,
-        categoriesByTitle: Map<String, AdminTag>,
+        existingPostsByKey: Map<String, AdminPost>,
+    ): CollectedPostsResult {
+        fetchedPosts.forEach { fetchedPost ->
+            existingPostsByKey[fetchedPost.key]?.updateCollectedData(
+                title = fetchedPost.title,
+                description = fetchedPost.description,
+                thumbnail = fetchedPost.thumbnail,
+                url = fetchedPost.url,
+                publishedAt = fetchedPost.publishedAt,
+            )
+        }
+
+        val newPosts = fetchedPosts.asSequence()
+            .filter { it.key !in existingPostsByKey }
+            .map {
+                AdminPost(
+                    key = it.key,
+                    title = it.title,
+                    description = it.description,
+                    thumbnail = it.thumbnail,
+                    url = it.url,
+                    publishedAt = it.publishedAt,
+                    techBlogId = techBlog.id,
+                    categoryId = Category.UNDEFINED.id,
+                )
+            }
+            .toList()
+
+        val savedNewPosts = if (newPosts.isEmpty()) emptyList()
+        else postRepository.saveAll(newPosts).toList()
+
+        return CollectedPostsResult(
+            posts = existingPostsByKey.values.toList() + savedNewPosts,
+            newPostCount = savedNewPosts.size,
+            updatedPostCount = existingPostsByKey.size,
+        )
+    }
+
+    private fun syncPostTags(
+        posts: List<AdminPost>,
+        fetchedPosts: List<TechBlogPost>,
+        tagsByTitle: Map<String, AdminTag>,
     ) {
+        if (posts.isEmpty()) return
+
         val fetchedByKey = fetchedPosts.associateBy { it.key }
-        val postTags = savedPosts.flatMap { savedPost ->
-            val fetched = fetchedByKey[savedPost.key]
+        val desiredPostTags = posts.flatMap { post ->
+            val fetched = fetchedByKey[post.key]
                 ?: throw IllegalStateException("포스트가 존재하지 않습니다.")
 
             fetched.tags
-                .map { it.lowercase() }
-                .distinct()
+                .mapNotNull(::normalizeTagTitle)
                 .map { normalizedTitle ->
-                    val tag = categoriesByTitle[normalizedTitle]
-                        ?: throw IllegalStateException("카테고리가 존재하지 않습니다. title=$normalizedTitle")
-                    AdminPostTag(postId = savedPost.id, tagId = tag.id)
+                    val tag = tagsByTitle[normalizedTitle]
+                        ?: throw IllegalStateException("태그가 존재하지 않습니다. title=$normalizedTitle")
+                    post.id to tag.id
                 }
         }
 
-        postTagRepository.saveAll(postTags).toList()
+        val existingPostTags = postTagRepository.findAllByPostIdIn(posts.map { it.id })
+        val existingPostTagKeys = existingPostTags.map { it.postId to it.tagId }.toHashSet()
+        val desiredPostTagKeys = desiredPostTags.toHashSet()
+
+        val postTagsToDelete = existingPostTags.filter { (it.postId to it.tagId) !in desiredPostTagKeys }
+        if (postTagsToDelete.isNotEmpty()) {
+            postTagRepository.deleteAll(postTagsToDelete)
+        }
+
+        val postTagsToAdd = desiredPostTagKeys.asSequence()
+            .filterNot { it in existingPostTagKeys }
+            .map { (postId, tagId) -> AdminPostTag(postId = postId, tagId = tagId) }
+            .toList()
+
+        if (postTagsToAdd.isNotEmpty()) {
+            postTagRepository.saveAll(postTagsToAdd).toList()
+        }
     }
+
+    private fun normalizeTagTitle(title: String): String? {
+        val normalized = title.trim().lowercase()
+        return normalized.takeIf { it.isNotBlank() }
+    }
+
+    private data class CollectedPostsResult(
+        val posts: List<AdminPost>,
+        val newPostCount: Int,
+        val updatedPostCount: Int,
+    )
+}
+
+private fun List<AdminPostCountProjection>.associatePostCountsByTechBlogId(): Map<Long, Long> {
+    return associate { it.techBlogId to it.count }
+}
+
+private fun List<AdminSubscriptionCountProjection>.associateSubscriptionCountsByTechBlogId(): Map<Long, Long> {
+    return associate { it.techBlogId to it.count }
 }

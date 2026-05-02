@@ -2,6 +2,8 @@ package server.admin.feature.tag.domain
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Column
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import server.admin.support.domain.AdminBaseEntity
@@ -10,6 +12,7 @@ import server.admin.support.domain.AdminBaseEntity
 @Table(name = "tag")
 internal class AdminTag(
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     override val id: Long = 0,
 

@@ -42,24 +42,31 @@ internal data class AdminTechBlogData(
     val title: String,
     val icon: String,
     val blogUrl: String,
-    val key: String
+    val key: String,
+    val postCount: Long,
+    val subscriptionCount: Long,
 ) {
     constructor(
-        techBlog: AdminTechBlog
+        techBlog: AdminTechBlog,
+        postCount: Long = 0,
+        subscriptionCount: Long = 0,
     ) : this(
         id = techBlog.id,
         title = techBlog.title,
         key = techBlog.key,
         icon = techBlog.icon,
-        blogUrl = techBlog.blogUrl
+        blogUrl = techBlog.blogUrl,
+        postCount = postCount,
+        subscriptionCount = subscriptionCount,
     )
 }
 
-internal data class AdminInitTechBlogCommand(
+internal data class AdminCollectPostsCommand(
     val techBlogId: Long
 )
 
-internal data class AdminInitTechBlogResult(
+internal data class AdminCollectPostsResult(
     val techBlog: AdminTechBlogData,
-    val newPostCount: Int
+    val newPostCount: Int,
+    val updatedPostCount: Int
 )

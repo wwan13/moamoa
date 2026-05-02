@@ -1,0 +1,117 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.searchWrap {
+  width: 360px;
+  background: #ffffff;
+}
+
+.count {
+  color: #667085;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.listWrap {
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.blogCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.blogIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #eaecf0;
+  object-fit: cover;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.blogText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.blogTitle {
+  overflow: hidden;
+  color: #111111;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blogKey {
+  overflow: hidden;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blogUrl {
+  display: block;
+  min-width: 0;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.urlLink {
+  display: block;
+  overflow: hidden;
+  color: inherit;
+  text-overflow: ellipsis;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.urlLink:hover {
+  color: #111111;
+}
+
+.metric {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  color: #111111;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.buttonCell {
+  display: flex;
+  justify-content: center;
+}
+
+.empty {
+  border: 1px solid #e6e6e6;
+  border-top: none;
+  padding: 20px 16px;
+  color: #667085;
+  font-size: 14px;
+  text-align: center;
+}

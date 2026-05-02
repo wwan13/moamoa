@@ -188,6 +188,8 @@ internal class AdminPostQueryService(
             icon = techBlogIcon,
             blogUrl = techBlogBlogUrl,
             key = techBlogKey,
+            postCount = 0,
+            subscriptionCount = 0,
         ),
         tags = tags,
     )
