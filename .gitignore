@@ -45,6 +45,9 @@ out/
 .aiassistant/
 
 #.codex/
+.codex/.context/*
+!.codex/.context/README.md
+!.codex/.context/_template.md
 
 /log
 
