@@ -62,7 +62,6 @@ internal class WoowabrosSource(
                     page.navigate(BASE_URL, Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED))
 
                     val summaries = fetchSummaries(page, size)
-                    println(summaries.size)
                     return summaries.map { summary ->
                         summary.copy(tags = fetchCategories(context, summary.url))
                     }

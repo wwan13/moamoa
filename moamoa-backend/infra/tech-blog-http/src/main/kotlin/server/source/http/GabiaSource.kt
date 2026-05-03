@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.util.HtmlUtils
 import server.source.http.util.fetchWithPaging
 import server.source.http.util.handlePagingFinished
 import server.source.http.util.validateIsPagingFinished
@@ -81,8 +82,8 @@ internal class GabiaSource(
     }
 
     private fun String.cleanHtml(): String =
-        replace(Regex("<[^>]*>"), "")
-            .replace("&nbsp;", " ")
+        HtmlUtils.htmlUnescape(replace(Regex("<[^>]*>"), ""))
+            .replace('\u00A0', ' ')
             .trim()
 
     companion object {
