@@ -10,6 +10,7 @@ import FeedbackPage from "../pages/feedbackpage/FeedbackPage.tsx"
 import SubmissionPage from "../pages/submissionpage/SubmissionPage.tsx"
 import TechBlogPage from "../pages/techblogpage/TechBlogPage.tsx"
 import NotFoundPage from "../pages/notfoundpage/NotFoundPage.tsx"
+import CachePage from "../pages/cachepage/CachePage.tsx"
 
 const AppRoutes = () => {
   return (
@@ -21,6 +22,7 @@ const AppRoutes = () => {
         <Route path="/notice/create" element={<NoticeCreatePage />} />
         <Route path="/post" element={<PostsPage />} />
         <Route path="/blog" element={<TechBlogPage />} />
+        <Route path="/cache" element={<CachePage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="/submission" element={<SubmissionPage />} />
       </Route>

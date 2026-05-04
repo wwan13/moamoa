@@ -5,6 +5,7 @@ import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined"
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined"
 import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined"
 import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined"
+import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined"
 import { useLocation, useNavigate } from "react-router-dom"
 import * as React from "react"
 
@@ -72,6 +73,16 @@ const menus: Menu[] = [
     navigateTo: "/feedback",
     icon: (active) => (
       <ChatOutlinedIcon
+        sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
+      />
+    ),
+  },
+  {
+    title: "캐시 관리",
+    key: "/cache",
+    navigateTo: "/cache",
+    icon: (active) => (
+      <StorageOutlinedIcon
         sx={{ fontSize: 16, color: active ? "#000000" : "#808080" }}
       />
     ),
