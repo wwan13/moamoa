@@ -1,4 +1,10 @@
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query"
 import {
   postsApi,
   type PostList,
@@ -12,6 +18,69 @@ import useAuth from "../auth/useAuth"
 
 type QueryOptions = {
   enabled?: boolean
+}
+
+const READ_POST_IDS_QUERY_KEY = ["posts", "read"] as const
+const READ_POST_IDS_CACHE_NAME = "moamoa-post-state"
+const READ_POST_IDS_CACHE_KEY = "/__cache__/read-post-ids"
+const MAX_READ_POST_IDS = 500
+
+const loadReadPostIds = async (): Promise<number[]> => {
+  if (!("caches" in globalThis)) return []
+
+  try {
+    const cache = await globalThis.caches.open(READ_POST_IDS_CACHE_NAME)
+    const response = await cache.match(READ_POST_IDS_CACHE_KEY)
+    if (!response) return []
+
+    const parsed = await response.json()
+    if (!Array.isArray(parsed)) return []
+
+    return parsed.filter((value): value is number => Number.isInteger(value))
+  } catch {
+    return []
+  }
+}
+
+const saveReadPostIds = async (postIds: number[]): Promise<void> => {
+  if (!("caches" in globalThis)) return
+
+  try {
+    const cache = await globalThis.caches.open(READ_POST_IDS_CACHE_NAME)
+    await cache.put(
+      READ_POST_IDS_CACHE_KEY,
+      new Response(JSON.stringify(postIds.slice(-MAX_READ_POST_IDS)), {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        },
+      }),
+    )
+  } catch {
+    // Ignore cache write failures and keep in-memory cache working.
+  }
+}
+
+export const useReadPostIdsQuery = () => {
+  return useQuery<number[]>({
+    queryKey: READ_POST_IDS_QUERY_KEY,
+    queryFn: loadReadPostIds,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
+  })
+}
+
+export const markPostAsRead = (
+  queryClient: QueryClient,
+  postId: number,
+): void => {
+  queryClient.setQueryData<number[]>(READ_POST_IDS_QUERY_KEY, (current = []) => {
+    if (current.includes(postId)) return current
+
+    const next = [...current, postId]
+    void saveReadPostIds(next)
+    return next
+  })
 }
 
 export const usePostsQuery = (
@@ -156,7 +225,12 @@ export const useInfinitePostsQuery = (
 }
 
 export const useViewPostMutation = () => {
+  const queryClient = useQueryClient()
+
   return useMutation<ViewedPostResult | null, Error, ViewPostCommand>({
     mutationFn: (command) => postsApi.viewPost(command),
+    onSuccess: (_data, variables) => {
+      markPostAsRead(queryClient, Number(variables.postId))
+    },
   })
 }

@@ -2,11 +2,16 @@ import styles from "./PostItem.module.css"
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder"
 import BookmarkIcon from "@mui/icons-material/Bookmark"
 import VisibilityIcon from "@mui/icons-material/Visibility"
+import { useQueryClient } from "@tanstack/react-query"
 import { formatRelativeDate } from "../../utils/date"
 import { useState, type MouseEvent } from "react"
 import useAuth from "../../auth/useAuth"
 import { useNavigate } from "react-router-dom"
 import { showGlobalConfirm, showToast } from "../../api/client"
+import {
+  markPostAsRead,
+  useReadPostIdsQuery,
+} from "../../queries/post.queries"
 import {
   useBookmarkMutation,
   useUnbookmarkMutation,
@@ -26,7 +31,9 @@ const PostItem = ({
   isLoading = false,
 }: PostItemProps) => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { isLoggedIn, openLogin } = useAuth()
+  const readPostIdsQuery = useReadPostIdsQuery()
 
   const bookmarkMutation = useBookmarkMutation({
     invalidateOnSuccess: false,
@@ -39,6 +46,7 @@ const PostItem = ({
   const [bookmarkCount, setBookmarkCount] = useState(post?.bookmarkCount ?? 0)
   const [viewCount, setViewCount] = useState(post?.viewCount ?? 0)
   const category = usePostCategory(post?.categoryId)
+  const isRead = !!post && (readPostIdsQuery.data ?? []).includes(post.id)
 
   const stop = (e: MouseEvent<HTMLElement>) => {
     e.preventDefault()
@@ -46,6 +54,7 @@ const PostItem = ({
   }
 
   const onOpenPost = (postId: number) => {
+    markPostAsRead(queryClient, postId)
     window.open(`/post/${postId}`, "_blank", "noopener,noreferrer")
     setViewCount((v) => v + 1)
   }
@@ -178,7 +187,11 @@ const PostItem = ({
 
         <div className={styles.bottom}>
           <div className={styles.contents}>
-            <div className={styles.title}>{post.title}</div>
+            <div
+              className={`${styles.title} ${isRead ? styles.readTitle : ""}`}
+            >
+              {post.title}
+            </div>
             <div className={styles.summary}>{post.description}</div>
           </div>
 

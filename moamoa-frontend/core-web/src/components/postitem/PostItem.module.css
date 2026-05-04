@@ -94,8 +94,16 @@
   text-overflow: ellipsis;
 }
 
+.readTitle {
+  color: #858585;
+}
+
 .card:hover .title {
   color: #0e4bbc;
+}
+
+.card:hover .readTitle {
+  color: #858585;
 }
 
 .summary {
