@@ -23,6 +23,9 @@ import server.admin.feature.techblog.domain.AdminTechBlog
 import server.admin.feature.techblog.domain.AdminTechBlogRepository
 import server.admin.feature.techblog.infra.TechBlogCollector
 import server.core.feature.category.domain.Category
+import server.techblog.TechBlogPost
+import server.techblog.TechBlogPostCategory
+import server.techblog.TechBlogPostCatetorizer
 import test.UnitTest
 import java.time.LocalDateTime
 import java.util.Optional
@@ -41,6 +44,7 @@ class AdminTechBlogServiceTest : UnitTest() {
             techBlogCollector = mockk(),
             tagRepository = mockk(),
             postTagRepository = mockk(),
+            techBlogCategorizer = mockk(),
         )
 
         every { techBlogRepository.findAllByOrderByTitleAscIdAsc() } returns listOf(
@@ -69,6 +73,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val postRepository = mockk<AdminPostRepository>()
         val tagRepository = mockk<AdminTagRepository>()
         val postTagRepository = mockk<AdminPostTagRepository>()
+        val techBlogCategorizer = mockk<TechBlogPostCatetorizer>()
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
@@ -76,14 +81,22 @@ class AdminTechBlogServiceTest : UnitTest() {
             techBlogCollector = mockk(),
             tagRepository = tagRepository,
             postTagRepository = postTagRepository,
+            techBlogCategorizer = techBlogCategorizer,
         )
         val techBlog = createAdminTechBlog(id = 1L, key = "gabia")
         val fetchedPosts = listOf(
             createTechBlogPost(key = "p1", tags = listOf("Kotlin")),
             createTechBlogPost(key = "p2", tags = listOf("Spring")),
         )
+        val categorizedPosts = listOf(
+            fetchedPosts[0].copy(category = TechBlogPostCategory.ENGINEERING),
+            fetchedPosts[1].copy(category = TechBlogPostCategory.PRODUCT),
+        )
+        val savedPosts = slot<Iterable<AdminPost>>()
 
         every { techBlogRepository.findById(techBlog.id) } returns Optional.of(techBlog)
+        every { techBlogCategorizer.categorize(fetchedPosts[0]) } returns categorizedPosts[0]
+        every { techBlogCategorizer.categorize(fetchedPosts[1]) } returns categorizedPosts[1]
         every { tagRepository.findAllByTitleIn(listOf("kotlin", "spring")) } returns emptyList()
         every { tagRepository.saveAll(any<Iterable<AdminTag>>()) } answers {
             firstArg<Iterable<AdminTag>>().toList().mapIndexed { index, tag ->
@@ -91,8 +104,8 @@ class AdminTechBlogServiceTest : UnitTest() {
             }
         }
         every { postRepository.findAllByTechBlogIdAndKeyIn(techBlog.id, listOf("p1", "p2")) } returns emptyList()
-        every { postRepository.saveAll(any<Iterable<AdminPost>>()) } answers {
-            firstArg<Iterable<AdminPost>>().toList().mapIndexed { index, post ->
+        every { postRepository.saveAll(capture(savedPosts)) } answers {
+            savedPosts.captured.toList().mapIndexed { index, post ->
                 createAdminPost(
                     id = 100L + index,
                     key = post.key,
@@ -116,8 +129,14 @@ class AdminTechBlogServiceTest : UnitTest() {
         result.techBlog.id shouldBe techBlog.id
         result.newPostCount shouldBe 2
         result.updatedPostCount shouldBe 0
+        savedPosts.captured.toList().map { it.categoryId } shouldBe listOf(
+            TechBlogPostCategory.ENGINEERING.categoryId,
+            TechBlogPostCategory.PRODUCT.categoryId,
+        )
         verify(exactly = 1) { postRepository.saveAll(any<Iterable<AdminPost>>()) }
         verify(exactly = 1) { postTagRepository.saveAll(any<Iterable<AdminPostTag>>()) }
+        verify(exactly = 1) { techBlogCategorizer.categorize(fetchedPosts[0]) }
+        verify(exactly = 1) { techBlogCategorizer.categorize(fetchedPosts[1]) }
     }
 
     @Test
@@ -126,6 +145,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val postRepository = mockk<AdminPostRepository>()
         val tagRepository = mockk<AdminTagRepository>()
         val postTagRepository = mockk<AdminPostTagRepository>()
+        val techBlogCategorizer = mockk<TechBlogPostCatetorizer>()
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
@@ -133,6 +153,7 @@ class AdminTechBlogServiceTest : UnitTest() {
             techBlogCollector = mockk(),
             tagRepository = tagRepository,
             postTagRepository = postTagRepository,
+            techBlogCategorizer = techBlogCategorizer,
         )
         val techBlog = createAdminTechBlog(id = 1L, key = "gabia")
         val existingPost = createAdminPost(
@@ -154,8 +175,10 @@ class AdminTechBlogServiceTest : UnitTest() {
             publishedAt = LocalDateTime.parse("2026-04-02T00:00:00"),
             tags = emptyList(),
         )
+        val categorizedPost = fetchedPost.copy(category = TechBlogPostCategory.DESIGN)
 
         every { techBlogRepository.findById(techBlog.id) } returns Optional.of(techBlog)
+        every { techBlogCategorizer.categorize(fetchedPost) } returns categorizedPost
         every { tagRepository.findAllByTitleIn(any<List<String>>()) } returns emptyList()
         every { postRepository.findAllByTechBlogIdAndKeyIn(techBlog.id, listOf("p1")) } returns listOf(existingPost)
         every { postTagRepository.findAllByPostIdIn(listOf(existingPost.id)) } returns emptyList()
@@ -171,6 +194,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         existingPost.publishedAt shouldBe fetchedPost.publishedAt
         existingPost.categoryId shouldBe 999L
         verify(exactly = 0) { postRepository.saveAll(any<Iterable<AdminPost>>()) }
+        verify(exactly = 1) { techBlogCategorizer.categorize(fetchedPost) }
     }
 
     @Test
@@ -179,6 +203,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val postRepository = mockk<AdminPostRepository>()
         val tagRepository = mockk<AdminTagRepository>()
         val postTagRepository = mockk<AdminPostTagRepository>()
+        val techBlogCategorizer = mockk<TechBlogPostCatetorizer>()
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
@@ -186,6 +211,7 @@ class AdminTechBlogServiceTest : UnitTest() {
             techBlogCollector = mockk(),
             tagRepository = tagRepository,
             postTagRepository = postTagRepository,
+            techBlogCategorizer = techBlogCategorizer,
         )
         val techBlog = createAdminTechBlog(id = 1L, key = "gabia")
         val existingPost = createAdminPost(id = 11L, key = "p1")
@@ -198,6 +224,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val saveSlot = slot<Iterable<AdminPostTag>>()
 
         every { techBlogRepository.findById(techBlog.id) } returns Optional.of(techBlog)
+        every { techBlogCategorizer.categorize(fetchedPost) } returns fetchedPost
         every { tagRepository.findAllByTitleIn(listOf("spring", "kotlin")) } returns listOf(
             AdminTag(id = 10L, title = "spring"),
             AdminTag(id = 20L, title = "kotlin"),
@@ -225,6 +252,7 @@ class AdminTechBlogServiceTest : UnitTest() {
             techBlogCollector = mockk(),
             tagRepository = mockk(),
             postTagRepository = mockk(),
+            techBlogCategorizer = mockk(),
         )
 
         every { techBlogRepository.findById(1L) } returns Optional.empty()
@@ -280,7 +308,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         url: String = "https://example.com",
         publishedAt: java.time.LocalDateTime = java.time.LocalDateTime.parse("2026-04-01T00:00:00"),
         tags: List<String> = emptyList(),
-    ) = server.techblog.TechBlogPost(
+    ) = TechBlogPost(
         key = key,
         title = title,
         description = description,

@@ -15,8 +15,8 @@ import server.admin.feature.tag.domain.AdminTagRepository
 import server.admin.feature.techblog.domain.AdminTechBlog
 import server.admin.feature.techblog.domain.AdminTechBlogRepository
 import server.admin.feature.techblog.infra.TechBlogCollector
-import server.core.feature.category.domain.Category
 import server.techblog.TechBlogPost
+import server.techblog.TechBlogPostCatetorizer
 
 @Service
 internal class AdminTechBlogService(
@@ -26,6 +26,7 @@ internal class AdminTechBlogService(
     private val techBlogCollector: TechBlogCollector,
     private val tagRepository: AdminTagRepository,
     private val postTagRepository: AdminPostTagRepository,
+    private val techBlogCategorizer: TechBlogPostCatetorizer,
 ) {
     @Transactional(readOnly = true)
     fun findAll(): List<AdminTechBlogData> {
@@ -82,11 +83,12 @@ internal class AdminTechBlogService(
     ): AdminCollectPostsResult {
         val techBlog = techBlogRepository.findByIdOrNull(techBlogId)
             ?: throw NoSuchElementException("존재하지 않는 tech blog 입니다.")
+        val categorizedPosts = fetchedPosts.map(techBlogCategorizer::categorize)
 
-        val tagsByTitle = upsertTags(fetchedPosts)
-        val existingPostsByKey = findExistingPostsByKey(techBlog.id, fetchedPosts)
-        val collectResult = saveCollectedPosts(techBlog, fetchedPosts, existingPostsByKey)
-        syncPostTags(collectResult.posts, fetchedPosts, tagsByTitle)
+        val tagsByTitle = upsertTags(categorizedPosts)
+        val existingPostsByKey = findExistingPostsByKey(techBlog.id, categorizedPosts)
+        val collectResult = saveCollectedPosts(techBlog, categorizedPosts, existingPostsByKey)
+        syncPostTags(collectResult.posts, categorizedPosts, tagsByTitle)
 
         return AdminCollectPostsResult(
             techBlog = AdminTechBlogData(techBlog),
@@ -145,7 +147,7 @@ internal class AdminTechBlogService(
                     url = it.url,
                     publishedAt = it.publishedAt,
                     techBlogId = techBlog.id,
-                    categoryId = Category.UNDEFINED.id,
+                    categoryId = it.category.categoryId,
                 )
             }
             .toList()
