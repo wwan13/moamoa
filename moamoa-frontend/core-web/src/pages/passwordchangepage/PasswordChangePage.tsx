@@ -57,10 +57,10 @@ const PasswordChangePage = () => {
     }
   }, [isLoggedIn, navigate])
 
-  const validateOldPassword = () => {
-    if (oldPassword === "") {
-      setOldPasswordError("기존 비밀번호를 입력해 주세요")
-    }
+  const validateOldPassword = (value) => {
+    const err = value === "" ? "기존 비밀번호를 입력해 주세요" : ""
+    setOldPasswordError(err)
+    return err === ""
   }
 
   const validateNewPassword = (value) => {
@@ -99,7 +99,7 @@ const PasswordChangePage = () => {
   const onSubmit = async (e) => {
     e.preventDefault()
 
-    const oldPasswordOk = oldPasswordError === ""
+    const oldPasswordOk = validateOldPassword(oldPassword)
     const newPasswordOk = validateNewPassword(newPassword)
     const passwordConfirmOk = validatePasswordConfirm(passwordConfirm)
 
@@ -155,10 +155,14 @@ const PasswordChangePage = () => {
               placeholder="**********"
               value={oldPassword}
               onChange={(e) => {
-                setOldPassword(e.target.value)
-                if (oldPasswordError) validateOldPassword()
+                const next = e.target.value
+                setOldPassword(next)
+
+                if (oldPasswordError) {
+                  validateOldPassword(next)
+                }
               }}
-              onBlur={() => validateOldPassword()}
+              onBlur={() => validateOldPassword(oldPassword)}
               hasError={oldPasswordError !== ""}
             />
             {oldPasswordError !== "" && (
@@ -231,9 +235,12 @@ const PasswordChangePage = () => {
               placeholder="**********"
               value={passwordConfirm}
               onChange={(e) => {
-                setPasswordConfirm(e.target.value)
-                if (passwordConfirmError)
-                  validatePasswordConfirm(passwordConfirm)
+                const next = e.target.value
+                setPasswordConfirm(next)
+
+                if (passwordConfirmError) {
+                  validatePasswordConfirm(next)
+                }
               }}
               onBlur={() => validatePasswordConfirm(passwordConfirm)}
               hasError={passwordConfirmError !== ""}
