@@ -102,6 +102,7 @@ moamoa/
 ### Repo Operations
 
 - Commit message and commit-splitting guidance: `$commit-style`
+- Fast code-definition lookup in `core-api` and `core-web`: `$symbolify-lookup`
 
 ## Constraints
 

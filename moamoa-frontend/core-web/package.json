@@ -9,7 +9,11 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "symbolify:index": "node scripts/symbolify.mjs index",
+    "symbolify:find": "node scripts/symbolify.mjs find",
+    "symbolify:show": "node scripts/symbolify.mjs show",
+    "symbolify:test": "node --test scripts/symbolify.test.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

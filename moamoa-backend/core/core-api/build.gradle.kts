@@ -42,3 +42,4 @@ dependencies {
 
 apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
 apply(from = "gradle/extract-openapi.gradle.kts")
+apply(from = "gradle/symbolify.gradle.kts")
