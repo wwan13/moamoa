@@ -1,3 +1,10 @@
+@font-face {
+  font-family: "NanumBarunGothic";
+  src: url("//cdn.jsdelivr.net/font-nanumlight/1.0/NanumBarunGothicWebBold.eot");
+  font-weight: 700;
+  font-display: swap;
+}
+
 .wrap {
   position: relative;
   width: 100%;
@@ -24,6 +31,7 @@
 }
 
 .main {
+  font-family: "NanumBarunGothic", "Pretendard", sans-serif;
   font-size: 36px;
   font-weight: 700;
   color: #252525;
