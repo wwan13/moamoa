@@ -2,7 +2,7 @@ import styles from "./Banner.module.css"
 import { useEffect, useState } from "react"
 import DrawIcon from "@mui/icons-material/Draw"
 
-const texts = ["구독한 블로그의 최신 글을 이메일로 받아보세요!"]
+const texts = ["여러 테크 기업 블로그를 한 곳에서 보고, 새 글을 놓치지 않고 받아보세요!"]
 
 const Banner = () => {
   const [text, setText] = useState("")

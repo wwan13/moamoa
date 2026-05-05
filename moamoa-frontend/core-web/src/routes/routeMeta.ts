@@ -3,9 +3,9 @@ import { matchPath } from "react-router-dom"
 const SITE_URL = "https://moamoa.dev"
 const SITE_NAME = "moamoa"
 const DEFAULT_OG_IMAGE = `https://i.imgur.com/8n3jdl6.png`
-const SITE_TITLE = "모아모아 | 기술 블로그를 한 곳에서"
+const SITE_TITLE = "모아모아 | 기술 블로그 모아보기 · 구독 서비스"
 const SITE_DESCRIPTION =
-  "매일 업데이트되는 테크 기업들의 기술 블로그를 북마크하고 구독해서 매일 오전 8시 이메일로 받아보세요."
+  "기술 블로그 모아보기 · 이메일 구독 서비스. 여러 테크 기업 블로그를 한 곳에서 보고, 새 글을 놓치지 않고 받아보세요!"
 
 type MetaRule = {
   path: string
