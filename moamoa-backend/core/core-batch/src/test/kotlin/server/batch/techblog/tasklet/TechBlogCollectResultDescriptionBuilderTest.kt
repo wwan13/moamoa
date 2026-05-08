@@ -96,7 +96,7 @@ class TechBlogCollectResultDescriptionBuilderTest : UnitTest() {
     }
 
     @Test
-    fun `에러 설명은 error type과 message를 포함한다`() {
+    fun `에러 설명은 구조 필드 변경 가능성과 source key error type message를 포함한다`() {
         val snapshot = snapshot(
             sources = listOf(
                 source(title = "실패A", status = FetchStatus.FAILED, added = 0, errorType = "Timeout", errorMessage = "socket timeout"),
@@ -107,9 +107,10 @@ class TechBlogCollectResultDescriptionBuilderTest : UnitTest() {
 
         val description = TechBlogCollectErrorDescriptionBuilder.build(snapshot, failed)
 
+        description.contains("원천 사이트 구조 또는 필드 변경") shouldBe true
         description.contains("FAILED SOURCES") shouldBe true
-        description.contains("실패A: Timeout:socket timeout") shouldBe true
-        description.contains("실패B: IllegalState:boom") shouldBe true
+        description.contains("실패A (key=실패a): Timeout:socket timeout") shouldBe true
+        description.contains("실패B (key=실패b): IllegalState:boom") shouldBe true
     }
 
     @Test

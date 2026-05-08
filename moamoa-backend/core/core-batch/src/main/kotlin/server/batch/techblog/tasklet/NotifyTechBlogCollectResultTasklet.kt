@@ -107,7 +107,7 @@ internal class NotifyTechBlogCollectResultTasklet(
         val description = TechBlogCollectErrorDescriptionBuilder.build(snapshot, failedSources)
 
         return WebhookContent.Error(
-            title = "collectTechBlogPostJob fetch 실패",
+            title = "collectTechBlogPostJob fetch 실패 - 사이트 구조/필드 변경 가능성",
             description = description,
             fields = listOf(
                 "수집 날짜(KST)" to snapshot.collectDateKst,
@@ -129,6 +129,7 @@ internal class NotifyTechBlogCollectResultTasklet(
 
 internal object TechBlogCollectErrorDescriptionBuilder {
     private const val MAX_DESCRIPTION_LENGTH = 3500
+    private const val FAILURE_GUIDE = "원천 사이트 구조 또는 필드 변경으로 tech blog fetch/parsing이 실패했을 가능성이 있습니다."
 
     fun build(
         snapshot: TechBlogCollectMonitorSnapshot,
@@ -143,11 +144,23 @@ internal object TechBlogCollectErrorDescriptionBuilder {
         if (summary.length >= MAX_DESCRIPTION_LENGTH) return summary.take(MAX_DESCRIPTION_LENGTH)
         if (failedSources.isEmpty()) return summary
 
-        val result = StringBuilder(summary).append("\n\nFAILED SOURCES")
+        val result = StringBuilder(summary)
+        val guide = "\n\n$FAILURE_GUIDE"
+        if (result.length + guide.length > MAX_DESCRIPTION_LENGTH) {
+            return result.toString()
+        }
+        result.append(guide)
+
+        val sectionHeader = "\n\nFAILED SOURCES"
+        if (result.length + sectionHeader.length > MAX_DESCRIPTION_LENGTH) {
+            return result.toString()
+        }
+        result.append(sectionHeader)
+
         var includedCount = 0
 
         for (source in failedSources) {
-            val line = "\n- ${source.techBlogTitle}: ${errorText(source)}"
+            val line = "\n- ${source.techBlogTitle} (key=${source.techBlogKey}): ${errorText(source)}"
             if (result.length + line.length > MAX_DESCRIPTION_LENGTH) {
                 return appendOmittedSuffix(result, failedSources.size - includedCount)
             }
