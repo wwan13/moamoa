@@ -14,7 +14,7 @@ import {
 } from "../../queries/post.queries"
 import { useSubscribingTechBlogsQuery } from "../../queries/techBlog.queries"
 import Banner from "../../components/banner/Banner"
-import type { PostCategoryKey } from "../../api/post.api"
+import type { PostCategoryKey, PostSortType } from "../../api/post.api"
 import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
 
 const TYPES = {
@@ -45,6 +45,8 @@ const MainPage = () => {
     rawCategory === "etc"
       ? rawCategory
       : "all"
+  const rawSort = (searchParams.get("sort") ?? "latest").toLowerCase()
+  const sort: PostSortType = rawSort === "popular" ? "popular" : "latest"
   const isWelcome = searchParams.get("welcome")
 
   useEffect(() => {
@@ -79,17 +81,17 @@ const MainPage = () => {
 
   // ✅ posts 쿼리: type/blogKey에 따라 1개만 활성화
   const allPostsQuery = usePostsQuery(
-    { page, category },
+    { page, category, sort },
     { enabled: type === TYPES.ALL },
   )
 
   const subscribingPostsQuery = usePostsBySubscriptionQuery(
-    { page, category },
+    { page, category, sort },
     { enabled: type === TYPES.SUBSCRIBED && !techBlogId && isLoggedIn },
   )
 
   const techBlogPostsQuery = usePostsByTechBlogIdQuery(
-    { page, techBlogId, category },
+    { page, techBlogId, category, sort },
     { enabled: type === TYPES.SUBSCRIBED && !!techBlogId },
   )
 

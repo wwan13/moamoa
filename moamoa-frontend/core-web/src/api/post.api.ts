@@ -9,23 +9,27 @@ const CATEGORY_ID_BY_KEY = {
 } as const
 
 export type PostCategoryKey = "all" | keyof typeof CATEGORY_ID_BY_KEY
+export type PostSortType = "latest" | "popular"
 
 export type PostListConditions = {
   page?: number
   size?: number
   query?: string
   category?: PostCategoryKey | number | string
+  sort?: PostSortType
 }
 
 export type TechBlogPostConditions = {
   page?: number
   techBlogId?: string | number
   category?: PostCategoryKey | number | string
+  sort?: PostSortType
 }
 
 export type PostPagingConditions = {
   page?: number
   category?: PostCategoryKey | number | string
+  sort?: PostSortType
 }
 
 export type ViewPostCommand = {
@@ -118,6 +122,7 @@ export const postsApi = {
       size,
       query: conditions.query || undefined,
       category: resolveCategoryId(conditions.category),
+      sort: conditions.sort,
     })
 
     const res = await http.get<PostList>(`/api/post${q}`, config)
@@ -133,6 +138,7 @@ export const postsApi = {
       size: DEFAULT_PAGE_SIZE,
       techBlogId: conditions.techBlogId,
       category: resolveCategoryId(conditions.category),
+      sort: conditions.sort,
     })
 
     const res = await http.get<PostList>(`/api/post/tech-blog${q}`, config)
@@ -147,6 +153,7 @@ export const postsApi = {
       page: page && page > 1 ? page : undefined,
       size: DEFAULT_PAGE_SIZE,
       category: resolveCategoryId(conditions.category),
+      sort: conditions.sort,
     })
     const res = await http.get<PostList>(`/api/post/subscribed${q}`, config)
     return res ?? emptyPostList(page ?? 1, DEFAULT_PAGE_SIZE)

@@ -1,9 +1,13 @@
+.sortTabs {
+  padding-top: 24px;
+}
+
 .list {
   display: flex;
   flex-direction: column;
   gap: 48px;
   overflow: hidden;
-  padding-top: 48px;
+  padding-top: 32px;
 }
 
 .paginationWrap {

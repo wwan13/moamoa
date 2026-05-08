@@ -10,6 +10,7 @@ import {
   type PostList,
   type PostListConditions,
   type PostPagingConditions,
+  type PostSortType,
   type TechBlogPostConditions,
   type ViewedPostResult,
   type ViewPostCommand,
@@ -92,6 +93,7 @@ export const usePostsQuery = (
 
   const resolvedPage = conditions.page ?? 1
   const resolvedSize = conditions.size ?? 20
+  const resolvedSort: PostSortType = conditions.sort ?? "latest"
   const hasQuery = !!conditions.query
 
   return useQuery<PostList>({
@@ -104,6 +106,7 @@ export const usePostsQuery = (
         size: resolvedSize,
         query: hasQuery ? conditions.query : undefined,
         category: conditions.category,
+        sort: resolvedSort,
       },
     ],
     queryFn: ({ signal }) =>
@@ -113,6 +116,7 @@ export const usePostsQuery = (
           size: resolvedSize,
           query: conditions.query,
           category: conditions.category,
+          sort: resolvedSort,
         },
         { signal },
       ),
@@ -128,6 +132,7 @@ export const usePostsByTechBlogIdQuery = (
 ) => {
   const { authScope, publicScope } = useAuth()
   const scope = authScope ?? publicScope
+  const resolvedSort: PostSortType = conditions.sort ?? "latest"
 
   return useQuery<PostList>({
     queryKey: [
@@ -138,9 +143,11 @@ export const usePostsByTechBlogIdQuery = (
         techBlogId: conditions.techBlogId,
         page: conditions.page ?? 1,
         category: conditions.category,
+        sort: resolvedSort,
       },
     ],
-    queryFn: ({ signal }) => postsApi.listByTechBlogId(conditions, { signal }),
+    queryFn: ({ signal }) =>
+      postsApi.listByTechBlogId({ ...conditions, sort: resolvedSort }, { signal }),
     enabled: (options.enabled ?? true) && !!conditions.techBlogId,
   })
 }
@@ -150,16 +157,21 @@ export const usePostsBySubscriptionQuery = (
   options: QueryOptions = {},
 ) => {
   const { authScope } = useAuth()
+  const resolvedSort: PostSortType = conditions.sort ?? "latest"
 
   return useQuery<PostList>({
     queryKey: [
       "posts",
       authScope,
       "subscribed",
-      { page: conditions.page ?? 1, category: conditions.category },
+      {
+        page: conditions.page ?? 1,
+        category: conditions.category,
+        sort: resolvedSort,
+      },
     ],
     queryFn: ({ signal }) =>
-      postsApi.listBySubscription(conditions, { signal }),
+      postsApi.listBySubscription({ ...conditions, sort: resolvedSort }, { signal }),
     enabled: (options.enabled ?? true) && !!authScope,
   })
 }
@@ -190,6 +202,7 @@ export const useInfinitePostsQuery = (
   const scope = authScope ?? publicScope
 
   const resolvedSize = conditions.size ?? 10
+  const resolvedSort: PostSortType = conditions.sort ?? "latest"
   const hasQuery = !!conditions.query
 
   return useInfiniteQuery<PostList>({
@@ -200,6 +213,7 @@ export const useInfinitePostsQuery = (
       {
         size: resolvedSize,
         query: hasQuery ? conditions.query : undefined,
+        sort: resolvedSort,
       },
     ],
     queryFn: ({ pageParam = 1, signal }) =>
@@ -208,6 +222,7 @@ export const useInfinitePostsQuery = (
           page: Number(pageParam),
           size: resolvedSize,
           query: conditions.query,
+          sort: resolvedSort,
         },
         { signal },
       ),

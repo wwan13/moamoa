@@ -2,8 +2,9 @@ import Pagination from "@mui/material/Pagination"
 import styles from "./PostList.module.css"
 import PostItem from "../postitem/PostItem"
 import CategoryTabs from "../categorytab/CategoryTabs"
+import SortTabs from "../sorttabs/SortTabs"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import type { PostCategoryKey, PostSummary } from "../../api/post.api"
+import type { PostSortType, PostSummary } from "../../api/post.api"
 
 const SKELETON_COUNT = 8
 const CATEGORY_ITEMS = [
@@ -13,6 +14,11 @@ const CATEGORY_ITEMS = [
   { id: 30, key: "design", title: "디자인" },
   { id: 40, key: "etc", title: "기타" },
 ]
+const SORT_ITEMS = [
+  { key: "latest", label: "최신순" },
+  { key: "popular", label: "인기순" },
+] as const
+
 const VALID_CATEGORY_IDS = new Set(CATEGORY_ITEMS.map((item) => item.id))
 const VALID_CATEGORY_KEYS = new Set(CATEGORY_ITEMS.map((item) => item.key))
 
@@ -36,9 +42,11 @@ const PostList = ({
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Number(searchParams.get("page") ?? 1)
   const rawCategory = (searchParams.get("category") ?? "all").toLowerCase()
+  const rawSort = (searchParams.get("sort") ?? "latest").toLowerCase()
   const selectedCategory = VALID_CATEGORY_KEYS.has(rawCategory)
     ? rawCategory
     : "all"
+  const selectedSort: PostSortType = rawSort === "popular" ? "popular" : "latest"
   const selected =
     CATEGORY_ITEMS.find((it) => it.key === selectedCategory)?.id ?? 0
   const navigate = useNavigate()
@@ -69,6 +77,18 @@ const PostList = ({
       })
     })
   }
+  const onChangeSort = (nextSort: PostSortType) => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+    requestAnimationFrame(() => {
+      setSearchParams((prev) => {
+        const p = new URLSearchParams(prev)
+        if (nextSort === "latest") p.delete("sort")
+        else p.set("sort", nextSort)
+        p.delete("page")
+        return p
+      })
+    })
+  }
 
   const showEmpty = !isLoading && posts.length === 0
 
@@ -82,6 +102,16 @@ const PostList = ({
         onClickSubscriptions={() => navigate("/subscription")}
         isLoading={false}
       />
+
+      {type !== "bookmarked" && (
+        <div className={styles.sortTabs}>
+          <SortTabs
+            items={SORT_ITEMS}
+            value={selectedSort}
+            onChange={onChangeSort}
+          />
+        </div>
+      )}
 
       <div className={styles.list}>
         {isLoading ? (
