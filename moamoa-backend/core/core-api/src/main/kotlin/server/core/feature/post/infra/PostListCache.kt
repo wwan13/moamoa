@@ -3,6 +3,7 @@ package server.core.feature.post.infra
 import org.springframework.stereotype.Component
 import server.cache.CacheMemory
 import server.cache.get
+import server.core.feature.post.query.PostSortType
 import server.core.feature.post.query.PostSummary
 import server.core.support.domain.ListEntry
 
@@ -14,20 +15,21 @@ class PostListCache(
     private val prefix = "POST:LIST"
     private val ttlMillis: Long = 1_800_000L // 30분
 
-    fun key(page: Long, size: Long, category: Long?) =
-        "$prefix:CATEGORY:${categoryToken(category)}:PAGE:$page:SIZE:$size"
+    fun key(page: Long, size: Long, category: Long?, sort: PostSortType) =
+        "$prefix:CATEGORY:${categoryToken(category)}:SORT:${sort.name}:PAGE:$page:SIZE:$size"
 
-    fun get(page: Long, size: Long, category: Long?): ListEntry<PostSummary>? {
-        return cacheMemory.get(key(page, size, category))
+    fun get(page: Long, size: Long, category: Long?, sort: PostSortType): ListEntry<PostSummary>? {
+        return cacheMemory.get(key(page, size, category, sort))
     }
 
     fun set(
         page: Long,
         size: Long,
         category: Long?,
+        sort: PostSortType,
         entry: ListEntry<PostSummary>
     ) {
-        cacheMemory.set(key(page, size, category), entry, ttlMillis)
+        cacheMemory.set(key(page, size, category, sort), entry, ttlMillis)
     }
 
     private fun categoryToken(category: Long?): Long = category ?: 0L

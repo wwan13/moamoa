@@ -24,7 +24,7 @@ class SubscribedPostQueryServiceTest : UnitTest() {
         val postStatsReader = mockk<PostStatsReader>()
         val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
 
-        every { subscribedPostListCache.get(10L, 1L, 10L) } returns ListEntry(
+        every { subscribedPostListCache.get(10L, 1L, 10L, PostSortType.latest) } returns ListEntry(
             count = 2L,
             list = listOf(
                 postSummary(1L, 1L, 1L),
@@ -45,13 +45,38 @@ class SubscribedPostQueryServiceTest : UnitTest() {
         )
 
         val result = service.findAllByConditions(
-            PostQueryConditions(page = 1, size = 20, query = null, category = 10L),
+            PostQueryConditions(page = 1, size = 20, query = null, category = 10L, sort = PostSortType.latest),
             Passport(10L, MemberRole.USER)
         )
 
         result.posts[0].bookmarkCount shouldBe 11L
         result.posts[1].isBookmarked shouldBe true
-        verify(exactly = 1) { subscribedPostListCache.get(10L, 1L, 10L) }
+        verify(exactly = 1) { subscribedPostListCache.get(10L, 1L, 10L, PostSortType.latest) }
+    }
+
+    @Test
+    fun `인기순 요청이면 구독 게시글 인기순 캐시 키를 조회한다`() {
+        val subscribedPostListCache = mockk<SubscribedPostListCache>()
+
+        every { subscribedPostListCache.get(10L, 1L, 10L, PostSortType.popular) } returns ListEntry(
+            count = 0L,
+            list = emptyList()
+        )
+
+        val service = SubscribedPostQueryService(
+            mockk(relaxed = true),
+            subscribedPostListCache,
+            mockk(),
+            mockk(),
+            mockk(relaxed = true)
+        )
+
+        service.findAllByConditions(
+            PostQueryConditions(page = 1, size = 20, query = null, category = 10L, sort = PostSortType.popular),
+            Passport(10L, MemberRole.USER)
+        )
+
+        verify(exactly = 1) { subscribedPostListCache.get(10L, 1L, 10L, PostSortType.popular) }
     }
 
     @Test

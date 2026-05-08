@@ -30,6 +30,7 @@ class PostQueryService(
         conditions: PostQueryConditions,
         passport: Passport?
     ): PostList {
+        val sort = conditions.sort ?: PostSortType.latest
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
@@ -38,7 +39,7 @@ class PostQueryService(
             Category.fromId(it)?.id ?: throw NoSuchElementException("존재하지 않는 카테고리입니다.")
         }
 
-        val entry = loadEntry(paging, conditions.query, categoryId)
+        val entry = loadEntry(paging, conditions.query, categoryId, sort)
         val totalCount = entry.count
         val basePosts = entry.list
 
@@ -75,18 +76,19 @@ class PostQueryService(
         paging: Paging,
         query: String?,
         categoryId: Long?,
+        sort: PostSortType,
     ): ListEntry<PostSummary> {
         if (paging.page > 5 || !query.isNullOrBlank()) {
-            return fetchEntry(paging, query, categoryId)
+            return fetchEntry(paging, query, categoryId, sort)
         }
 
-        val cached = postListCache.get(paging.page, paging.size, categoryId)
+        val cached = postListCache.get(paging.page, paging.size, categoryId, sort)
         if (cached != null) return cached
 
-        return fetchEntry(paging, categoryId = categoryId).also { entry ->
-            val warmupKey = postListCache.key(paging.page, paging.size, categoryId)
+        return fetchEntry(paging, categoryId = categoryId, sort = sort).also { entry ->
+            val warmupKey = postListCache.key(paging.page, paging.size, categoryId, sort)
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                postListCache.set(paging.page, paging.size, categoryId, entry)
+                postListCache.set(paging.page, paging.size, categoryId, sort, entry)
             }
         }
     }
@@ -95,9 +97,10 @@ class PostQueryService(
         paging: Paging,
         query: String? = null,
         categoryId: Long? = null,
+        sort: PostSortType,
     ): ListEntry<PostSummary> {
         val count = fetchCountAllPosts(query, categoryId)
-        val list = fetchBasePosts(paging, query, categoryId)
+        val list = fetchBasePosts(paging, query, categoryId, sort)
         return ListEntry(
             count = count,
             list = list
@@ -108,10 +111,11 @@ class PostQueryService(
         paging: Paging,
         query: String? = null,
         categoryId: Long? = null,
+        sort: PostSortType,
     ): List<PostSummary> {
         val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
-        val jpqlQuery = createBasePostsQuery(query, categoryId)
+        val jpqlQuery = createBasePostsQuery(query, categoryId, sort)
 
         val rows = jdslExecutor
             .createQuery(
@@ -140,10 +144,10 @@ class PostQueryService(
             ?: 0L
     }
 
-    private fun createBasePostsQuery(query: String?, categoryId: Long?) = jpql {
+    private fun createBasePostsQuery(query: String?, categoryId: Long?, sort: PostSortType) = jpql {
         val keyword = query?.takeIf { it.isNotBlank() }?.let { "%$it%" }
 
-        selectBasePostSummary(isBookmarked = false)
+        val query = selectBasePostSummary(isBookmarked = false)
             .from(
                 entity(Post::class),
                 join(TechBlog::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
@@ -170,7 +174,16 @@ class PostQueryService(
                     )
                 }
             )
-            .orderBy(path(Post::publishedAt).desc())
+        when (sort) {
+            PostSortType.latest ->
+                query.orderBy(path(Post::publishedAt).desc())
+
+            PostSortType.popular ->
+                query.orderBy(
+                    path(Post::viewCount).times(2L).plus(path(Post::bookmarkCount).times(3L)).desc(),
+                    path(Post::publishedAt).desc()
+                )
+        }
     }
 
     private fun createCountAllPostsQuery(query: String?, categoryId: Long?) = jpql {

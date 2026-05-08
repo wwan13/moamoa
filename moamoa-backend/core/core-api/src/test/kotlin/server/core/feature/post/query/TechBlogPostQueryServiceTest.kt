@@ -24,7 +24,7 @@ class TechBlogPostQueryServiceTest : UnitTest() {
         val postStatsReader = mockk<PostStatsReader>()
         val warmupCoordinator = mockk<WarmupCoordinator>(relaxed = true)
 
-        every { techBlogPostListCache.get(1L, 1L, 20L) } returns ListEntry(
+        every { techBlogPostListCache.get(1L, 1L, 20L, PostSortType.latest) } returns ListEntry(
             count = 2L,
             list = listOf(
                 postSummary(1L, 1L, 1L),
@@ -43,12 +43,37 @@ class TechBlogPostQueryServiceTest : UnitTest() {
         )
 
         val result = service.findAllByConditions(
-            TechBlogPostQueryConditions(techBlogId = 1L, page = 1, size = 20, category = 20L),
+            TechBlogPostQueryConditions(techBlogId = 1L, page = 1, size = 20, category = 20L, sort = PostSortType.latest),
             Passport(10L, MemberRole.USER)
         )
 
         result.posts[1].isBookmarked shouldBe true
-        verify(exactly = 1) { techBlogPostListCache.get(1L, 1L, 20L) }
+        verify(exactly = 1) { techBlogPostListCache.get(1L, 1L, 20L, PostSortType.latest) }
+    }
+
+    @Test
+    fun `인기순 요청이면 기술블로그 인기순 캐시 키를 조회한다`() {
+        val techBlogPostListCache = mockk<TechBlogPostListCache>()
+
+        every { techBlogPostListCache.get(1L, 1L, 20L, PostSortType.popular) } returns ListEntry(
+            count = 0L,
+            list = emptyList()
+        )
+
+        val service = TechBlogPostQueryService(
+            mockk(relaxed = true),
+            techBlogPostListCache,
+            mockk(),
+            mockk(),
+            mockk(relaxed = true)
+        )
+
+        service.findAllByConditions(
+            TechBlogPostQueryConditions(techBlogId = 1L, page = 1, size = 20, category = 20L, sort = PostSortType.popular),
+            Passport(10L, MemberRole.USER)
+        )
+
+        verify(exactly = 1) { techBlogPostListCache.get(1L, 1L, 20L, PostSortType.popular) }
     }
 
     @Test

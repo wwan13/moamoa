@@ -7,6 +7,7 @@ data class PostQueryConditions(
     val size: Long?,
     val query: String?,
     val category: Long?,
+    val sort: PostSortType? = null,
 )
 
 data class PostList(
@@ -46,6 +47,7 @@ data class TechBlogPostQueryConditions(
     val page: Long?,
     val size: Long?,
     val category: Long?,
+    val sort: PostSortType? = null,
 )
 
 data class PostStats(
@@ -53,3 +55,8 @@ data class PostStats(
     val viewCount: Long,
     val bookmarkCount: Long,
 )
+
+enum class PostSortType {
+    latest,
+    popular,
+}

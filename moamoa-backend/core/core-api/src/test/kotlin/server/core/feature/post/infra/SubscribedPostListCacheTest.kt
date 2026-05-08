@@ -5,10 +5,11 @@ import io.kotest.matchers.shouldBe
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import server.core.feature.post.query.PostSummary
 import server.core.feature.post.infra.SubscribedPostListCache
 import server.cache.CacheMemory
 import server.core.fixture.createPostSummary
+import server.core.feature.post.query.PostSortType
+import server.core.feature.post.query.PostSummary
 import server.core.support.domain.ListEntry
 import test.UnitTest
 
@@ -20,7 +21,7 @@ class SubscribedPostListCacheTest : UnitTest() {
         val memberId = 3L
         val page = 1L
         val versionKey = "POST:LIST:SUBSCRIBED:$memberId:VER"
-        val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:1:CATEGORY:0:PAGE:$page:"
+        val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:1:CATEGORY:0:SORT:latest:PAGE:$page:"
         val expected = ListEntry(
             count = 2L,
             list = listOf(createPostSummary())
@@ -29,7 +30,7 @@ class SubscribedPostListCacheTest : UnitTest() {
         coEvery { cacheMemory.get(versionKey, any<TypeReference<Long>>()) } returns null
         coEvery { cacheMemory.get(valueKey, any<TypeReference<ListEntry<PostSummary>>>()) } returns expected
 
-        val result = cache.get(memberId, page, null)
+        val result = cache.get(memberId, page, null, PostSortType.latest)
 
         result shouldBe expected
         coVerify(exactly = 1) { cacheMemory.get(versionKey, any<TypeReference<Long>>()) }
@@ -43,7 +44,7 @@ class SubscribedPostListCacheTest : UnitTest() {
         val memberId = 3L
         val page = 1L
         val versionKey = "POST:LIST:SUBSCRIBED:$memberId:VER"
-        val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:5:CATEGORY:20:PAGE:$page:"
+        val valueKey = "POST:LIST:SUBSCRIBED:$memberId:V:5:CATEGORY:20:SORT:popular:PAGE:$page:"
         val entry = ListEntry(
             count = 2L,
             list = listOf(createPostSummary())
@@ -52,7 +53,7 @@ class SubscribedPostListCacheTest : UnitTest() {
         coEvery { cacheMemory.get(versionKey, any<TypeReference<Long>>()) } returns 5L
         coEvery { cacheMemory.set(valueKey, entry, 60_000L) } just Runs
 
-        cache.set(memberId, page, 20L, entry)
+        cache.set(memberId, page, 20L, PostSortType.popular, entry)
 
         coVerify(exactly = 1) { cacheMemory.get(versionKey, any<TypeReference<Long>>()) }
         coVerify(exactly = 1) { cacheMemory.set(valueKey, entry, 60_000L) }

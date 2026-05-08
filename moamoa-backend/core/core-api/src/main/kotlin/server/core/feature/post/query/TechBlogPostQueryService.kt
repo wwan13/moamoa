@@ -28,6 +28,7 @@ class TechBlogPostQueryService(
         conditions: TechBlogPostQueryConditions,
         passport: Passport?,
     ): PostList {
+        val sort = conditions.sort ?: PostSortType.latest
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
@@ -36,7 +37,7 @@ class TechBlogPostQueryService(
             Category.fromId(it)?.id ?: throw NoSuchElementException("존재하지 않는 카테고리입니다.")
         }
 
-        val entry = loadEntry(paging, conditions.techBlogId, categoryId)
+        val entry = loadEntry(paging, conditions.techBlogId, categoryId, sort)
         val totalCount = entry.count
         val basePosts = entry.list
 
@@ -74,18 +75,19 @@ class TechBlogPostQueryService(
         paging: Paging,
         techBlogId: Long,
         categoryId: Long?,
+        sort: PostSortType,
     ): ListEntry<PostSummary> {
         if (paging.page > 5) {
-            return fetchEntry(paging, techBlogId, categoryId)
+            return fetchEntry(paging, techBlogId, categoryId, sort)
         }
 
-        val cached = techBlogPostListCache.get(techBlogId, paging.page, categoryId)
+        val cached = techBlogPostListCache.get(techBlogId, paging.page, categoryId, sort)
         if (cached != null) return cached
 
-        return fetchEntry(paging, techBlogId, categoryId).also { entry ->
-            val warmupKey = techBlogPostListCache.key(techBlogId, paging.page, categoryId)
+        return fetchEntry(paging, techBlogId, categoryId, sort).also { entry ->
+            val warmupKey = techBlogPostListCache.key(techBlogId, paging.page, categoryId, sort)
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                techBlogPostListCache.set(techBlogId, paging.page, categoryId, entry)
+                techBlogPostListCache.set(techBlogId, paging.page, categoryId, sort, entry)
             }
         }
     }
@@ -94,9 +96,10 @@ class TechBlogPostQueryService(
         paging: Paging,
         techBlogId: Long,
         categoryId: Long?,
+        sort: PostSortType,
     ): ListEntry<PostSummary> {
         val count = fetchCountTechBlogPosts(techBlogId, categoryId)
-        val list = fetchBasePostsByTechBlogKey(paging, techBlogId, categoryId)
+        val list = fetchBasePostsByTechBlogKey(paging, techBlogId, categoryId, sort)
         return ListEntry(
             count = count,
             list = list
@@ -107,10 +110,11 @@ class TechBlogPostQueryService(
         paging: Paging,
         techBlogId: Long,
         categoryId: Long?,
+        sort: PostSortType,
     ): List<PostSummary> {
         val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
-        val jpqlQuery = createTechBlogBasePostsQuery(techBlogId, categoryId)
+        val jpqlQuery = createTechBlogBasePostsQuery(techBlogId, categoryId, sort)
 
         return jdslExecutor
             .createQuery(
@@ -137,8 +141,8 @@ class TechBlogPostQueryService(
             ?: 0L
     }
 
-    private fun createTechBlogBasePostsQuery(techBlogId: Long, categoryId: Long?) = jpql {
-        selectBasePostSummary(isBookmarked = false)
+    private fun createTechBlogBasePostsQuery(techBlogId: Long, categoryId: Long?, sort: PostSortType) = jpql {
+        val query = selectBasePostSummary(isBookmarked = false)
             .from(
                 entity(Post::class),
                 join(TechBlog::class).on(path(Post::techBlogId).equal(path(TechBlog::id))),
@@ -147,7 +151,16 @@ class TechBlogPostQueryService(
                 path(TechBlog::id).equal(techBlogId),
                 categoryId?.let { path(Post::categoryId).equal(it) }
             )
-            .orderBy(path(Post::publishedAt).desc())
+        when (sort) {
+            PostSortType.latest ->
+                query.orderBy(path(Post::publishedAt).desc())
+
+            PostSortType.popular ->
+                query.orderBy(
+                    path(Post::viewCount).times(2L).plus(path(Post::bookmarkCount).times(3L)).desc(),
+                    path(Post::publishedAt).desc()
+                )
+        }
     }
 
     private fun createCountTechBlogPostsQuery(techBlogId: Long, categoryId: Long?) = jpql {

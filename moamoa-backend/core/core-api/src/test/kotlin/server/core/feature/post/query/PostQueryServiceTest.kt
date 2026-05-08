@@ -29,7 +29,7 @@ class PostQueryServiceTest : UnitTest() {
             postSummary(id = 2L, viewCount = 3L, bookmarkCount = 4L, isBookmarked = false)
         )
 
-        every { postListCache.get(1L, 20L, 10L) } returns ListEntry(
+        every { postListCache.get(1L, 20L, 10L, PostSortType.latest) } returns ListEntry(
             count = 2L,
             list = basePosts
         )
@@ -47,14 +47,39 @@ class PostQueryServiceTest : UnitTest() {
         )
 
         val result = service.findByConditions(
-            conditions = PostQueryConditions(page = 1, size = 20, query = null, category = 10L),
+            conditions = PostQueryConditions(page = 1, size = 20, query = null, category = 10L, sort = PostSortType.latest),
             passport = Passport(memberId = 10L, role = MemberRole.USER)
         )
 
         result.posts[0].viewCount shouldBe 10L
         result.posts[0].bookmarkCount shouldBe 11L
         result.posts[1].isBookmarked shouldBe true
-        verify(exactly = 1) { postListCache.get(1L, 20L, 10L) }
+        verify(exactly = 1) { postListCache.get(1L, 20L, 10L, PostSortType.latest) }
+    }
+
+    @Test
+    fun `인기순 요청이면 인기순 캐시 키를 조회한다`() {
+        val postListCache = mockk<PostListCache>()
+
+        every { postListCache.get(1L, 20L, 10L, PostSortType.popular) } returns ListEntry(
+            count = 0L,
+            list = emptyList()
+        )
+
+        val service = PostQueryService(
+            jdslExecutor = mockk(relaxed = true),
+            postListCache = postListCache,
+            bookmarkedPostReader = mockk(),
+            postStatsReader = mockk(),
+            warmupCoordinator = mockk(relaxed = true)
+        )
+
+        service.findByConditions(
+            conditions = PostQueryConditions(page = 1, size = 20, query = null, category = 10L, sort = PostSortType.popular),
+            passport = null
+        )
+
+        verify(exactly = 1) { postListCache.get(1L, 20L, 10L, PostSortType.popular) }
     }
 
     @Test

@@ -29,6 +29,7 @@ class SubscribedPostQueryService(
         conditions: PostQueryConditions,
         passport: Passport,
     ): PostList {
+        val sort = conditions.sort ?: PostSortType.latest
         val paging = Paging(
             size = conditions.size ?: 20,
             page = conditions.page ?: 1
@@ -37,7 +38,7 @@ class SubscribedPostQueryService(
             Category.fromId(it)?.id ?: throw NoSuchElementException("존재하지 않는 카테고리입니다.")
         }
 
-        val entry = loadEntry(memberId = passport.memberId, paging = paging, categoryId = categoryId)
+        val entry = loadEntry(memberId = passport.memberId, paging = paging, categoryId = categoryId, sort = sort)
         val totalCount = entry.count
         val basePosts = entry.list
 
@@ -69,18 +70,18 @@ class SubscribedPostQueryService(
         return PostList(meta, posts)
     }
 
-    private fun loadEntry(memberId: Long, paging: Paging, categoryId: Long?): ListEntry<PostSummary> {
+    private fun loadEntry(memberId: Long, paging: Paging, categoryId: Long?, sort: PostSortType): ListEntry<PostSummary> {
         if (paging.page > 5) {
-            return fetchEntry(paging, memberId, categoryId)
+            return fetchEntry(paging, memberId, categoryId, sort)
         }
 
-        val cached = subscribedPostListCache.get(memberId, paging.page, categoryId)
+        val cached = subscribedPostListCache.get(memberId, paging.page, categoryId, sort)
         if (cached != null) return cached
 
-        return fetchEntry(paging, memberId, categoryId).also { entry ->
-            val warmupKey = "${subscribedPostListCache.versionKey(memberId)}:CATEGORY:${categoryId ?: 0L}:PAGE:${paging.page}"
+        return fetchEntry(paging, memberId, categoryId, sort).also { entry ->
+            val warmupKey = "${subscribedPostListCache.versionKey(memberId)}:CATEGORY:${categoryId ?: 0L}:SORT:${sort.name}:PAGE:${paging.page}"
             warmupCoordinator.launchIfAbsent(warmupKey) {
-                subscribedPostListCache.set(memberId, paging.page, categoryId, entry)
+                subscribedPostListCache.set(memberId, paging.page, categoryId, sort, entry)
             }
         }
     }
@@ -89,9 +90,10 @@ class SubscribedPostQueryService(
         paging: Paging,
         memberId: Long,
         categoryId: Long?,
+        sort: PostSortType,
     ): ListEntry<PostSummary> {
         val count = fetchCountSubscribedPosts(memberId, categoryId)
-        val list = fetchSubscribingBasePosts(paging, memberId, categoryId)
+        val list = fetchSubscribingBasePosts(paging, memberId, categoryId, sort)
         return ListEntry(
             count = count,
             list = list
@@ -102,10 +104,11 @@ class SubscribedPostQueryService(
         paging: Paging,
         memberId: Long,
         categoryId: Long?,
+        sort: PostSortType,
     ): List<PostSummary> {
         val limit = paging.size.toInt()
         val offset = (paging.page - 1L) * paging.size
-        val jpqlQuery = createSubscribedBasePostsQuery(memberId, categoryId)
+        val jpqlQuery = createSubscribedBasePostsQuery(memberId, categoryId, sort)
 
         return jdslExecutor
             .createQuery(
@@ -132,8 +135,8 @@ class SubscribedPostQueryService(
             ?: 0L
     }
 
-    private fun createSubscribedBasePostsQuery(memberId: Long, categoryId: Long?) = jpql {
-        selectBasePostSummary(isBookmarked = false)
+    private fun createSubscribedBasePostsQuery(memberId: Long, categoryId: Long?, sort: PostSortType) = jpql {
+        val query = selectBasePostSummary(isBookmarked = false)
             .from(
                 entity(Subscription::class),
                 join(TechBlog::class).on(path(Subscription::techBlogId).equal(path(TechBlog::id))),
@@ -143,7 +146,16 @@ class SubscribedPostQueryService(
                 path(Subscription::memberId).equal(memberId),
                 categoryId?.let { path(Post::categoryId).equal(it) }
             )
-            .orderBy(path(Post::publishedAt).desc())
+        when (sort) {
+            PostSortType.latest ->
+                query.orderBy(path(Post::publishedAt).desc())
+
+            PostSortType.popular ->
+                query.orderBy(
+                    path(Post::viewCount).times(2L).plus(path(Post::bookmarkCount).times(3L)).desc(),
+                    path(Post::publishedAt).desc()
+                )
+        }
     }
 
     private fun createCountSubscribedPostsQuery(memberId: Long, categoryId: Long?) = jpql {
