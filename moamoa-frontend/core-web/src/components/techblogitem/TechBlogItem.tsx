@@ -1,6 +1,4 @@
 import styles from "./TechBlogItem.module.css"
-import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
-import NotificationsOffOutlinedIcon from "@mui/icons-material/NotificationsOffOutlined"
 import { useQueryClient } from "@tanstack/react-query"
 import useAuth from "../../auth/useAuth"
 import { showGlobalConfirm, showToast } from "../../api/client"
@@ -12,6 +10,7 @@ import {
   useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
 import type { TechBlogSummary } from "../../api/techBlog.api"
+import TechBlogSubscriptionControl from "../techblogsubscriptioncontrol/TechBlogSubscriptionControl"
 
 type TechBlogItemProps = {
   techBlog?: TechBlogSummary
@@ -239,41 +238,20 @@ const TechBlogItem = ({
         </div>
 
         <div className={styles.right}>
-          <button
-            className={
-              techBlog.subscribed ? styles.subIngButton : styles.subButton
-            }
-            onClick={(e) => {
+          <TechBlogSubscriptionControl
+            subscribed={!!techBlog.subscribed}
+            notificationEnabled={!!techBlog.notificationEnabled}
+            onSubscriptionClick={(e) => {
               e.stopPropagation()
               subscriptionToggle()
             }}
-          >
-            {techBlog.subscribed ? "구독중" : "구독"}
-          </button>
-
-          {techBlog.subscribed && (
-            <button
-              className={
-                techBlog.notificationEnabled
-                  ? styles.alarmIngButton
-                  : styles.alarmButton
-              }
-              onClick={(e) => {
-                e.stopPropagation()
-                notificationToggle()
-              }}
-            >
-              {techBlog.notificationEnabled ? (
-                <NotificationsOffOutlinedIcon
-                  sx={{ fontSize: 18, color: "#A2A2A2", fontWeight: 800 }}
-                />
-              ) : (
-                <NotificationsNoneOutlinedIcon
-                  sx={{ fontSize: 18, color: "#ffffff", fontWeight: 800 }}
-                />
-              )}
-            </button>
-          )}
+            onNotificationClick={(e) => {
+              e.stopPropagation()
+              notificationToggle()
+            }}
+            isSubscriptionDisabled={isMutating}
+            isNotificationDisabled={isMutating}
+          />
         </div>
       </div>
     </div>

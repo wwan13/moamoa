@@ -17,10 +17,9 @@ import {
   useSubscribeMutation,
   useUnsubscribeMutation,
 } from "../../queries/techBlogSubscription.queries"
-import NotificationsOffOutlinedIcon from "@mui/icons-material/NotificationsOffOutlined"
-import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
 import type { TechBlogList, TechBlogSummary } from "../../api/techBlog.api"
 import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
+import TechBlogSubscriptionControl from "../../components/techblogsubscriptioncontrol/TechBlogSubscriptionControl"
 
 const TechBlogDetailPage = () => {
   const { isLoggedIn, openLogin, authScope, publicScope } = useAuth()
@@ -335,35 +334,21 @@ const TechBlogDetailPage = () => {
           </div>
 
           <div className={styles.buttonWrap}>
-            <button
-              className={subscribed ? styles.subIngButton : styles.subButton}
-              onClick={onSubButtonToggle}
-              disabled={isSubscriptionPending || techBlogQuery.isPending}
-            >
-              {subscribed ? "구독중" : "구독"}
-            </button>
-
-            {subscribed && techBlog && !isSubscriptionPending && (
-              <button
-                className={
-                  notificationEnabled
-                    ? styles.alarmIngButton
-                    : styles.alarmButton
-                }
-                onClick={onNotificationButtonToggle}
-                disabled={isNotificationPending || techBlogQuery.isPending}
-              >
-                {notificationEnabled ? (
-                  <NotificationsOffOutlinedIcon
-                    sx={{ fontSize: 18, color: "#A2A2A2", fontWeight: 800 }}
-                  />
-                ) : (
-                  <NotificationsNoneOutlinedIcon
-                    sx={{ fontSize: 18, color: "#ffffff", fontWeight: 800 }}
-                  />
-                )}
-              </button>
-            )}
+            <TechBlogSubscriptionControl
+              subscribed={subscribed}
+              notificationEnabled={notificationEnabled}
+              onSubscriptionClick={onSubButtonToggle}
+              onNotificationClick={onNotificationButtonToggle}
+              isSubscriptionDisabled={
+                isSubscriptionPending || techBlogQuery.isPending
+              }
+              isNotificationDisabled={
+                !techBlog ||
+                isSubscriptionPending ||
+                isNotificationPending ||
+                techBlogQuery.isPending
+              }
+            />
           </div>
         </div>
       </div>

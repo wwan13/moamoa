@@ -208,68 +208,17 @@
   line-height: 1.14;
 }
 
-.subscribedActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.subscribedButton {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-weight: 500;
-  color: #bbbbbb;
-  font-size: 14px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.subscribedCheck {
-  font-size: 12px;
-}
-
-.actionDivider {
-  color: #c7c7c7;
-  font-size: 14px;
-  line-height: 1;
-}
-
-.alarmActiveButton {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: #eaf1ff;
-  color: #1d4ed8;
-  cursor: pointer;
-  padding: 0;
-}
-
-.alarmInactiveButton {
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: #c6c6c6;
-  cursor: pointer;
-  padding: 0;
-}
-
 .hoverAction {
   width: 100%;
   display: flex;
   justify-content: center;
+  margin-top: 12px;
+}
+
+.skeletonActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 12px;
 }
 
@@ -320,22 +269,7 @@
   transform: translateX(-50%) translateY(0);
 }
 
-.hoverSubscribeButton {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 999px;
-  background: #0e4bbc;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.hoverSubscribeButton:disabled,
-.subscribedButton:disabled,
-.alarmActiveButton:disabled,
-.alarmInactiveButton:disabled {
+.hoverAction button:disabled {
   opacity: 0.55;
   cursor: default;
 }

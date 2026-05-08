@@ -1,0 +1,77 @@
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.withTopSpacing {
+  margin-top: 12px;
+}
+
+.subscribeButton {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  background: #0e4bbc;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.subscribedButton {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: #bbbbbb;
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.subscribedCheck {
+  font-size: 12px;
+}
+
+.actionDivider {
+  color: #c7c7c7;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.notificationDisabledButton {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #eaf1ff;
+  color: #1d4ed8;
+  cursor: pointer;
+  padding: 0;
+}
+
+.notificationEnabledButton {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #c6c6c6;
+  cursor: pointer;
+  padding: 0;
+}
+
+.control button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

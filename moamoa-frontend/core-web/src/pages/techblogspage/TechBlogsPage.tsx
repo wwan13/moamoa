@@ -4,11 +4,8 @@ import { useCountUp } from "../../hooks/useCountUp"
 import useAuth from "../../auth/useAuth"
 import { showGlobalConfirm, showToast } from "../../api/client"
 import { useNavigate } from "react-router-dom"
-import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined"
-import NotificationsOffOutlinedIcon from "@mui/icons-material/NotificationsOffOutlined"
 import { useQueryClient } from "@tanstack/react-query"
 import type { TechBlogSummary, TechBlogList } from "../../api/techBlog.api"
-
 import { useTechBlogsQuery } from "../../queries/techBlog.queries"
 import {
   useDisableNotificationMutation,
@@ -19,6 +16,7 @@ import {
 } from "../../queries/techBlogSubscription.queries"
 import ScrollTopButton from "../../components/scrolltopbutton/ScrollTopButton"
 import SearchBar from "../noticelistpage/SearchBar"
+import TechBlogSubscriptionControl from "../../components/techblogsubscriptioncontrol/TechBlogSubscriptionControl"
 
 const SKELETON_COUNT = 12
 
@@ -326,7 +324,7 @@ const TechBlogsPage = () => {
                   <div
                     className={`${styles.skeletonLineShort} ${styles.skeleton}`}
                   />
-                  <div className={styles.subscribedActions}>
+                  <div className={styles.skeletonActions}>
                     <div
                       className={`${styles.skeletonBtn} ${styles.skeleton}`}
                     />
@@ -372,45 +370,21 @@ const TechBlogsPage = () => {
                   </div>
 
                   {blog.subscribed ? (
-                    <div className={styles.subscribedActions}>
-                      <button
-                        className={styles.subscribedButton}
-                        onClick={(e) => {
-                          stop(e)
-                          subscriptionToggle(blog)
-                        }}
-                        disabled={isMutating}
-                      >
-                        <span className={styles.subscribedCheck}>✓</span>
-                        구독중
-                      </button>
-
-                      <span className={styles.actionDivider} aria-hidden="true">
-                        ·
-                      </span>
-
-                      <button
-                        className={
-                          blog.notificationEnabled
-                            ? styles.alarmActiveButton
-                            : styles.alarmInactiveButton
-                        }
-                        onClick={(e) => {
-                          stop(e)
-                          notificationToggle(blog)
-                        }}
-                        disabled={isMutating}
-                        aria-label={
-                          blog.notificationEnabled ? "알림 해제" : "알림 설정"
-                        }
-                      >
-                        {blog.notificationEnabled ? (
-                          <NotificationsNoneOutlinedIcon fontSize="small" />
-                        ) : (
-                          <NotificationsOffOutlinedIcon fontSize="small" />
-                        )}
-                      </button>
-                    </div>
+                    <TechBlogSubscriptionControl
+                      subscribed={blog.subscribed}
+                      notificationEnabled={!!blog.notificationEnabled}
+                      withTopSpacing
+                      onSubscriptionClick={(e) => {
+                        stop(e)
+                        subscriptionToggle(blog)
+                      }}
+                      onNotificationClick={(e) => {
+                        stop(e)
+                        notificationToggle(blog)
+                      }}
+                      isSubscriptionDisabled={isMutating}
+                      isNotificationDisabled={isMutating}
+                    />
                   ) : (
                     <div className={styles.hoverAction}>
                       <div className={styles.subscribeButtonWrap}>
@@ -419,17 +393,21 @@ const TechBlogsPage = () => {
                             로그인 후 구독할 수 있어요
                           </div>
                         )}
-
-                        <button
-                          className={styles.hoverSubscribeButton}
-                          onClick={(e) => {
+                        <TechBlogSubscriptionControl
+                          subscribed={blog.subscribed}
+                          notificationEnabled={!!blog.notificationEnabled}
+                          withTopSpacing
+                          onSubscriptionClick={(e) => {
                             stop(e)
                             subscriptionToggle(blog)
                           }}
-                          disabled={isMutating}
-                        >
-                          구독
-                        </button>
+                          onNotificationClick={(e) => {
+                            stop(e)
+                            notificationToggle(blog)
+                          }}
+                          isSubscriptionDisabled={isMutating}
+                          isNotificationDisabled={isMutating}
+                        />
                       </div>
                     </div>
                   )}
