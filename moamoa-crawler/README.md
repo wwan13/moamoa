@@ -1,7 +1,7 @@
 # moamoa-crawler
 
 `moamoa-crawler`는 기술 블로그별 Python crawler를 실행하는 독립 패키지입니다.
-source는 `sources/{key}.py` 파일로 자동 발견되며, 실행 결과는 기본적으로 `data/{key}.posts.json`에 저장됩니다.
+source는 `sources/{key}.py` 파일로 자동 발견됩니다.
 
 ## 시작하는 방법
 
@@ -17,18 +17,24 @@ python3 -m venv .venv
 `.[fetchers]`와 `scrapling install`은 Scrapling browser crawler를 사용하는 source에 필요합니다.
 API, RSS, 정적 HTML source만 실행할 때는 browser가 필요하지 않지만, 전체 source를 동일한 환경에서 돌리려면 위 방식으로 설치하는 것이 가장 단순합니다.
 
-### 2. 단일 source 실행
+### 2. 프로세스 실행
 
 ```bash
-.venv/bin/moamoa-crawler --once --key musinsa --size 30
+.venv/bin/moamoa-crawler
 ```
 
-주요 옵션:
+옵션 없이 실행하면 기본적으로 HTTP API와 Redis Stream consumer가 함께 실행됩니다.
+기본 API 주소는 `127.0.0.1:8765`이고, 기본 stream은 `tech-blog:crawl:requests`입니다.
+
+명시적으로 옵션을 지정하려면 다음처럼 실행할 수 있습니다.
 
 ```bash
-.venv/bin/moamoa-crawler --once --key toss --size 30 --output-dir data
-.venv/bin/moamoa-crawler --once --key musinsa --headful
-.venv/bin/moamoa-crawler --once --key musinsa --wait 3000 --scrolls 8 --scroll-wait 1200
+.venv/bin/moamoa-crawler --serve --redis-stream \
+  --host 127.0.0.1 \
+  --port 8765 \
+  --stream tech-blog:crawl:requests \
+  --group moamoa-crawler \
+  --consumer crawler-1
 ```
 
 ### 3. HTTP API 서버 실행
@@ -45,12 +51,10 @@ curl -X POST 'http://127.0.0.1:8765/crawl?key=musinsa&size=30'
 curl -X POST http://127.0.0.1:8765/crawl \
   -H 'Content-Type: application/json' \
   -d '{"key":"toss","size":30}'
-curl 'http://127.0.0.1:8765/posts?key=musinsa'
 ```
 
 `POST /crawl`은 요청을 내부 FIFO 큐에 넣고 crawler worker가 하나씩 실행합니다.
 응답은 해당 요청의 crawl이 끝난 뒤 같은 연결로 반환됩니다.
-`GET /posts?key={key}`는 메모리 또는 `data/{key}.posts.json`에 남아 있는 최신 결과를 반환합니다.
 
 ### 4. Redis Stream consumer 실행
 
@@ -73,6 +77,11 @@ redis-cli XADD tech-blog:crawl:requests '*' payload '{"key":"musinsa","size":30}
 
 consumer는 성공한 메시지를 ACK 합니다.
 실패 메시지도 ACK 해야 하면 `--redis-ack-on-failure`를 사용합니다.
+
+### 5. 동시 요청 처리
+
+HTTP API와 Redis Stream 이벤트 요청은 같은 내부 FIFO 큐로 처리합니다.
+따라서 API 요청과 이벤트 요청이 동시에 들어와도 crawler worker가 하나씩 순서대로 실행합니다.
 
 ## Source별 크롤링 방식
 

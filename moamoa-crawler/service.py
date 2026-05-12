@@ -41,16 +41,6 @@ class CrawlerApi:
                 "supportedKeys": supported_keys(),
             }
 
-    def latest_posts(self, key: str) -> dict[str, object] | None:
-        with self._lock:
-            if key in self._latest_results:
-                return self._latest_results[key]
-
-        output = self.config.output_dir / f"{key}.posts.json"
-        if output.exists():
-            return json.loads(output.read_text(encoding="utf-8"))
-        return None
-
     def crawl_now(self, request: CrawlJobRequest) -> tuple[HTTPStatus, dict[str, object]]:
         job = QueuedCrawl(request=request)
         self._crawl_queue.put(job)
@@ -161,16 +151,6 @@ def make_handler(api: CrawlerApi) -> type[BaseHTTPRequestHandler]:
                 json_response(self, HTTPStatus.OK, api.health())
                 return
 
-            if parsed.path == "/posts":
-                query = urllib.parse.parse_qs(parsed.query)
-                key = query.get("key", [DEFAULT_KEY])[0]
-                result = api.latest_posts(key)
-                if result is None:
-                    json_response(self, HTTPStatus.NOT_FOUND, {"error": "no crawl result yet"})
-                    return
-                json_response(self, HTTPStatus.OK, result)
-                return
-
             json_response(self, HTTPStatus.NOT_FOUND, {"error": "not found"})
 
         def do_POST(self) -> None:
@@ -185,11 +165,14 @@ def make_handler(api: CrawlerApi) -> type[BaseHTTPRequestHandler]:
     return Handler
 
 
-def serve(host: str, port: int, config: CrawlJobConfig) -> None:
-    api = CrawlerApi(config)
+def serve_api(host: str, port: int, api: CrawlerApi) -> None:
     server = ThreadingHTTPServer((host, port), make_handler(api))
     logging.info("crawler api listening on http://%s:%s", host, port)
     try:
         server.serve_forever()
     finally:
         server.server_close()
+
+
+def serve(host: str, port: int, config: CrawlJobConfig) -> None:
+    serve_api(host=host, port=port, api=CrawlerApi(config))

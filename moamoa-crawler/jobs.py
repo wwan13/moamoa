@@ -7,8 +7,6 @@ import re
 import sys
 from typing import Callable
 
-from crawler import write_json
-
 
 DEFAULT_KEY = "musinsa"
 DEFAULT_SIZE = 30
@@ -17,7 +15,6 @@ SOURCE_DIR = Path(__file__).resolve().parent / "sources"
 
 @dataclass(frozen=True)
 class CrawlJobConfig:
-    output_dir: Path
     headless: bool
     wait: int
     scrolls: int
@@ -69,10 +66,6 @@ def load_crawler(key: str) -> CrawlerFunc:
     return crawler
 
 
-def output_path(output_dir: Path, key: str) -> Path:
-    return output_dir / f"{key}.posts.json"
-
-
 def supported_keys() -> list[str]:
     return sorted(source_keys())
 
@@ -83,6 +76,4 @@ def run_crawl_job(request: CrawlJobRequest, config: CrawlJobConfig) -> dict[str,
         raise ValueError(f"unsupported crawler key: {request.key}; supported keys: {allowed}")
 
     crawler = load_crawler(request.key)
-    result = crawler(request, config)
-    write_json(result, output_path(config.output_dir, request.key))
-    return result
+    return crawler(request, config)

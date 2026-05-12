@@ -7,8 +7,7 @@ import socket
 import time
 import urllib.parse
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from jobs import DEFAULT_SIZE, CrawlJobConfig, CrawlJobRequest, run_crawl_job, supported_keys
 
@@ -179,7 +178,12 @@ def ensure_group(client: RedisClient, stream: str, group: str) -> None:
             raise
 
 
-def consume(redis_config: RedisStreamConfig, crawl_config: CrawlJobConfig) -> None:
+RunCrawl = Callable[[CrawlJobRequest], dict[str, object]]
+
+
+def consume(redis_config: RedisStreamConfig, crawl_config: CrawlJobConfig, run_crawl: RunCrawl | None = None) -> None:
+    crawl = run_crawl or (lambda request: run_crawl_job(request, crawl_config))
+
     with RedisClient(redis_config.redis_url) as client:
         ensure_group(client, redis_config.stream, redis_config.group)
         logging.info(
@@ -205,7 +209,7 @@ def consume(redis_config: RedisStreamConfig, crawl_config: CrawlJobConfig) -> No
                     ">",
                 )
                 for message_id, fields in parse_xreadgroup_response(response):
-                    handle_message(client, redis_config, crawl_config, message_id, fields)
+                    handle_message(client, redis_config, message_id, fields, crawl)
             except (OSError, RedisProtocolError):
                 logging.exception("redis stream consumer disconnected; reconnecting")
                 time.sleep(3)
@@ -241,14 +245,14 @@ def decode(value: object) -> str:
 def handle_message(
     client: RedisClient,
     redis_config: RedisStreamConfig,
-    crawl_config: CrawlJobConfig,
     message_id: str,
     fields: dict[str, str],
+    run_crawl: RunCrawl,
 ) -> None:
     try:
         requests = crawl_requests_from_fields(fields)
         for request in requests:
-            result = run_crawl_job(request, crawl_config)
+            result = run_crawl(request)
             logging.info("redis crawl completed: messageId=%s key=%s posts=%s", message_id, request.key, result["postCount"])
         client.command("XACK", redis_config.stream, redis_config.group, message_id)
     except Exception:
@@ -293,11 +297,11 @@ def run_redis_stream(
     block_ms: int,
     count: int,
     ack_on_failure: bool,
-    output_dir: Path,
     headless: bool,
     wait: int,
     scrolls: int,
     scroll_wait: int,
+    run_crawl: RunCrawl | None = None,
 ) -> None:
     consume(
         redis_config=RedisStreamConfig(
@@ -310,10 +314,10 @@ def run_redis_stream(
             ack_on_failure=ack_on_failure,
         ),
         crawl_config=CrawlJobConfig(
-            output_dir=output_dir,
             headless=headless,
             wait=wait,
             scrolls=scrolls,
             scroll_wait=scroll_wait,
         ),
+        run_crawl=run_crawl,
     )
