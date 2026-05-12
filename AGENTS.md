@@ -103,6 +103,7 @@ moamoa/
 
 - Commit message and commit-splitting guidance: `$commit-style`
 - Fast code-definition lookup in `core-api` and `core-web`: `$symbolify-lookup`
+- Standalone Python crawler source additions in `moamoa-crawler`: `$moamoa-crawler-source`
 
 ## Constraints
 

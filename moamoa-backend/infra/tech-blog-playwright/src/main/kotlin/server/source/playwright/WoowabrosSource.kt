@@ -58,6 +58,7 @@ internal class WoowabrosSource(
                         .setUserAgent(USER_AGENT)
                         .setLocale("ko-KR")
                 ).use { context ->
+                    PlaywrightStealth.applyTo(context)
                     val page = context.newPage()
                     page.navigate(BASE_URL, Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED))
 
@@ -81,8 +82,7 @@ internal class WoowabrosSource(
         }
 
         return playwright.chromium().launch(
-            BrowserType.LaunchOptions()
-                .setHeadless(true)
+            PlaywrightStealth.launchOptions()
         )
     }
 

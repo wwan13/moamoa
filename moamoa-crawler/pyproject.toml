@@ -1,0 +1,19 @@
+[project]
+name = "moamoa-crawler"
+version = "0.1.0"
+description = "Standalone crawler for techblog.musinsa.com"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+moamoa-crawler = "crawler:main"
+
+[project.optional-dependencies]
+fetchers = ["scrapling[fetchers]>=0.4.8"]
+
+[tool.setuptools]
+py-modules = ["crawler", "jobs", "redis_stream", "service"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

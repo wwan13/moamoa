@@ -1,5 +1,7 @@
 package server.source.jsoup
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.flow.Flow
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -10,8 +12,8 @@ import server.source.jsoup.util.fetchWithPaging
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
 import java.net.URI
+import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
@@ -29,54 +31,90 @@ internal class KakaoMobilitySource : TechBlogSource {
         }
     }
 
-    private fun parseItems(doc: Document): List<TechBlogPost> {
-        return doc.select("channel > item").mapNotNull(::toPost)
+    internal fun parseItems(doc: Document): List<TechBlogPost> {
+        return parseDataAsset(doc).ifEmpty {
+            parseHtmlCards(doc)
+        }
     }
 
-    private fun toPost(item: Element): TechBlogPost? {
-        val url = item.selectFirst("link")?.text()
+    internal fun parseDataAsset(doc: Document, fetchAsset: (String) -> String = ::fetchBody): List<TechBlogPost> {
+        val assetUrl = doc.selectFirst("link[rel=modulepreload][href*=techblogs.data.]")
+            ?.absUrl("href")
             ?.trim()
             .orEmpty()
 
-        val resolvedUrl = requireField(url, "url", null)
+        if (assetUrl.isBlank()) return emptyList()
 
-        val title = requireField(item.selectFirst("title")?.text(), "title", resolvedUrl)
+        val rawJson = runCatching {
+            extractJsonArray(fetchAsset(assetUrl))
+        }.getOrDefault("")
+        if (rawJson.isBlank()) return emptyList()
 
-        val keyRaw = item.selectFirst("guid")?.text()?.trim().orEmpty().ifBlank { resolvedUrl }
-        val key = requireField(normalizeKey(keyRaw), "key", resolvedUrl)
+        return runCatching {
+            objectMapper.readTree(rawJson)
+                .mapNotNull(::toPost)
+                .distinctBy { it.url }
+        }.getOrDefault(emptyList())
+    }
 
-        val description = item.selectFirst("description")
-            ?.text()
-            ?.let { Jsoup.parse(it).text().trim() }
-            .orEmpty()
+    private fun parseHtmlCards(doc: Document): List<TechBlogPost> {
+        val cards = doc.select("a.new-content-card[href], a.blog-card[href]")
+        return cards.mapNotNull(::toPost).distinctBy { it.url }
+    }
 
-        val thumbnail = item.selectFirst("enclosure")
-            ?.attr("url")
-            ?.trim()
-            .orEmpty()
-            .ifBlank { DEFAULT_THUMBNAIL }
-
-        val publishedAt = parsePublishedAt(item.selectFirst("pubDate")?.text())
+    private fun toPost(node: JsonNode): TechBlogPost? {
+        val url = resolveUrl(node.path("link").asText())
+        val title = requireField(node.path("title").asText(), "title", url)
+        val publishedAt = parsePublishedAt(node.path("date").asText())
 
         return TechBlogPost(
-            key = key,
+            key = requireField(normalizeKey(url), "key", url),
+            title = title,
+            description = node.path("description").asText().trim(),
+            tags = listOfNotNull(node.path("category").asText().trim().takeIf { it.isNotBlank() }),
+            thumbnail = node.path("image").asText().trim(),
+            publishedAt = publishedAt,
+            url = url
+        )
+    }
+
+    private fun toPost(card: Element): TechBlogPost? {
+        val url = resolveUrl(card.attr("href"))
+        val title = card.selectFirst(".new-content-card-title, .blog-card__title")
+            ?.normalizedText()
+            ?: return null
+        val description = card.selectFirst(".blog-card__description")?.normalizedText().orEmpty()
+        val thumbnail = card.selectFirst("img[src]")?.absUrl("src").orEmpty()
+        val date = card.selectFirst(".new-content-card-time")
+            ?.normalizedText()
+            ?: card.selectFirst(".blog-card__meta")
+                ?.normalizedText()
+                ?.substringBefore("|")
+                ?.trim()
+                .orEmpty()
+
+        return TechBlogPost(
+            key = requireField(normalizeKey(url), "key", url),
             title = title,
             description = description,
             tags = emptyList(),
             thumbnail = thumbnail,
-            publishedAt = publishedAt,
-            url = resolvedUrl
+            publishedAt = parsePublishedAt(date),
+            url = url
         )
     }
 
-    private fun parsePublishedAt(raw: String?): LocalDateTime {
-        val value = raw?.trim().orEmpty()
+    private fun parsePublishedAt(raw: String): LocalDateTime {
+        val value = raw.trim()
         if (value.isBlank()) return LocalDateTime.MIN
 
         return runCatching {
-            ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toLocalDateTime()
+            LocalDate.parse(value, dateFormatter).atStartOfDay()
         }.getOrElse { LocalDateTime.MIN }
     }
+
+    private fun resolveUrl(raw: String): String =
+        requireField(URI(BASE_URL).resolve(raw.trim()).toString(), "url", null)
 
     private fun normalizeKey(raw: String): String {
         val cleaned = raw.trim().trimEnd('/')
@@ -96,10 +134,36 @@ internal class KakaoMobilitySource : TechBlogSource {
         return trimmed
     }
 
+    private fun extractJsonArray(script: String): String =
+        Regex("""JSON\.parse\(`(.*)`\)""", RegexOption.DOT_MATCHES_ALL)
+            .find(script)
+            ?.groupValues
+            ?.get(1)
+            ?.replace("\\`", "`")
+            ?.replace("\\$", "$")
+            .orEmpty()
+
+    private fun fetchBody(url: String): String =
+        Jsoup.connect(url)
+            .timeout(TIMEOUT_MS)
+            .userAgent(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
+                    "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                    "Chrome/120.0.0.0 Safari/537.36"
+            )
+            .ignoreContentType(true)
+            .execute()
+            .body()
+
+    private fun Element.normalizedText(): String? =
+        text().trim().takeIf { it.isNotBlank() }
+
     companion object {
         private const val BLOG_KEY = "kakaoMobility"
-        private const val FEED_URL = "https://developers.kakaomobility.com/techblogs.xml"
+        private const val BASE_URL = "https://developers.kakaomobility.com"
+        private const val FEED_URL = "$BASE_URL/techblogs/"
         private const val TIMEOUT_MS = 10_000
-        private const val DEFAULT_THUMBNAIL = ""
+        private val dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+        private val objectMapper = ObjectMapper()
     }
 }

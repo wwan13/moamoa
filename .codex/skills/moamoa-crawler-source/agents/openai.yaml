@@ -1,0 +1,4 @@
+interface:
+  display_name: "moamoa crawler source"
+  short_description: "Add Python moamoa-crawler sources by file key."
+  default_prompt: "Add or update a moamoa-crawler source using the sources/{key}.py auto-discovery pattern."

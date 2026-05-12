@@ -55,3 +55,5 @@ include("moamoa-backend:support:support-monitoring")
 include("moamoa-backend:support:support-webhook")
 include("moamoa-backend:support:support-logging")
 include("moamoa-backend:support:support-test")
+
+include("moamoa-crawler")
