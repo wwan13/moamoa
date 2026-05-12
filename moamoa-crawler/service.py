@@ -2,28 +2,41 @@ from __future__ import annotations
 
 import json
 import logging
+import queue
 import threading
 import urllib.parse
+from dataclasses import dataclass, field
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from jobs import DEFAULT_KEY, DEFAULT_SIZE, CrawlJobConfig, CrawlJobRequest, run_crawl_job, supported_keys
 
 
+@dataclass
+class QueuedCrawl:
+    request: CrawlJobRequest
+    done: threading.Event = field(default_factory=threading.Event)
+    status: HTTPStatus | None = None
+    payload: dict[str, object] | None = None
+
+
 class CrawlerApi:
     def __init__(self, config: CrawlJobConfig) -> None:
         self.config = config
         self._lock = threading.RLock()
-        self._crawl_lock = threading.Lock()
+        self._crawl_queue: queue.Queue[QueuedCrawl] = queue.Queue()
+        self._worker = threading.Thread(target=self._consume_crawl_queue, name="crawler-api-worker", daemon=True)
         self._latest_results: dict[str, dict[str, object]] = {}
         self._latest_error: str | None = None
         self._running = False
+        self._worker.start()
 
     def health(self) -> dict[str, object]:
         with self._lock:
             return {
                 "status": "ok",
                 "running": self._running,
+                "queueSize": self._crawl_queue.qsize(),
                 "latestError": self._latest_error,
                 "supportedKeys": supported_keys(),
             }
@@ -39,9 +52,22 @@ class CrawlerApi:
         return None
 
     def crawl_now(self, request: CrawlJobRequest) -> tuple[HTTPStatus, dict[str, object]]:
-        if not self._crawl_lock.acquire(blocking=False):
-            return HTTPStatus.CONFLICT, {"error": "crawl already running"}
+        job = QueuedCrawl(request=request)
+        self._crawl_queue.put(job)
+        logging.info("crawl queued: key=%s queueSize=%s", request.key, self._crawl_queue.qsize())
+        job.done.wait()
+        return job.status or HTTPStatus.INTERNAL_SERVER_ERROR, job.payload or {"error": "crawl queue failed"}
 
+    def _consume_crawl_queue(self) -> None:
+        while True:
+            job = self._crawl_queue.get()
+            try:
+                job.status, job.payload = self._run_crawl(job.request)
+            finally:
+                job.done.set()
+                self._crawl_queue.task_done()
+
+    def _run_crawl(self, request: CrawlJobRequest) -> tuple[HTTPStatus, dict[str, object]]:
         try:
             with self._lock:
                 self._running = True
@@ -53,7 +79,7 @@ class CrawlerApi:
                 self._latest_results[request.key] = result
                 self._latest_error = None
 
-            logging.info("crawl completed: key=%s posts=%s", request.key, result["postCount"])
+            logging.info("crawl completed: key=%s posts=%s queueSize=%s", request.key, result["postCount"], self._crawl_queue.qsize())
             return HTTPStatus.OK, result
         except ValueError as exc:
             with self._lock:
@@ -67,7 +93,6 @@ class CrawlerApi:
         finally:
             with self._lock:
                 self._running = False
-            self._crawl_lock.release()
 
 
 def json_response(handler: BaseHTTPRequestHandler, status: HTTPStatus, payload: dict[str, object]) -> None:

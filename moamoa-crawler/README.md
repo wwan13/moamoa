@@ -48,7 +48,8 @@ curl -X POST http://127.0.0.1:8765/crawl \
 curl 'http://127.0.0.1:8765/posts?key=musinsa'
 ```
 
-`POST /crawl`은 즉시 crawler를 실행하고 같은 응답으로 결과를 반환합니다.
+`POST /crawl`은 요청을 내부 FIFO 큐에 넣고 crawler worker가 하나씩 실행합니다.
+응답은 해당 요청의 crawl이 끝난 뒤 같은 연결로 반환됩니다.
 `GET /posts?key={key}`는 메모리 또는 `data/{key}.posts.json`에 남아 있는 최신 결과를 반환합니다.
 
 ### 4. Redis Stream consumer 실행
