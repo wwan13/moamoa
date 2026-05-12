@@ -3,5 +3,7 @@ package server.techblog
 import kotlinx.coroutines.flow.Flow
 
 interface TechBlogSource {
-    suspend fun getPosts(size: Int? = null): Flow<TechBlogPost>
+    suspend fun getPosts(key: String, size: Int? = null): Flow<TechBlogPost>
+
+    fun exists(key: String): Boolean
 }

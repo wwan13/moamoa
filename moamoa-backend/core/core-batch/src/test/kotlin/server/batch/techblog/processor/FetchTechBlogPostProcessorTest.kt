@@ -13,7 +13,6 @@ import server.techblog.TechBlogPostCategory
 import server.techblog.TechBlogPostCatetorizer
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogSource
-import server.techblog.TechBlogSources
 import test.UnitTest
 import java.time.LocalDateTime
 
@@ -21,11 +20,10 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
 
     @Test
     fun `source 게시글을 PostData로 변환한다`() {
-        val sources = mockk<TechBlogSources>()
-        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 100L, 10L)
+        val sut = FetchTechBlogPostProcessor(source, categorizer, monitorStore, 100L, 10L)
         val techBlogKey = TechBlogKey(id = 7L, techBlogKey = "wanted", title = "Wanted")
         val post = TechBlogPost(
             key = "p1",
@@ -37,9 +35,8 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
             url = "https://example.com/p1"
         )
 
-        every { sources["wanted"] } returns source
         every { categorizer.categorize(post) } returns post.copy(category = TechBlogPostCategory.ENGINEERING)
-        coEvery { source.getPosts(10) } returns flowOf(post)
+        coEvery { source.getPosts("wanted", 10) } returns flowOf(post)
         coEvery { monitorStore.recordFetchSuccess(100L, techBlogKey, 1) } returns Unit
 
         val result = sut.process(techBlogKey)
@@ -53,15 +50,13 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
 
     @Test
     fun `post limit이 없으면 null을 전달한다`() {
-        val sources = mockk<TechBlogSources>()
-        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 101L, null)
+        val sut = FetchTechBlogPostProcessor(source, categorizer, monitorStore, 101L, null)
         val techBlogKey = TechBlogKey(id = 8L, techBlogKey = "kakao", title = "Kakao")
 
-        every { sources["kakao"] } returns source
-        coEvery { source.getPosts(null) } returns flowOf()
+        coEvery { source.getPosts("kakao", null) } returns flowOf()
         coEvery { monitorStore.recordFetchSuccess(101L, techBlogKey, 0) } returns Unit
 
         val result = sut.process(techBlogKey)
@@ -72,16 +67,14 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
 
     @Test
     fun `source fetch 실패 시 예외를 삼키고 실패를 기록한다`() {
-        val sources = mockk<TechBlogSources>()
-        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 102L, 5L)
+        val sut = FetchTechBlogPostProcessor(source, categorizer, monitorStore, 102L, 5L)
         val techBlogKey = TechBlogKey(id = 9L, techBlogKey = "bad", title = "Bad")
         val throwable = IllegalStateException("boom")
 
-        every { sources["bad"] } returns source
-        coEvery { source.getPosts(5) } throws throwable
+        coEvery { source.getPosts("bad", 5) } throws throwable
         coEvery { monitorStore.recordFetchFailure(102L, techBlogKey, throwable) } returns Unit
 
         val result = sut.process(techBlogKey)
@@ -92,11 +85,10 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
 
     @Test
     fun `모니터링 저장 실패가 나도 source fetch 성공 결과는 반환한다`() {
-        val sources = mockk<TechBlogSources>()
-        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 103L, 10L)
+        val sut = FetchTechBlogPostProcessor(source, categorizer, monitorStore, 103L, 10L)
         val techBlogKey = TechBlogKey(id = 10L, techBlogKey = "ok", title = "OK")
         val post = TechBlogPost(
             key = "p2",
@@ -108,9 +100,8 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
             url = "https://example.com/p2"
         )
 
-        every { sources["ok"] } returns source
         every { categorizer.categorize(post) } returns post.copy(category = TechBlogPostCategory.ENGINEERING)
-        coEvery { source.getPosts(10) } returns flowOf(post)
+        coEvery { source.getPosts("ok", 10) } returns flowOf(post)
         coEvery { monitorStore.recordFetchSuccess(103L, techBlogKey, 1) } throws IllegalStateException("redis down")
 
         val result = sut.process(techBlogKey)
@@ -121,11 +112,10 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
 
     @Test
     fun `카테고리 매칭 실패 시 999로 저장한다`() {
-        val sources = mockk<TechBlogSources>()
-        val categorizer = mockk<TechBlogPostCatetorizer>()
         val source = mockk<TechBlogSource>()
+        val categorizer = mockk<TechBlogPostCatetorizer>()
         val monitorStore = mockk<TechBlogCollectMonitorStore>()
-        val sut = FetchTechBlogPostProcessor(sources, categorizer, monitorStore, 104L, 10L)
+        val sut = FetchTechBlogPostProcessor(source, categorizer, monitorStore, 104L, 10L)
         val techBlogKey = TechBlogKey(id = 11L, techBlogKey = "none", title = "None")
         val post = TechBlogPost(
             key = "p3",
@@ -137,9 +127,8 @@ class FetchTechBlogPostProcessorTest : UnitTest() {
             url = "https://example.com/p3"
         )
 
-        every { sources["none"] } returns source
         every { categorizer.categorize(post) } returns post.copy(category = TechBlogPostCategory.UNDEFINED)
-        coEvery { source.getPosts(10) } returns flowOf(post)
+        coEvery { source.getPosts("none", 10) } returns flowOf(post)
         coEvery { monitorStore.recordFetchSuccess(104L, techBlogKey, 1) } returns Unit
 
         val result = sut.process(techBlogKey)

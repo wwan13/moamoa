@@ -13,12 +13,12 @@ import server.batch.techblog.dto.TechBlogKey
 import server.batch.techblog.monitoring.TechBlogCollectMonitorStore
 import server.techblog.TechBlogPostCategory
 import server.techblog.TechBlogPostCatetorizer
-import server.techblog.TechBlogSources
+import server.techblog.TechBlogSource
 
 @StepScope
 @Component
 internal class FetchTechBlogPostProcessor(
-    private val techBlogSources: TechBlogSources,
+    private val techBlogSource: TechBlogSource,
     private val techBlogCategorizer: TechBlogPostCatetorizer,
     private val monitorStore: TechBlogCollectMonitorStore,
     @field:Value("#{jobParameters['run.id']}") private val runId: Long?,
@@ -29,8 +29,7 @@ internal class FetchTechBlogPostProcessor(
         val actualRunId = runId ?: System.currentTimeMillis()
 
         runCatching {
-            val source = techBlogSources[item.techBlogKey]
-            source.getPosts(postLimit?.toInt())
+            techBlogSource.getPosts(item.techBlogKey, postLimit?.toInt())
                 .map {
                     val categorized = techBlogCategorizer.categorize(it)
                     PostData(

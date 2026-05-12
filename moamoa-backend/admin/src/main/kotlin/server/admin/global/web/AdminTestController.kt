@@ -5,18 +5,18 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
-import server.techblog.TechBlogSources
+import server.techblog.TechBlogSource
 
 @RestController
 internal class AdminTestController(
-    private val techBlogSources: TechBlogSources
+    private val techBlogSource: TechBlogSource
 ) {
 
     @GetMapping("/admin/test/{key}")
     fun test(
         @PathVariable key: String
     ): String {
-        val result = runBlocking { techBlogSources[key].getPosts().toList() }
+        val result = runBlocking { techBlogSource.getPosts(key).toList() }
         println(result)
         println(result.size)
         return result.toString()

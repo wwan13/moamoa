@@ -5,8 +5,6 @@ plugins {
 dependencies {
     api(project(":moamoa-backend:infra:tech-blog-api"))
     implementation(project(":moamoa-backend:infra:tech-blog-http"))
-    implementation(project(":moamoa-backend:infra:tech-blog-jsoup"))
-    implementation(project(":moamoa-backend:infra:tech-blog-playwright"))
 
     implementation("org.springframework.boot:spring-boot-autoconfigure")
 
