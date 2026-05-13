@@ -61,9 +61,22 @@ Posts should include at least `title`, `url`, and `source`, matching the existin
 
 Prefer stable APIs or static HTML parsing when available. Use Scrapling browser crawling only when the source needs rendered DOM behavior.
 
+For Medium-family publications or Medium-hosted custom domains, prefer Scrapling browser crawling over RSS when the task is to match what is visibly rendered on the publication list page.
+
 Keep source-specific URL rules, selectors, parsing, paging, and stop conditions inside the `{key}.py` module. Do not broaden shared crawler abstractions unless the user explicitly asks for it.
 
 Avoid generated or hash-like CSS selectors. Prefer href patterns, semantic tags, stable attributes, and URL-derived keys.
+
+When the list page already shows the needed fields, do not fetch detail pages just to re-derive them. Extract `title`, `description`, `thumbnail`, and `url` directly from the list card and keep the crawler single-page when possible.
+
+Prefer element-role analysis over broad text heuristics. Identify the post card first, then pull fields from stable semantic elements inside that card such as:
+
+- main post link for `url`
+- primary heading/link text for `title`
+- secondary heading such as `h3` for `description` when the publication uses a subtitle/deck line
+- `img` inside the same card for `thumbnail`
+
+Only fall back to broader text scanning when a field cannot be obtained from stable elements.
 
 Raise a clear error if the crawl succeeds technically but extracts no post links. Include the source key or requested URL in source-specific failure messages when helpful.
 

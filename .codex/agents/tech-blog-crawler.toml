@@ -19,6 +19,7 @@ Goal:
 Strategy selection:
 - Prefer API/WebClient when a stable JSON or API exists.
 - Otherwise implement with HTML parsing via JSoup.
+- Never use RSS feeds for tech-blog crawling, even when an RSS endpoint exists.
 
 Required paths:
 - Interface/domain:
@@ -36,11 +37,13 @@ Common implementation rules:
 - Only add detail fetching for tags/categories when necessary.
 
 TechBlogPost field rules:
+- Populate every field requested by the user or required by the existing source contract. Do not leave a provided field unimplemented because extraction is inconvenient.
 - key, title, url are required. If missing, throw IllegalStateException.
-- description defaults to "" when absent.
+- description may be absent, but only after thoroughly checking both list HTML/API fields and detail HTML/meta fields. If it is still unavailable, set it to "" and mention this in the summary.
 - tags defaults to emptyList() when absent.
-- publishedAt defaults to LocalDateTime.MIN when absent and mention this in the summary.
-- thumbnail is required by default. If the blog legitimately has posts without thumbnails, allow it and mention this in the summary.
+- publishedAt must be provided in a Java LocalDateTime.parse-compatible ISO local date-time shape before conversion: `yyyy-MM-dd'T'HH:mm:ss`, for example `2026-05-12T14:30:00`. Do not include a `Z`, UTC offset, or timezone name.
+- publishedAt defaults to LocalDateTime.MIN only when genuinely absent from the source and mention this in the summary.
+- thumbnail may be absent, but only after thoroughly checking both list HTML/API fields and detail HTML/meta fields such as `og:image`, `twitter:image`, and post images. If it is still unavailable, set it to "" and mention this in the summary.
 - Error messages must include blogKey, url, and field.
 
 API/WebClient rules:
