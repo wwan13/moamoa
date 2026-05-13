@@ -9,7 +9,7 @@ from typing import Callable
 
 
 DEFAULT_KEY = "musinsa"
-DEFAULT_SIZE = 30
+DEFAULT_SIZE: int | None = None
 SOURCE_DIR = Path(__file__).resolve().parent / "sources"
 
 
@@ -24,7 +24,7 @@ class CrawlJobConfig:
 @dataclass(frozen=True)
 class CrawlJobRequest:
     key: str = DEFAULT_KEY
-    size: int = DEFAULT_SIZE
+    size: int | None = DEFAULT_SIZE
 
 
 CrawlerFunc = Callable[[CrawlJobRequest, CrawlJobConfig], dict[str, object]]

@@ -94,7 +94,7 @@ def json_response(handler: BaseHTTPRequestHandler, status: HTTPStatus, payload: 
     handler.wfile.write(body)
 
 
-def positive_int(value: object, default: int) -> int:
+def positive_int_or_none(value: object, default: int | None) -> int | None:
     if value is None or value == "":
         return default
     try:
@@ -129,7 +129,7 @@ def crawl_request_from_http(handler: BaseHTTPRequestHandler) -> CrawlJobRequest:
     if size_value is None:
         size_value = query.get("size", [DEFAULT_SIZE])[0]
 
-    return CrawlJobRequest(key=key, size=positive_int(size_value, DEFAULT_SIZE))
+    return CrawlJobRequest(key=key, size=positive_int_or_none(size_value, DEFAULT_SIZE))
 
 
 def handle_crawl_request(api: CrawlerApi, handler: BaseHTTPRequestHandler) -> tuple[HTTPStatus, dict[str, object]]:

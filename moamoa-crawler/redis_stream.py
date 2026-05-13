@@ -7,6 +7,7 @@ import socket
 import time
 import urllib.parse
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Callable
 
 from jobs import DEFAULT_SIZE, CrawlJobConfig, CrawlJobRequest, run_crawl_job, supported_keys
@@ -141,8 +142,16 @@ def load_dotenv(path: Path) -> dict[str, str]:
     return values
 
 
+def default_dotenv_paths() -> list[Path]:
+    module_root = Path(__file__).resolve().parent
+    return [Path(".env"), module_root.parent / ".env"]
+
+
 def redis_url_from_env(dotenv_path: Path | None = None) -> str:
-    env_file_values = load_dotenv(dotenv_path or Path(".env"))
+    dotenv_paths = [dotenv_path] if dotenv_path else default_dotenv_paths()
+    env_file_values: dict[str, str] = {}
+    for path in dotenv_paths:
+        env_file_values.update(load_dotenv(path))
 
     def get(name: str, default: str = "") -> str:
         return os.environ.get(name) or env_file_values.get(name) or default

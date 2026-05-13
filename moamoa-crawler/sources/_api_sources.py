@@ -21,6 +21,13 @@ from _common import (
 )
 
 
+def _request_page_size(request: Any, default: int = 100) -> int:
+    size = getattr(request, "size", None)
+    if size is None:
+        return default
+    return size
+
+
 def _epoch_ms(value: Any) -> str:
     try:
         number = int(value)
@@ -64,7 +71,7 @@ def crawl_ably(request: Any) -> dict[str, object]:
 
 def crawl_gabia(request: Any) -> dict[str, object]:
     base_url = "https://library.gabia.com"
-    api_url = f"{base_url}/wp-json/wp/v2/posts?page=1&per_page={request.size}&_embed=1"
+    api_url = f"{base_url}/wp-json/wp/v2/posts?page=1&per_page={_request_page_size(request)}&_embed=1"
     items = fetch_json(api_url)
     posts = []
     for item in items:
@@ -91,7 +98,7 @@ def crawl_gabia(request: Any) -> dict[str, object]:
 
 def crawl_naver(request: Any) -> dict[str, object]:
     base_url = "https://d2.naver.com"
-    api_url = f"{base_url}/api/v1/contents?categoryId=&page=0&size={request.size}"
+    api_url = f"{base_url}/api/v1/contents?categoryId=&page=0&size={_request_page_size(request)}"
     data = fetch_json(api_url)
     posts = []
     for item in data.get("content", []):
@@ -112,7 +119,7 @@ def crawl_naver(request: Any) -> dict[str, object]:
 
 def crawl_nhncloud(request: Any) -> dict[str, object]:
     base_url = "https://meetup.nhncloud.com"
-    api_url = f"{base_url}/tcblog/v1.0/posts?pageNo=1&rowsPerPage={request.size}"
+    api_url = f"{base_url}/tcblog/v1.0/posts?pageNo=1&rowsPerPage={_request_page_size(request)}"
     data = fetch_json(api_url)
     if not (data.get("header") or {}).get("isSuccessful"):
         raise RuntimeError("nhncloud meetup API was not successful")
@@ -132,7 +139,7 @@ def crawl_nhncloud(request: Any) -> dict[str, object]:
 
 def crawl_postype(request: Any) -> dict[str, object]:
     base_url = "https://postype.com"
-    api_url = f"https://api.postype.com/api/v1/channel/516863/activity/posts?page=0&size={request.size}&sortType=RECENT"
+    api_url = f"https://api.postype.com/api/v1/channel/516863/activity/posts?page=0&size={_request_page_size(request)}&sortType=RECENT"
     data = fetch_json(api_url)
     posts = []
     for wrapper in data.get("content") or []:
@@ -156,7 +163,7 @@ def crawl_postype(request: Any) -> dict[str, object]:
 
 def crawl_toss(request: Any) -> dict[str, object]:
     base_url = "https://toss.tech"
-    api_url = f"https://api-public.toss.im/api-public/v3/ipd-thor/api/v1/workspaces/15/posts?size={request.size}&page=1"
+    api_url = f"https://api-public.toss.im/api-public/v3/ipd-thor/api/v1/workspaces/15/posts?size={_request_page_size(request)}&page=1"
     data = fetch_json(api_url)
     if data.get("resultType") != "SUCCESS":
         raise RuntimeError("toss API was not successful")

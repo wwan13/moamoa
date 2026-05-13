@@ -6,19 +6,17 @@ import urllib.parse
 from _common import card_browser_posts
 
 
-KEY = "miridih"
-BASE_URL = "https://medium.com/miridih"
+KEY = "mathpresso"
+BASE_URL = "https://blog.mathpresso.com"
 
 
 def is_post_url(url: str) -> bool:
     parsed = urllib.parse.urlsplit(url)
-    if parsed.netloc != "medium.com":
+    if parsed.netloc != "blog.mathpresso.com":
         return False
-    if parsed.path in {"", "/", "/miridih", "/miridih/", "/miridih/all"}:
+    if parsed.path in {"", "/", "/all"}:
         return False
-    if not parsed.path.startswith("/miridih/"):
-        return False
-    if parsed.path.startswith(("/miridih/tagged/", "/m/", "/me/", "/search")):
+    if parsed.path.startswith(("/tagged/", "/m/", "/me/", "/search")):
         return False
     return re.search(r"-[0-9a-f]{12,}/?$", urllib.parse.unquote(parsed.path)) is not None
 
@@ -26,10 +24,10 @@ def is_post_url(url: str) -> bool:
 def crawl(request, config) -> dict[str, object]:
     return card_browser_posts(
         key=KEY,
-        blog="Miridih Blog",
+        blog="Team QANDA",
         base_url=BASE_URL,
         request=request,
         config=config,
         is_post_url=is_post_url,
-        no_posts_message="miridih browser crawl finished but no post links were extracted from /all",
+        no_posts_message="mathpresso browser crawl finished but no post links were extracted from /all",
     )

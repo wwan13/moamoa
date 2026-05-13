@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from _common import Post, fetch_text, make_payload, strip_html, unique_posts
+from _common import Post, extract_meta, fetch_text, make_payload, normalize_published_at, strip_html, unique_posts
 
 
 BASE_URL = "https://devocean.sk.com"
@@ -25,6 +25,7 @@ def crawl(request, config) -> dict[str, object]:
         posts.append(Post(post_id, title, "", [], "", "", url, "html"))
 
     posts = unique_posts(posts, request.size)
+    posts = [_enrich_post(post) for post in posts]
     if not posts:
         raise RuntimeError(f"devocean crawl finished but no post links were extracted from {LIST_URL}")
 
@@ -37,3 +38,39 @@ def crawl(request, config) -> dict[str, object]:
         requested_size=request.size,
         posts=posts,
     )
+
+
+def _enrich_post(post: Post) -> Post:
+    body = fetch_text(post.url)
+    description = strip_html(extract_meta(body, "description"))
+    if description == "데보션 (DEVOCEAN) 기술 블로그 , 개발자 커뮤니티이자 내/외부 소통과 성장 플랫폼":
+        description = ""
+    thumbnail = extract_meta(body, "og:image")
+    published_at = (
+        extract_meta(body, "article:published_time")
+        or extract_meta(body, "publishdate")
+        or extract_meta(body, "date")
+        or _extract_page_date(body)
+    )
+    return Post(
+        key=post.key,
+        title=post.title,
+        description=description,
+        tags=post.tags,
+        thumbnail=thumbnail or post.thumbnail,
+        publishedAt=normalize_published_at(published_at) or post.publishedAt,
+        url=post.url,
+        source=post.source,
+    )
+
+
+def _extract_page_date(body: str) -> str:
+    for pattern in (
+        r"<time[^>]+datetime=[\"']([^\"']+)[\"']",
+        r"class=[\"'][^\"']*(?:upload-date|published|post-date|date)[^\"']*[\"'][^>]*>([^<]+)<",
+        r"id=[\"'][^\"']*(?:Regdate|regdate|date)[^\"']*[\"'][^>]*>([^<]+)<",
+    ):
+        match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            return strip_html(match.group(1))
+    return ""
