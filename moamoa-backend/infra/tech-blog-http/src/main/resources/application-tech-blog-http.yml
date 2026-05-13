@@ -1,0 +1,6 @@
+tech-blog:
+  crawler:
+    base-url: http://127.0.0.1:8765
+    connect-timeout: 30s
+    response-timeout: 15m
+    max-in-memory-size: 52428800

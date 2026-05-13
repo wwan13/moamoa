@@ -44,6 +44,5 @@ internal class TechBlogCrawlerClientConfig {
     @Bean
     fun pythonCrawlerTechBlogSource(
         client: TechBlogCrawlerClient,
-        properties: TechBlogCrawlerProperties,
-    ): PythonCrawlerTechBlogSource = PythonCrawlerTechBlogSource(client, properties)
+    ): PythonCrawlerTechBlogSource = PythonCrawlerTechBlogSource(client)
 }

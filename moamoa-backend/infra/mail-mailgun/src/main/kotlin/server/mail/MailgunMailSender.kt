@@ -1,6 +1,7 @@
 package server.mail
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
@@ -10,6 +11,7 @@ import server.mail.template.TemplateRenderer
 
 @Component
 internal class MailgunMailSender internal constructor(
+    @param:Qualifier("mailWebClient")
     private val mailWebClient: WebClient,
     private val templateRenderer: TemplateRenderer,
     private val props: MailProperties
