@@ -26,6 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--redis-stream", action="store_true", help="Run a Redis Stream event consumer")
     parser.add_argument("--redis-url", help="Redis URL for --redis-stream. Defaults to REDIS_URL or REDIS_HOST/REDIS_PORT/REDIS_DATABASE/REDIS_PASSWORD from .env")
     parser.add_argument("--stream", default="tech-blog:crawl:requests", help="Redis Stream name")
+    parser.add_argument("--response-stream", default="tech-blog:crawl:response", help="Redis Stream name for successful crawl responses")
     parser.add_argument("--group", default="moamoa-crawler", help="Redis Stream consumer group")
     parser.add_argument("--consumer", default="moamoa-crawler-1", help="Redis Stream consumer name")
     parser.add_argument("--redis-block-ms", type=positive_int, default=5000, help="Redis XREADGROUP block time in milliseconds")
@@ -82,6 +83,7 @@ def main() -> None:
         run_redis_stream(
             redis_url=args.redis_url or redis_url_from_env(),
             stream=args.stream,
+            response_stream=args.response_stream,
             group=args.group,
             consumer=args.consumer,
             block_ms=args.redis_block_ms,
@@ -101,6 +103,7 @@ def main() -> None:
         run_redis_stream(
             redis_url=args.redis_url or redis_url_from_env(),
             stream=args.stream,
+            response_stream=args.response_stream,
             group=args.group,
             consumer=args.consumer,
             block_ms=args.redis_block_ms,

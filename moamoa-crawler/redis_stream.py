@@ -17,6 +17,7 @@ from jobs import DEFAULT_SIZE, CrawlJobConfig, CrawlJobRequest, run_crawl_job, s
 class RedisStreamConfig:
     redis_url: str
     stream: str
+    response_stream: str
     group: str
     consumer: str
     block_ms: int
@@ -196,8 +197,9 @@ def consume(redis_config: RedisStreamConfig, crawl_config: CrawlJobConfig, run_c
     with RedisClient(redis_config.redis_url) as client:
         ensure_group(client, redis_config.stream, redis_config.group)
         logging.info(
-            "redis stream consumer started: stream=%s group=%s consumer=%s",
+            "redis stream consumer started: stream=%s responseStream=%s group=%s consumer=%s",
             redis_config.stream,
+            redis_config.response_stream,
             redis_config.group,
             redis_config.consumer,
         )
@@ -262,12 +264,23 @@ def handle_message(
         requests = crawl_requests_from_fields(fields)
         for request in requests:
             result = run_crawl(request)
+            publish_response(client, redis_config.response_stream, result)
             logging.info("redis crawl completed: messageId=%s key=%s posts=%s", message_id, request.key, result["postCount"])
         client.command("XACK", redis_config.stream, redis_config.group, message_id)
     except Exception:
         logging.exception("redis crawl failed: messageId=%s fields=%s", message_id, fields)
         if redis_config.ack_on_failure:
             client.command("XACK", redis_config.stream, redis_config.group, message_id)
+
+
+def publish_response(client: RedisClient, response_stream: str, payload: dict[str, object]) -> None:
+    client.command(
+        "XADD",
+        response_stream,
+        "*",
+        "payload",
+        json.dumps(payload, ensure_ascii=False),
+    )
 
 
 def crawl_requests_from_fields(fields: dict[str, str]) -> list[CrawlJobRequest]:
@@ -301,6 +314,7 @@ def run_redis_stream(
     *,
     redis_url: str,
     stream: str,
+    response_stream: str,
     group: str,
     consumer: str,
     block_ms: int,
@@ -316,6 +330,7 @@ def run_redis_stream(
         redis_config=RedisStreamConfig(
             redis_url=redis_url,
             stream=stream,
+            response_stream=response_stream,
             group=group,
             consumer=consumer,
             block_ms=block_ms,
