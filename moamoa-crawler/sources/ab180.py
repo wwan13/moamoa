@@ -1,32 +1,103 @@
 from __future__ import annotations
 
+import html
 import re
-
-from _common import Post, fetch_text, key_from_url, make_payload, normalize_space, strip_html, unique_posts
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 
 KEY = "ab180"
+BLOG = "AB180 Engineering"
 BASE_URL = "https://engineering.ab180.co"
 RSS_URL = "https://raw.githubusercontent.com/ab180/engineering-blog-rss-scheduler/main/rss.xml"
+USER_AGENT = "Mozilla/5.0"
 
 
 def crawl(request, config) -> dict[str, object]:
-    body = fetch_text(RSS_URL)
-    posts = []
-    for item in re.findall(r"<item\b.*?</item>", body, flags=re.IGNORECASE | re.DOTALL):
-        link = normalize_space(_tag(item, "link"))
-        title = normalize_space(_tag(item, "title"))
+    del config
+    root = ET.fromstring(_fetch(RSS_URL))
+    posts: list[dict[str, object]] = []
+    for item in root.findall("./channel/item"):
+        link = _clean(item.findtext("link"))
+        title = _clean(item.findtext("title"))
         if not link or not title:
             continue
-        description = strip_html(_tag(item, "description"))
-        tags = [normalize_space(value) for value in re.findall(r"<category[^>]*><!\[CDATA\[(.*?)\]\]></category>|<category[^>]*>(.*?)</category>", item, flags=re.IGNORECASE | re.DOTALL) for value in value if normalize_space(value)]
-        posts.append(Post(key_from_url(link), title, description, tags, "", normalize_space(_tag(item, "pubDate")), link, "rss"))
-    posts = unique_posts(posts, request.size)
+        posts.append(
+            {
+                "key": _key(link),
+                "title": title,
+                "description": _clean(item.findtext("description")),
+                "tags": [_clean(node.text) for node in item.findall("category") if _clean(node.text)],
+                "thumbnail": _thumbnail(link),
+                "publishedAt": _published(_clean(item.findtext("pubDate"))),
+                "url": link,
+                "source": "rss",
+            }
+        )
+        if request.size and len(posts) >= request.size:
+            break
     if not posts:
-        raise RuntimeError("ab180 RSS returned no posts")
-    return make_payload(key=KEY, blog="AB180 Engineering", base_url=BASE_URL, requested_url=RSS_URL, crawler="rss.urllib", requested_size=request.size, posts=posts)
+        raise RuntimeError(f"{KEY} crawl finished but no RSS items were extracted from {RSS_URL}")
+    return _payload(request, RSS_URL, "rss.urllib", posts)
 
 
-def _tag(body: str, tag: str) -> str:
-    match = re.search(rf"<{tag}[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</{tag}>", body, flags=re.IGNORECASE | re.DOTALL)
-    return match.group(1) if match else ""
+def _thumbnail(url: str) -> str:
+    body = _fetch(url)
+    return _absolute(url, _meta(body, "og:image"))
+
+
+def _fetch(url: str) -> str:
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xml,*/*;q=0.8"})
+    with urllib.request.urlopen(req, timeout=20) as response:
+        charset = response.headers.get_content_charset() or "utf-8"
+        return response.read().decode(charset, errors="replace")
+
+
+def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
+    return {
+        "key": request.key,
+        "blog": BLOG,
+        "baseUrl": BASE_URL,
+        "requestedUrl": requested_url,
+        "crawler": crawler,
+        "crawledAt": datetime.now(timezone.utc).isoformat(),
+        "requestedSize": request.size,
+        "postCount": len(posts),
+        "posts": posts,
+    }
+
+
+def _meta(body: str, name: str) -> str:
+    patterns = [
+        rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
+        rf'<meta[^>]+name=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            return html.unescape(match.group(1)).strip()
+    return ""
+
+
+def _absolute(base_url: str, value: str) -> str:
+    return urllib.parse.urljoin(base_url, html.unescape(value or ""))
+
+
+def _clean(value: str | None) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
+
+
+def _key(url: str) -> str:
+    return urllib.parse.urlsplit(url).path.strip("/").split("/")[-1]
+
+
+def _published(value: str) -> str:
+    if not value:
+        return ""
+    try:
+        return parsedate_to_datetime(value).astimezone(timezone.utc).replace(tzinfo=None, microsecond=0).isoformat(timespec="seconds")
+    except (TypeError, ValueError):
+        return ""
