@@ -1,99 +1,74 @@
 from __future__ import annotations
 
-import html
 import re
-import urllib.parse
-import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
+from urllib.parse import urlsplit
+
+from _common import Post, fetch_html, make_payload_raw as make_payload
 
 
 KEY = "skplanet"
 BLOG = "SK planet Tech Topic"
 BASE_URL = "https://techtopic.skplanet.com"
-LIST_URLS = [BASE_URL]
-USER_AGENT = "Mozilla/5.0"
-CARD_RE = re.compile(
-    r'<article class="post-list-item".*?<div class="tags">(.*?)</div>.*?<a itemProp="url" href="([^"]+)"><span itemProp="headline">(.*?)</span></a>.*?<p itemProp="description">(.*?)</p>.*?<small>(20\d{2}\.\d{2}\.\d{2})',
-    flags=re.DOTALL,
-)
+DATE_RE = re.compile(r"\d{4}\.\d{2}\.\d{2}")
 
 
 def crawl(request, config) -> dict[str, object]:
     del config
-    body = _fetch(LIST_URLS[0])
-    posts: list[dict[str, object]] = []
-    for tags_html, href, title, description, published in CARD_RE.findall(body):
-        url = _absolute(BASE_URL, href)
-        detail = _fetch(url)
+    doc = fetch_html(BASE_URL)
+    items = doc.select("article.post-list-item")
+    if not items:
+        raise RuntimeError(f"{KEY} crawl finished but no cards were extracted from {BASE_URL}")
+
+    limit = request.size or len(items)
+    posts: list[Post] = []
+    for item in items[:limit]:
+        link_el = item.select_first("h2.title a[href]")
+        if link_el is None:
+            continue
+
+        url = (link_el.abs_url("href") or link_el.attr("href")).strip()
+        if url.startswith("/"):
+            url = BASE_URL + url
+        title = link_el.text().strip()
+        if not url or not title:
+            continue
+
+        description_el = item.select_first("p[itemprop=description]")
+        date_text = item.select_first("small")
+        matched = DATE_RE.search(date_text.text() if date_text else "")
+        tags: list[str] = []
+        for tag_el in item.select("div.tags a span, div.tags a"):
+            tag = tag_el.text().strip()
+            if tag and tag not in tags:
+                tags.append(tag)
+
         posts.append(
-            {
-                "key": _key(url),
-                "title": _clean(title),
-                "description": _clean(_meta(detail, "og:description") or description),
-                "tags": [_clean(tag) for tag in re.findall(r"<span[^>]*>(.*?)</span>", tags_html) if _clean(tag)],
-                "thumbnail": _absolute(url, _meta(detail, "og:image")),
-                "publishedAt": _published(_meta(detail, "article:published_time") or published),
-                "url": url,
-                "source": "html",
-            }
+            Post(
+                key=_extract_key(url),
+                title=title,
+                description=description_el.text().strip() if description_el else "",
+                tags=tags,
+                thumbnail="",
+                publishedAt=datetime.strptime(matched.group(0), "%Y.%m.%d").strftime("%Y-%m-%dT00:00:00") if matched else "",
+                url=url,
+                source="html",
+            )
         )
-        if request.size and len(posts) >= request.size:
-            break
+
     if not posts:
-        raise RuntimeError(f"{KEY} crawl finished but no SK planet cards were extracted from {LIST_URLS[0]}")
-    return _payload(request, LIST_URLS[0], "html.urllib", posts)
+        raise RuntimeError(f"{KEY} crawl finished but no posts were extracted from {BASE_URL}")
+
+    return make_payload(
+        key=KEY,
+        blog=BLOG,
+        base_url=BASE_URL,
+        requested_url=BASE_URL,
+        crawler="html.urllib",
+        requested_size=request.size,
+        posts=posts,
+    )
 
 
-def _fetch(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.read().decode(charset, errors="replace")
-
-
-def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
-    return {
-        "key": request.key,
-        "blog": BLOG,
-        "baseUrl": BASE_URL,
-        "requestedUrl": requested_url,
-        "crawler": crawler,
-        "crawledAt": datetime.now(timezone.utc).isoformat(),
-        "requestedSize": request.size,
-        "postCount": len(posts),
-        "posts": posts,
-    }
-
-
-def _meta(body: str, name: str) -> str:
-    patterns = [
-        rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-        rf'<meta[^>]+name=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
-        if match:
-            return html.unescape(match.group(1)).strip()
-    return ""
-
-
-def _clean(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
-
-
-def _absolute(base_url: str, value: str) -> str:
-    return urllib.parse.urljoin(base_url, html.unescape(value or ""))
-
-
-def _published(value: str) -> str:
-    text = _clean(value).replace(".", "-")
-    if not text:
-        return ""
-    parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-    return parsed.replace(microsecond=0).isoformat(timespec="seconds")
-
-
-def _key(url: str) -> str:
-    return urllib.parse.urlsplit(url).path.strip("/").split("/")[-1]
+def _extract_key(url: str) -> str:
+    return urlsplit(url).path.rstrip("/").split("/")[-1].strip()

@@ -99,7 +99,7 @@ HTTP API와 Redis Stream 이벤트 요청은 같은 내부 FIFO 큐로 처리합
 | `hyperconnect` | Hyperconnect Tech Blog | 정적 HTML | GitHub Pages 목록 HTML에서 날짜 기반 게시글 URL을 수집합니다. |
 | `kakao` | Kakao Tech | API | `tech.kakao.com/api/v2/posts` JSON API를 호출합니다. |
 | `kakaobank` | KakaoBank Tech Blog | 정적 HTML | 목록 HTML에서 `/posts/...` 또는 루트 게시글 URL을 수집합니다. |
-| `kakaomobility` | Kakao Mobility Developers | 정적 HTML | `/techblogs/` 목록 HTML에서 상세 링크를 수집합니다. |
+| `kakaomobility` | Kakao Mobility Developers | 정적 데이터 청크 | `/techblogs` 페이지가 preload 하는 VitePress `techblogs.data.*.js` 청크를 파싱하며 payload key는 `kakaoMobility`를 사용합니다. |
 | `kakaopay` | KakaoPay Tech Blog | 정적 HTML | 목록 HTML에서 `/post/...` 링크를 수집합니다. |
 | `kakaostyle` | Kakao Style Dev Blog | 정적 HTML | 목록 HTML에서 한국어 블로그 게시글 링크를 수집합니다. |
 | `kream` | KREAM Tech Blog | Browser | Medium publication `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |

@@ -11,6 +11,9 @@ from email.utils import parsedate_to_datetime
 from html.parser import HTMLParser
 from typing import Any, Callable, Iterable
 
+from lxml import etree
+from lxml import html as lxml_html
+
 
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -35,6 +38,35 @@ class Post:
 class Link:
     url: str
     text: str
+
+
+class HtmlNode:
+    def __init__(self, element: Any, base_url: str):
+        self.element = element
+        self.base_url = base_url
+
+    def select(self, selector: str) -> list["HtmlNode"]:
+        return [HtmlNode(node, self.base_url) for node in self.element.cssselect(selector)]
+
+    def select_first(self, selector: str) -> "HtmlNode | None":
+        nodes = self.element.cssselect(selector)
+        return HtmlNode(nodes[0], self.base_url) if nodes else None
+
+    def text(self) -> str:
+        return normalize_space(self.element.text_content())
+
+    def attr(self, name: str) -> str:
+        return normalize_space(self.element.get(name))
+
+    def abs_url(self, name: str) -> str:
+        raw = self.element.get(name)
+        if not raw:
+            return ""
+        return normalize_url(self.base_url, raw)
+
+
+class HtmlDocument(HtmlNode):
+    pass
 
 
 class AnchorParser(HTMLParser):
@@ -81,6 +113,20 @@ def fetch_text(url: str, *, method: str = "GET", data: bytes | None = None, head
 def fetch_json(url: str, *, method: str = "GET", data: bytes | None = None, headers: dict[str, str] | None = None) -> Any:
     text = fetch_text(url, method=method, data=data, headers=headers)
     return json.loads(text)
+
+
+def parse_html(body: str, base_url: str) -> HtmlDocument:
+    root = lxml_html.fromstring(body)
+    return HtmlDocument(root, base_url)
+
+
+def fetch_html(url: str, *, method: str = "GET", data: bytes | None = None, headers: dict[str, str] | None = None) -> HtmlDocument:
+    return parse_html(fetch_text(url, method=method, data=data, headers=headers), url)
+
+
+def parse_xml(body: str) -> etree._Element:
+    parser = etree.XMLParser(recover=True)
+    return etree.fromstring(body.encode("utf-8"), parser=parser)
 
 
 def normalize_space(value: str | None) -> str:
@@ -465,6 +511,29 @@ def make_payload(
         "requestedSize": requested_size,
         "postCount": len(posts),
         "posts": [asdict(_normalized_post(post)) for post in posts],
+    }
+
+
+def make_payload_raw(
+    *,
+    key: str,
+    blog: str,
+    base_url: str,
+    requested_url: str,
+    crawler: str,
+    requested_size: int | None,
+    posts: list[Post],
+) -> dict[str, object]:
+    return {
+        "key": key,
+        "blog": blog,
+        "baseUrl": base_url,
+        "requestedUrl": requested_url,
+        "crawler": crawler,
+        "crawledAt": iso_now(),
+        "requestedSize": requested_size,
+        "postCount": len(posts),
+        "posts": [asdict(post) for post in posts],
     }
 
 

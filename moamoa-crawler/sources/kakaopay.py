@@ -1,89 +1,117 @@
 from __future__ import annotations
 
-import html
-import re
-import urllib.parse
-import urllib.request
-from datetime import datetime, timezone
+from urllib.error import HTTPError
+from urllib.parse import urlsplit
+
+from _common import Post, fetch_html, make_payload_raw as make_payload, normalize_tag
 
 
 KEY = "kakaopay"
-BLOG = "KakaoPay Tech Blog"
+BLOG = "KakaoPay Tech"
 BASE_URL = "https://tech.kakaopay.com"
-LIST_URL = BASE_URL
-USER_AGENT = "Mozilla/5.0"
-CARD_RE = re.compile(
-    r'<a href="(/post/[^"]+/)">.*?<img alt="([^"]+)"[^>]+src="([^"]+)".*?<strong>(.*?)</strong>\s*<p>(.*?)</p>\s*<time>(.*?)</time>',
-    flags=re.DOTALL,
-)
 
 
 def crawl(request, config) -> dict[str, object]:
     del config
-    body = _fetch(LIST_URL)
-    posts: list[dict[str, object]] = []
-    for match in CARD_RE.finditer(body):
-        url = _absolute(BASE_URL, match.group(1))
-        posts.append(
-            {
-                "key": _key(url),
-                "title": _clean(match.group(4)),
-                "description": _clean(match.group(5)),
-                "tags": [],
-                "thumbnail": _absolute(BASE_URL, match.group(3)),
-                "publishedAt": _published(_clean(match.group(6))),
-                "url": url,
-                "source": "html",
-            }
-        )
-        if request.size and len(posts) >= request.size:
+    page = 1
+    seen_keys: set[str] = set()
+    posts: list[Post] = []
+
+    while request.size is None or len(posts) < request.size:
+        try:
+            doc = fetch_html(_build_list_url(page))
+        except HTTPError as error:
+            if error.code == 404 and page > 1:
+                break
+            raise
+        items = [item for item in doc.select('li[class*="_postListItem_"]') if item.select_first('a[href^="/post/"]')]
+        if not items:
+            items = [item for item in doc.select("li") if item.select_first('a[href^="/post/"]')]
+        if not items:
             break
+
+        new_posts: list[Post] = []
+        for item in items:
+            link_el = item.select_first('a[href^="/post/"]')
+            title_el = item.select_first("strong")
+            time_el = item.select_first("time")
+            if link_el is None or title_el is None or time_el is None:
+                continue
+
+            href = link_el.attr("href").strip()
+            url = link_el.abs_url("href").strip()
+            key = _extract_key_from_href(href)
+            title = title_el.text().strip()
+            description_el = item.select_first('div[class*="_postInfo_"] p') or item.select_first("p")
+            description = description_el.text().strip() if description_el else ""
+            published_at = _parse_published_at(time_el.text())
+            if not url or not key or not title or not published_at or key in seen_keys:
+                continue
+
+            thumbnail_el = item.select_first("img[alt]")
+            new_posts.append(
+                Post(
+                    key=key,
+                    title=title,
+                    description=description,
+                    tags=_fetch_categories(url),
+                    thumbnail=thumbnail_el.abs_url("src").strip() if thumbnail_el else "",
+                    publishedAt=published_at,
+                    url=url,
+                    source="html",
+                )
+            )
+            seen_keys.add(key)
+
+        if not new_posts:
+            break
+
+        posts.extend(new_posts)
+        page += 1
+
+    if request.size is not None:
+        posts = posts[: request.size]
     if not posts:
-        raise RuntimeError(f"{KEY} crawl finished but no KakaoPay post cards were extracted from {LIST_URL}")
-    return _payload(request, LIST_URL, "html.urllib", posts)
+        raise RuntimeError(f"{KEY} crawl finished but no posts were extracted from {_build_list_url(1)}")
+
+    return make_payload(
+        key=KEY,
+        blog=BLOG,
+        base_url=BASE_URL,
+        requested_url=_build_list_url(1),
+        crawler="html.urllib",
+        requested_size=request.size,
+        posts=posts,
+    )
 
 
-def _fetch(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.read().decode(charset, errors="replace")
+def _build_list_url(page: int) -> str:
+    return BASE_URL if page == 1 else f"{BASE_URL}/page/{page}/"
 
 
-def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
-    return {
-        "key": request.key,
-        "blog": BLOG,
-        "baseUrl": BASE_URL,
-        "requestedUrl": requested_url,
-        "crawler": crawler,
-        "crawledAt": datetime.now(timezone.utc).isoformat(),
-        "requestedSize": request.size,
-        "postCount": len(posts),
-        "posts": posts,
-    }
-
-
-def _clean(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
-
-
-def _absolute(base_url: str, value: str) -> str:
-    return urllib.parse.urljoin(base_url, html.unescape(value or ""))
-
-
-def _published(value: str) -> str:
-    if not value:
-        return ""
+def _fetch_categories(post_url: str) -> list[str]:
     try:
-        parsed = datetime.fromisoformat(value.replace(".", "-").replace(" ", "").replace("-", "-", 2))
-        return parsed.replace(microsecond=0).isoformat(timespec="seconds")
-    except ValueError:
-        match = re.search(r"(20\d{2})\.\s*(\d{1,2})\.\s*(\d{1,2})", value)
-        if not match:
-            return ""
-        return f"{match.group(1)}-{int(match.group(2)):02d}-{int(match.group(3)):02d}T00:00:00"
+        detail = fetch_html(post_url)
+    except Exception:
+        return []
+
+    categories: list[str] = []
+    for tag_el in detail.select('a[href^="/tag/"]'):
+        tag = normalize_tag(tag_el.text())
+        if tag and tag not in categories:
+            categories.append(tag)
+    return categories
 
 
-def _key(url: str) -> str:
-    return urllib.parse.urlsplit(url).path.strip("/").split("/")[-1]
+def _extract_key_from_href(href: str) -> str:
+    cleaned = href.split("?", 1)[0].split("#", 1)[0].strip()
+    path = urlsplit(cleaned).path if "://" in cleaned else cleaned
+    return path.removeprefix("/post/").strip("/").strip()
+
+
+def _parse_published_at(raw: str) -> str:
+    parts = [part.strip() for part in raw.split(".") if part.strip()]
+    if len(parts) != 3:
+        return ""
+    year, month, day = (int(part) for part in parts)
+    return f"{year:04d}-{month:02d}-{day:02d}T00:00:00"

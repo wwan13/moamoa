@@ -1,117 +1,146 @@
 from __future__ import annotations
 
-import html
-import re
-import urllib.parse
-import urllib.request
-from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from urllib.error import HTTPError
+from urllib.parse import urlsplit
+
+from _common import Post, fetch_html, make_payload_raw as make_payload, normalize_tag
 
 
 KEY = "banksalad"
 BLOG = "Banksalad Tech Blog"
 BASE_URL = "https://blog.banksalad.com"
-LIST_URLS = [f"{BASE_URL}/tech/", f"{BASE_URL}/tech/page/2"]
-USER_AGENT = "Mozilla/5.0"
-LINK_RE = re.compile(r'href="(/tech/[^"/?#]+/)"')
 
 
 def crawl(request, config) -> dict[str, object]:
     del config
-    posts: list[dict[str, object]] = []
-    seen: set[str] = set()
-    for list_url in LIST_URLS:
-        body = _fetch(list_url)
-        for href in LINK_RE.findall(body):
-            url = _absolute(BASE_URL, href)
-            if url in seen:
-                continue
-            seen.add(url)
-            posts.append(_detail_post(url))
-            if request.size and len(posts) >= request.size:
+    page = 1
+    seen_keys: set[str] = set()
+    posts: list[Post] = []
+
+    while request.size is None or len(posts) < request.size:
+        try:
+            doc = fetch_html(_build_list_url(page))
+        except HTTPError as error:
+            if error.code in (403, 404):
                 break
-        if request.size and len(posts) >= request.size:
+            raise
+        cards = doc.select(".post_card")
+        if not cards:
             break
+
+        new_posts: list[dict[str, object]] = []
+        for card in cards:
+            title_el = card.select_first('.post_title a[href^="/tech/"]')
+            if title_el is None:
+                raise RuntimeError(f"{KEY} crawl finished but missing url for unknown")
+
+            url = _require(title_el.abs_url("href"), "url", "")
+            key = _extract_key(url)
+            title = _require(title_el.text(), "title", url)
+            if key in seen_keys:
+                continue
+
+            tags = []
+            for tag_el in card.select('.post_tags a[href^="/tags/"]'):
+                tag = normalize_tag(tag_el.text())
+                if tag and tag not in tags:
+                    tags.append(tag)
+
+            thumbnail = _extract_thumbnail(card)
+            if not thumbnail:
+                raise RuntimeError(f"{KEY} crawl finished but missing thumbnail for {url}")
+
+            new_posts.append(
+                {
+                    "key": key,
+                    "title": title,
+                    "description": card.select_first(".excerpt").text() if card.select_first(".excerpt") else "",
+                    "tags": tags,
+                    "thumbnail": thumbnail,
+                    "url": url,
+                }
+            )
+            seen_keys.add(key)
+
+        if not new_posts:
+            break
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            details = executor.map(lambda item: _fetch_detail(item["url"]), new_posts)
+            for item, detail in zip(new_posts, details):
+                resolved_thumbnail = item["thumbnail"] or detail["thumbnail"]
+                if not resolved_thumbnail:
+                    raise RuntimeError(f"{KEY} crawl finished but missing thumbnail for {item['url']}")
+                posts.append(
+                    Post(
+                        key=item["key"],
+                        title=item["title"],
+                        description=item["description"],
+                        tags=item["tags"],
+                        thumbnail=resolved_thumbnail,
+                        publishedAt=detail["publishedAt"],
+                        url=item["url"],
+                        source="html",
+                    )
+                )
+        page += 1
+
+    if request.size is not None:
+        posts = posts[: request.size]
     if not posts:
-        raise RuntimeError(f"{KEY} crawl finished but no Banksalad post links were extracted from {LIST_URLS[0]}")
-    return _payload(request, LIST_URLS[0], "html.urllib", posts)
+        raise RuntimeError(f"{KEY} crawl finished but no post links were extracted from {_build_list_url(1)}")
+
+    return make_payload(
+        key=KEY,
+        blog=BLOG,
+        base_url=BASE_URL,
+        requested_url=_build_list_url(1),
+        crawler="html.urllib",
+        requested_size=request.size,
+        posts=posts,
+    )
 
 
-def _detail_post(url: str) -> dict[str, object]:
-    body = _fetch(url)
-    title = _meta(body, "og:title") or _first(body, r"<h1[^>]*>(.*?)</h1>")
-    description = _meta(body, "og:description") or _meta(body, "description")
-    image = _meta(body, "og:image") or _first(body, r'(?:data-src|src)="([^"]*thumbnail[^"]*)"')
-    published = _first(body, r'>\s*(\d{1,2} [A-Za-z]{3,9}, \d{4})\s*<') or _meta(body, "article:published_time")
-    tags = re.findall(r'href="/tags/[^"]+/">#?([^<]+)</a>', body)
+def _build_list_url(page: int) -> str:
+    return f"{BASE_URL}/tech/" if page == 1 else f"{BASE_URL}/tech/page/{page}/"
+
+
+def _extract_thumbnail(card) -> str:
+    img = card.select_first(".post_preview img[data-main-image]") or card.select_first(".post_preview img[alt]")
+    if img is None:
+        return ""
+    return img.abs_url("data-src") or img.abs_url("src")
+
+
+def _fetch_detail(url: str) -> dict[str, str]:
+    detail = fetch_html(url)
+    detail_published = detail.select_first(".post_details > span")
+    detail_thumbnail = detail.select_first('meta[property="og:image"]')
     return {
-        "key": _key(url),
-        "title": _clean(title),
-        "description": _clean(description),
-        "tags": [_clean(tag) for tag in tags if _clean(tag)],
-        "thumbnail": _absolute(url, image),
-        "publishedAt": _published(published),
-        "url": url,
-        "source": "html",
+        "publishedAt": _parse_published_at(detail_published.text() if detail_published else "", url),
+        "thumbnail": detail_thumbnail.attr("content").strip() if detail_thumbnail else "",
     }
 
 
-def _fetch(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.read().decode(charset, errors="replace")
-
-
-def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
-    return {
-        "key": request.key,
-        "blog": BLOG,
-        "baseUrl": BASE_URL,
-        "requestedUrl": requested_url,
-        "crawler": crawler,
-        "crawledAt": datetime.now(timezone.utc).isoformat(),
-        "requestedSize": request.size,
-        "postCount": len(posts),
-        "posts": posts,
-    }
-
-
-def _meta(body: str, name: str) -> str:
-    patterns = [
-        rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-        rf'<meta[^>]+name=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
-        if match:
-            return html.unescape(match.group(1)).strip()
-    return ""
-
-
-def _first(body: str, pattern: str) -> str:
-    match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
-    return match.group(1) if match else ""
-
-
-def _clean(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
-
-
-def _absolute(base_url: str, value: str) -> str:
-    return urllib.parse.urljoin(base_url, html.unescape(value or ""))
-
-
-def _published(value: str) -> str:
-    text = _clean(value)
+def _parse_published_at(raw: str, url: str = "") -> str:
+    text = raw.strip()
     if not text:
         return ""
-    for pattern in ("%d %b, %Y", "%d %B, %Y"):
-        try:
-            return datetime.strptime(text, pattern).replace(microsecond=0).isoformat(timespec="seconds")
-        except ValueError:
-            continue
-    return ""
+    try:
+        return datetime.strptime(text, "%d %b, %Y").strftime("%Y-%m-%dT00:00:00")
+    except ValueError as error:
+        raise RuntimeError(f"{KEY} crawl finished but missing publishedAt for {url or 'unknown'}") from error
 
 
-def _key(url: str) -> str:
-    return urllib.parse.urlsplit(url).path.strip("/").split("/")[-1]
+def _extract_key(url: str) -> str:
+    key = urlsplit(url).path.rstrip("/").split("/")[-1]
+    return _require(key, "key", url)
+
+
+def _require(value: str, field: str, url: str) -> str:
+    trimmed = value.strip()
+    if not trimmed:
+        raise RuntimeError(f"{KEY} crawl finished but missing {field} for {url or 'unknown'}")
+    return trimmed

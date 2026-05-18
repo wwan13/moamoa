@@ -1,113 +1,106 @@
 from __future__ import annotations
 
-import html
 import re
-import urllib.parse
-import urllib.request
-from datetime import datetime, timezone
+
+from datetime import datetime
+
+from _common import Post, fetch_html, make_payload_raw as make_payload
 
 
 KEY = "wanted"
 BLOG = "Wanted Tech Blog"
-BASE_URL = "https://social.wanted.co.kr"
-LIST_URLS = [f"{BASE_URL}/community/team/171"]
-USER_AGENT = "Mozilla/5.0"
-LINK_RE = re.compile(r'href="(/community/article/\d+)"')
+BASE_URL = "https://social.wanted.co.kr/community/team/171"
+DATE_RE = re.compile(r"\d{4}\.\d{2}\.\d{2}")
 
 
 def crawl(request, config) -> dict[str, object]:
     del config
-    body = _fetch(LIST_URLS[0])
-    posts: list[dict[str, object]] = []
-    seen: set[str] = set()
-    for href in LINK_RE.findall(body):
-        url = _absolute(BASE_URL, href)
-        if url in seen:
+    doc = fetch_html(BASE_URL)
+    links = doc.select('a[href^="/community/article/"]')
+    if not links:
+        raise RuntimeError(f"{KEY} crawl finished but no article links were extracted from {BASE_URL}")
+
+    seen_keys: set[str] = set()
+    posts: list[Post] = []
+    for link in links:
+        url = link.abs_url("href").strip()
+        key = url.rstrip("/").split("/")[-1]
+        if not url or not key or key in seen_keys:
             continue
-        seen.add(url)
-        posts.append(_detail_post(url))
+        posts.append(_fetch_detail(key, url))
+        seen_keys.add(key)
         if request.size and len(posts) >= request.size:
             break
-    if not posts:
-        raise RuntimeError(f"{KEY} crawl finished but no Wanted article links were extracted from {LIST_URLS[0]}")
-    return _payload(request, LIST_URLS[0], "html.urllib", posts)
+
+    return make_payload(
+        key=KEY,
+        blog=BLOG,
+        base_url=BASE_URL,
+        requested_url=BASE_URL,
+        crawler="html.urllib",
+        requested_size=request.size,
+        posts=posts,
+    )
 
 
-def _detail_post(url: str) -> dict[str, object]:
-    body = _fetch(url)
-    published = _first(body, r'\\"createdAt\\":\\"([^\\"]+)')
-    return {
-        "key": _key(url),
-        "title": _clean(_meta(body, "og:title") or _text(body, "title")),
-        "description": _clean(_meta(body, "og:description") or _meta(body, "description")),
-        "tags": [],
-        "thumbnail": _absolute(url, _meta(body, "og:image")),
-        "publishedAt": _published(published),
-        "url": url,
-        "source": "html",
-    }
+def _fetch_detail(key: str, url: str) -> Post:
+    doc = fetch_html(url)
+    title = (
+        (doc.select_first('meta[property="og:title"]').attr("content") if doc.select_first('meta[property="og:title"]') else "")
+        or (doc.select_first('meta[name="twitter:title"]').attr("content") if doc.select_first('meta[name="twitter:title"]') else "")
+        or (doc.select_first("h1").text() if doc.select_first("h1") else "")
+        or (doc.select_first("h2").text() if doc.select_first("h2") else "")
+    )
+    description = (
+        (doc.select_first('meta[property="og:description"]').attr("content") if doc.select_first('meta[property="og:description"]') else "")
+        or (doc.select_first('meta[name="description"]').attr("content") if doc.select_first('meta[name="description"]') else "")
+    )
+    if not description:
+        for candidate in doc.select("article p, section p, p"):
+            if candidate.text():
+                description = candidate.text()
+                break
+
+    thumbnail = (
+        (doc.select_first('meta[property="og:image"]').attr("content") if doc.select_first('meta[property="og:image"]') else "")
+        or (doc.select_first('meta[property="og:image:secure_url"]').attr("content") if doc.select_first('meta[property="og:image:secure_url"]') else "")
+        or (doc.select_first('meta[name="twitter:image"]').attr("content") if doc.select_first('meta[name="twitter:image"]') else "")
+        or (doc.select_first("article img[src]").abs_url("src") if doc.select_first("article img[src]") else "")
+        or (doc.select_first("img[src]").abs_url("src") if doc.select_first("img[src]") else "")
+    )
+    published = (
+        (doc.select_first('meta[property="article:published_time"], meta[name="article:published_time"]').attr("content") if doc.select_first('meta[property="article:published_time"], meta[name="article:published_time"]') else "")
+        or (doc.select_first("time[datetime]").attr("datetime") if doc.select_first("time[datetime]") else "")
+        or (doc.select_first("time").text() if doc.select_first("time") else "")
+    )
+    if not published:
+        matched = DATE_RE.search(doc.text())
+        if matched:
+            published = matched.group(0)
+
+    return Post(
+        key=key,
+        title=title,
+        description=description,
+        tags=[],
+        thumbnail=thumbnail,
+        publishedAt=_parse_published_at(published),
+        url=url,
+        source="html",
+    )
 
 
-def _fetch(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.read().decode(charset, errors="replace")
-
-
-def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
-    return {
-        "key": request.key,
-        "blog": BLOG,
-        "baseUrl": BASE_URL,
-        "requestedUrl": requested_url,
-        "crawler": crawler,
-        "crawledAt": datetime.now(timezone.utc).isoformat(),
-        "requestedSize": request.size,
-        "postCount": len(posts),
-        "posts": posts,
-    }
-
-
-def _meta(body: str, name: str) -> str:
-    patterns = [
-        rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-        rf'<meta[^>]+name=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
-        if match:
-            return html.unescape(match.group(1)).strip()
-    return ""
-
-
-def _text(body: str, tag: str) -> str:
-    match = re.search(rf"<{tag}[^>]*>(.*?)</{tag}>", body, flags=re.IGNORECASE | re.DOTALL)
-    return match.group(1) if match else ""
-
-
-def _first(body: str, pattern: str) -> str:
-    match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
-    return match.group(1) if match else ""
-
-
-def _clean(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
-
-
-def _absolute(base_url: str, value: str) -> str:
-    return urllib.parse.urljoin(base_url, html.unescape(value or ""))
-
-
-def _published(value: str) -> str:
-    text = _clean(value).replace("Z", "+00:00")
+def _parse_published_at(raw: str) -> str:
+    text = raw.strip().replace("Z", "+00:00")
     if not text:
         return ""
-    parsed = datetime.fromisoformat(text)
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-    return parsed.replace(microsecond=0).isoformat(timespec="seconds")
-
-
-def _key(url: str) -> str:
-    return urllib.parse.urlsplit(url).path.strip("/").split("/")[-1]
+    try:
+        return datetime.fromisoformat(text).replace(microsecond=0).isoformat(timespec="seconds")
+    except ValueError:
+        pass
+    for pattern in ("%Y.%m.%d", "%Y. %m. %d"):
+        try:
+            return datetime.strptime(text, pattern).strftime("%Y-%m-%dT00:00:00")
+        except ValueError:
+            continue
+    return ""

@@ -1,59 +1,70 @@
 from __future__ import annotations
 
 import html
+import json
 import re
 import subprocess
 import urllib.parse
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 
 KEY = "woowabros"
 BLOG = "우아한형제들 기술블로그"
-BASE_URL = "https://techblog.woowahan.com"
-LIST_URL = f"{BASE_URL}/"
-CARD_RE = re.compile(
-    r'<a href="(https://techblog\.woowahan\.com/\d+/)">.*?<time class="post-author-date">\s*(.*?)\s*</time>.*?<h2 class="post-title">(.*?)</h2>.*?<p class="post-excerpt">(.*?)</p>',
-    flags=re.DOTALL,
+BASE_URL = "https://techblog.woowahan.com/"
+AJAX_URL = urllib.parse.urljoin(BASE_URL, "wp-admin/admin-ajax.php")
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/120.0.0.0 Safari/537.36"
 )
+CAT_TAG_RE = re.compile(r'<a class="cat-tag"[^>]*>(.*?)</a>', flags=re.DOTALL)
+
+
+@dataclass(frozen=True)
+class Summary:
+    key: str
+    title: str
+    description: str
+    published_at: str
+    url: str
+
+
+@dataclass(frozen=True)
+class PageResult:
+    posts: list[Summary]
+    max_page: int
 
 
 def crawl(request, config) -> dict[str, object]:
     del config
-    body = _fetch(LIST_URL)
+
+    summaries = _fetch_summaries(request.size)
+    if not summaries:
+        raise RuntimeError(f"{KEY} crawl finished but no AJAX posts were extracted from {BASE_URL}")
+
     posts: list[dict[str, object]] = []
-    for url, published, title, description in CARD_RE.findall(body):
-        detail = _fetch(url)
+    for summary in summaries:
+        detail = _fetch_text(summary.url)
         posts.append(
             {
-                "key": _key(url),
-                "title": _clean(title),
-                "description": _clean(description),
-                "tags": [],
-                "thumbnail": _absolute(url, _meta(detail, "og:image")),
-                "publishedAt": _published(published),
-                "url": url,
-                "source": "html",
+                "key": summary.key,
+                "title": summary.title,
+                "description": summary.description,
+                "tags": _categories(detail),
+                "thumbnail": _absolute(summary.url, _meta(detail, "og:image")),
+                "publishedAt": summary.published_at,
+                "url": summary.url,
+                "source": "ajax",
             }
         )
-        if request.size and len(posts) >= request.size:
-            break
-    if not posts:
-        raise RuntimeError(f"{KEY} crawl finished but no Woowabros post cards were extracted from {LIST_URL}")
-    return _payload(request, LIST_URL, "html.curl", posts)
 
-
-def _fetch(url: str) -> str:
-    result = subprocess.run(["curl", "-L", "-A", "Mozilla/5.0", url], check=True, capture_output=True, text=True)
-    return result.stdout
-
-
-def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
     return {
         "key": request.key,
         "blog": BLOG,
-        "baseUrl": BASE_URL,
-        "requestedUrl": requested_url,
-        "crawler": crawler,
+        "baseUrl": BASE_URL.rstrip("/"),
+        "requestedUrl": BASE_URL,
+        "crawler": "ajax.curl",
         "crawledAt": datetime.now(timezone.utc).isoformat(),
         "requestedSize": request.size,
         "postCount": len(posts),
@@ -61,13 +72,120 @@ def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, ob
     }
 
 
+def _fetch_summaries(size: int | None) -> list[Summary]:
+    posts: list[Summary] = []
+    page_no = 1
+    max_page = 2**31 - 1
+    first_signature: str | None = None
+
+    while (size is None or len(posts) < size) and page_no <= max_page:
+        page = _parse_page(_fetch_ajax_page(page_no))
+        if not page.posts:
+            break
+
+        max_page = page.max_page if page.max_page > 0 else max_page
+        signature = "|".join(post.url for post in page.posts)
+        if page_no == 1:
+            first_signature = signature
+        elif first_signature == signature:
+            break
+
+        remaining = len(page.posts) if size is None else max(size - len(posts), 0)
+        posts.extend(page.posts[:remaining])
+        page_no += 1
+
+    return posts
+
+
+def _parse_page(body: str) -> PageResult:
+    root = json.loads(body)
+    if not root.get("success"):
+        raise RuntimeError("woowabros AJAX response was not successful")
+
+    data = root.get("data") or {}
+    raw_posts = data.get("posts") or []
+    posts_by_url: dict[str, Summary] = {}
+    for item in raw_posts:
+        summary = _parse_summary(item)
+        if summary is None or summary.url in posts_by_url:
+            continue
+        posts_by_url[summary.url] = summary
+
+    pagination = data.get("pagination") or {}
+    max_page = pagination.get("max") or 0
+    try:
+        parsed_max_page = int(max_page)
+    except (TypeError, ValueError):
+        parsed_max_page = 0
+
+    return PageResult(posts=list(posts_by_url.values()), max_page=parsed_max_page)
+
+
+def _parse_summary(item: dict[str, object]) -> Summary | None:
+    url = _clean(item.get("permalink"))
+    title = _clean(item.get("post_title"))
+    if not url or not title:
+        return None
+
+    return Summary(
+        key=_key(url),
+        title=title,
+        description=_clean(item.get("excerpt")),
+        published_at=_published(_clean(item.get("date"))),
+        url=url,
+    )
+
+
+def _fetch_ajax_page(page_no: int) -> str:
+    return _fetch_text(
+        AJAX_URL,
+        data=urllib.parse.urlencode(
+            {
+                "action": "get_posts_data",
+                "data[post][post_status]": "publish",
+                "data[post][paged]": str(page_no),
+                "data[meta]": "main",
+            }
+        ),
+        headers={
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Referer": BASE_URL,
+        },
+    )
+
+
+def _fetch_text(url: str, *, data: str | None = None, headers: dict[str, str] | None = None) -> str:
+    command = ["curl", "-s", "-L", "-A", USER_AGENT]
+    for name, value in (headers or {}).items():
+        command.extend(["-H", f"{name}: {value}"])
+    if data is not None:
+        command.extend(["--data", data])
+    command.append(url)
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    return result.stdout
+
+
 def _meta(body: str, name: str) -> str:
     match = re.search(rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)', body, flags=re.IGNORECASE)
     return html.unescape(match.group(1)).strip() if match else ""
 
 
-def _clean(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
+def _categories(body: str) -> list[str]:
+    tags: list[str] = []
+    seen: set[str] = set()
+    for raw in CAT_TAG_RE.findall(body):
+        value = _clean(raw)
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        tags.append(value)
+    return tags
+
+
+def _clean(value: object) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(str(value or "")))).strip()
 
 
 def _absolute(base_url: str, value: str) -> str:
@@ -75,8 +193,15 @@ def _absolute(base_url: str, value: str) -> str:
 
 
 def _published(value: str) -> str:
-    text = _clean(value)
-    for pattern in ("%b.%d.%Y", "%B.%d.%Y"):
+    text = value.replace(". ", ".")
+    for pattern in (
+        "%Y.%m.%d.",
+        "%Y.%m.%d",
+        "%b.%d.%Y",
+        "%b. %d. %Y",
+        "%b.%d.%Y.",
+        "%b. %d. %Y.",
+    ):
         try:
             return datetime.strptime(text, pattern).replace(microsecond=0).isoformat(timespec="seconds")
         except ValueError:

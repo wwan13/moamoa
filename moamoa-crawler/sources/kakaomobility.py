@@ -1,108 +1,100 @@
 from __future__ import annotations
 
-import html
+import json
 import re
-import urllib.parse
-import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
+
+from _common import Post, fetch_text, make_payload_raw as make_payload, normalize_url
 
 
-KEY = "kakaomobility"
+KEY = "kakaoMobility"
 BLOG = "Kakao Mobility Developers"
 BASE_URL = "https://developers.kakaomobility.com"
-LIST_URLS = [f"{BASE_URL}/techblogs/"]
-USER_AGENT = "Mozilla/5.0"
-LINK_RE = re.compile(r'href="(/techblogs/[^"]+\.html)"')
+LIST_URL = f"{BASE_URL}/techblogs"
 
 
 def crawl(request, config) -> dict[str, object]:
     del config
-    body = _fetch(LIST_URLS[0])
-    posts: list[dict[str, object]] = []
-    seen: set[str] = set()
-    for href in LINK_RE.findall(body):
-        url = _absolute(BASE_URL, href)
-        if url in seen:
-            continue
-        seen.add(url)
-        posts.append(_detail_post(url))
+    list_page = fetch_text(LIST_URL)
+    data_url = _extract_data_url(list_page)
+    raw_items = _extract_items(fetch_text(data_url))
+
+    posts: list[Post] = []
+    for item in raw_items:
+        posts.append(_to_post(item))
         if request.size and len(posts) >= request.size:
             break
+
     if not posts:
-        raise RuntimeError(f"{KEY} crawl finished but no Kakao Mobility post links were extracted from {LIST_URLS[0]}")
-    return _payload(request, LIST_URLS[0], "html.urllib", posts)
+        raise RuntimeError(f"{KEY} crawl finished but no posts were extracted from {data_url}")
+
+    return make_payload(
+        key=KEY,
+        blog=BLOG,
+        base_url=BASE_URL,
+        requested_url=data_url,
+        crawler="vitepress-data.urllib",
+        requested_size=request.size,
+        posts=posts,
+    )
 
 
-def _detail_post(url: str) -> dict[str, object]:
-    body = _fetch(url)
-    tags = re.findall(r'<a href="/techblogs/\?tag=[^"]+">([^<]+)</a>', body)
-    return {
-        "key": _key(url),
-        "title": _clean(_meta(body, "og:title") or _text(body, "title")),
-        "description": _clean(_meta(body, "og:description") or _meta(body, "description")),
-        "tags": [_clean(tag) for tag in tags if _clean(tag)],
-        "thumbnail": _absolute(url, _meta(body, "og:image")),
-        "publishedAt": _published(_meta(body, "article:published_time")),
-        "url": url,
-        "source": "html",
-    }
+def _extract_data_url(list_page: str) -> str:
+    match = re.search(r'(/assets/chunks/techblogs\.data\.[^"\s]+\.js)', list_page)
+    if match is None:
+        raise RuntimeError(f"{KEY} list page data chunk was not found: {LIST_URL}")
+    return normalize_url(BASE_URL, match.group(1))
 
 
-def _fetch(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.read().decode(charset, errors="replace")
+def _extract_items(raw_data: str) -> list[dict[str, object]]:
+    match = re.search(r"JSON\.parse\(`(.*)`\);export\{", raw_data, re.S)
+    if match is None:
+        raise RuntimeError(f"{KEY} data chunk payload was not found")
+
+    return json.loads(match.group(1))
 
 
-def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
-    return {
-        "key": request.key,
-        "blog": BLOG,
-        "baseUrl": BASE_URL,
-        "requestedUrl": requested_url,
-        "crawler": crawler,
-        "crawledAt": datetime.now(timezone.utc).isoformat(),
-        "requestedSize": request.size,
-        "postCount": len(posts),
-        "posts": posts,
-    }
+def _to_post(item: dict[str, object]) -> Post:
+    url = _require_field(str(item.get("link") or ""), "url")
+    resolved_url = normalize_url(BASE_URL, url)
+    title = _require_field(str(item.get("title") or ""), "title", resolved_url)
+    key = _require_field(_normalize_key(resolved_url), "key", resolved_url)
+    description = str(item.get("description") or "").strip()
+    thumbnail = normalize_url(BASE_URL, str(item.get("image") or "")) if item.get("image") else ""
+
+    return Post(
+        key=key,
+        title=title,
+        description=description,
+        tags=[],
+        thumbnail=thumbnail,
+        publishedAt=_parse_published_at(str(item.get("date") or "")),
+        url=resolved_url,
+        source="vitepress-data",
+    )
 
 
-def _meta(body: str, name: str) -> str:
-    patterns = [
-        rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-        rf'<meta[^>]+name=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
-        if match:
-            return html.unescape(match.group(1)).strip()
-    return ""
-
-
-def _text(body: str, tag: str) -> str:
-    match = re.search(rf"<{tag}[^>]*>(.*?)</{tag}>", body, flags=re.IGNORECASE | re.DOTALL)
-    return match.group(1) if match else ""
-
-
-def _clean(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
-
-
-def _absolute(base_url: str, value: str) -> str:
-    return urllib.parse.urljoin(base_url, html.unescape(value or ""))
-
-
-def _published(value: str) -> str:
-    text = _clean(value).replace("Z", "+00:00")
+def _parse_published_at(raw: str) -> str:
+    text = raw.strip()
     if not text:
         return ""
-    parsed = datetime.fromisoformat(text)
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-    return parsed.replace(microsecond=0).isoformat(timespec="seconds")
+    try:
+        return datetime.strptime(text, "%Y.%m.%d").strftime("%Y-%m-%dT00:00:00")
+    except ValueError:
+        return ""
 
 
-def _key(url: str) -> str:
-    return urllib.parse.urlsplit(url).path.strip("/").removesuffix(".html").split("/")[-1]
+def _normalize_key(raw: str) -> str:
+    cleaned = raw.strip().rstrip("/").removesuffix(".html")
+    if not cleaned:
+        return ""
+    return cleaned.split("/")[-1]
+
+
+def _require_field(value: str, field: str, url: str | None = None) -> str:
+    trimmed = value.strip()
+    if trimmed:
+        return trimmed
+
+    url_value = url if url else "unknown"
+    raise RuntimeError(f"blogKey={KEY}, url={url_value}, field={field}")

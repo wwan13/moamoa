@@ -1,129 +1,166 @@
 from __future__ import annotations
 
-import html
 import re
-import urllib.parse
-import urllib.request
-from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
+
+from datetime import datetime
+from urllib.parse import urlsplit
+
+from _common import HtmlNode, Post, fetch_html, make_payload_raw as make_payload, normalize_tag
 
 
 KEY = "rapportlabs"
-BLOG = "Rapport Labs Tech Blog"
+BLOG = "Rapport Labs Blog"
 BASE_URL = "https://blog.rapportlabs.kr"
-LIST_URLS = [BASE_URL, f"{BASE_URL}?page=2"]
-USER_AGENT = "Mozilla/5.0"
-CARD_RE = re.compile(
-    r'\\"id\\":(\d+),\\"slug\\":\\".*?\\",\\"title\\":\\"(.*?)\\",\\"description\\":\\"(.*?)\\",\\"published\\":true,\\"published_at\\":\\"(.*?)\\".*?\\"image\\":\{\\"url\\":\\"(.*?)\\".*?\\"posts_tags\\":\[(.*?)\]',
-    flags=re.DOTALL,
-)
+DATE_RE = re.compile(r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}")
 
 
 def crawl(request, config) -> dict[str, object]:
     del config
-    posts: list[dict[str, object]] = []
-    seen: set[str] = set()
-    for list_url in LIST_URLS:
-        body = _fetch(list_url)
-        for post_id, title, description, published, image, tags_blob in CARD_RE.findall(body):
-            url = f"{BASE_URL}/{post_id}"
-            if url in seen:
-                continue
-            seen.add(url)
-            posts.append(
-                {
-                    "key": post_id,
-                    "title": _clean(_unescape_json(title)),
-                    "description": _clean(_unescape_json(description)),
-                    "tags": [_clean(_unescape_json(tag)) for tag in re.findall(r'\\"title\\":\\"(.*?)\\"', tags_blob) if _clean(_unescape_json(tag))],
-                    "thumbnail": _clean(_unescape_json(image)),
-                    "publishedAt": _published(_unescape_json(published)),
-                    "url": url,
-                    "source": "html-json",
-                }
-            )
-            if request.size and len(posts) >= request.size:
-                break
-        if request.size and len(posts) >= request.size:
+    seen_keys: set[str] = set()
+    posts: list[Post] = []
+    page = 1
+
+    while request.size is None or len(posts) < request.size:
+        doc = fetch_html(_build_list_url(page))
+        links = doc.select("main a[href]")
+        if not links:
             break
+
+        new_posts = []
+        for link_el in links:
+            url = link_el.abs_url("href").strip()
+            key = _extract_key(url)
+            title_el = link_el.select_first("h1, h2, h3")
+            title = title_el.text().strip() if title_el else ""
+            if not url.startswith(BASE_URL) or not key or not title or key in seen_keys:
+                continue
+
+            root = _container(link_el)
+            date_text = _extract_date_text(root)
+            thumbnail = _extract_thumbnail(root)
+            if not thumbnail:
+                continue
+            new_posts.append(
+                Post(
+                    key=key,
+                    title=title,
+                    description=_extract_description(root),
+                    tags=_extract_tags(root, date_text),
+                    thumbnail=thumbnail,
+                    publishedAt=_parse_published_at(date_text),
+                    url=url,
+                    source="html",
+                )
+            )
+            seen_keys.add(key)
+
+        if not new_posts:
+            break
+        posts.extend(new_posts)
+        page += 1
+
+    if request.size is not None:
+        posts = posts[: request.size]
     if not posts:
-        raise RuntimeError(f"{KEY} crawl finished but no Rapport Labs post links were extracted from {LIST_URLS[0]}")
-    return _payload(request, LIST_URLS[0], "html.urllib", posts)
+        raise RuntimeError(f"{KEY} crawl finished but no links were extracted from {_build_list_url(1)}")
+
+    return make_payload(
+        key=KEY,
+        blog=BLOG,
+        base_url=BASE_URL,
+        requested_url=_build_list_url(1),
+        crawler="html.urllib",
+        requested_size=request.size,
+        posts=posts,
+    )
 
 
-def _fetch(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.read().decode(charset, errors="replace")
+def _build_list_url(page: int) -> str:
+    return BASE_URL if page == 1 else f"{BASE_URL}?page={page}"
 
 
-def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
-    return {
-        "key": request.key,
-        "blog": BLOG,
-        "baseUrl": BASE_URL,
-        "requestedUrl": requested_url,
-        "crawler": crawler,
-        "crawledAt": datetime.now(timezone.utc).isoformat(),
-        "requestedSize": request.size,
-        "postCount": len(posts),
-        "posts": posts,
-    }
+def _extract_key(url: str) -> str:
+    path = urlsplit(url).path.strip("/")
+    if not path or path.startswith("category/") or path.startswith("tag/"):
+        return ""
+    return path
 
 
-def _meta(body: str, name: str) -> str:
-    patterns = [
-        rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-        rf'<meta[^>]+name=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)',
-        rf'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']{re.escape(name)}["\']',
-        rf'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']{re.escape(name)}["\']',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, body, flags=re.IGNORECASE | re.DOTALL)
-        if match:
-            return html.unescape(match.group(1)).strip()
+def _container(link_el) -> HtmlNode:
+    current = link_el.element
+    while current is not None:
+        if current.tag.lower() in {"article", "li", "div", "section"}:
+            return HtmlNode(current, link_el.base_url)
+        current = current.getparent()
+    return link_el
+
+
+def _extract_description(root: HtmlNode) -> str:
+    for candidate in root.select('div[class*="line-clamp"], p'):
+        if candidate.select_first("span") is None and candidate.text():
+            return candidate.text().strip()
     return ""
 
 
-def _text(body: str, tag: str) -> str:
-    match = re.search(rf"<{tag}[^>]*>(.*?)</{tag}>", body, flags=re.IGNORECASE | re.DOTALL)
-    return _clean(match.group(1)) if match else ""
+def _extract_date_text(root: HtmlNode) -> str:
+    time_el = root.select_first("time[datetime]")
+    if time_el and time_el.attr("datetime"):
+        return time_el.attr("datetime")
+    for candidate in root.select("span, div"):
+        matched = DATE_RE.search(candidate.text())
+        if matched:
+            return matched.group(0)
+    return ""
 
 
-def _clean(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
+def _extract_tags(root: HtmlNode, date_text: str) -> list[str]:
+    candidates = [node.text() for node in root.select('span[class*="rounded-full"]')]
+    if not candidates:
+        candidates = [node.text() for node in root.select("span")]
+    tags = []
+    for candidate in candidates:
+        text = candidate.strip()
+        if not text or text == date_text or DATE_RE.match(text) or (len(text) <= 2 and text.isalpha() and text.islower()):
+            continue
+        tag = normalize_tag(text)
+        if tag and tag not in tags:
+            tags.append(tag)
+    return tags
 
 
-def _absolute(base_url: str, value: str) -> str:
-    if not value:
+def _extract_thumbnail(root: HtmlNode) -> str:
+    img = root.select_first("img[src], img[srcset]")
+    if img is None:
         return ""
-    return urllib.parse.urljoin(base_url, html.unescape(value))
+    if img.attr("src"):
+        return _resolve_image_url(img.attr("src").strip())
+    if img.attr("srcset"):
+        first_src = img.attr("srcset").split(",", 1)[0].strip().split(" ", 1)[0]
+        return _resolve_image_url(first_src)
+    return ""
 
 
-def _key(url: str) -> str:
-    return urllib.parse.urlsplit(url).path.strip("/").split("/")[-1]
+def _resolve_image_url(raw: str) -> str:
+    if raw.startswith("http"):
+        return raw
+    if raw.startswith("//"):
+        return "https:" + raw
+    if raw.startswith("/"):
+        return BASE_URL + raw
+    return raw
 
 
-def _unescape_json(value: str) -> str:
-    return value.replace("\\/", "/").replace("\\n", " ").replace('\\"', '"')
-
-
-def _published(value: str) -> str:
-    text = _clean(value)
+def _parse_published_at(raw: str) -> str:
+    text = raw.strip().replace("Z", "+00:00")
     if not text:
         return ""
-    text = text.replace("Z", "+00:00")
-    text = re.sub(r"(\.\d{1,5})([+-]\d{2}:\d{2})$", lambda m: "." + m.group(1)[1:].ljust(6, "0") + m.group(2), text)
-    for candidate in (text, text.rstrip(".").replace(".", "-")):
-        try:
-            parsed = datetime.fromisoformat(candidate)
-            if parsed.tzinfo is not None:
-                parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-            return parsed.replace(microsecond=0).isoformat(timespec="seconds")
-        except ValueError:
-            pass
     try:
-        return parsedate_to_datetime(text).astimezone(timezone.utc).replace(tzinfo=None, microsecond=0).isoformat(timespec="seconds")
-    except (TypeError, ValueError):
-        return ""
+        return datetime.fromisoformat(text).replace(microsecond=0).isoformat(timespec="seconds")
+    except ValueError:
+        pass
+    for pattern in ("%b %d, %Y", "%b %d, %Y"):
+        try:
+            return datetime.strptime(text, pattern).strftime("%Y-%m-%dT00:00:00")
+        except ValueError:
+            continue
+    return ""

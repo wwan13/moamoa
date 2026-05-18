@@ -55,7 +55,11 @@ def load_crawler(key: str) -> CrawlerFunc:
     if added_source_dir:
         sys.path.insert(0, source_dir)
     try:
+        sys.modules[module_name] = module
         spec.loader.exec_module(module)
+    except Exception:
+        sys.modules.pop(module_name, None)
+        raise
     finally:
         if added_source_dir:
             sys.path.remove(source_dir)

@@ -1,103 +1,115 @@
 from __future__ import annotations
 
-import html
-import re
-import urllib.parse
-import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
+from urllib.error import HTTPError
+from urllib.parse import urlsplit
+
+from _common import Post, fetch_html, make_payload_raw as make_payload, normalize_tag
 
 
 KEY = "nds"
-BLOG = "NDS Tech Blog"
+BLOG = "NDS Tech Insight"
 BASE_URL = "https://tech.cloud.nongshim.co.kr"
-LIST_URLS = [f"{BASE_URL}/post/", f"{BASE_URL}/post/page/2/"]
-USER_AGENT = "Mozilla/5.0"
-LINK_RE = re.compile(r'href="(https://tech\.cloud\.nongshim\.co\.kr/blog/[^"]+/[0-9]+/)"')
+ELLIPSIS = "…"
 
 
 def crawl(request, config) -> dict[str, object]:
     del config
-    posts: list[dict[str, object]] = []
-    seen: set[str] = set()
-    for list_url in LIST_URLS:
-        body = _fetch(list_url)
-        for url in LINK_RE.findall(body):
-            if url in seen:
-                continue
-            seen.add(url)
-            posts.append(_detail_post(url))
-            if request.size and len(posts) >= request.size:
+    seen_keys: set[str] = set()
+    posts: list[Post] = []
+    page = 1
+
+    while request.size is None or len(posts) < request.size:
+        try:
+            doc = fetch_html(_build_list_url(page))
+        except HTTPError as error:
+            if error.code == 404 and page > 1:
                 break
-        if request.size and len(posts) >= request.size:
+            raise
+        articles = doc.select("#blog-entries article.blog-entry")
+        if not articles:
             break
+
+        new_posts: list[Post] = []
+        for article in articles:
+            link_el = article.select_first('h2.blog-entry-title a[rel="bookmark"][href]')
+            if link_el is None:
+                continue
+
+            url = link_el.abs_url("href").strip()
+            key = _extract_key(url)
+            title = link_el.text().strip()
+            if not url or not key or not title or key in seen_keys:
+                continue
+
+            tags = []
+            for tag_el in article.select(".blog-entry-category a[href]"):
+                tag = normalize_tag(tag_el.text())
+                if tag and tag not in tags:
+                    tags.append(tag)
+
+            thumb_el = article.select_first(".thumbnail img[src]")
+            date_el = article.select_first(".blog-entry-date")
+            published_at = _parse_published_at(date_el.text().strip() if date_el else "")
+            if not published_at:
+                continue
+            new_posts.append(
+                Post(
+                    key=key,
+                    title=title,
+                    description=_extract_description(article),
+                    tags=tags,
+                    thumbnail=thumb_el.abs_url("src").strip() if thumb_el else "",
+                    publishedAt=published_at,
+                    url=url,
+                    source="html",
+                )
+            )
+            seen_keys.add(key)
+
+        if not new_posts:
+            break
+
+        posts.extend(new_posts)
+        page += 1
+
+    if request.size is not None:
+        posts = posts[: request.size]
     if not posts:
-        raise RuntimeError(f"{KEY} crawl finished but no NDS post links were extracted from {LIST_URLS[0]}")
-    return _payload(request, LIST_URLS[0], "html.urllib", posts)
+        raise RuntimeError(f"{KEY} crawl finished but no articles were extracted from {_build_list_url(1)}")
+
+    return make_payload(
+        key=KEY,
+        blog=BLOG,
+        base_url=BASE_URL,
+        requested_url=_build_list_url(1),
+        crawler="html.urllib",
+        requested_size=request.size,
+        posts=posts,
+    )
 
 
-def _detail_post(url: str) -> dict[str, object]:
-    body = _fetch(url)
-    return {
-        "key": _key(url),
-        "title": _clean(_meta(body, "og:title")).removesuffix(" - NDS Cloud Tech Blog"),
-        "description": _clean(_meta(body, "og:description") or _meta(body, "description")),
-        "tags": _keywords(body),
-        "thumbnail": _absolute(url, _meta(body, "og:image")),
-        "publishedAt": _published(_meta(body, "article:published_time")),
-        "url": url,
-        "source": "html",
-    }
+def _build_list_url(page: int) -> str:
+    return f"{BASE_URL}/post/" if page == 1 else f"{BASE_URL}/post/page/{page}/"
 
 
-def _keywords(body: str) -> list[str]:
-    match = re.search(r'"keywords":\[(.*?)\]', body, flags=re.DOTALL)
-    if not match:
-        return []
-    return [_clean(part) for part in re.findall(r'"([^"]+)"', match.group(1)) if _clean(part)]
+def _extract_key(url: str) -> str:
+    return urlsplit(url).path.rstrip("/").split("/")[-1].strip()
 
 
-def _fetch(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.read().decode(charset, errors="replace")
-
-
-def _payload(request, requested_url: str, crawler: str, posts: list[dict[str, object]]) -> dict[str, object]:
-    return {
-        "key": request.key,
-        "blog": BLOG,
-        "baseUrl": BASE_URL,
-        "requestedUrl": requested_url,
-        "crawler": crawler,
-        "crawledAt": datetime.now(timezone.utc).isoformat(),
-        "requestedSize": request.size,
-        "postCount": len(posts),
-        "posts": posts,
-    }
-
-
-def _meta(body: str, name: str) -> str:
-    match = re.search(rf'<meta[^>]+property=["\']{re.escape(name)}["\'][^>]+content=["\']([^"\']+)', body, flags=re.IGNORECASE)
-    return html.unescape(match.group(1)).strip() if match else ""
-
-
-def _clean(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
-
-
-def _absolute(base_url: str, value: str) -> str:
-    return urllib.parse.urljoin(base_url, html.unescape(value or ""))
-
-
-def _key(url: str) -> str:
-    return urllib.parse.urlsplit(url).path.strip("/").split("/")[-1]
-
-
-def _published(value: str) -> str:
-    if not value:
+def _extract_description(article) -> str:
+    summary = article.select_first(".blog-entry-summary")
+    if summary is None:
         return ""
-    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-    return parsed.replace(microsecond=0).isoformat(timespec="seconds")
+    text = summary.text().strip()
+    return "" if not text or text == ELLIPSIS else text
+
+
+def _parse_published_at(raw: str) -> str:
+    text = raw.strip()
+    if not text:
+        return ""
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").strftime("%Y-%m-%dT00:00:00")
+    except ValueError:
+        return ""
