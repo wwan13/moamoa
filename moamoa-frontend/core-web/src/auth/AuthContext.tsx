@@ -59,17 +59,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoggedIn(true)
   }, [])
 
+  const handleForcedLogout = useCallback(async (): Promise<void> => {
+    await showGlobalAlert("다시 로그인해 주세요.")
+    await clearAuthCookieBestEffort()
+    await qc.cancelQueries()
+    qc.clear()
+    resetSessionState()
+  }, [qc, resetSessionState])
+
   useEffect(() => {
     setOnLoginRequired(async () => {
       if (isHandlingLoginRequiredRef.current) return
       isHandlingLoginRequiredRef.current = true
 
       try {
-        await clearAuthCookieBestEffort()
-        await showGlobalAlert("다시 로그인해 주세요.")
-        await qc.cancelQueries()
-        qc.clear()
-        resetSessionState()
+        await handleForcedLogout()
       } finally {
         isHandlingLoginRequiredRef.current = false
       }
@@ -80,17 +84,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isHandlingLoginRequiredRef.current = true
 
       try {
-        await clearAuthCookieBestEffort()
-        await showGlobalAlert("다시 로그인해 주세요.")
-        await qc.cancelQueries()
-        qc.clear()
-
-        resetSessionState()
+        await handleForcedLogout()
       } finally {
         isHandlingLoginRequiredRef.current = false
       }
     })
-  }, [qc, resetSessionState])
+  }, [handleForcedLogout])
 
   const openLogin = (): void => setAuthModal("login")
 
