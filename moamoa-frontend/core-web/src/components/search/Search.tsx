@@ -11,6 +11,7 @@ import useDebouncedValue from "../../hooks/useDebouncedValue"
 import TechBlogItem from "../techblogitem/TechBlogItem"
 import { DotLottieReact } from "@lottiefiles/dotlottie-react"
 import { useNavigate } from "react-router-dom"
+import SearchBar from "../../pages/noticelistpage/SearchBar"
 
 type SearchProps = {
   open: boolean
@@ -27,6 +28,7 @@ const Search = ({ open, onClose }: SearchProps) => {
 
   useEffect(() => {
     if (!open) return
+    setQuery("")
     inputRef.current?.focus()
   }, [open])
 
@@ -126,13 +128,15 @@ const Search = ({ open, onClose }: SearchProps) => {
           </button>
         </div>
 
-        <input
-          ref={inputRef}
-          className={styles.searchInput}
-          type="text"
-          placeholder="주제, 블로그 검색"
-          value={query}
+        <SearchBar
+          query={query}
+          hasInputQuery={query.trim().length > 0}
           onChange={onInputChange}
+          onSearch={() => {}}
+          onClear={() => setQuery("")}
+          placeholder="주제, 블로그 검색"
+          className={styles.searchBar}
+          inputRef={inputRef}
         />
 
         <div className={styles.content}>

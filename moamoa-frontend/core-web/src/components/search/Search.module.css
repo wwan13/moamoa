@@ -58,25 +58,10 @@
   background: #f3f4f6;
 }
 
-.searchInput {
+.searchBar {
   width: 100%;
-  height: 46px;
-  padding: 0 20px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  outline: none;
-  box-sizing: border-box;
-  transition: 0.2s ease;
-  color: #252525;
-}
-
-.searchInput:focus {
-  border-color: #252525;
-}
-
-.searchInput::placeholder {
-  color: #b2b2b2;
+  margin-left: 0;
+  --search-bar-width: 100%;
 }
 
 .content {
