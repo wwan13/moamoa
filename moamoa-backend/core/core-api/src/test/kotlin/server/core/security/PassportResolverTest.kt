@@ -15,6 +15,7 @@ import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.web.context.request.ServletWebRequest
 import server.core.global.security.UnauthorizedException
 import server.core.feature.member.domain.MemberRole
+import server.core.global.security.ForbiddenException
 import server.core.global.security.Passport
 import server.core.global.security.PassportResolver
 import server.core.global.security.RequestPassport
@@ -166,6 +167,37 @@ class PassportResolverTest : UnitTest() {
             resolver.resolveArgument(methodParameter("required"), null, webRequest, null)
         }
 
+        verify(exactly = 0) { tokenProvider.decodeToken(any()) }
+    }
+
+    @Test
+    fun `nullable passport 에 캐시된 decode 예외가 있으면 null을 반환한다`() {
+        val tokenProvider = mockk<TokenProvider>()
+        val resolver = PassportResolver(tokenProvider)
+        val webRequest = webRequest(authorization = "Bearer access-token")
+        webRequest.request.setAttribute(TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR, InvalidTokenException())
+
+        val result = resolver.resolveArgument(methodParameter("optional"), null, webRequest, null)
+
+        result shouldBe null
+        verify(exactly = 0) { tokenProvider.decodeToken(any()) }
+    }
+
+    @Test
+    fun `블랙리스트 예외가 캐시되어 있으면 nullable passport 여도 ForbiddenException을 전파한다`() {
+        val tokenProvider = mockk<TokenProvider>()
+        val resolver = PassportResolver(tokenProvider)
+        val webRequest = webRequest(authorization = "Bearer access-token")
+        webRequest.request.setAttribute(
+            TokenDecodeCacheAttributes.BLACKLIST_ERROR_ATTR,
+            ForbiddenException("차단된 사용자입니다")
+        )
+
+        val exception = shouldThrow<ForbiddenException> {
+            resolver.resolveArgument(methodParameter("optional"), null, webRequest, null)
+        }
+
+        exception.message shouldBe "차단된 사용자입니다"
         verify(exactly = 0) { tokenProvider.decodeToken(any()) }
     }
 

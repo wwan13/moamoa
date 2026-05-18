@@ -12,6 +12,7 @@ import org.springframework.mock.web.MockFilterChain
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.web.context.request.ServletWebRequest
+import server.core.feature.member.infra.BlackListSet
 import server.core.global.security.TokenDecodeCacheFilter
 import server.core.feature.member.domain.MemberRole
 import server.core.global.security.Passport
@@ -31,7 +32,9 @@ class TokenDecodeReuseFlowTest : UnitTest() {
             type = TokenType.ACCESS,
             role = "USER"
         )
-        val filter = TokenDecodeCacheFilter(tokenProvider)
+        val blackListSet = mockk<BlackListSet>()
+        every { blackListSet.contains(42L) } returns false
+        val filter = TokenDecodeCacheFilter(tokenProvider, blackListSet)
         val resolver = PassportResolver(tokenProvider)
 
         val request = MockHttpServletRequest("GET", "/")

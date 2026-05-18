@@ -12,3 +12,7 @@ data class ApplyTemporaryPasswordEvent(
     val email: String,
     val temporaryPassword: String
 ) : Event
+
+data class MemberUnjoinEvent(
+    val memberId: Long,
+) : Event

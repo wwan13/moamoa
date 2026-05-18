@@ -46,9 +46,15 @@ class PassportResolver(
         val request = webRequest.getNativeRequest(HttpServletRequest::class.java) ?: return unauthorized()
         val accessToken = request.resolveAccessToken() ?: return unauthorized()
 
+        val blacklistError = request.getAttribute(TokenDecodeCacheAttributes.BLACKLIST_ERROR_ATTR) as? ForbiddenException
+        if (blacklistError != null) {
+            throw blacklistError
+        }
+
         val decodeError = request.getAttribute(TokenDecodeCacheAttributes.TOKEN_DECODE_ERROR_ATTR) as? RuntimeException
         if (decodeError != null) {
-            throw decodeError
+            if (!isNullable) throw decodeError
+            return null
         }
 
         val principal = (request.getAttribute(TokenDecodeCacheAttributes.AUTH_PRINCIPAL_ATTR) as? AuthPrincipal)
