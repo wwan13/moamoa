@@ -243,6 +243,62 @@ class AdminTechBlogServiceTest : UnitTest() {
     }
 
     @Test
+    fun `기술 블로그별 게시글 전체 삭제 시 post tag를 먼저 삭제하고 삭제 건수를 반환한다`() {
+        val techBlogRepository = mockk<AdminTechBlogRepository>()
+        val postRepository = mockk<AdminPostRepository>()
+        val postTagRepository = mockk<AdminPostTagRepository>()
+        val service = AdminTechBlogService(
+            techBlogRepository = techBlogRepository,
+            postRepository = postRepository,
+            subscriptionRepository = mockk(),
+            techBlogCollector = mockk(),
+            tagRepository = mockk(),
+            postTagRepository = postTagRepository,
+            techBlogCategorizer = mockk(),
+        )
+        val techBlog = createAdminTechBlog(id = 1L, key = "gabia")
+        val postIds = listOf(11L, 12L)
+
+        every { techBlogRepository.findById(techBlog.id) } returns Optional.of(techBlog)
+        every { postRepository.findIdsByTechBlogId(techBlog.id) } returns postIds
+        every { postTagRepository.deleteAllByPostIdIn(postIds) } returns 3
+        every { postRepository.deleteAllByTechBlogId(techBlog.id) } returns 2
+
+        val result = service.deletePosts(techBlog.id)
+
+        result.techBlog.id shouldBe techBlog.id
+        result.deletedPostCount shouldBe 2
+        verify(exactly = 1) { postTagRepository.deleteAllByPostIdIn(postIds) }
+        verify(exactly = 1) { postRepository.deleteAllByTechBlogId(techBlog.id) }
+    }
+
+    @Test
+    fun `기술 블로그별 게시글이 없으면 삭제 쿼리를 실행하지 않는다`() {
+        val techBlogRepository = mockk<AdminTechBlogRepository>()
+        val postRepository = mockk<AdminPostRepository>()
+        val postTagRepository = mockk<AdminPostTagRepository>()
+        val service = AdminTechBlogService(
+            techBlogRepository = techBlogRepository,
+            postRepository = postRepository,
+            subscriptionRepository = mockk(),
+            techBlogCollector = mockk(),
+            tagRepository = mockk(),
+            postTagRepository = postTagRepository,
+            techBlogCategorizer = mockk(),
+        )
+        val techBlog = createAdminTechBlog(id = 1L, key = "gabia")
+
+        every { techBlogRepository.findById(techBlog.id) } returns Optional.of(techBlog)
+        every { postRepository.findIdsByTechBlogId(techBlog.id) } returns emptyList()
+
+        val result = service.deletePosts(techBlog.id)
+
+        result.deletedPostCount shouldBe 0
+        verify(exactly = 0) { postTagRepository.deleteAllByPostIdIn(any()) }
+        verify(exactly = 0) { postRepository.deleteAllByTechBlogId(any()) }
+    }
+
+    @Test
     fun `저장 대상 tech blog가 존재하지 않으면 예외가 발생한다`() {
         val techBlogRepository = mockk<AdminTechBlogRepository>()
         val service = AdminTechBlogService(

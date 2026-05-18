@@ -70,3 +70,8 @@ internal data class AdminCollectPostsResult(
     val newPostCount: Int,
     val updatedPostCount: Int
 )
+
+internal data class AdminDeleteTechBlogPostsResult(
+    val techBlog: AdminTechBlogData,
+    val deletedPostCount: Int,
+)

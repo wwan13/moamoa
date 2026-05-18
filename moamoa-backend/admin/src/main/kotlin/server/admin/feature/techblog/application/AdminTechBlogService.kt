@@ -70,6 +70,28 @@ internal class AdminTechBlogService(
         return AdminTechBlogData(techBlog)
     }
 
+    @Transactional
+    fun deletePosts(techBlogId: Long): AdminDeleteTechBlogPostsResult {
+        val techBlog = techBlogRepository.findByIdOrNull(techBlogId)
+            ?: throw NoSuchElementException("존재하지 않는 tech blog 입니다.")
+        val postIds = postRepository.findIdsByTechBlogId(techBlogId)
+
+        if (postIds.isEmpty()) {
+            return AdminDeleteTechBlogPostsResult(
+                techBlog = AdminTechBlogData(techBlog),
+                deletedPostCount = 0,
+            )
+        }
+
+        postTagRepository.deleteAllByPostIdIn(postIds)
+        val deletedPostCount = postRepository.deleteAllByTechBlogId(techBlogId)
+
+        return AdminDeleteTechBlogPostsResult(
+            techBlog = AdminTechBlogData(techBlog),
+            deletedPostCount = deletedPostCount,
+        )
+    }
+
     private fun validateTitle(title: String) {
         if (techBlogRepository.existsByTitle(title)) {
             throw IllegalArgumentException("이미 존재하는 tech blog 입니다.")

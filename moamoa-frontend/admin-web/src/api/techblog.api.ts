@@ -20,6 +20,11 @@ export type AdminCollectPostsResult = {
   updatedPostCount: number
 }
 
+export type AdminDeleteTechBlogPostsResult = {
+  techBlog: AdminTechBlogSummary
+  deletedPostCount: number
+}
+
 const COLLECT_POSTS_TIMEOUT_MS = 1000 * 60 * 10
 
 export const techBlogApi = {
@@ -50,5 +55,16 @@ export const techBlogApi = {
     } finally {
       window.clearTimeout(timeoutId)
     }
+  },
+  deletePosts: async (
+    techBlogId: number,
+  ): Promise<AdminDeleteTechBlogPostsResult> => {
+    const res = await http.del<AdminDeleteTechBlogPostsResult>(
+      `/api/admin/tech-blog/${techBlogId}/posts`,
+    )
+
+    if (res) return res
+
+    throw new Error("EMPTY_DELETE_TECH_BLOG_POSTS_RESPONSE")
   },
 }

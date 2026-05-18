@@ -105,6 +105,11 @@
 .buttonCell {
   display: flex;
   justify-content: center;
+  gap: 8px;
+}
+
+.deleteButton {
+  padding: 0 12px;
 }
 
 .empty {

@@ -41,6 +41,14 @@ internal class AdminTechBlogController(
         return AdminApiResponse.of(response)
     }
 
+    @DeleteMapping("/{techBlogId}/posts")
+    fun deletePosts(
+        @PathVariable techBlogId: Long,
+    ): AdminApiResponse<AdminDeleteTechBlogPostsResult> {
+        val response = techBlogService.deletePosts(techBlogId)
+        return AdminApiResponse.of(response)
+    }
+
     @PatchMapping("/{techBlogId}")
     fun update(
         @PathVariable techBlogId: Long,

@@ -5,9 +5,10 @@ import { Search } from "../../components/ui/Search.tsx"
 import { ListHeader } from "../../components/ui/ListHeader.tsx"
 import { ListItem } from "../../components/ui/ListItem.tsx"
 import Button from "../../components/ui/Button.tsx"
-import { showGlobalAlert } from "../../api/client"
+import { showGlobalAlert, showGlobalConfirm, showToast } from "../../api/client"
 import {
   useCollectTechBlogPostsMutation,
+  useDeleteTechBlogPostsMutation,
   useTechBlogsQuery,
 } from "../../queries/techblog.queries"
 
@@ -39,6 +40,7 @@ const TechBlogPage = () => {
 
   const { data, isLoading } = useTechBlogsQuery()
   const collectTechBlogPostsMutation = useCollectTechBlogPostsMutation()
+  const deleteTechBlogPostsMutation = useDeleteTechBlogPostsMutation()
   const normalizedQuery = searchInput.trim().toLowerCase()
   const techBlogs = (data ?? []).filter((techBlog) => {
     if (!normalizedQuery) return true
@@ -79,7 +81,10 @@ const TechBlogPage = () => {
     <div key={`collect-${techBlog.id}`} className={styles.buttonCell}>
       <Button
         type="button"
-        disabled={collectingTechBlogId === techBlog.id}
+        disabled={
+          collectingTechBlogId === techBlog.id ||
+          deleteTechBlogPostsMutation.isPending
+        }
         onClick={() => {
           void handleCollectPosts(techBlog.id, techBlog.title)
         }}
@@ -87,6 +92,19 @@ const TechBlogPage = () => {
         {collectingTechBlogId === techBlog.id
           ? formatElapsedSeconds(elapsedSeconds)
           : "게시글 수집"}
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        className={styles.deleteButton}
+        disabled={
+          collectingTechBlogId !== null || deleteTechBlogPostsMutation.isPending
+        }
+        onClick={() => {
+          void handleDeletePosts(techBlog.id, techBlog.title, techBlog.postCount)
+        }}
+      >
+        {deleteTechBlogPostsMutation.isPending ? "삭제 중..." : "전체 삭제"}
       </Button>
     </div>,
   ])
@@ -116,6 +134,29 @@ const TechBlogPage = () => {
     }
   }
 
+  const handleDeletePosts = async (
+    techBlogId: number,
+    techBlogTitle: string,
+    postCount: number,
+  ) => {
+    const confirmed = await showGlobalConfirm({
+      title: "게시글 전체 삭제",
+      message: `${techBlogTitle} 게시글 ${postCount.toLocaleString("ko-KR")}건을 모두 삭제하시겠어요?`,
+      confirmText: "전체 삭제",
+    })
+    if (!confirmed) return
+
+    try {
+      const result = await deleteTechBlogPostsMutation.mutateAsync({ techBlogId })
+      showToast(
+        `${result.techBlog.title} 게시글 ${result.deletedPostCount.toLocaleString("ko-KR")}건을 삭제했습니다.`,
+        { type: "success" },
+      )
+    } catch {
+      await showGlobalAlert(`${techBlogTitle} 게시글 전체 삭제에 실패했습니다.`)
+    }
+  }
+
   return (
     <div className={styles.wrap}>
       <PageTitle value="기술블로그" />
@@ -135,7 +176,7 @@ const TechBlogPage = () => {
 
       <section className={styles.listWrap}>
         <ListHeader
-          templateColumns="minmax(0, 1.2fr) minmax(0, 1.7fr) 120px 120px 140px"
+          templateColumns="minmax(0, 1.2fr) minmax(0, 1.7fr) 120px 120px 240px"
           columns={[
             { key: "title", label: "블로그" },
             { key: "blogUrl", label: "URL" },
@@ -154,7 +195,7 @@ const TechBlogPage = () => {
             <ListItem
               key={techBlogs[index]?.id ?? index}
               cells={cells}
-              templateColumns="minmax(0, 1.2fr) minmax(0, 1.7fr) 120px 120px 140px"
+              templateColumns="minmax(0, 1.2fr) minmax(0, 1.7fr) 120px 120px 240px"
             />
           ))}
       </section>
