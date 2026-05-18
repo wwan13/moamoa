@@ -56,10 +56,12 @@ class AuthController(
 
     @PostMapping("/logout")
     fun logout(
-        @RequestPassport passport: Passport,
+        @RequestPassport passport: Passport?,
         httpResponse: HttpServletResponse,
     ): ApiResponse<Unit> {
-        authService.logout(passport.memberId)
+        passport?.also {
+            authService.logout(it.memberId)
+        }
         httpResponse.expireAuthCookies()
 
         return ApiResponse.of()
