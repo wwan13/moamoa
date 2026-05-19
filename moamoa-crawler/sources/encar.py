@@ -1,94 +1,143 @@
 from __future__ import annotations
 
 import re
-import urllib.parse
+from urllib.parse import urlsplit, urlunsplit
 
-from _common import Post, enrich_post_details, key_from_url, make_payload, title_from_url, unique_posts
+from _common import Post, fetch_text, make_payload_raw as make_payload, normalize_published_at, normalize_tag, parse_html, parse_xml, strip_html, unique_posts
 
 
 KEY = "encar"
 BLOG = "엔카닷컴 AI 블로그"
 BASE_URL = "https://medium.com/@encar-ai"
-REQUESTED_URL = BASE_URL
-
-
-def is_post_url(url: str) -> bool:
-    parsed = urllib.parse.urlsplit(url)
-    if parsed.netloc != "medium.com":
-        return False
-    if parsed.path in {"", "/", "/@encar-ai", "/@encar-ai/", "/@encar-ai/all"}:
-        return False
-    if not parsed.path.startswith("/@encar-ai/"):
-        return False
-    if parsed.path.startswith(("/@encar-ai/tagged/", "/m/", "/me/", "/search")):
-        return False
-    return re.search(r"-[0-9a-f]{12,}/?$", urllib.parse.unquote(parsed.path)) is not None
+RSS_URL = "https://medium.com/feed/@encar-ai"
 
 
 def crawl(request, config) -> dict[str, object]:
-    from scrapling.fetchers import StealthyFetcher
+    del config
 
-    page = StealthyFetcher.fetch(
-        REQUESTED_URL,
-        headless=config.headless,
-        network_idle=True,
-        wait=config.wait,
-        page_action=_scroll_page(config.scrolls, config.scroll_wait),
-    )
-    posts = _extract_posts_from_page(page)
-    posts = enrich_post_details(posts, limit=request.size)
+    posts = _fetch_rss_posts()
     posts = unique_posts(posts, request.size)
     if not posts:
-        raise RuntimeError(f"{KEY} browser crawl finished but no post links were extracted from {REQUESTED_URL}")
+        raise RuntimeError(f"{KEY} crawl finished but no RSS items were extracted from {RSS_URL}")
 
     return make_payload(
         key=KEY,
         blog=BLOG,
         base_url=BASE_URL,
-        requested_url=REQUESTED_URL,
-        crawler="scrapling.StealthyFetcher",
+        requested_url=RSS_URL,
+        crawler="rss.urllib",
         requested_size=request.size,
         posts=posts,
     )
 
 
-def _extract_posts_from_page(page) -> list[Post]:
+def _fetch_rss_posts() -> list[Post]:
+    root = parse_xml(fetch_text(RSS_URL))
+    items = root.xpath(".//item")
+    if not items:
+        raise RuntimeError(f"{KEY} crawl finished but no RSS items were extracted from {RSS_URL}")
+
     posts: list[Post] = []
-    for anchor in page.css("a[href]"):
-        href = _attr(anchor, "href")
-        if not href:
+    for item in items:
+        url = _normalize_post_url(_xpath_text(item, "link"))
+        if not _is_post_url(url):
             continue
-        url = urllib.parse.urljoin(BASE_URL, href)
-        url = urllib.parse.urlunsplit(urllib.parse.urlsplit(url)._replace(query="", fragment=""))
-        if not is_post_url(url):
+
+        title = _xpath_text(item, "title").strip()
+        if not title:
             continue
+
+        encoded_html = _xpath_text(item, "*[local-name()='encoded']")
+        description = _extract_description(encoded_html)
+        thumbnail = _extract_thumbnail(encoded_html)
+        published_at = normalize_published_at(_xpath_text(item, "pubDate")) or normalize_published_at(_xpath_text(item, "*[local-name()='updated']"))
+        tags = _extract_tags(item)
+
         posts.append(
             Post(
-                key=key_from_url(url),
-                title=title_from_url(url),
-                description="",
-                tags=[],
-                thumbnail="",
-                publishedAt="",
+                key=_key_from_url(url),
+                title=title,
+                description=description,
+                tags=tags,
+                thumbnail=thumbnail,
+                publishedAt=published_at,
                 url=url,
-                source="browser",
+                source="rss",
             )
         )
-    return unique_posts(posts, 10_000)
+
+    return posts
 
 
-def _attr(node, name: str) -> str:
-    if hasattr(node, "attrib"):
-        value = node.attrib.get(name)
-        if value:
-            return str(value)
-    return ""
+def _extract_description(encoded_html: str) -> str:
+    if not encoded_html:
+        return ""
+
+    doc = parse_html(encoded_html, BASE_URL)
+    parts: list[str] = []
+
+    subtitle = doc.select_first("h3")
+    if subtitle and subtitle.text():
+        parts.append(subtitle.text())
+
+    for paragraph in doc.select("p"):
+        text = paragraph.text()
+        if not text:
+            continue
+        if text.startswith("Continue reading on Medium"):
+            continue
+        parts.append(text)
+        if len(parts) >= 2:
+            break
+
+    if parts:
+        return " ".join(parts).strip()
+    return strip_html(encoded_html)
 
 
-def _scroll_page(scrolls: int, scroll_wait: int):
-    def action(page) -> None:
-        for _ in range(scrolls):
-            page.mouse.wheel(0, 2400)
-            page.wait_for_timeout(scroll_wait)
+def _extract_thumbnail(encoded_html: str) -> str:
+    if not encoded_html:
+        return ""
 
-    return action
+    doc = parse_html(encoded_html, BASE_URL)
+    image = doc.select_first("img[src]")
+    if image:
+        return image.abs_url("src")
+
+    match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', encoded_html, flags=re.IGNORECASE)
+    return match.group(1).strip() if match else ""
+
+
+def _extract_tags(item) -> list[str]:
+    tags: list[str] = []
+    for category in item.xpath("./category"):
+        tag = normalize_tag("".join(category.itertext()).strip())
+        if tag and tag not in tags:
+            tags.append(tag)
+    return tags
+
+
+def _xpath_text(node, expr: str) -> str:
+    values = node.xpath(f"./{expr}/text()")
+    return "".join(value.strip() for value in values if value and value.strip())
+
+
+def _normalize_post_url(url: str) -> str:
+    parsed = urlsplit(url.strip())
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+
+
+def _is_post_url(url: str) -> bool:
+    parsed = urlsplit(url)
+    if parsed.netloc != "medium.com":
+        return False
+    if not parsed.path.startswith("/@encar-ai/"):
+        return False
+    if parsed.path in {"", "/", "/@encar-ai", "/@encar-ai/"}:
+        return False
+    return re.search(r"-[0-9a-f]{12,}/?$", parsed.path) is not None
+
+
+def _key_from_url(url: str) -> str:
+    path = urlsplit(url).path.rstrip("/")
+    return path.split("/")[-1]

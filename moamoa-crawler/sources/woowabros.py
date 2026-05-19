@@ -3,21 +3,17 @@ from __future__ import annotations
 import html
 import json
 import re
-import subprocess
 import urllib.parse
 from dataclasses import dataclass
 from datetime import datetime, timezone
+
+from _common import fetch_text
 
 
 KEY = "woowabros"
 BLOG = "우아한형제들 기술블로그"
 BASE_URL = "https://techblog.woowahan.com/"
 AJAX_URL = urllib.parse.urljoin(BASE_URL, "wp-admin/admin-ajax.php")
-USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/120.0.0.0 Safari/537.36"
-)
 CAT_TAG_RE = re.compile(r'<a class="cat-tag"[^>]*>(.*?)</a>', flags=re.DOTALL)
 
 
@@ -146,7 +142,7 @@ def _fetch_ajax_page(page_no: int) -> str:
                 "data[post][paged]": str(page_no),
                 "data[meta]": "main",
             }
-        ),
+        ).encode("utf-8"),
         headers={
             "X-Requested-With": "XMLHttpRequest",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -156,15 +152,9 @@ def _fetch_ajax_page(page_no: int) -> str:
     )
 
 
-def _fetch_text(url: str, *, data: str | None = None, headers: dict[str, str] | None = None) -> str:
-    command = ["curl", "-s", "-L", "-A", USER_AGENT]
-    for name, value in (headers or {}).items():
-        command.extend(["-H", f"{name}: {value}"])
-    if data is not None:
-        command.extend(["--data", data])
-    command.append(url)
-    result = subprocess.run(command, check=True, capture_output=True, text=True)
-    return result.stdout
+def _fetch_text(url: str, *, data: bytes | None = None, headers: dict[str, str] | None = None) -> str:
+    method = "POST" if data is not None else "GET"
+    return fetch_text(url, method=method, data=data, headers=headers)
 
 
 def _meta(body: str, name: str) -> str:

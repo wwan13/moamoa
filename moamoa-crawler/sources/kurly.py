@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import re
-import subprocess
+import urllib.parse
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from lxml import html as lxml_html
-
-from _common import HtmlDocument, Post, make_payload_raw as make_payload
+from _common import Post, make_payload_raw as make_payload, normalize_space, normalize_url, unique_posts
 
 
 KEY = "kurly"
@@ -18,14 +16,22 @@ SEOUL = ZoneInfo("Asia/Seoul")
 
 
 def crawl(request, config) -> dict[str, object]:
-    del config
+    from scrapling.fetchers import StealthyFetcher
+
     page = 1
     first_page_signature: str | None = None
     posts: list[Post] = []
 
     while request.size is None or len(posts) < request.size:
-        doc = _fetch_html(_build_list_url(page))
-        parsed = _parse_posts(doc)
+        page_url = _build_list_url(page)
+        browser_page = StealthyFetcher.fetch(
+            page_url,
+            headless=config.headless,
+            network_idle=True,
+            wait=config.wait,
+            page_action=_scroll_page(config.scrolls, config.scroll_wait),
+        )
+        parsed = _parse_posts(browser_page)
         if not parsed:
             break
 
@@ -38,6 +44,9 @@ def crawl(request, config) -> dict[str, object]:
             break
 
         posts.extend(parsed)
+        posts = unique_posts(posts, request.size)
+        if request.size is not None and len(posts) >= request.size:
+            break
         page += 1
 
     if request.size is not None:
@@ -50,67 +59,68 @@ def crawl(request, config) -> dict[str, object]:
         blog=BLOG,
         base_url=BASE_URL,
         requested_url=_build_list_url(1),
-        crawler="html.urllib",
+        crawler="scrapling.StealthyFetcher",
         requested_size=request.size,
         posts=posts,
     )
 
 
-def _parse_posts(doc) -> list[Post]:
-    current_cards = [card for card in doc.select("article a[href]") if _normalized_blog_url(card)]
-    legacy_cards = doc.select("ul.post-list li.post-card")
+def _parse_posts(page) -> list[Post]:
+    current_cards = [card for card in page.css("article a[href]") if _normalized_blog_url(card)]
+    legacy_cards = list(page.css("ul.post-list li.post-card"))
     if current_cards:
-        return [post for card in current_cards if (post := _parse_current_card(card)) is not None]
-    return [post for card in legacy_cards if (post := _parse_legacy_card(card)) is not None]
+        return unique_posts([post for card in current_cards if (post := _parse_current_card(card)) is not None], 10_000)
+    return unique_posts([post for card in legacy_cards if (post := _parse_legacy_card(card)) is not None], 10_000)
 
 
 def _parse_current_card(card) -> Post | None:
     url = _normalized_blog_url(card)
     if not url:
         return None
-    title_el = card.select_first("h2")
-    if title_el is None or not title_el.text():
+    title = _text(_first(card.css("h2")))
+    if not title:
         return None
-    time_el = card.select_first("time")
+    time_el = _first(card.css("time"))
     published_at = _parse_published_at(
-        raw=time_el.text().strip() if time_el else "",
-        datetime_raw=time_el.attr("datetime").strip() if time_el else "",
+        raw=_text(time_el),
+        datetime_raw=_attr(time_el, "datetime").strip(),
     )
     if not published_at:
         return None
-    category_el = card.select_first("span")
-    img_el = card.select_first("img[src]")
+    category = _text(_first(card.css("span")))
+    description = _text(_first(card.css("p")))
+    thumbnail = _image_url(_first(card.css("img[src]")))
     return Post(
         key=url.rstrip("/").split("/")[-1],
-        title=title_el.text(),
-        description=card.select_first("p").text() if card.select_first("p") else "",
-        tags=[category_el.text()] if category_el and category_el.text() else [],
-        thumbnail=img_el.abs_url("src") if img_el else "",
+        title=title,
+        description=description,
+        tags=[category] if category else [],
+        thumbnail=thumbnail,
         publishedAt=published_at,
         url=url,
-        source="html",
+        source="browser",
     )
 
 
 def _parse_legacy_card(card) -> Post | None:
-    link = card.select_first("a.post-link[href]")
-    title_el = card.select_first("h3.post-title")
-    date_el = card.select_first("span.post-date")
-    if link is None or title_el is None or date_el is None:
+    link = _first(card.css("a.post-link[href]"))
+    title = _text(_first(card.css("h3.post-title")))
+    raw_date = _text(_first(card.css("span.post-date")))
+    if link is None or not title or not raw_date:
         return None
-    url = link.abs_url("href")
-    published_at = _parse_published_at(raw=date_el.text().strip().rstrip("."), datetime_raw="")
-    if not url or not title_el.text() or not published_at:
+    url = _absolute_url(_attr(link, "href"))
+    published_at = _parse_published_at(raw=raw_date.rstrip("."), datetime_raw="")
+    if not url or not published_at:
         return None
     return Post(
         key=url.rstrip("/").split("/")[-1],
-        title=title_el.text(),
-        description=card.select_first("p.title-summary").text() if card.select_first("p.title-summary") else "",
+        title=title,
+        description=_text(_first(card.css("p.title-summary"))),
         tags=[],
         thumbnail="",
         publishedAt=published_at,
         url=url,
-        source="html",
+        source="browser",
     )
 
 
@@ -118,19 +128,56 @@ def _build_list_url(page: int) -> str:
     return f"{BASE_URL}/" if page == 1 else f"{BASE_URL}/page/{page}/"
 
 
-def _fetch_html(url: str):
-    response = subprocess.run(
-        ["curl", "-L", "-A", "Mozilla/5.0", url],
-        check=True,
-        capture_output=True,
-    )
-    return HtmlDocument(lxml_html.fromstring(response.stdout), url)
-
-
 def _normalized_blog_url(card) -> str:
-    url = card.abs_url("href").strip()
-    path = url.split("://", 1)[-1].split("/", 1)[-1] if "://" in url else ""
+    url = _absolute_url(_attr(card, "href")).strip()
+    parsed = urllib.parse.urlsplit(url)
+    path = parsed.path.lstrip("/")
     return url if path.startswith("blog/") else ""
+
+
+def _absolute_url(value: str) -> str:
+    if not value:
+        return ""
+    return normalize_url(BASE_URL, value)
+
+
+def _image_url(node) -> str:
+    src = _attr(node, "src")
+    return _absolute_url(src) if src else ""
+
+
+def _first(nodes):
+    for node in nodes:
+        return node
+    return None
+
+
+def _text(node) -> str:
+    if node is None:
+        return ""
+    value = getattr(node, "text", "")
+    if callable(value):
+        value = value()
+    return normalize_space(str(value)) if value else ""
+
+
+def _attr(node, name: str) -> str:
+    if node is None:
+        return ""
+    if hasattr(node, "attrib"):
+        value = node.attrib.get(name)
+        if value:
+            return normalize_space(str(value))
+    return ""
+
+
+def _scroll_page(scrolls: int, scroll_wait: int):
+    def action(page) -> None:
+        for _ in range(scrolls):
+            page.mouse.wheel(0, 2400)
+            page.wait_for_timeout(scroll_wait)
+
+    return action
 
 
 def _parse_published_at(*, raw: str, datetime_raw: str) -> str:
