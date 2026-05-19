@@ -7,7 +7,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
 
   transaction:
     default-timeout: 30
