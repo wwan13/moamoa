@@ -86,6 +86,7 @@ HTTP API와 Redis Stream 이벤트 요청은 같은 내부 FIFO 큐로 처리합
 | `ably` | Ably Tech Blog | API | Next.js `buildId`를 추출한 뒤 `_next/data` JSON을 호출합니다. |
 | `banksalad` | Banksalad Tech Blog | 정적 HTML | 목록 HTML의 링크를 파싱하고 `/tech/...` URL 패턴만 수집합니다. |
 | `buzzvil` | Buzzvil Tech Blog | 정적 HTML | 목록 HTML 안의 embedded JSON slug/title을 우선 파싱하고, 실패 시 링크/정규식 fallback을 사용합니다. |
+| `catchtable` | Catchtable | Browser | Medium publication `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |
 | `com2us` | Com2uS Tech Blog | 정적 HTML | WordPress 태그 목록 HTML에서 게시글 링크를 수집합니다. |
 | `daangn` | Daangn Tech Blog | Browser | Medium publication `/all` 페이지를 Scrapling `StealthyFetcher`로 렌더링/스크롤한 뒤 링크를 수집합니다. |
 | `danawa` | Danawa Lab | 정적 HTML | GitHub Pages 목록 HTML에서 날짜 기반 게시글 URL을 수집합니다. |
@@ -128,6 +129,7 @@ HTTP API와 Redis Stream 이벤트 요청은 같은 내부 FIFO 큐로 처리합
 | `tabling` | Tabling Tech Blog | Browser | Medium 스타일 `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |
 | `tmapmobility` | TMAP Mobility Tech | API | Brunch article API를 호출합니다. |
 | `toss` | Toss Tech | API | Toss 공개 posts API를 호출합니다. |
+| `tving` | TVING | Browser | Medium publication `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |
 | `wanted` | Wanted Tech Blog | 정적 HTML | Wanted team community 목록 HTML에서 article 링크를 수집합니다. |
 | `watcha` | WATCHA Tech Blog | Browser | Medium publication `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |
 | `woowabros` | 우아한형제들 기술블로그 | Browser + AJAX | Scrapling으로 WordPress 세션을 연 뒤 `admin-ajax.php` 게시글 API를 호출합니다. |

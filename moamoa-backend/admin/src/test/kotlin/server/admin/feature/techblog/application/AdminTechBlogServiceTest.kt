@@ -22,7 +22,6 @@ import server.admin.feature.tag.domain.AdminTag
 import server.admin.feature.tag.domain.AdminTagRepository
 import server.admin.feature.techblog.domain.AdminTechBlog
 import server.admin.feature.techblog.domain.AdminTechBlogRepository
-import server.admin.feature.techblog.infra.TechBlogCollector
 import server.core.feature.category.domain.Category
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogPostCategory
@@ -43,7 +42,6 @@ class AdminTechBlogServiceTest : UnitTest() {
             postRepository = postRepository,
             bookmarkRepository = mockk(),
             subscriptionRepository = subscriptionRepository,
-            techBlogCollector = mockk(),
             tagRepository = mockk(),
             postTagRepository = mockk(),
             techBlogCategorizer = mockk(),
@@ -81,7 +79,6 @@ class AdminTechBlogServiceTest : UnitTest() {
             postRepository = postRepository,
             bookmarkRepository = mockk(),
             subscriptionRepository = mockk(),
-            techBlogCollector = mockk(),
             tagRepository = tagRepository,
             postTagRepository = postTagRepository,
             techBlogCategorizer = techBlogCategorizer,
@@ -154,7 +151,6 @@ class AdminTechBlogServiceTest : UnitTest() {
             postRepository = postRepository,
             bookmarkRepository = mockk(),
             subscriptionRepository = mockk(),
-            techBlogCollector = mockk(),
             tagRepository = tagRepository,
             postTagRepository = postTagRepository,
             techBlogCategorizer = techBlogCategorizer,
@@ -213,7 +209,6 @@ class AdminTechBlogServiceTest : UnitTest() {
             postRepository = postRepository,
             bookmarkRepository = mockk(),
             subscriptionRepository = mockk(),
-            techBlogCollector = mockk(),
             tagRepository = tagRepository,
             postTagRepository = postTagRepository,
             techBlogCategorizer = techBlogCategorizer,
@@ -258,7 +253,6 @@ class AdminTechBlogServiceTest : UnitTest() {
             postRepository = postRepository,
             bookmarkRepository = bookmarkRepository,
             subscriptionRepository = mockk(),
-            techBlogCollector = mockk(),
             tagRepository = mockk(),
             postTagRepository = postTagRepository,
             techBlogCategorizer = mockk(),
@@ -292,7 +286,6 @@ class AdminTechBlogServiceTest : UnitTest() {
             postRepository = postRepository,
             bookmarkRepository = bookmarkRepository,
             subscriptionRepository = mockk(),
-            techBlogCollector = mockk(),
             tagRepository = mockk(),
             postTagRepository = postTagRepository,
             techBlogCategorizer = mockk(),
@@ -318,7 +311,6 @@ class AdminTechBlogServiceTest : UnitTest() {
             postRepository = mockk(),
             bookmarkRepository = mockk(),
             subscriptionRepository = mockk(),
-            techBlogCollector = mockk(),
             tagRepository = mockk(),
             postTagRepository = mockk(),
             techBlogCategorizer = mockk(),

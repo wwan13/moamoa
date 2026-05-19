@@ -15,7 +15,6 @@ import server.admin.feature.tag.domain.AdminTag
 import server.admin.feature.tag.domain.AdminTagRepository
 import server.admin.feature.techblog.domain.AdminTechBlog
 import server.admin.feature.techblog.domain.AdminTechBlogRepository
-import server.admin.feature.techblog.infra.TechBlogCollector
 import server.techblog.TechBlogPost
 import server.techblog.TechBlogPostCatetorizer
 
@@ -25,7 +24,6 @@ internal class AdminTechBlogService(
     private val postRepository: AdminPostRepository,
     private val bookmarkRepository: AdminBookmarkRepository,
     private val subscriptionRepository: AdminSubscriptionRepository,
-    private val techBlogCollector: TechBlogCollector,
     private val tagRepository: AdminTagRepository,
     private val postTagRepository: AdminPostTagRepository,
     private val techBlogCategorizer: TechBlogPostCatetorizer,
@@ -53,13 +51,12 @@ internal class AdminTechBlogService(
     @Transactional
     fun create(command: AdminCreateTechBlogCommand): AdminTechBlogData {
         validateTitle(command.title)
-        val techBlog = server.admin.feature.techblog.domain.AdminTechBlog(
+        val techBlog = AdminTechBlog(
             title = command.title,
             icon = command.icon,
             blogUrl = command.blogUrl,
             key = command.key,
         )
-        techBlogCollector.validateExists(techBlog.key)
         return AdminTechBlogData(techBlogRepository.save(techBlog))
     }
 

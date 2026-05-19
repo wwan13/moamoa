@@ -15,10 +15,4 @@ internal class TechBlogCollector(
             techBlogSource.getPosts(techBlogKey).toList()
         }.distinctBy { it.key }
     }
-
-    fun validateExists(techBlogKey: String) {
-        if (!techBlogSource.exists(techBlogKey)) {
-            throw IllegalArgumentException("tech blog source가 존재하지 않습니다.")
-        }
-    }
 }
