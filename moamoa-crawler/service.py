@@ -64,12 +64,14 @@ class CrawlerApi:
                 self._latest_error = None
 
             result = run_crawl_job(request, self.config)
+            result_key = result.get("key")
+            latest_result_key = result_key if isinstance(result_key, str) and result_key else request.key
 
             with self._lock:
-                self._latest_results[request.key] = result
+                self._latest_results[latest_result_key] = result
                 self._latest_error = None
 
-            logging.info("crawl completed: key=%s posts=%s queueSize=%s", request.key, result["postCount"], self._crawl_queue.qsize())
+            logging.info("crawl completed: key=%s posts=%s queueSize=%s", latest_result_key, result["postCount"], self._crawl_queue.qsize())
             return HTTPStatus.OK, result
         except ValueError as exc:
             with self._lock:

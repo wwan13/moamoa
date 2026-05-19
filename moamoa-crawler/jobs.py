@@ -74,10 +74,24 @@ def supported_keys() -> list[str]:
     return sorted(source_keys())
 
 
+def resolve_supported_key(key: str) -> str | None:
+    requested_key = key.strip()
+    if not requested_key:
+        return None
+
+    requested_key_folded = requested_key.casefold()
+    for supported_key in supported_keys():
+        if supported_key.casefold() == requested_key_folded:
+            return supported_key
+    return None
+
+
 def run_crawl_job(request: CrawlJobRequest, config: CrawlJobConfig) -> dict[str, object]:
-    if request.key not in supported_keys():
+    resolved_key = resolve_supported_key(request.key)
+    if resolved_key is None:
         allowed = ", ".join(supported_keys())
         raise ValueError(f"unsupported crawler key: {request.key}; supported keys: {allowed}")
 
-    crawler = load_crawler(request.key)
-    return crawler(request, config)
+    resolved_request = CrawlJobRequest(key=resolved_key, size=request.size)
+    crawler = load_crawler(resolved_request.key)
+    return crawler(resolved_request, config)
