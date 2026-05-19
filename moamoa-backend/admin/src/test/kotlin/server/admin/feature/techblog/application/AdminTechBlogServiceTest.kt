@@ -1,5 +1,6 @@
 package server.admin.feature.techblog.application
 
+import server.admin.feature.bookmark.domain.AdminBookmarkRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
@@ -40,6 +41,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
+            bookmarkRepository = mockk(),
             subscriptionRepository = subscriptionRepository,
             techBlogCollector = mockk(),
             tagRepository = mockk(),
@@ -77,6 +79,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
+            bookmarkRepository = mockk(),
             subscriptionRepository = mockk(),
             techBlogCollector = mockk(),
             tagRepository = tagRepository,
@@ -149,6 +152,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
+            bookmarkRepository = mockk(),
             subscriptionRepository = mockk(),
             techBlogCollector = mockk(),
             tagRepository = tagRepository,
@@ -207,6 +211,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
+            bookmarkRepository = mockk(),
             subscriptionRepository = mockk(),
             techBlogCollector = mockk(),
             tagRepository = tagRepository,
@@ -246,10 +251,12 @@ class AdminTechBlogServiceTest : UnitTest() {
     fun `기술 블로그별 게시글 전체 삭제 시 post tag를 먼저 삭제하고 삭제 건수를 반환한다`() {
         val techBlogRepository = mockk<AdminTechBlogRepository>()
         val postRepository = mockk<AdminPostRepository>()
+        val bookmarkRepository = mockk<AdminBookmarkRepository>()
         val postTagRepository = mockk<AdminPostTagRepository>()
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
+            bookmarkRepository = bookmarkRepository,
             subscriptionRepository = mockk(),
             techBlogCollector = mockk(),
             tagRepository = mockk(),
@@ -262,6 +269,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         every { techBlogRepository.findById(techBlog.id) } returns Optional.of(techBlog)
         every { postRepository.findIdsByTechBlogId(techBlog.id) } returns postIds
         every { postTagRepository.deleteAllByPostIdIn(postIds) } returns 3
+        every { bookmarkRepository.deleteAllByPostIdIn(postIds) } returns 4
         every { postRepository.deleteAllByTechBlogId(techBlog.id) } returns 2
 
         val result = service.deletePosts(techBlog.id)
@@ -269,6 +277,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         result.techBlog.id shouldBe techBlog.id
         result.deletedPostCount shouldBe 2
         verify(exactly = 1) { postTagRepository.deleteAllByPostIdIn(postIds) }
+        verify(exactly = 1) { bookmarkRepository.deleteAllByPostIdIn(postIds) }
         verify(exactly = 1) { postRepository.deleteAllByTechBlogId(techBlog.id) }
     }
 
@@ -276,10 +285,12 @@ class AdminTechBlogServiceTest : UnitTest() {
     fun `기술 블로그별 게시글이 없으면 삭제 쿼리를 실행하지 않는다`() {
         val techBlogRepository = mockk<AdminTechBlogRepository>()
         val postRepository = mockk<AdminPostRepository>()
+        val bookmarkRepository = mockk<AdminBookmarkRepository>()
         val postTagRepository = mockk<AdminPostTagRepository>()
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = postRepository,
+            bookmarkRepository = bookmarkRepository,
             subscriptionRepository = mockk(),
             techBlogCollector = mockk(),
             tagRepository = mockk(),
@@ -295,6 +306,7 @@ class AdminTechBlogServiceTest : UnitTest() {
 
         result.deletedPostCount shouldBe 0
         verify(exactly = 0) { postTagRepository.deleteAllByPostIdIn(any()) }
+        verify(exactly = 0) { bookmarkRepository.deleteAllByPostIdIn(any()) }
         verify(exactly = 0) { postRepository.deleteAllByTechBlogId(any()) }
     }
 
@@ -304,6 +316,7 @@ class AdminTechBlogServiceTest : UnitTest() {
         val service = AdminTechBlogService(
             techBlogRepository = techBlogRepository,
             postRepository = mockk(),
+            bookmarkRepository = mockk(),
             subscriptionRepository = mockk(),
             techBlogCollector = mockk(),
             tagRepository = mockk(),

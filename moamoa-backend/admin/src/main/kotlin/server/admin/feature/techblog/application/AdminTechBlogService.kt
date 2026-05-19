@@ -1,5 +1,6 @@
 package server.admin.feature.techblog.application
 
+import server.admin.feature.bookmark.domain.AdminBookmarkRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -22,6 +23,7 @@ import server.techblog.TechBlogPostCatetorizer
 internal class AdminTechBlogService(
     private val techBlogRepository: AdminTechBlogRepository,
     private val postRepository: AdminPostRepository,
+    private val bookmarkRepository: AdminBookmarkRepository,
     private val subscriptionRepository: AdminSubscriptionRepository,
     private val techBlogCollector: TechBlogCollector,
     private val tagRepository: AdminTagRepository,
@@ -84,6 +86,7 @@ internal class AdminTechBlogService(
         }
 
         postTagRepository.deleteAllByPostIdIn(postIds)
+        bookmarkRepository.deleteAllByPostIdIn(postIds)
         val deletedPostCount = postRepository.deleteAllByTechBlogId(techBlogId)
 
         return AdminDeleteTechBlogPostsResult(
