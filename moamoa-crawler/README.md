@@ -96,6 +96,7 @@ HTTP API와 Redis Stream 이벤트 요청은 같은 내부 FIFO 큐로 처리합
 | `flex` | flex Tech Blog | 정적 HTML | 카테고리 목록 HTML에서 날짜 기반 `/blog/yyyy/mm/dd/...` 링크를 수집합니다. |
 | `gabia` | Gabia Library | API | WordPress REST API `wp-json/wp/v2/posts`를 호출합니다. |
 | `gccompany` | GC Company Tech Blog | Browser | Medium 스타일 `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |
+| `gangnamunni` | 강남언니 공식 블로그 | Browser + 정적 HTML 파싱 | `/blog`를 Scrapling으로 렌더링한 뒤 반환된 HTML 소스에서 `/post/` 링크를 다시 파싱하고, 상세 페이지 JSON-LD/메타데이터를 채웁니다. |
 | `goorm` | goorm TechBlog | 정적 HTML | WordPress 목록 HTML에서 게시글 링크를 수집합니다. |
 | `hyperconnect` | Hyperconnect Tech Blog | 정적 HTML | GitHub Pages 목록 HTML에서 날짜 기반 게시글 URL을 수집합니다. |
 | `kakao` | Kakao Tech | API | `tech.kakao.com/api/v2/posts` JSON API를 호출합니다. |
@@ -127,6 +128,7 @@ HTTP API와 Redis Stream 이벤트 요청은 같은 내부 FIFO 큐로 처리합
 | `socar` | Socar Tech Blog | 정적 HTML | `/posts/` 목록 HTML에서 게시글 링크를 수집합니다. |
 | `ssgtech` | SSG Tech Blog | Browser | Medium publication `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |
 | `tabling` | Tabling Tech Blog | Browser | Medium 스타일 `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |
+| `theswing` | 더스윙 기술 블로그 | 정적 HTML | Ghost 홈 목록 카드 HTML에서 게시글 메타데이터를 직접 파싱합니다. |
 | `tmapmobility` | TMAP Mobility Tech | API | Brunch article API를 호출합니다. |
 | `toss` | Toss Tech | API | Toss 공개 posts API를 호출합니다. |
 | `tving` | TVING | Browser | Medium publication `/all` 페이지를 Scrapling으로 렌더링/스크롤합니다. |
